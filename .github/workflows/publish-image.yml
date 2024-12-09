@@ -1,0 +1,35 @@
+name: Build and publish docker image
+
+on: [push]
+
+jobs:
+  build-publish-docker-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read      # Required for reading the repository contents
+      packages: write     # Required for pushing to GitHub Packages
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get short Git SHA
+        id: vars
+        run: echo "sha=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Build the docker image
+        run: |
+          docker build . -t ghcr.io/${{ github.repository }}:latest -t ghcr.io/${{ github.repository }}:${{ env.sha }}
+
+      - name: Push the docker image
+        run: |
+          docker push ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${{ github.repository }}:${{ env.sha }}
+  
