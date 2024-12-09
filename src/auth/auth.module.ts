@@ -1,10 +1,8 @@
-import {Module} from '@nestjs/common';
-import {KeycloakAuthService} from './keycloak-auth-service/keycloak-auth.service';
-import {UsersModule} from "../users/users.module";
+import { Module } from '@nestjs/common';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-    imports: [UsersModule],
-    providers: [KeycloakAuthService],
+  imports: [UsersModule],
+  providers: [],
 })
-export class AuthModule {
-}
+export class AuthModule {}

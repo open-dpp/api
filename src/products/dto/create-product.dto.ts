@@ -1,4 +1,4 @@
 export class CreateProductDto {
-    name: string;
-    description: string;
+  name: string;
+  description: string;
 }
