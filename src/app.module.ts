@@ -4,7 +4,7 @@ import {TypeOrmModule} from '@nestjs/typeorm';
 import {ProductsModule} from './products/products.module';
 import {OrganizationsModule} from './organizations/organizations.module';
 import {UsersModule} from './users/users.module';
-import {ConfigModule} from "@nestjs/config";
+import {ConfigModule, ConfigService} from "@nestjs/config";
 import {KeycloakImportModule} from './keycloak-import/keycloak-import.module';
 import {PermalinksModule} from './permalinks/permalinks.module';
 import {AuthModule} from './auth/auth.module';
@@ -18,17 +18,21 @@ import {HttpModule} from "@nestjs/axios";
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            host: 'lc-db',
-            port: 5432,
-            username: 'living-circle',
-            password: 'living-circle',
-            database: 'living-circle',
-            entities: [],
-            synchronize: true,
-            autoLoadEntities: true,
-            dropSchema: true,
+        TypeOrmModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: (configService: ConfigService) => ({
+                type: 'postgres',
+                host: configService.get('DB_HOST'),
+                port: configService.get('DB_PORT'),
+                username: configService.get('DB_USERNAME'),
+                password: configService.get('DB_PASSWORD'),
+                database: configService.get('DB_DATABASE'),
+                entities: [],
+                synchronize: true,
+                autoLoadEntities: true,
+                dropSchema: true,
+            }),
+            inject: [ConfigService],
         }),
         ProductsModule,
         OrganizationsModule,
