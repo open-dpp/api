@@ -48,5 +48,4 @@ import {HttpModule} from "@nestjs/axios";
         useClass: KeycloakAuthGuard,
     }, AppService],
 })
-export class AppModule {
-}
+export class AppModule {}

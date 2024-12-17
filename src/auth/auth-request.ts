@@ -1,11 +1,11 @@
-import {User} from "../users/entities/user.entity";
+import { User } from '../users/entities/user.entity';
 
 export const AUTH_CONTEXT = 'authContext';
 
 export class AuthContext {
-    user: User;
+  user: User;
 }
 
 export interface AuthRequest extends Request {
-    authContext: AuthContext;
+  authContext: AuthContext;
 }
