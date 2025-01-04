@@ -10,7 +10,7 @@ import { DataSource } from 'typeorm';
 import { v4 as uuid4 } from 'uuid';
 
 describe('ProductsService', () => {
-  let service: ProductsService;
+  let productService: ProductsService;
   let userService: UsersService;
   let dataSource: DataSource;
 
@@ -24,7 +24,7 @@ describe('ProductsService', () => {
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
-    service = module.get<ProductsService>(ProductsService);
+    productService = module.get<ProductsService>(ProductsService);
     userService = module.get<UsersService>(UsersService);
   });
 
@@ -33,14 +33,14 @@ describe('ProductsService', () => {
     authContext.user = makeUser(uuid4());
     const name = `My interesting product ${uuid4()}`;
     const description = 'My description';
-    const { id } = await service.create(
+    const { id } = await productService.create(
       {
         name,
         description,
       },
       authContext,
     );
-    const found = await service.findOne(id);
+    const found = await productService.findOne(id);
     expect(found.name).toEqual(name);
     expect(found.description).toEqual(description);
     expect(await userService.findOneById(found.createdByUserId)).toBeDefined();

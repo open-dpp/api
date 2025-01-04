@@ -12,17 +12,26 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AuthRequest } from '../auth/auth-request';
+import { PermalinksService } from '../permalinks/permalinks.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly permalinkService: PermalinksService,
+  ) {}
 
   @Post()
-  create(
+  async create(
     @Body() createProductDto: CreateProductDto,
     @Request() req: AuthRequest,
   ) {
-    return this.productsService.create(createProductDto, req.authContext);
+    const product = await this.productsService.create(
+      createProductDto,
+      req.authContext,
+    );
+    await this.permalinkService.create({ product, view: 'all' });
+    return await this.productsService.findOne(product.id);
   }
 
   @Get()
@@ -32,9 +41,7 @@ export class ProductsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const product = await this.productsService.findOne(id);
-    console.log(product);
-    return product;
+    return await this.productsService.findOne(id);
   }
 
   @Patch(':id')

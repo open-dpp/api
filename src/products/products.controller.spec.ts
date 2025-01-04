@@ -9,10 +9,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../test/keycloak-auth.guard.testing';
 import { ProductsService } from './products.service';
+import { PermalinksModule } from '../permalinks/permalinks.module';
+import { PermalinksService } from '../permalinks/permalinks.service';
 
 describe('ProductsController', () => {
   let app: INestApplication;
   let service: ProductsService;
+  let permalinkService: PermalinksService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -20,6 +23,7 @@ describe('ProductsController', () => {
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([Product, User]),
         ProductsModule,
+        PermalinksModule,
       ],
       providers: [
         {
@@ -32,6 +36,8 @@ describe('ProductsController', () => {
     }).compile();
 
     service = moduleRef.get<ProductsService>(ProductsService);
+    permalinkService = moduleRef.get(PermalinksService);
+
     app = moduleRef.createNestApplication();
 
     await app.init();
@@ -44,8 +50,14 @@ describe('ProductsController', () => {
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(201);
+    expect(response.body.permalinks).toHaveLength(1);
     const found = await service.findOne(response.body.id);
     expect(response.body.id).toEqual(found.id);
+    expect(found.permalinks).toHaveLength(1);
+    const foundPermalink = await permalinkService.findOne(
+      found.permalinks[0].uuid,
+    );
+    expect(foundPermalink.product.id).toEqual(found.id);
   });
 
   afterAll(async () => {

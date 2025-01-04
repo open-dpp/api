@@ -6,7 +6,6 @@ import { Permalink } from './entities/permalink.entity';
 import { makeUser } from '../users/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsService } from '../products/products.service';
-import { ProductsModule } from '../products/products.module';
 import { AuthContext } from '../auth/auth-request';
 import { DataSource } from 'typeorm';
 
@@ -20,9 +19,8 @@ describe('PermalinksService', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([Permalink, Product]),
-        ProductsModule,
       ],
-      providers: [PermalinksService],
+      providers: [PermalinksService, ProductsService],
     }).compile();
 
     prodcuctsService = module.get<ProductsService>(ProductsService);
@@ -35,16 +33,16 @@ describe('PermalinksService', () => {
     authContext.user = makeUser('someID');
     const name = 'My interesting product';
     const description = 'My description';
-    const { id: productId } = await prodcuctsService.create(
+    const product = await prodcuctsService.create(
       {
         name,
         description,
       },
       authContext,
     );
-    const { uuid } = await service.create({ productId, view: 'all' });
+    const { uuid } = await service.create({ product, view: 'all' });
     const found = await service.findOne(uuid);
-    expect(found.productId).toEqual(productId);
+    expect(found.productId).toEqual(product.id);
   });
 
   afterEach(async () => {

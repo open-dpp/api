@@ -1,4 +1,6 @@
+import { Product } from '../../products/entities/product.entity';
+
 export class CreatePermalinkDto {
-  productId: string;
+  product: Product;
   view: 'all' | 'manufacturer' | 'compliance' | 'client';
 }
