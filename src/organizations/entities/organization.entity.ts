@@ -34,7 +34,7 @@ export class Organization {
   @ManyToMany(
     () => User,
     (preventionCourse) => preventionCourse.organizations,
-    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+    { cascade: ['insert'], onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   users: User[];
 }

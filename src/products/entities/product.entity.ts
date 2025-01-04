@@ -46,6 +46,7 @@ export class Product {
   createdByUserId: string;
 
   @ManyToOne(() => User, (user) => user.products, {
+    cascade: ['insert'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })

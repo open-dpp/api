@@ -1,20 +1,57 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
+import { INestApplication } from '@nestjs/common';
+import { ProductsModule } from './products.module';
+import * as request from 'supertest';
+import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
+import { Product } from './entities/product.entity';
+import { Permalink } from '../permalinks/entities/permalink.entity';
+import { User } from '../users/entities/user.entity';
+import { Organization } from '../organizations/entities/organization.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
+import { KeycloakAuthTestingGuard } from '../../test/keycloak-auth.guard.testing';
 import { ProductsService } from './products.service';
 
 describe('ProductsController', () => {
-  let controller: ProductsController;
+  let app: INestApplication;
+  let service: ProductsService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [ProductsController],
-      providers: [ProductsService],
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [
+        TypeOrmTestingModule([Product, Permalink, User, Organization]),
+        TypeOrmModule.forFeature([Product, User]),
+        ProductsModule,
+      ],
+      providers: [
+        {
+          provide: APP_GUARD,
+          useValue: new KeycloakAuthTestingGuard(
+            new Map([['token1', 'user1']]),
+          ),
+        },
+      ],
     }).compile();
 
-    controller = module.get<ProductsController>(ProductsController);
+    service = moduleRef.get<ProductsService>(ProductsService);
+    app = moduleRef.createNestApplication();
+
+    await app.init();
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it(`/CREATE product`, async () => {
+    const body = { name: 'My name', description: 'My desc' };
+    const response = await request(app.getHttpServer())
+      .post('/products')
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(201);
+    const found = await service.findOne(response.body.id);
+    expect(response.body.id).toEqual(found.id);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

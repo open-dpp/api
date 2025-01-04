@@ -10,13 +10,12 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../auth-request';
 import { HttpService } from '@nestjs/axios';
-import { UsersService } from '../../users/users.service';
+import { makeUser } from '../../users/entities/user.entity';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private usersService: UsersService,
     private httpService: HttpService,
     private configService: ConfigService,
   ) {}
@@ -33,6 +32,7 @@ export class KeycloakAuthGuard implements CanActivate {
     }
 
     const header = request.headers.authorization;
+
     if (!header) {
       throw new HttpException(
         'Authorization: Bearer <token> header missing',
@@ -51,6 +51,7 @@ export class KeycloakAuthGuard implements CanActivate {
     const accessToken = parts[1];
 
     const url = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
+
     let keycloakId = null;
     try {
       const response = await firstValueFrom(
@@ -71,15 +72,8 @@ export class KeycloakAuthGuard implements CanActivate {
     }
     // const authContext: AuthContext = await this.keycloakAuthService.getAuthContextFromKeycloakUser(req.user, isPublic);
     const authContext = new AuthContext();
-    const foundUser = await this.usersService.findOne({
-      where: {
-        keycloakId,
-      },
-    });
-    authContext.user = foundUser;
-    console.log(foundUser.id + ' guarded');
+    authContext.user = makeUser(keycloakId);
     request.authContext = authContext;
-
     return true;
   }
 }
