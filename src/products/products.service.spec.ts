@@ -2,9 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Permalink } from '../permalinks/entities/permalink.entity';
 import { makeUser, User } from '../users/entities/user.entity';
-import { Organization } from '../organizations/entities/organization.entity';
 import { AuthContext } from '../auth/auth-request';
 import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
 import { UsersService } from '../users/users.service';
@@ -19,7 +17,7 @@ describe('ProductsService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule([Product, Permalink, User, Organization]),
+        TypeOrmTestingModule,
         TypeOrmModule.forFeature([Product, User]),
       ],
       providers: [ProductsService, UsersService],

@@ -3,8 +3,7 @@ import { PermalinksService } from './permalinks.service';
 import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
 import { Product } from '../products/entities/product.entity';
 import { Permalink } from './entities/permalink.entity';
-import { makeUser, User } from '../users/entities/user.entity';
-import { Organization } from '../organizations/entities/organization.entity';
+import { makeUser } from '../users/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsService } from '../products/products.service';
 import { ProductsModule } from '../products/products.module';
@@ -19,7 +18,7 @@ describe('PermalinksService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule([Product, Permalink, User, Organization]),
+        TypeOrmTestingModule,
         TypeOrmModule.forFeature([Permalink, Product]),
         ProductsModule,
       ],

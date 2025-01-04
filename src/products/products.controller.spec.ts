@@ -1,13 +1,10 @@
 import { Test } from '@nestjs/testing';
-import { ProductsController } from './products.controller';
 import { INestApplication } from '@nestjs/common';
 import { ProductsModule } from './products.module';
 import * as request from 'supertest';
 import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
 import { Product } from './entities/product.entity';
-import { Permalink } from '../permalinks/entities/permalink.entity';
 import { User } from '../users/entities/user.entity';
-import { Organization } from '../organizations/entities/organization.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../test/keycloak-auth.guard.testing';
@@ -20,7 +17,7 @@ describe('ProductsController', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule([Product, Permalink, User, Organization]),
+        TypeOrmTestingModule,
         TypeOrmModule.forFeature([Product, User]),
         ProductsModule,
       ],
