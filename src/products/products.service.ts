@@ -16,7 +16,7 @@ export class ProductsService {
     private permalinkService: PermalinksService,
   ) {}
 
-  convert(productEntity: ProductEntity, permalinks: { id: string }[]) {
+  convert(productEntity: ProductEntity, permalinks: { uuid: string }[]) {
     return new Product(
       productEntity.id,
       productEntity.name,
@@ -34,11 +34,11 @@ export class ProductsService {
       description: createProductDto.description,
       createdByUser: authContext.user,
     });
-    const { id } = await this.permalinkService.create({
+    const { uuid } = await this.permalinkService.create({
       referencedId: product.id,
       view: 'all',
     });
-    return this.convert(product, [{ id }]);
+    return this.convert(product, [{ uuid }]);
   }
 
   async findAll(authContext: AuthContext) {
@@ -49,8 +49,8 @@ export class ProductsService {
       productEntities.map(async (entity: ProductEntity) => {
         return this.convert(entity, [
           {
-            id: (await this.permalinkService.findOneByReferencedId(entity.id))
-              .id,
+            uuid: (await this.permalinkService.findOneByReferencedId(entity.id))
+              .uuid,
           },
         ]);
       }),
@@ -61,9 +61,10 @@ export class ProductsService {
     const productEntity = await this.productRepository.findOne({
       where: { id },
     });
-    const { id: permalinkId } =
-      await this.permalinkService.findOneByReferencedId(productEntity.id);
-    return this.convert(productEntity, [{ id: permalinkId }]);
+    const { uuid } = await this.permalinkService.findOneByReferencedId(
+      productEntity.id,
+    );
+    return this.convert(productEntity, [{ uuid }]);
   }
 
   update(id: string, updateProductDto: UpdateProductDto) {

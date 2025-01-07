@@ -63,7 +63,7 @@ describe('ProductsController', () => {
       found.id,
     );
     expect(foundPermalink.referencedId).toEqual(found.id);
-    expect(response.body.permalinks).toEqual([{ id: foundPermalink.id }]);
+    expect(response.body.permalinks).toEqual([{ uuid: foundPermalink.uuid }]);
   });
 
   it(`/GET products`, async () => {
@@ -87,7 +87,8 @@ describe('ProductsController', () => {
       expect(response.body.find((p) => p.id === product.id).permalinks).toEqual(
         [
           {
-            id: (await permalinkService.findOneByReferencedId(product.id)).id,
+            uuid: (await permalinkService.findOneByReferencedId(product.id))
+              .uuid,
           },
         ],
       );

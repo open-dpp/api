@@ -6,6 +6,6 @@ export class Product {
     public updatedAt: Date,
     public deletedAt: Date | null,
     public description: string,
-    public permalinks: { id: string }[],
+    public permalinks: { uuid: string }[],
   ) {}
 }
