@@ -5,15 +5,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Permalink } from '../../permalinks/entities/permalink.entity';
 import { User } from '../../users/entities/user.entity';
 
-@Entity()
-export class Product {
+@Entity('product')
+export class ProductEntity {
   @Column('char', {
     primary: true,
     name: 'id',
@@ -36,9 +34,6 @@ export class Product {
 
   @Column()
   description: string;
-
-  @OneToMany(() => Permalink, (permalink) => permalink.product)
-  permalinks: Permalink[];
 
   @Column('char', {
     name: 'createdByUserId',

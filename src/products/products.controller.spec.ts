@@ -3,25 +3,30 @@ import { INestApplication } from '@nestjs/common';
 import { ProductsModule } from './products.module';
 import * as request from 'supertest';
 import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
-import { Product } from './entities/product.entity';
-import { User } from '../users/entities/user.entity';
+import { ProductEntity } from './entities/product.entity';
+import { makeUser, User } from '../users/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../test/keycloak-auth.guard.testing';
 import { ProductsService } from './products.service';
 import { PermalinksModule } from '../permalinks/permalinks.module';
 import { PermalinksService } from '../permalinks/permalinks.service';
+import { AuthContext } from '../auth/auth-request';
+import { v4 as uuid4 } from 'uuid';
 
 describe('ProductsController', () => {
   let app: INestApplication;
   let service: ProductsService;
   let permalinkService: PermalinksService;
+  let productsService: ProductsService;
+  const authContext = new AuthContext();
+  authContext.user = makeUser(uuid4());
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([Product, User]),
+        TypeOrmModule.forFeature([ProductEntity, User]),
         ProductsModule,
         PermalinksModule,
       ],
@@ -29,7 +34,7 @@ describe('ProductsController', () => {
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', 'user1']]),
+            new Map([['token1', authContext.user.id]]),
           ),
         },
       ],
@@ -37,6 +42,7 @@ describe('ProductsController', () => {
 
     service = moduleRef.get<ProductsService>(ProductsService);
     permalinkService = moduleRef.get(PermalinksService);
+    productsService = moduleRef.get(ProductsService);
 
     app = moduleRef.createNestApplication();
 
@@ -50,14 +56,42 @@ describe('ProductsController', () => {
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.permalinks).toHaveLength(1);
     const found = await service.findOne(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.permalinks).toHaveLength(1);
-    const foundPermalink = await permalinkService.findOne(
-      found.permalinks[0].uuid,
+
+    const foundPermalink = await permalinkService.findOneByReferencedId(
+      found.id,
     );
-    expect(foundPermalink.product.id).toEqual(found.id);
+    expect(foundPermalink.referencedId).toEqual(found.id);
+    expect(response.body.permalinks).toEqual([{ id: foundPermalink.id }]);
+  });
+
+  it(`/GET products`, async () => {
+    const productNames = ['P1', 'P2'];
+    const products = await Promise.all(
+      productNames.map(
+        async (pn) =>
+          await productsService.create(
+            {
+              name: pn,
+              description: 'My desc',
+            },
+            authContext,
+          ),
+      ),
+    );
+    const response = await request(app.getHttpServer())
+      .get('/products')
+      .set('Authorization', 'Bearer token1');
+    for (const product of products) {
+      expect(response.body.find((p) => p.id === product.id).permalinks).toEqual(
+        [
+          {
+            id: (await permalinkService.findOneByReferencedId(product.id)).id,
+          },
+        ],
+      );
+    }
   });
 
   afterAll(async () => {

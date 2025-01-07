@@ -3,12 +3,9 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Product } from '../../products/entities/product.entity';
 
 @Entity()
 export class Permalink {
@@ -35,15 +32,8 @@ export class Permalink {
   @Column()
   view: 'all' | 'manufacturer' | 'compliance' | 'client';
 
-  @Column('char', {
-    name: 'productId',
+  @Column('uuid', {
+    name: 'referencedId',
   })
-  productId: string;
-
-  @ManyToOne(() => Product, (product) => product.permalinks, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  @JoinColumn([{ name: 'productId', referencedColumnName: 'id' }])
-  product: Product;
+  referencedId: string;
 }

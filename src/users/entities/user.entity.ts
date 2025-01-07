@@ -9,8 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Organization } from '../../organizations/entities/organization.entity';
-import { Permalink } from '../../permalinks/entities/permalink.entity';
-import { Product } from '../../products/entities/product.entity';
+import { ProductEntity } from '../../products/entities/product.entity';
 
 @Entity()
 export class User {
@@ -39,8 +38,8 @@ export class User {
   })
   organizations: Organization[];
 
-  @OneToMany(() => Permalink, (permalink) => permalink.product)
-  products: Product[];
+  @OneToMany(() => ProductEntity, (product) => product)
+  products: ProductEntity[];
 }
 
 export function makeUser(id: string) {

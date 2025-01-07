@@ -12,31 +12,22 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AuthRequest } from '../auth/auth-request';
-import { PermalinksService } from '../permalinks/permalinks.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly permalinkService: PermalinksService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   async create(
     @Body() createProductDto: CreateProductDto,
     @Request() req: AuthRequest,
   ) {
-    const product = await this.productsService.create(
-      createProductDto,
-      req.authContext,
-    );
-    await this.permalinkService.create({ product, view: 'all' });
-    return await this.productsService.findOne(product.id);
+    return await this.productsService.create(createProductDto, req.authContext);
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Request() req: AuthRequest) {
+    return this.productsService.findAll(req.authContext);
   }
 
   @Get(':id')

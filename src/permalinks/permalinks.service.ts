@@ -17,7 +17,7 @@ export class PermalinksService {
     return this.permalinkRepository.save({
       uuid: randomUUID(),
       view: createPermalinkDto.view,
-      product: createPermalinkDto.product,
+      referencedId: createPermalinkDto.referencedId,
     });
   }
 
@@ -28,9 +28,12 @@ export class PermalinksService {
   findOne(uuid: string) {
     return this.permalinkRepository.findOne({
       where: { uuid },
-      relations: {
-        product: true,
-      },
+    });
+  }
+
+  findOneByReferencedId(referenceId: string) {
+    return this.permalinkRepository.findOne({
+      where: { referencedId: referenceId },
     });
   }
 
