@@ -1,17 +1,17 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Patch,
   Post,
   Request,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
+import { ProductsService } from '../infrastructure/products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { AuthRequest } from '../auth/auth-request';
+import { AuthRequest } from '../../auth/auth-request';
+import { Product } from '../domain/product';
 
 @Controller('products')
 export class ProductsController {
@@ -22,7 +22,12 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @Request() req: AuthRequest,
   ) {
-    return await this.productsService.create(createProductDto, req.authContext);
+    const product = new Product(
+      undefined,
+      createProductDto.name,
+      createProductDto.description,
+    );
+    return await this.productsService.save(product, req.authContext);
   }
 
   @Get()
@@ -36,12 +41,16 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(id, updateProductDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @Request() req: AuthRequest,
+  ) {
+    const product = new Product(
+      id,
+      updateProductDto.name,
+      updateProductDto.description,
+    );
+    return this.productsService.save(product, req.authContext);
   }
 }

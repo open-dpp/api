@@ -1,18 +1,19 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { ProductsModule } from './products.module';
+import { ProductsModule } from '../products.module';
 import * as request from 'supertest';
-import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
-import { ProductEntity } from './entities/product.entity';
-import { makeUser, User } from '../users/entities/user.entity';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { ProductEntity } from '../infrastructure/product.entity';
+import { makeUser, User } from '../../users/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '../../test/keycloak-auth.guard.testing';
-import { ProductsService } from './products.service';
-import { PermalinksModule } from '../permalinks/permalinks.module';
-import { PermalinksService } from '../permalinks/permalinks.service';
-import { AuthContext } from '../auth/auth-request';
+import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import { ProductsService } from '../infrastructure/products.service';
+import { PermalinksModule } from '../../permalinks/permalinks.module';
+import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
+import { AuthContext } from '../../auth/auth-request';
 import { v4 as uuid4 } from 'uuid';
+import { Product } from '../domain/product';
 
 describe('ProductsController', () => {
   let app: INestApplication;
@@ -59,11 +60,16 @@ describe('ProductsController', () => {
     const found = await service.findOne(response.body.id);
     expect(response.body.id).toEqual(found.id);
 
-    const foundPermalink = await permalinkService.findOneByReferencedId(
+    const foundPermalinks = await permalinkService.findAllByReferencedId(
       found.id,
     );
-    expect(foundPermalink.referencedId).toEqual(found.id);
-    expect(response.body.permalinks).toEqual([{ uuid: foundPermalink.uuid }]);
+    for (const permalink of foundPermalinks) {
+      expect(permalink.getReference()).toEqual(found.id);
+    }
+    const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
+    expect([...response.body.permalinks].sort(sortFn)).toEqual(
+      [...foundPermalinks].sort(sortFn),
+    );
   });
 
   it(`/GET products`, async () => {
@@ -71,11 +77,8 @@ describe('ProductsController', () => {
     const products = await Promise.all(
       productNames.map(
         async (pn) =>
-          await productsService.create(
-            {
-              name: pn,
-              description: 'My desc',
-            },
+          await productsService.save(
+            new Product(undefined, pn, 'My desc'),
             authContext,
           ),
       ),
@@ -85,12 +88,7 @@ describe('ProductsController', () => {
       .set('Authorization', 'Bearer token1');
     for (const product of products) {
       expect(response.body.find((p) => p.id === product.id).permalinks).toEqual(
-        [
-          {
-            uuid: (await permalinkService.findOneByReferencedId(product.id))
-              .uuid,
-          },
-        ],
+        await permalinkService.findAllByReferencedId(product.id),
       );
     }
   });

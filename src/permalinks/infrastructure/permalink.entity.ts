@@ -3,19 +3,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity()
-export class Permalink {
-  @Column('char', {
-    primary: true,
-    name: 'id',
-    length: 36,
-  })
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+@Entity('permalink')
+export class PermalinkEntity {
+  @PrimaryColumn()
+  uuid: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -25,9 +20,6 @@ export class Permalink {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date | null;
-
-  @Column()
-  uuid: string;
 
   @Column()
   view: 'all' | 'manufacturer' | 'compliance' | 'client';
