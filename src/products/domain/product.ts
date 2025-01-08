@@ -1,8 +1,9 @@
 import { Permalink } from '../../permalinks/domain/permalink';
+import { randomUUID } from 'crypto';
 
 export class Product {
   constructor(
-    public readonly id: string | undefined,
+    public readonly id: string = randomUUID(),
     public name: string,
     public description: string,
     public readonly permalinks: Permalink[] = [],

@@ -27,6 +27,7 @@ export class ProductsService {
 
   async save(product: Product, authContext: AuthContext) {
     const productEntity = await this.productRepository.save({
+      id: product.id,
       name: product.name,
       description: product.description,
       createdByUser: authContext.user,

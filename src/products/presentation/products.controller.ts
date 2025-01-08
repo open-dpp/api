@@ -27,6 +27,7 @@ export class ProductsController {
       createProductDto.name,
       createProductDto.description,
     );
+    product.createPermalink();
     return await this.productsService.save(product, req.authContext);
   }
 

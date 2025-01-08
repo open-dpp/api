@@ -63,6 +63,7 @@ describe('ProductsController', () => {
     const foundPermalinks = await permalinkService.findAllByReferencedId(
       found.id,
     );
+    expect(foundPermalinks).toHaveLength(1);
     for (const permalink of foundPermalinks) {
       expect(permalink.getReference()).toEqual(found.id);
     }

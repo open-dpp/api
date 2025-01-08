@@ -5,19 +5,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('product')
 export class ProductEntity {
-  @Column('char', {
-    primary: true,
-    name: 'id',
-    length: 36,
-  })
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid', { name: 'id' })
   id: string;
 
   @CreateDateColumn()
