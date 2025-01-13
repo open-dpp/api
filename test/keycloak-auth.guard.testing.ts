@@ -5,10 +5,10 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AuthContext } from '../src/auth/auth-request';
-import { makeUser } from '../src/users/entities/user.entity';
+import { User } from '../src/users/domain/user';
 
 export class KeycloakAuthTestingGuard implements CanActivate {
-  constructor(private readonly tokenToUserIdMap: Map<string, string>) {}
+  constructor(private readonly tokenToUserMap: Map<string, User>) {}
   async canActivate(context: ExecutionContext) {
     // const [req] = context.getArgs();
 
@@ -32,9 +32,9 @@ export class KeycloakAuthTestingGuard implements CanActivate {
 
     const accessToken = parts[1];
 
-    if (this.tokenToUserIdMap.has(accessToken)) {
+    if (this.tokenToUserMap.has(accessToken)) {
       const authContext = new AuthContext();
-      authContext.user = makeUser(this.tokenToUserIdMap.get(accessToken));
+      authContext.user = this.tokenToUserMap.get(accessToken);
       request.authContext = authContext;
       return true;
     } else {

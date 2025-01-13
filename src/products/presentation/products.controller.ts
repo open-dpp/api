@@ -28,12 +28,12 @@ export class ProductsController {
       createProductDto.description,
     );
     product.createPermalink();
-    return await this.productsService.save(product, req.authContext);
+    return await this.productsService.save(product, req.authContext.user);
   }
 
   @Get()
   findAll(@Request() req: AuthRequest) {
-    return this.productsService.findAll(req.authContext);
+    return this.productsService.findAll(req.authContext.user);
   }
 
   @Get(':id')
@@ -52,6 +52,6 @@ export class ProductsController {
       updateProductDto.name,
       updateProductDto.description,
     );
-    return this.productsService.save(product, req.authContext);
+    return this.productsService.save(product, req.authContext.user);
   }
 }

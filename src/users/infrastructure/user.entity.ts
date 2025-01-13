@@ -8,11 +8,11 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Organization } from '../../organizations/entities/organization.entity';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { ProductEntity } from '../../products/infrastructure/product.entity';
 
-@Entity()
-export class User {
+@Entity('user')
+export class UserEntity {
   @PrimaryColumn()
   id: string;
 
@@ -25,7 +25,7 @@ export class User {
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date | null;
 
-  @ManyToMany(() => Organization, (organization) => organization.users, {
+  @ManyToMany(() => OrganizationEntity, (organization) => organization.users, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
@@ -36,14 +36,8 @@ export class User {
       { name: 'organization_id', referencedColumnName: 'id' },
     ],
   })
-  organizations: Organization[];
+  organizations: OrganizationEntity[];
 
   @OneToMany(() => ProductEntity, (product) => product)
   products: ProductEntity[];
-}
-
-export function makeUser(id: string) {
-  const user = new User();
-  user.id = id;
-  return user;
 }

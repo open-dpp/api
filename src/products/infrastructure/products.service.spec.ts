@@ -2,42 +2,43 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductEntity } from './product.entity';
-import { makeUser, User } from '../../users/entities/user.entity';
-import { AuthContext } from '../../auth/auth-request';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { UsersService } from '../../users/users.service';
+import { UsersService } from '../../users/infrastructure/users.service';
 import { DataSource } from 'typeorm';
-import { v4 as uuid4 } from 'uuid';
 import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
 import { PermalinkEntity } from '../../permalinks/infrastructure/permalink.entity';
 import { Product } from '../domain/product';
+import { User } from '../../users/domain/user';
+import { randomUUID } from 'crypto';
 
 describe('ProductsService', () => {
   let productService: ProductsService;
+  let userService: UsersService;
   let dataSource: DataSource;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ProductEntity, PermalinkEntity, User]),
+        TypeOrmModule.forFeature([ProductEntity, PermalinkEntity, UserEntity]),
       ],
       providers: [ProductsService, PermalinksService, UsersService],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
     productService = module.get<ProductsService>(ProductsService);
+    userService = module.get<UsersService>(UsersService);
   });
 
   it('should create a product', async () => {
-    const authContext = new AuthContext();
-    authContext.user = makeUser(uuid4());
+    const user = new User(randomUUID());
     const product = new Product(undefined, 'My product', 'This is my product');
-    const { id } = await productService.save(product, authContext);
+    const { id } = await productService.save(product, user);
     const foundProduct = await productService.findOne(id);
     expect(foundProduct.name).toEqual(product.name);
     expect(foundProduct.description).toEqual(product.description);
-    // expect(await userService.findOneById(foundProduct.createdByUserId)).toBeDefined();
+    expect(await userService.findOne(user.id)).toEqual(user);
   });
 
   afterEach(async () => {

@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../auth-request';
 import { HttpService } from '@nestjs/axios';
-import { makeUser } from '../../users/entities/user.entity';
+import { User } from '../../users/domain/user';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -72,7 +72,7 @@ export class KeycloakAuthGuard implements CanActivate {
     }
     // const authContext: AuthContext = await this.keycloakAuthService.getAuthContextFromKeycloakUser(req.user, isPublic);
     const authContext = new AuthContext();
-    authContext.user = makeUser(keycloakId);
+    authContext.user = new User(keycloakId);
     request.authContext = authContext;
     return true;
   }

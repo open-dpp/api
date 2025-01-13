@@ -4,19 +4,14 @@ import {
   DeleteDateColumn,
   Entity,
   ManyToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 
-@Entity()
-export class Organization {
-  @Column('char', {
-    primary: true,
-    name: 'id',
-    length: 36,
-  })
-  @PrimaryGeneratedColumn('uuid')
+@Entity('Organization')
+export class OrganizationEntity {
+  @PrimaryColumn('uuid')
   id: string;
 
   @CreateDateColumn()
@@ -32,9 +27,9 @@ export class Organization {
   name: string;
 
   @ManyToMany(
-    () => User,
+    () => UserEntity,
     (preventionCourse) => preventionCourse.organizations,
     { cascade: ['insert'], onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
-  users: User[];
+  users: UserEntity[];
 }

@@ -8,7 +8,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 
 @Entity('product')
 export class ProductEntity {
@@ -35,11 +35,11 @@ export class ProductEntity {
   })
   createdByUserId: string;
 
-  @ManyToOne(() => User, (user) => user.products, {
+  @ManyToOne(() => UserEntity, (user) => user.products, {
     cascade: ['insert'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
-  createdByUser: User;
+  createdByUser: UserEntity;
 }

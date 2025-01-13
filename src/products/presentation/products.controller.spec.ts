@@ -4,7 +4,7 @@ import { ProductsModule } from '../products.module';
 import * as request from 'supertest';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { ProductEntity } from '../infrastructure/product.entity';
-import { makeUser, User } from '../../users/entities/user.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
@@ -12,8 +12,9 @@ import { ProductsService } from '../infrastructure/products.service';
 import { PermalinksModule } from '../../permalinks/permalinks.module';
 import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
 import { AuthContext } from '../../auth/auth-request';
-import { v4 as uuid4 } from 'uuid';
 import { Product } from '../domain/product';
+import { User } from '../../users/domain/user';
+import { randomUUID } from 'crypto';
 
 describe('ProductsController', () => {
   let app: INestApplication;
@@ -21,13 +22,13 @@ describe('ProductsController', () => {
   let permalinkService: PermalinksService;
   let productsService: ProductsService;
   const authContext = new AuthContext();
-  authContext.user = makeUser(uuid4());
+  authContext.user = new User(randomUUID());
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ProductEntity, User]),
+        TypeOrmModule.forFeature([ProductEntity, UserEntity]),
         ProductsModule,
         PermalinksModule,
       ],
@@ -35,7 +36,7 @@ describe('ProductsController', () => {
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.user.id]]),
+            new Map([['token1', authContext.user]]),
           ),
         },
       ],
@@ -80,7 +81,7 @@ describe('ProductsController', () => {
         async (pn) =>
           await productsService.save(
             new Product(undefined, pn, 'My desc'),
-            authContext,
+            authContext.user,
           ),
       ),
     );

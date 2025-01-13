@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ProductEntity } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthContext } from '../../auth/auth-request';
 import { Product } from '../domain/product';
 import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
 import { Permalink } from '../../permalinks/domain/permalink';
+import { User } from '../../users/domain/user';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 
 @Injectable()
 export class ProductsService {
@@ -15,7 +16,7 @@ export class ProductsService {
     private permalinkService: PermalinksService,
   ) {}
 
-  converToDomain(productEntity: ProductEntity, permalinks: Permalink[]) {
+  convertToDomain(productEntity: ProductEntity, permalinks: Permalink[]) {
     return new Product(
       productEntity.id,
       productEntity.name,
@@ -25,26 +26,28 @@ export class ProductsService {
     );
   }
 
-  async save(product: Product, authContext: AuthContext) {
+  async save(product: Product, user: User) {
+    const userEntity = new UserEntity();
+    userEntity.id = user.id;
     const productEntity = await this.productRepository.save({
       id: product.id,
       name: product.name,
       description: product.description,
-      createdByUser: authContext.user,
+      createdByUser: userEntity,
     });
     for (const permalink of product.permalinks) {
       await this.permalinkService.save(permalink);
     }
-    return this.converToDomain(productEntity, product.permalinks);
+    return this.convertToDomain(productEntity, product.permalinks);
   }
 
-  async findAll(authContext: AuthContext) {
+  async findAll(user: User) {
     const productEntities = await this.productRepository.find({
-      where: { createdByUserId: authContext.user.id },
+      where: { createdByUserId: user.id },
     });
     return await Promise.all(
       productEntities.map(async (entity: ProductEntity) => {
-        return this.converToDomain(
+        return this.convertToDomain(
           entity,
           await this.permalinkService.findAllByReferencedId(entity.id),
         );
@@ -56,7 +59,7 @@ export class ProductsService {
     const productEntity = await this.productRepository.findOne({
       where: { id },
     });
-    return this.converToDomain(
+    return this.convertToDomain(
       productEntity,
       await this.permalinkService.findAllByReferencedId(productEntity.id),
     );

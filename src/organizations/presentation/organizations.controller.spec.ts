@@ -1,14 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
-import { User } from '../users/entities/user.entity';
-import { Organization } from './entities/organization.entity';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { OrganizationEntity } from '../infrastructure/organization.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '../../test/keycloak-auth.guard.testing';
-import { OrganizationsService } from './organizations.service';
-import { OrganizationsModule } from './organizations.module';
+import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import { OrganizationsService } from '../infrastructure/organizations.service';
+import { OrganizationsModule } from '../organizations.module';
+import { User } from '../../users/domain/user';
 
 describe('OrganizationController', () => {
   let app: INestApplication;
@@ -18,14 +19,14 @@ describe('OrganizationController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([Organization, User]),
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
         OrganizationsModule,
       ],
       providers: [
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', 'user1']]),
+            new Map([['token1', new User('user1')]]),
           ),
         },
       ],
