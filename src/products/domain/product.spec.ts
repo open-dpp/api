@@ -1,7 +1,7 @@
 import { Product } from './product';
 
 describe('Product', () => {
-  it('should create permalinks', () => {
+  it('should create permalinks on product creation', () => {
     const product = new Product(undefined, 'My product', 'This is my product');
     const permalink1 = product.createPermalink();
     const permalink2 = product.createPermalink();

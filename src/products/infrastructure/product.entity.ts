@@ -4,11 +4,13 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
+import { ItemEntity } from '../../items/infrastructure/item.entity';
 
 @Entity('product')
 export class ProductEntity {
@@ -42,4 +44,7 @@ export class ProductEntity {
   })
   @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
   createdByUser: UserEntity;
+
+  @ManyToMany(() => ItemEntity, (item) => item.product)
+  items: ItemEntity[];
 }
