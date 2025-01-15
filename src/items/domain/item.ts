@@ -1,10 +1,14 @@
 import { randomUUID } from 'crypto';
 
 export class Item {
-  public model: string;
+  private _model: string;
   constructor(public readonly id: string = randomUUID()) {}
 
+  get model() {
+    return this._model;
+  }
+
   defineModel(modelId: string) {
-    this.model = modelId;
+    this._model = modelId;
   }
 }

@@ -39,37 +39,35 @@ describe('ProductsService', () => {
   });
 
   it('should create and find item for a model', async () => {
-    const model = await productService.save(
-      new Product(undefined, 'name', 'description'),
-      new User(randomUUID()),
-    );
+    const model = new Product(undefined, 'name', 'description');
+    model.assignOwner(new User(randomUUID()));
+    const savedModel = await productService.save(model);
     const item = new Item();
-    item.defineModel(model.id);
+    item.defineModel(savedModel.id);
     const savedItem = await itemService.save(item);
-    expect(savedItem.model).toEqual(model.id);
+    expect(savedItem.model).toEqual(savedModel.id);
     const foundItem = await itemService.findById(item.id);
-    expect(foundItem.model).toEqual(model.id);
+    expect(foundItem.model).toEqual(savedModel.id);
   });
 
   it('should create multiple items for a model and find them by model', async () => {
-    const model = await productService.save(
-      new Product(undefined, 'name', 'description'),
-      new User(randomUUID()),
-    );
-    const model2 = await productService.save(
-      new Product(undefined, 'name', 'description'),
-      new User(randomUUID()),
-    );
+    const model = new Product(undefined, 'name', 'description');
+    const user = new User(randomUUID());
+    model.assignOwner(user);
+    const model2 = new Product(undefined, 'name', 'description');
+    model2.assignOwner(user);
+    const savedModel1 = await productService.save(model);
+    const savedModel2 = await productService.save(model2);
     const item1 = new Item();
-    item1.defineModel(model.id);
+    item1.defineModel(savedModel1.id);
     const item2 = new Item();
-    item2.defineModel(model.id);
+    item2.defineModel(savedModel1.id);
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = new Item();
-    item3.defineModel(model2.id);
+    item3.defineModel(savedModel2.id);
 
-    const foundItems = await itemService.findAllByModel(model);
+    const foundItems = await itemService.findAllByModel(savedModel1.id);
     expect(foundItems).toEqual([item1, item2]);
   });
 

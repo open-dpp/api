@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from '../../products/domain/product';
 import { ItemEntity } from './item.entity';
 import { Item } from '../domain/item';
 import { ProductEntity } from '../../products/infrastructure/product.entity';
@@ -17,17 +16,17 @@ export class ItemsService {
 
   convertToDomain(itemEntity: ItemEntity) {
     const item = new Item(itemEntity.id);
-    item.defineModel(itemEntity.productId);
+    item.defineModel(itemEntity.modelId);
     return item;
   }
 
   async save(item: Item) {
-    const productEntity = await this.productsRepository.findOne({
+    const modelEntity = await this.productsRepository.findOne({
       where: { id: item.model },
     });
     const itemEntity = await this.itemsRepository.save({
       id: item.id,
-      product: productEntity,
+      model: modelEntity,
     });
     return this.convertToDomain(itemEntity);
   }
@@ -38,11 +37,11 @@ export class ItemsService {
     );
   }
 
-  async findAllByModel(product: Product) {
+  async findAllByModel(modelId: string) {
     const itemEntities = await this.itemsRepository.find({
       where: {
-        product: {
-          id: product.id,
+        model: {
+          id: modelId,
         },
       },
     });

@@ -22,13 +22,14 @@ export class ProductsService {
       productEntity.name,
       productEntity.description,
       permalinks,
+      productEntity.createdByUserId,
       productEntity.createdAt,
     );
   }
 
-  async save(product: Product, user: User) {
+  async save(product: Product) {
     const userEntity = new UserEntity();
-    userEntity.id = user.id;
+    userEntity.id = product.owner;
     const productEntity = await this.productRepository.save({
       id: product.id,
       name: product.name,
@@ -41,7 +42,7 @@ export class ProductsService {
     return this.convertToDomain(productEntity, product.permalinks);
   }
 
-  async findAll(user: User) {
+  async findAllByUser(user: User) {
     const productEntities = await this.productRepository.find({
       where: { createdByUserId: user.id },
     });

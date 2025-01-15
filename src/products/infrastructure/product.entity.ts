@@ -45,6 +45,6 @@ export class ProductEntity {
   @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
   createdByUser: UserEntity;
 
-  @ManyToMany(() => ItemEntity, (item) => item.product)
+  @ManyToMany(() => ItemEntity, (item) => item.model)
   items: ItemEntity[];
 }

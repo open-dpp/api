@@ -77,13 +77,11 @@ describe('ProductsController', () => {
   it(`/GET products`, async () => {
     const productNames = ['P1', 'P2'];
     const products = await Promise.all(
-      productNames.map(
-        async (pn) =>
-          await productsService.save(
-            new Product(undefined, pn, 'My desc'),
-            authContext.user,
-          ),
-      ),
+      productNames.map(async (pn) => {
+        const product = new Product(undefined, pn, 'My desc');
+        product.assignOwner(authContext.user);
+        return await productsService.save(product);
+      }),
     );
     const response = await request(app.getHttpServer())
       .get('/products')
