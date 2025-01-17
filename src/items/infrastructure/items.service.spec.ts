@@ -43,7 +43,7 @@ describe('ProductsService', () => {
     model.assignOwner(new User(randomUUID()));
     const savedModel = await productService.save(model);
     const item = new Item();
-    item.defineModel(savedModel.id);
+    item.defineModel({ modelId: savedModel.id, modelOwner: savedModel.owner });
     const savedItem = await itemService.save(item);
     expect(savedItem.model).toEqual(savedModel.id);
     const foundItem = await itemService.findById(item.id);
@@ -59,13 +59,22 @@ describe('ProductsService', () => {
     const savedModel1 = await productService.save(model);
     const savedModel2 = await productService.save(model2);
     const item1 = new Item();
-    item1.defineModel(savedModel1.id);
+    item1.defineModel({
+      modelId: savedModel1.id,
+      modelOwner: savedModel1.owner,
+    });
     const item2 = new Item();
-    item2.defineModel(savedModel1.id);
+    item2.defineModel({
+      modelId: savedModel1.id,
+      modelOwner: savedModel1.owner,
+    });
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = new Item();
-    item3.defineModel(savedModel2.id);
+    item3.defineModel({
+      modelId: savedModel2.id,
+      modelOwner: savedModel2.owner,
+    });
 
     const foundItems = await itemService.findAllByModel(savedModel1.id);
     expect(foundItems).toEqual([item1, item2]);

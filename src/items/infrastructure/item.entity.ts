@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
 import { ProductEntity } from '../../products/infrastructure/product.entity';
 
 @Entity('item')
@@ -9,4 +9,6 @@ export class ItemEntity {
   model: ProductEntity;
   @RelationId((item: ItemEntity) => item.model)
   modelId: string;
+  @Column('uuid')
+  ownerId: string;
 }

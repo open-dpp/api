@@ -12,6 +12,7 @@ import { Item } from '../domain/item';
 import { ProductsService } from '../../products/infrastructure/products.service';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
+import { defineAbilityFor } from '../../auth/abilities/item.ability';
 
 @Controller('models/:modelId/items')
 export class ItemsController {
@@ -22,18 +23,29 @@ export class ItemsController {
 
   @Post()
   async create(@Param('modelId') modelId: string, @Request() req: AuthRequest) {
-    await this.checkPermission(req, modelId);
+    const model = await this.productsService.findOne(modelId);
     const item = new Item();
-    item.defineModel(modelId);
-    return this.itemToDto(await this.itemsService.save(item));
+    item.defineModel({ modelId: model.id, modelOwner: model.owner });
+    const ability = defineAbilityFor(req.authContext.user);
+    if (ability.can('create', item)) {
+      return this.itemToDto(await this.itemsService.save(item));
+    } else {
+      throw new ForbiddenException();
+    }
   }
 
   @Get()
   async getAll(@Param('modelId') modelId: string, @Request() req: AuthRequest) {
-    await this.checkPermission(req, modelId);
-    return (await this.itemsService.findAllByModel(modelId)).map((item) =>
-      this.itemToDto(item),
-    );
+    const items = await this.itemsService.findAllByModel(modelId);
+    const ability = defineAbilityFor(req.authContext.user);
+
+    return items.map((item) => {
+      if (ability.can('readAll', item)) {
+        return this.itemToDto(item);
+      } else {
+        throw new ForbiddenException();
+      }
+    });
   }
 
   @Get(':id')

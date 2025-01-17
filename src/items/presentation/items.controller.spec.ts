@@ -73,61 +73,61 @@ describe('ItemsController', () => {
   });
 
   it(`/GET item`, async () => {
-    const product = new Product(undefined, 'name', 'description');
-    product.assignOwner(authContext.user);
-    await productsService.save(product);
+    const model = new Product(undefined, 'name', 'description');
+    model.assignOwner(authContext.user);
+    await productsService.save(model);
     const item = new Item();
-    item.defineModel(product.id);
+    item.defineModel({ modelId: model.id, modelOwner: model.owner });
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
-      .get(`/models/${product.id}/items/${item.id}`)
+      .get(`/models/${model.id}/items/${item.id}`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({ id: item.id });
   });
 
   it(`/GET item fails caused by missing permissions`, async () => {
-    const product = new Product(undefined, 'name', 'description');
-    product.assignOwner(new User(randomUUID()));
-    await productsService.save(product);
+    const model = new Product(undefined, 'name', 'description');
+    model.assignOwner(new User(randomUUID()));
+    await productsService.save(model);
     const item = new Item();
-    item.defineModel(product.id);
+    item.defineModel({ modelId: model.id, modelOwner: model.owner });
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
-      .get(`/models/${product.id}/items/${item.id}`)
+      .get(`/models/${model.id}/items/${item.id}`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(403);
   });
 
   it(`/GET all item`, async () => {
-    const product = new Product(undefined, 'name', 'description');
-    product.assignOwner(authContext.user);
-    await productsService.save(product);
+    const model = new Product(undefined, 'name', 'description');
+    model.assignOwner(authContext.user);
+    await productsService.save(model);
     const item = new Item();
-    item.defineModel(product.id);
+    item.defineModel({ modelId: model.id, modelOwner: model.owner });
     await itemsService.save(item);
     const item2 = new Item();
-    item2.defineModel(product.id);
+    item2.defineModel({ modelId: model.id, modelOwner: model.owner });
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
-      .get(`/models/${product.id}/items`)
+      .get(`/models/${model.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([{ id: item.id }, { id: item2.id }]);
   });
 
   it(`/GET all item fails caused by missing permissions`, async () => {
-    const product = new Product(undefined, 'name', 'description');
-    product.assignOwner(new User(randomUUID()));
-    await productsService.save(product);
+    const model = new Product(undefined, 'name', 'description');
+    model.assignOwner(new User(randomUUID()));
+    await productsService.save(model);
     const item = new Item();
-    item.defineModel(product.id);
+    item.defineModel({ modelId: model.id, modelOwner: model.owner });
     await itemsService.save(item);
     const item2 = new Item();
-    item2.defineModel(product.id);
+    item2.defineModel({ modelId: model.id, modelOwner: model.owner });
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
-      .get(`/models/${product.id}/items`)
+      .get(`/models/${model.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(403);
   });

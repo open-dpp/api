@@ -16,7 +16,10 @@ export class ItemsService {
 
   convertToDomain(itemEntity: ItemEntity) {
     const item = new Item(itemEntity.id);
-    item.defineModel(itemEntity.modelId);
+    item.defineModel({
+      modelId: itemEntity.modelId,
+      modelOwner: itemEntity.ownerId,
+    });
     return item;
   }
 
@@ -27,6 +30,7 @@ export class ItemsService {
     const itemEntity = await this.itemsRepository.save({
       id: item.id,
       model: modelEntity,
+      ownerId: modelEntity.createdByUserId,
     });
     return this.convertToDomain(itemEntity);
   }
