@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from './auth/keycloak-auth/keycloak-auth.guard';
 import { HttpModule } from '@nestjs/axios';
+import { ItemsModule } from './items/items.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { HttpModule } from '@nestjs/axios';
       }),
       inject: [ConfigService],
     }),
+    ItemsModule,
     ProductsModule,
     OrganizationsModule,
     UsersModule,
