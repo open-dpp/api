@@ -14,22 +14,8 @@ $ npm install
 ```
 
 ## Configure service
-For the service configuration create an _.env_ file with the following content:
-```dotenv
-DB_HOST=localhost
-DB_PORT=20003
-DB_USERNAME=open-dpp
-DB_PASSWORD=open-dpp
-DB_DATABASE=open-dpp
-KEYCLOAK_PUBLIC_URL=http://localhost:20000
-KEYCLOAK_NETWORK_URL=http://localhost:20000
-KEYCLOAK_REALM=open-dpp
-KEYCLOAK_CLIENT=backend
-KEYCLOAK_ADMIN_REALM=master
-KEYCLOAK_ADMIN_CLIENT=admin-cli
-KEYCLOAK_ADMIN_USERNAME=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
-```
+For the service configuration create an _.env_ file by copying one from the [env-template](env-templates) into the root folder.
+
 ## Database and Authentication
 Start the [PostgreSQL](https://www.postgresql.org/) database together with the authentication service [KEYCLOAK](https://www.keycloak.org/) with [Docker Compose](https://docs.docker.com/compose/).
 ```bash
