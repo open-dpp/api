@@ -77,9 +77,9 @@ jobs:
         env:
           DB_HOST: localhost
           DB_PORT: 20003
-          DB_USERNAME: open-dpp
-          DB_PASSWORD: open-dpp
-          DB_DATABASE: open-dpp
+          DB_USERNAME: admin
+          DB_PASSWORD: admin
+          DB_DATABASE: management
         run: npm test
 
   build-publish-docker-image:
