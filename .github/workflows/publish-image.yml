@@ -52,7 +52,7 @@ jobs:
 
       - name: Start database
         run: |
-          docker compose up -d api-db
+          docker compose up -f docker-compose-tests.yml
 
       # Step 2: Set up Node.js
       - name: Set up Node.js
