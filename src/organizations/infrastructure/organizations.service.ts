@@ -32,7 +32,9 @@ export class OrganizationsService {
       await this.organizationRepository.save({
         id: organization.id,
         name: organization.name,
-        users: organization.members.map((u) => this.convertUserToEntity(u)),
+        users: organization.members
+          ? organization.members.map((u) => this.convertUserToEntity(u))
+          : [],
       }),
     );
   }
