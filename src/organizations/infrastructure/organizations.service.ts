@@ -23,7 +23,9 @@ export class OrganizationsService {
     return new Organization(
       organizationEntity.id,
       organizationEntity.name,
-      organizationEntity.users.map((u) => new User(u.id)),
+      organizationEntity.users
+        ? organizationEntity.users.map((u) => new User(u.id))
+        : [],
     );
   }
 
