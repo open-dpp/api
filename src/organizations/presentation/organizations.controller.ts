@@ -12,6 +12,7 @@ export class OrganizationsController {
     const organization = new Organization(
       undefined,
       createOrganizationDto.name,
+      [],
     );
     return this.organizationsService.save(organization);
   }
