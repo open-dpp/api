@@ -42,9 +42,13 @@ export class OrganizationsService {
   }
 
   async findAll() {
-    return (await this.organizationRepository.find()).map((o) =>
-      this.convertToDomain(o),
-    );
+    return (
+      await this.organizationRepository.find({
+        relations: {
+          users: true,
+        },
+      })
+    ).map((o) => this.convertToDomain(o));
   }
 
   async findOne(id: string) {
