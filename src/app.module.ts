@@ -11,7 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from './auth/keycloak-auth/keycloak-auth.guard';
 import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
-
+import * as path from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,10 +26,12 @@ import { ItemsModule } from './items/items.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [],
-        synchronize: true,
+        synchronize: false,
         autoLoadEntities: true,
         dropSchema: false,
+        migrationsTransactionMode: 'each',
+        migrationsRun: true,
+        migrations: [path.join(__dirname, '/migrations/**/*{.ts,.js}')],
       }),
       inject: [ConfigService],
     }),
