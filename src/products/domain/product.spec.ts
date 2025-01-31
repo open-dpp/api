@@ -3,13 +3,13 @@ import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 
 describe('Product', () => {
-  it('should create permalinks on product creation', () => {
+  it('should create unique product identifiers on product creation', () => {
     const product = new Product(undefined, 'My product', 'This is my product');
-    const permalink1 = product.createPermalink();
-    const permalink2 = product.createPermalink();
+    const permalink1 = product.createUniqueProductIdentifier();
+    const permalink2 = product.createUniqueProductIdentifier();
 
     expect(product.id).toBeDefined();
-    expect(product.permalinks).toEqual([permalink1, permalink2]);
+    expect(product.uniqueProductIdentifiers).toEqual([permalink1, permalink2]);
     expect(permalink1.getReference()).toEqual(product.id);
     expect(permalink2.getReference()).toEqual(product.id);
   });

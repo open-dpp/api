@@ -5,8 +5,8 @@ import { ProductEntity } from '../../products/infrastructure/product.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { DataSource } from 'typeorm';
-import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
-import { PermalinkEntity } from '../../permalinks/infrastructure/permalink.entity';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
+import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { Product } from '../../products/domain/product';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
@@ -25,12 +25,16 @@ describe('ProductsService', () => {
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([
           ProductEntity,
-          PermalinkEntity,
+          UniqueProductIdentifierEntity,
           UserEntity,
           ItemEntity,
         ]),
       ],
-      providers: [ItemsService, ProductsService, PermalinksService],
+      providers: [
+        ItemsService,
+        ProductsService,
+        UniqueProductIdentifierService,
+      ],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);

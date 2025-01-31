@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('permalink')
-export class PermalinkEntity {
+@Entity('unique_product_identifier')
+export class UniqueProductIdentifierEntity {
   @PrimaryColumn()
   uuid: string;
 

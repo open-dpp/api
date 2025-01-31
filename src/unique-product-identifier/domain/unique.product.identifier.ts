@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-export class Permalink {
+export class UniqueProductIdentifier {
   private referenceId?: string;
   constructor(
     public readonly uuid: string = randomUUID(),

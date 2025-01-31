@@ -5,7 +5,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { KeycloakImportModule } from './keycloak-import/keycloak-import.module';
-import { PermalinksModule } from './permalinks/permalinks.module';
+import { UniqueProductIdentifierModule } from './unique-product-identifier/unique.product.identifier.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from './auth/keycloak-auth/keycloak-auth.guard';
@@ -36,7 +36,7 @@ import { generateConfig } from './database/config';
     OrganizationsModule,
     UsersModule,
     KeycloakImportModule,
-    PermalinksModule,
+    UniqueProductIdentifierModule,
     AuthModule,
     HttpModule,
   ],

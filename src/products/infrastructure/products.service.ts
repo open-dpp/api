@@ -3,8 +3,8 @@ import { ProductEntity } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../domain/product';
-import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
-import { Permalink } from '../../permalinks/domain/permalink';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
+import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { User } from '../../users/domain/user';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 
@@ -13,10 +13,13 @@ export class ProductsService {
   constructor(
     @InjectRepository(ProductEntity)
     private productRepository: Repository<ProductEntity>,
-    private permalinkService: PermalinksService,
+    private permalinkService: UniqueProductIdentifierService,
   ) {}
 
-  convertToDomain(productEntity: ProductEntity, permalinks: Permalink[]) {
+  convertToDomain(
+    productEntity: ProductEntity,
+    permalinks: UniqueProductIdentifier[],
+  ) {
     return new Product(
       productEntity.id,
       productEntity.name,
@@ -36,10 +39,13 @@ export class ProductsService {
       description: product.description,
       createdByUser: userEntity,
     });
-    for (const permalink of product.permalinks) {
+    for (const permalink of product.uniqueProductIdentifiers) {
       await this.permalinkService.save(permalink);
     }
-    return this.convertToDomain(productEntity, product.permalinks);
+    return this.convertToDomain(
+      productEntity,
+      product.uniqueProductIdentifiers,
+    );
   }
 
   async findAllByUser(user: User) {
