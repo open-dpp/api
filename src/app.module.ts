@@ -12,6 +12,7 @@ import { KeycloakAuthGuard } from './auth/keycloak-auth/keycloak-auth.guard';
 import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
 import * as path from 'path';
+import { generateConfig } from './database/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,18 +21,13 @@ import * as path from 'path';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        synchronize: false,
+        ...generateConfig(
+          configService,
+          path.join(__dirname, '/migrations/**/*{.ts,.js}'),
+        ),
         autoLoadEntities: true,
-        dropSchema: false,
         migrationsTransactionMode: 'each',
         migrationsRun: true,
-        migrations: [path.join(__dirname, '/migrations/**/*{.ts,.js}')],
       }),
       inject: [ConfigService],
     }),
