@@ -66,11 +66,11 @@ describe('ProductsController', () => {
     const foundUniqueProductIdentifiers =
       await uniqueProductIdentifierService.findAllByReferencedId(found.id);
     expect(foundUniqueProductIdentifiers).toHaveLength(1);
-    for (const permalink of foundUniqueProductIdentifiers) {
-      expect(permalink.getReference()).toEqual(found.id);
+    for (const uniqueProductIdentifier of foundUniqueProductIdentifiers) {
+      expect(uniqueProductIdentifier.getReference()).toEqual(found.id);
     }
     const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
-    expect([...response.body.permalinks].sort(sortFn)).toEqual(
+    expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
       [...foundUniqueProductIdentifiers].sort(sortFn),
     );
   });
@@ -88,7 +88,9 @@ describe('ProductsController', () => {
       .get('/products')
       .set('Authorization', 'Bearer token1');
     for (const product of products) {
-      expect(response.body.find((p) => p.id === product.id).permalinks).toEqual(
+      expect(
+        response.body.find((p) => p.id === product.id).uniqueProductIdentifiers,
+      ).toEqual(
         await uniqueProductIdentifierService.findAllByReferencedId(product.id),
       );
     }
