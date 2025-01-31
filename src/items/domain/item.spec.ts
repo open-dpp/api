@@ -9,4 +9,18 @@ describe('Item', () => {
     item.defineModel(productId);
     expect(item.model).toEqual(productId);
   });
+
+  it('should create unique product identifier on item creation', () => {
+    const item = new Item();
+    const uniqueProductIdentifier1 = item.createUniqueProductIdentifier();
+    const uniqueProductIdentifier2 = item.createUniqueProductIdentifier();
+
+    expect(item.id).toBeDefined();
+    expect(item.uniqueProductIdentifiers).toEqual([
+      uniqueProductIdentifier1,
+      uniqueProductIdentifier2,
+    ]);
+    expect(uniqueProductIdentifier1.getReference()).toEqual(item.id);
+    expect(uniqueProductIdentifier2.getReference()).toEqual(item.id);
+  });
 });
