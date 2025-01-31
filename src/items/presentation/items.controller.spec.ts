@@ -8,7 +8,7 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductEntity } from '../../products/infrastructure/product.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import { PermalinksModule } from '../../permalinks/permalinks.module';
+import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import * as request from 'supertest';
@@ -30,7 +30,7 @@ describe('ItemsController', () => {
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([ProductEntity, UserEntity]),
         ItemsModule,
-        PermalinksModule,
+        UniqueProductIdentifierModule,
       ],
       providers: [
         {

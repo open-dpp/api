@@ -9,8 +9,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { ProductsService } from '../infrastructure/products.service';
-import { PermalinksModule } from '../../permalinks/permalinks.module';
-import { PermalinksService } from '../../permalinks/infrastructure/permalinks.service';
+import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { AuthContext } from '../../auth/auth-request';
 import { Product } from '../domain/product';
 import { User } from '../../users/domain/user';
@@ -19,7 +19,7 @@ import { randomUUID } from 'crypto';
 describe('ProductsController', () => {
   let app: INestApplication;
   let service: ProductsService;
-  let permalinkService: PermalinksService;
+  let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let productsService: ProductsService;
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID());
@@ -30,7 +30,7 @@ describe('ProductsController', () => {
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([ProductEntity, UserEntity]),
         ProductsModule,
-        PermalinksModule,
+        UniqueProductIdentifierModule,
       ],
       providers: [
         {
@@ -43,7 +43,9 @@ describe('ProductsController', () => {
     }).compile();
 
     service = moduleRef.get<ProductsService>(ProductsService);
-    permalinkService = moduleRef.get(PermalinksService);
+    uniqueProductIdentifierService = moduleRef.get(
+      UniqueProductIdentifierService,
+    );
     productsService = moduleRef.get(ProductsService);
 
     app = moduleRef.createNestApplication();
@@ -61,16 +63,15 @@ describe('ProductsController', () => {
     const found = await service.findOne(response.body.id);
     expect(response.body.id).toEqual(found.id);
 
-    const foundPermalinks = await permalinkService.findAllByReferencedId(
-      found.id,
-    );
-    expect(foundPermalinks).toHaveLength(1);
-    for (const permalink of foundPermalinks) {
+    const foundUniqueProductIdentifiers =
+      await uniqueProductIdentifierService.findAllByReferencedId(found.id);
+    expect(foundUniqueProductIdentifiers).toHaveLength(1);
+    for (const permalink of foundUniqueProductIdentifiers) {
       expect(permalink.getReference()).toEqual(found.id);
     }
     const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
     expect([...response.body.permalinks].sort(sortFn)).toEqual(
-      [...foundPermalinks].sort(sortFn),
+      [...foundUniqueProductIdentifiers].sort(sortFn),
     );
   });
 
@@ -88,7 +89,7 @@ describe('ProductsController', () => {
       .set('Authorization', 'Bearer token1');
     for (const product of products) {
       expect(response.body.find((p) => p.id === product.id).permalinks).toEqual(
-        await permalinkService.findAllByReferencedId(product.id),
+        await uniqueProductIdentifierService.findAllByReferencedId(product.id),
       );
     }
   });
