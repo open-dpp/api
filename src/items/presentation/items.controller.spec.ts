@@ -16,11 +16,14 @@ import { Product } from '../../products/domain/product';
 import { ItemsService } from '../infrastructure/items.service';
 import { ItemsModule } from '../items.module';
 import { Item } from '../domain/item';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let productsService: ProductsService;
+  let uniqueProductIdentifierService: UniqueProductIdentifierService;
+
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID());
 
@@ -44,6 +47,9 @@ describe('ItemsController', () => {
 
     productsService = moduleRef.get(ProductsService);
     itemsService = moduleRef.get(ItemsService);
+    uniqueProductIdentifierService = moduleRef.get(
+      UniqueProductIdentifierService,
+    );
 
     app = moduleRef.createNestApplication();
 
@@ -59,7 +65,19 @@ describe('ItemsController', () => {
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(201);
     const found = await itemsService.findById(response.body.id);
-    expect(response.body).toEqual({ id: found.id });
+    const foundUniqueProductIdentifiers =
+      await uniqueProductIdentifierService.findAllByReferencedId(found.id);
+    expect(foundUniqueProductIdentifiers).toHaveLength(1);
+    expect(response.body).toEqual({
+      id: found.id,
+      uniqueProductIdentifiers: [
+        {
+          uuid: foundUniqueProductIdentifiers[0].uuid,
+          view: foundUniqueProductIdentifiers[0].view,
+          referenceId: found.id,
+        },
+      ],
+    });
   });
 
   it(`/CREATE item fails cause of missing permissions`, async () => {
@@ -78,12 +96,22 @@ describe('ItemsController', () => {
     await productsService.save(product);
     const item = new Item();
     item.defineModel(product.id);
+    const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(`/models/${product.id}/items/${item.id}`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual({ id: item.id });
+    expect(response.body).toEqual({
+      id: item.id,
+      uniqueProductIdentifiers: [
+        {
+          referenceId: item.id,
+          uuid: uniqueProductId.uuid,
+          view: uniqueProductId.view,
+        },
+      ],
+    });
   });
 
   it(`/GET item fails caused by missing permissions`, async () => {
@@ -105,15 +133,38 @@ describe('ItemsController', () => {
     await productsService.save(product);
     const item = new Item();
     item.defineModel(product.id);
+    const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const item2 = new Item();
+    const uniqueProductId2 = item2.createUniqueProductIdentifier();
     item2.defineModel(product.id);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/models/${product.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual([{ id: item.id }, { id: item2.id }]);
+    expect(response.body).toEqual([
+      {
+        id: item.id,
+        uniqueProductIdentifiers: [
+          {
+            referenceId: item.id,
+            uuid: uniqueProductId1.uuid,
+            view: uniqueProductId1.view,
+          },
+        ],
+      },
+      {
+        id: item2.id,
+        uniqueProductIdentifiers: [
+          {
+            referenceId: item2.id,
+            uuid: uniqueProductId2.uuid,
+            view: uniqueProductId2.view,
+          },
+        ],
+      },
+    ]);
   });
 
   it(`/GET all item fails caused by missing permissions`, async () => {

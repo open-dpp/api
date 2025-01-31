@@ -13,18 +13,18 @@ export class ProductsService {
   constructor(
     @InjectRepository(ProductEntity)
     private productRepository: Repository<ProductEntity>,
-    private permalinkService: UniqueProductIdentifierService,
+    private uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   convertToDomain(
     productEntity: ProductEntity,
-    permalinks: UniqueProductIdentifier[],
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
     return new Product(
       productEntity.id,
       productEntity.name,
       productEntity.description,
-      permalinks,
+      uniqueProductIdentifiers,
       productEntity.createdByUserId,
       productEntity.createdAt,
     );
@@ -39,8 +39,8 @@ export class ProductsService {
       description: product.description,
       createdByUser: userEntity,
     });
-    for (const permalink of product.uniqueProductIdentifiers) {
-      await this.permalinkService.save(permalink);
+    for (const uniqueProductIdentifier of product.uniqueProductIdentifiers) {
+      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
     }
     return this.convertToDomain(
       productEntity,
@@ -56,7 +56,9 @@ export class ProductsService {
       productEntities.map(async (entity: ProductEntity) => {
         return this.convertToDomain(
           entity,
-          await this.permalinkService.findAllByReferencedId(entity.id),
+          await this.uniqueProductIdentifierService.findAllByReferencedId(
+            entity.id,
+          ),
         );
       }),
     );
@@ -68,7 +70,9 @@ export class ProductsService {
     });
     return this.convertToDomain(
       productEntity,
-      await this.permalinkService.findAllByReferencedId(productEntity.id),
+      await this.uniqueProductIdentifierService.findAllByReferencedId(
+        productEntity.id,
+      ),
     );
   }
 }

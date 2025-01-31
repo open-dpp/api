@@ -25,6 +25,7 @@ export class ItemsController {
     await this.checkPermission(req, modelId);
     const item = new Item();
     item.defineModel(modelId);
+    item.createUniqueProductIdentifier();
     return this.itemToDto(await this.itemsService.save(item));
   }
 
@@ -47,7 +48,10 @@ export class ItemsController {
   }
 
   private itemToDto(item: Item) {
-    return plainToInstance(GetItemDto, { id: item.id });
+    return plainToInstance(GetItemDto, {
+      id: item.id,
+      uniqueProductIdentifiers: item.uniqueProductIdentifiers,
+    });
   }
 
   private async checkPermission(req: AuthRequest, modelId: string) {

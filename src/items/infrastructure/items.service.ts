@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { ItemEntity } from './item.entity';
 import { Item } from '../domain/item';
 import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
+import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 @Injectable()
 export class ItemsService {
@@ -12,10 +14,14 @@ export class ItemsService {
     private itemsRepository: Repository<ItemEntity>,
     @InjectRepository(ProductEntity)
     private productsRepository: Repository<ProductEntity>,
+    private uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {}
 
-  convertToDomain(itemEntity: ItemEntity) {
-    const item = new Item(itemEntity.id);
+  convertToDomain(
+    itemEntity: ItemEntity,
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
+  ) {
+    const item = new Item(itemEntity.id, uniqueProductIdentifiers);
     item.defineModel(itemEntity.modelId);
     return item;
   }
@@ -28,12 +34,19 @@ export class ItemsService {
       id: item.id,
       model: modelEntity,
     });
-    return this.convertToDomain(itemEntity);
+    for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
+      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
+    }
+    return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
   }
 
   async findById(id: string) {
+    const itemEntity = await this.itemsRepository.findOne({ where: { id } });
     return this.convertToDomain(
-      await this.itemsRepository.findOne({ where: { id } }),
+      itemEntity,
+      await this.uniqueProductIdentifierService.findAllByReferencedId(
+        itemEntity.id,
+      ),
     );
   }
 
@@ -45,6 +58,15 @@ export class ItemsService {
         },
       },
     });
-    return itemEntities.map((ie) => this.convertToDomain(ie));
+    return await Promise.all(
+      itemEntities.map(async (ie) =>
+        this.convertToDomain(
+          ie,
+          await this.uniqueProductIdentifierService.findAllByReferencedId(
+            ie.id,
+          ),
+        ),
+      ),
+    );
   }
 }
