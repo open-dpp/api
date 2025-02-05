@@ -20,7 +20,7 @@ describe('ModelsController', () => {
   let app: INestApplication;
   let service: ModelsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  let productsService: ModelsService;
+  let modelsService: ModelsService;
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID());
 
@@ -46,17 +46,17 @@ describe('ModelsController', () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    productsService = moduleRef.get(ModelsService);
+    modelsService = moduleRef.get(ModelsService);
 
     app = moduleRef.createNestApplication();
 
     await app.init();
   });
 
-  it(`/CREATE product`, async () => {
+  it(`/CREATE model`, async () => {
     const body = { name: 'My name', description: 'My desc' };
     const response = await request(app.getHttpServer())
-      .post('/products')
+      .post('/models')
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(201);
@@ -75,23 +75,23 @@ describe('ModelsController', () => {
     );
   });
 
-  it(`/GET products`, async () => {
-    const productNames = ['P1', 'P2'];
-    const products = await Promise.all(
-      productNames.map(async (pn) => {
-        const product = new Model(undefined, pn, 'My desc');
-        product.assignOwner(authContext.user);
-        return await productsService.save(product);
+  it(`/GET models`, async () => {
+    const modelNames = ['P1', 'P2'];
+    const models = await Promise.all(
+      modelNames.map(async (pn) => {
+        const model = new Model(undefined, pn, 'My desc');
+        model.assignOwner(authContext.user);
+        return await modelsService.save(model);
       }),
     );
     const response = await request(app.getHttpServer())
-      .get('/products')
+      .get('/models')
       .set('Authorization', 'Bearer token1');
-    for (const product of products) {
+    for (const model of models) {
       expect(
-        response.body.find((p) => p.id === product.id).uniqueProductIdentifiers,
+        response.body.find((p) => p.id === model.id).uniqueProductIdentifiers,
       ).toEqual(
-        await uniqueProductIdentifierService.findAllByReferencedId(product.id),
+        await uniqueProductIdentifierService.findAllByReferencedId(model.id),
       );
     }
   });

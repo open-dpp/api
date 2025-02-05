@@ -1,17 +1,12 @@
-import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { OrganizationsService } from '../infrastructure/organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { Organization } from '../domain/organization';
 import { HasPermissions } from '../../auth/permissions/permissions.decorator';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { AuthRequest } from '../../auth/auth-request';
 
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(
-    private readonly organizationsService: OrganizationsService,
-    private readonly keycloakResourcesService: KeycloakResourcesService,
-  ) {}
+  constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Post()
   create(
@@ -34,14 +29,7 @@ export class OrganizationsController {
 
   @Get(':id')
   @HasPermissions()
-  findOne(@Param('id') id: string, @Request() req: AuthRequest) {
-    // check permission
-    const allowed =
-      req.authContext.permissions.find(
-        (per) =>
-          per.rsname === 'organization-' + id &&
-          per.scopes.includes('organization:read'),
-      ) !== undefined;
+  findOne(@Param('id') id: string) {
     return this.organizationsService.findOne(id);
   }
 }
