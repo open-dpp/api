@@ -9,7 +9,9 @@ describe('KeycloakResourcesController', () => {
       controllers: [KeycloakResourcesController],
     }).compile();
 
-    controller = module.get<KeycloakResourcesController>(KeycloakResourcesController);
+    controller = module.get<KeycloakResourcesController>(
+      KeycloakResourcesController,
+    );
   });
 
   it('should be defined', () => {
