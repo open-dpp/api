@@ -4,10 +4,14 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../../auth/auth-request';
+import KcAdminClient from '@keycloak/keycloak-admin-client';
 
 @Injectable()
 export class KeycloakResourcesService {
   private readonly logger = new Logger(KeycloakResourcesService.name);
+  private readonly kcAdminClient = new KcAdminClient({
+    baseUrl: this.configService.get('KEYCLOAK_NETWORK_URL'),
+  });
 
   constructor(
     private reflector: Reflector,
@@ -50,5 +54,22 @@ export class KeycloakResourcesService {
     } catch (e) {
       throw new Error(e.message);
     }
+  }
+
+  async createGroup(authContext: AuthContext, groupName: string) {
+    await this.kcAdminClient.auth({
+      grantType: 'password',
+      clientId: 'admin-cli',
+      username: 'admin',
+      password: 'admin',
+    });
+    await this.kcAdminClient.groups.create({
+      name: groupName,
+      realm: 'open-dpp',
+    });
+    await this.kcAdminClient.users.addToGroup({
+      id: authContext.user.id,
+      groupId: groupName,
+    });
   }
 }

@@ -24,7 +24,7 @@
     "typeorm:revert-migration": "npm run typeorm -- -d ./typeorm.config.ts migration:revert"
   },
   "dependencies": {
-    "@keycloak/keycloak-admin-client": "^26.0.5",
+    "@keycloak/keycloak-admin-client": "^26.1.1",
     "@nestjs/axios": "^3.1.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",

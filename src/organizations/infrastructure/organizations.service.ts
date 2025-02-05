@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { Organization } from '../domain/organization';
 import { User } from '../../users/domain/user';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { AuthContext } from '../../auth/auth-request';
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @InjectRepository(OrganizationEntity)
     private organizationRepository: Repository<OrganizationEntity>,
+    private readonly dataSource: DataSource,
+    private readonly keycloakResourcesService: KeycloakResourcesService,
   ) {}
 
   convertUserToEntity(user: User) {
@@ -29,16 +33,31 @@ export class OrganizationsService {
     );
   }
 
-  async save(organization: Organization) {
-    return this.convertToDomain(
-      await this.organizationRepository.save({
+  async save(authContext: AuthContext, organization: Organization) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let result: Organization | null = null;
+    try {
+      await this.keycloakResourcesService.createGroup(
+        authContext,
+        'organization-' + organization.id,
+      );
+      const entity = await this.organizationRepository.save({
         id: organization.id,
         name: organization.name,
         users: organization.members
           ? organization.members.map((u) => this.convertUserToEntity(u))
           : [],
-      }),
-    );
+      });
+      await queryRunner.commitTransaction();
+      result = this.convertToDomain(entity);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+    return result;
   }
 
   async findAll() {
