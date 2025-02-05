@@ -1,12 +1,12 @@
 import { Entity, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
-import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { ModelEntity } from '../../models/infrastructure/model.entity';
 
 @Entity('item')
 export class ItemEntity {
   @PrimaryColumn('uuid')
   id: string;
-  @ManyToOne(() => ProductEntity, (product) => product.items)
-  model: ProductEntity;
+  @ManyToOne(() => ModelEntity, (product) => product.items)
+  model: ModelEntity;
   @RelationId((item: ItemEntity) => item.model)
   modelId: string;
 }

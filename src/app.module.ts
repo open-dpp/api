@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductsModule } from './products/products.module';
+import { ModelsModule } from './models/models.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -13,6 +13,9 @@ import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
 import * as path from 'path';
 import { generateConfig } from './database/config';
+import { PermissionsGuard } from './auth/permissions/permissions.guard';
+import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -32,18 +35,23 @@ import { generateConfig } from './database/config';
       inject: [ConfigService],
     }),
     ItemsModule,
-    ProductsModule,
+    ModelsModule,
     OrganizationsModule,
     UsersModule,
     KeycloakImportModule,
     UniqueProductIdentifierModule,
     AuthModule,
     HttpModule,
+    KeycloakResourcesModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
   ],
 })

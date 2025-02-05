@@ -12,8 +12,8 @@ import {
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ItemEntity } from '../../items/infrastructure/item.entity';
 
-@Entity('product')
-export class ProductEntity {
+@Entity('model')
+export class ModelEntity {
   @PrimaryColumn('uuid', { name: 'id' })
   id: string;
 
@@ -37,7 +37,7 @@ export class ProductEntity {
   })
   createdByUserId: string;
 
-  @ManyToOne(() => UserEntity, (user) => user.products, {
+  @ManyToOne(() => UserEntity, (user) => user.models, {
     cascade: ['insert'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

@@ -1,8 +1,8 @@
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
+import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
-export class Product {
+export class Model {
   constructor(
     public readonly id: string = randomUUID(),
     public name: string,

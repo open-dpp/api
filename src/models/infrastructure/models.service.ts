@@ -1,46 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { ProductEntity } from './product.entity';
+import { ModelEntity } from './model.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from '../domain/product';
+import { Model } from '../domain/model';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { User } from '../../users/domain/user';
 import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 @Injectable()
-export class ProductsService {
+export class ModelsService {
   constructor(
-    @InjectRepository(ProductEntity)
-    private productRepository: Repository<ProductEntity>,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
+    @InjectRepository(ModelEntity)
+    private modelRepository: Repository<ModelEntity>,
+    private uniqueModelIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   convertToDomain(
-    productEntity: ProductEntity,
+    modelEntity: ModelEntity,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    return new Product(
-      productEntity.id,
-      productEntity.name,
-      productEntity.description,
+    return new Model(
+      modelEntity.id,
+      modelEntity.name,
+      modelEntity.description,
       uniqueProductIdentifiers,
-      productEntity.createdByUserId,
-      productEntity.createdAt,
+      modelEntity.createdByUserId,
+      modelEntity.createdAt,
     );
   }
 
-  async save(product: Product) {
+  async save(product: Model) {
     const userEntity = new UserEntity();
     userEntity.id = product.owner;
-    const productEntity = await this.productRepository.save({
+    const productEntity = await this.modelRepository.save({
       id: product.id,
       name: product.name,
       description: product.description,
       createdByUser: userEntity,
     });
     for (const uniqueProductIdentifier of product.uniqueProductIdentifiers) {
-      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
+      await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
     return this.convertToDomain(
       productEntity,
@@ -49,14 +49,14 @@ export class ProductsService {
   }
 
   async findAllByUser(user: User) {
-    const productEntities = await this.productRepository.find({
+    const productEntities = await this.modelRepository.find({
       where: { createdByUserId: user.id },
     });
     return await Promise.all(
-      productEntities.map(async (entity: ProductEntity) => {
+      productEntities.map(async (entity: ModelEntity) => {
         return this.convertToDomain(
           entity,
-          await this.uniqueProductIdentifierService.findAllByReferencedId(
+          await this.uniqueModelIdentifierService.findAllByReferencedId(
             entity.id,
           ),
         );
@@ -65,12 +65,12 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
-    const productEntity = await this.productRepository.findOne({
+    const productEntity = await this.modelRepository.findOne({
       where: { id },
     });
     return this.convertToDomain(
       productEntity,
-      await this.uniqueProductIdentifierService.findAllByReferencedId(
+      await this.uniqueModelIdentifierService.findAllByReferencedId(
         productEntity.id,
       ),
     );

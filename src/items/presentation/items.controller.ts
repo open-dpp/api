@@ -9,7 +9,7 @@ import {
 import { AuthRequest } from '../../auth/auth-request';
 import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
-import { ProductsService } from '../../products/infrastructure/products.service';
+import { ModelsService } from '../../models/infrastructure/models.service';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -17,7 +17,7 @@ import { plainToInstance } from 'class-transformer';
 export class ItemsController {
   constructor(
     private readonly itemsService: ItemsService,
-    private readonly productsService: ProductsService,
+    private readonly modelsService: ModelsService,
   ) {}
 
   @Post()
@@ -55,7 +55,7 @@ export class ItemsController {
   }
 
   private async checkPermission(req: AuthRequest, modelId: string) {
-    const model = await this.productsService.findOne(modelId);
+    const model = await this.modelsService.findOne(modelId);
     if (!model.isOwnedBy(req.authContext.user)) {
       throw new ForbiddenException();
     }

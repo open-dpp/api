@@ -1,26 +1,26 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { ProductsModule } from '../products.module';
+import { ModelsModule } from '../models.module';
 import * as request from 'supertest';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { ProductEntity } from '../infrastructure/product.entity';
+import { ModelEntity } from '../infrastructure/model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
-import { ProductsService } from '../infrastructure/products.service';
+import { ModelsService } from '../infrastructure/models.service';
 import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { AuthContext } from '../../auth/auth-request';
-import { Product } from '../domain/product';
+import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 
-describe('ProductsController', () => {
+describe('ModelsController', () => {
   let app: INestApplication;
-  let service: ProductsService;
+  let service: ModelsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  let productsService: ProductsService;
+  let productsService: ModelsService;
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID());
 
@@ -28,8 +28,8 @@ describe('ProductsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ProductEntity, UserEntity]),
-        ProductsModule,
+        TypeOrmModule.forFeature([ModelEntity, UserEntity]),
+        ModelsModule,
         UniqueProductIdentifierModule,
       ],
       providers: [
@@ -42,11 +42,11 @@ describe('ProductsController', () => {
       ],
     }).compile();
 
-    service = moduleRef.get<ProductsService>(ProductsService);
+    service = moduleRef.get<ModelsService>(ModelsService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    productsService = moduleRef.get(ProductsService);
+    productsService = moduleRef.get(ModelsService);
 
     app = moduleRef.createNestApplication();
 
@@ -79,7 +79,7 @@ describe('ProductsController', () => {
     const productNames = ['P1', 'P2'];
     const products = await Promise.all(
       productNames.map(async (pn) => {
-        const product = new Product(undefined, pn, 'My desc');
+        const product = new Model(undefined, pn, 'My desc');
         product.assignOwner(authContext.user);
         return await productsService.save(product);
       }),
