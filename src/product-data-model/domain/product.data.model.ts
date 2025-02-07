@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-
-import { DataValue } from '../../products/domain/product';
+import { DataValue } from '../../models/domain/model';
 
 export enum DataType {
   TEXT_FIELD = 'TextField',

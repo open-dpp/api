@@ -8,7 +8,7 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
-import { Model } from '../domain/model';
+import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import {
@@ -42,25 +42,23 @@ describe('ModelsService', () => {
 
   it('should create a product', async () => {
     const user = new User(randomUUID());
-    const product = new Model(undefined, 'My product', 'This is my product');
-    product.assignOwner(user);
-      const productDataModel = new ProductDataModel(undefined, 'Laptop', '1.0', [
-          new DataSection(randomUUID(), [
-              new TextField(randomUUID(), 'Title', { min: 2 }),
-              new TextField(randomUUID(), 'Title 2', { min: 7 }),
-          ]),
-          new DataSection(randomUUID(), [
-              new TextField(randomUUID(), 'Title 3', { min: 8 }),
-          ]),
-      ]);
-    const { id } = await modelsService.save(product);
-    const foundProduct = await modelsService.findOne(id);
+    const model = new Model(undefined, 'My product', 'This is my product');
+    model.assignOwner(user);
+    const productDataModel = new ProductDataModel(undefined, 'Laptop', '1.0', [
+      new DataSection(randomUUID(), [
+        new TextField(randomUUID(), 'Title', { min: 2 }),
+        new TextField(randomUUID(), 'Title 2', { min: 7 }),
+      ]),
+      new DataSection(randomUUID(), [
+        new TextField(randomUUID(), 'Title 3', { min: 8 }),
+      ]),
+    ]);
 
-    product.assignProductDataModel(productDataModel);
-    const { id } = await productService.save(product);
-    const foundProduct = await productService.findOne(id);
-    expect(foundProduct.name).toEqual(product.name);
-    expect(foundProduct.description).toEqual(product.description);
+    model.assignProductDataModel(productDataModel);
+    const { id } = await modelsService.save(model);
+    const foundProduct = await modelsService.findOne(id);
+    expect(foundProduct.name).toEqual(model.name);
+    expect(foundProduct.description).toEqual(model.description);
     expect(foundProduct.productDataModelId).toEqual(productDataModel.id);
     expect(foundProduct.dataValues).toEqual([
       new DataValue(

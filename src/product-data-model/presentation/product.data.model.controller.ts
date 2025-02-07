@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Request,
-} from '@nestjs/common';
-import { AuthRequest } from '../../auth/auth-request';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ProductDataModelService } from '../infrastructure/product.data.model.service';
 import { ProductDataModel } from '../domain/product.data.model';
 
@@ -18,10 +9,7 @@ export class ProductDataModelController {
   ) {}
 
   @Post()
-  async create(
-    @Body() createProductDataModelDto: unknown,
-    @Request() req: AuthRequest,
-  ) {
+  async create(@Body() createProductDataModelDto: unknown) {
     return await this.productDataModelService.save(
       ProductDataModel.fromPlain(createProductDataModelDto),
     );

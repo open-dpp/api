@@ -4,7 +4,7 @@ import {
   ProductDataModel,
   TextField,
 } from './product.data.model';
-import { DataValue } from '../../products/domain/product';
+import { DataValue } from '../../models/domain/model';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {

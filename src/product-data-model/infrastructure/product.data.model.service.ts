@@ -3,15 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductDataModelEntity } from './product.data.model.entity';
 import {
-  DataField,
   DataSection,
-  DataType,
   makeDataField,
   ProductDataModel,
-  TextField,
 } from '../domain/product.data.model';
-import { DataFieldEntity } from './data.field.entity';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ProductDataModelService {
