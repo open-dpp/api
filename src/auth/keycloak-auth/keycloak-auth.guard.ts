@@ -51,30 +51,49 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const accessToken = parts[1];
 
-    const url = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
+    const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
+    const urlUserinfo = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
 
     let keycloakId = null;
+    const authContext = new AuthContext();
+    authContext.permissions = [];
     try {
-      const response = await firstValueFrom(
-        this.httpService.get<any>(url, {
+      const data = new URLSearchParams();
+      data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
+      data.append('audience', 'backend');
+      data.append('response_mode', 'permissions');
+      const responsePermissions = await firstValueFrom(
+        this.httpService.post<any>(urlPermissions, data, {
           headers: {
             authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
         }),
       );
+      responsePermissions.data.forEach((p) => {
+        authContext.permissions.push(p);
+      });
 
+      const responseUserinfo = await firstValueFrom(
+        this.httpService.post<any>(urlUserinfo, data, {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }),
+      );
+      console.log(responseUserinfo.data);
       const user = {
-        id: response.data.sub,
-        username: response.data.preferred_username,
+        id: responseUserinfo.data.sub,
+        username: responseUserinfo.data.preferred_username,
       };
       keycloakId = user.id;
     } catch (e) {
       throw new UnauthorizedException(e.message);
     }
-    // const authContext: AuthContext = await this.keycloakAuthService.getAuthContextFromKeycloakUser(req.user, isPublic);
-    const authContext = new AuthContext();
     authContext.user = new User(keycloakId);
     request.authContext = authContext;
+    console.log(authContext);
     return true;
   }
 }

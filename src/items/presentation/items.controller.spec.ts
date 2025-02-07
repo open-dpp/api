@@ -1,18 +1,18 @@
 import { INestApplication } from '@nestjs/common';
-import { ProductsService } from '../../products/infrastructure/products.service';
+import { ModelsService } from '../../models/infrastructure/models.service';
 import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Test } from '@nestjs/testing';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import * as request from 'supertest';
-import { Product } from '../../products/domain/product';
+import { Model } from '../../models/domain/model';
 import { ItemsService } from '../infrastructure/items.service';
 import { ItemsModule } from '../items.module';
 import { Item } from '../domain/item';
@@ -21,7 +21,7 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
-  let productsService: ProductsService;
+  let productsService: ModelsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   const authContext = new AuthContext();
@@ -31,7 +31,7 @@ describe('ItemsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ProductEntity, UserEntity]),
+        TypeOrmModule.forFeature([ModelEntity, UserEntity]),
         ItemsModule,
         UniqueProductIdentifierModule,
       ],
@@ -45,7 +45,7 @@ describe('ItemsController', () => {
       ],
     }).compile();
 
-    productsService = moduleRef.get(ProductsService);
+    productsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
@@ -57,7 +57,7 @@ describe('ItemsController', () => {
   });
 
   it(`/CREATE item`, async () => {
-    const product = new Product(undefined, 'name', 'description');
+    const product = new Model(undefined, 'name', 'description');
     product.assignOwner(authContext.user);
     await productsService.save(product);
     const response = await request(app.getHttpServer())
@@ -81,7 +81,7 @@ describe('ItemsController', () => {
   });
 
   it(`/CREATE item fails cause of missing permissions`, async () => {
-    const product = new Product(undefined, 'name', 'description');
+    const product = new Model(undefined, 'name', 'description');
     product.assignOwner(new User(randomUUID()));
     await productsService.save(product);
     const response = await request(app.getHttpServer())
@@ -91,7 +91,7 @@ describe('ItemsController', () => {
   });
 
   it(`/GET item`, async () => {
-    const product = new Product(undefined, 'name', 'description');
+    const product = new Model(undefined, 'name', 'description');
     product.assignOwner(authContext.user);
     await productsService.save(product);
     const item = new Item();
@@ -115,7 +115,7 @@ describe('ItemsController', () => {
   });
 
   it(`/GET item fails caused by missing permissions`, async () => {
-    const product = new Product(undefined, 'name', 'description');
+    const product = new Model(undefined, 'name', 'description');
     product.assignOwner(new User(randomUUID()));
     await productsService.save(product);
     const item = new Item();
@@ -128,7 +128,7 @@ describe('ItemsController', () => {
   });
 
   it(`/GET all item`, async () => {
-    const product = new Product(undefined, 'name', 'description');
+    const product = new Model(undefined, 'name', 'description');
     product.assignOwner(authContext.user);
     await productsService.save(product);
     const item = new Item();
@@ -168,7 +168,7 @@ describe('ItemsController', () => {
   });
 
   it(`/GET all item fails caused by missing permissions`, async () => {
-    const product = new Product(undefined, 'name', 'description');
+    const product = new Model(undefined, 'name', 'description');
     product.assignOwner(new User(randomUUID()));
     await productsService.save(product);
     const item = new Item();

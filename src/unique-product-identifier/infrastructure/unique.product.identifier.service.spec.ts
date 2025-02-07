@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UniqueProductIdentifierService } from './unique.product.identifier.service';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UniqueProductIdentifierEntity } from './unique.product.identifier.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -16,10 +16,7 @@ describe('UniqueProductIdentifierService', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          UniqueProductIdentifierEntity,
-          ProductEntity,
-        ]),
+        TypeOrmModule.forFeature([UniqueProductIdentifierEntity, ModelEntity]),
       ],
       providers: [UniqueProductIdentifierService],
     }).compile();

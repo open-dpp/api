@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { ModelEntity } from '../../models/infrastructure/model.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -38,6 +38,6 @@ export class UserEntity {
   })
   organizations: OrganizationEntity[];
 
-  @OneToMany(() => ProductEntity, (product) => product)
-  products: ProductEntity[];
+  @OneToMany(() => ModelEntity, (product) => product)
+  models: ModelEntity[];
 }

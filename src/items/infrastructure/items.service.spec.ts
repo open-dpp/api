@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsService } from '../../products/infrastructure/products.service';
+import { ModelsService } from '../../models/infrastructure/models.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
-import { Product } from '../../products/domain/product';
+import { Model } from '../../models/domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
@@ -16,7 +16,7 @@ import { ItemEntity } from './item.entity';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
-  let productService: ProductsService;
+  let productService: ModelsService;
   let dataSource: DataSource;
 
   beforeEach(async () => {
@@ -24,26 +24,22 @@ describe('ProductsService', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([
-          ProductEntity,
+          ModelEntity,
           UniqueProductIdentifierEntity,
           UserEntity,
           ItemEntity,
         ]),
       ],
-      providers: [
-        ItemsService,
-        ProductsService,
-        UniqueProductIdentifierService,
-      ],
+      providers: [ItemsService, ModelsService, UniqueProductIdentifierService],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
     itemService = module.get<ItemsService>(ItemsService);
-    productService = module.get<ProductsService>(ProductsService);
+    productService = module.get<ModelsService>(ModelsService);
   });
 
   it('should create and find item for a model', async () => {
-    const model = new Product(undefined, 'name', 'description');
+    const model = new Model(undefined, 'name', 'description');
     model.assignOwner(new User(randomUUID()));
     const savedModel = await productService.save(model);
     const item = new Item();
@@ -55,10 +51,10 @@ describe('ProductsService', () => {
   });
 
   it('should create multiple items for a model and find them by model', async () => {
-    const model = new Product(undefined, 'name', 'description');
+    const model = new Model(undefined, 'name', 'description');
     const user = new User(randomUUID());
     model.assignOwner(user);
-    const model2 = new Product(undefined, 'name', 'description');
+    const model2 = new Model(undefined, 'name', 'description');
     model2.assignOwner(user);
     const savedModel1 = await productService.save(model);
     const savedModel2 = await productService.save(model2);

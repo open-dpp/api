@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsService } from './products.service';
+import { ModelsService } from './models.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductEntity } from './product.entity';
+import { ModelEntity } from './model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
-import { DataValue, Product } from '../domain/product';
+import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import {
@@ -17,8 +17,8 @@ import {
   TextField,
 } from '../../product-data-model/domain/product.data.model';
 
-describe('ProductsService', () => {
-  let productService: ProductsService;
+describe('ModelsService', () => {
+  let modelsService: ModelsService;
   let userService: UsersService;
   let dataSource: DataSource;
 
@@ -27,36 +27,35 @@ describe('ProductsService', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([
-          ProductEntity,
+          ModelEntity,
           UniqueProductIdentifierEntity,
           UserEntity,
         ]),
       ],
-      providers: [
-        ProductsService,
-        UniqueProductIdentifierService,
-        UsersService,
-      ],
+      providers: [ModelsService, UniqueProductIdentifierService, UsersService],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
-    productService = module.get<ProductsService>(ProductsService);
+    modelsService = module.get<ModelsService>(ModelsService);
     userService = module.get<UsersService>(UsersService);
   });
 
-  it('should create a product with data', async () => {
+  it('should create a product', async () => {
     const user = new User(randomUUID());
-    const product = new Product(undefined, 'My product', 'This is my product');
+    const product = new Model(undefined, 'My product', 'This is my product');
     product.assignOwner(user);
-    const productDataModel = new ProductDataModel(undefined, 'Laptop', '1.0', [
-      new DataSection(randomUUID(), [
-        new TextField(randomUUID(), 'Title', { min: 2 }),
-        new TextField(randomUUID(), 'Title 2', { min: 7 }),
-      ]),
-      new DataSection(randomUUID(), [
-        new TextField(randomUUID(), 'Title 3', { min: 8 }),
-      ]),
-    ]);
+      const productDataModel = new ProductDataModel(undefined, 'Laptop', '1.0', [
+          new DataSection(randomUUID(), [
+              new TextField(randomUUID(), 'Title', { min: 2 }),
+              new TextField(randomUUID(), 'Title 2', { min: 7 }),
+          ]),
+          new DataSection(randomUUID(), [
+              new TextField(randomUUID(), 'Title 3', { min: 8 }),
+          ]),
+      ]);
+    const { id } = await modelsService.save(product);
+    const foundProduct = await modelsService.findOne(id);
+
     product.assignProductDataModel(productDataModel);
     const { id } = await productService.save(product);
     const foundProduct = await productService.findOne(id);

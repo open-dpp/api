@@ -1,18 +1,8 @@
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 
-export class DataValue {
-  constructor(
-    public readonly id: string = randomUUID(),
-    public readonly value: unknown,
-    public readonly dataSectionId: string,
-    public readonly dataFieldId: string,
-  ) {}
-}
-
-export class Product {
+export class Model {
   constructor(
     public readonly id: string = randomUUID(),
     public name: string,

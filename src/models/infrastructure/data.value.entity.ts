@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-import { ProductEntity } from './product.entity';
+import { ModelEntity } from './model.entity';
 
 @Entity('data_value')
 export class DataValueEntity {
@@ -12,6 +12,6 @@ export class DataValueEntity {
   @Column('uuid')
   dataFieldId: string;
 
-  @ManyToOne(() => ProductEntity, (product) => product.dataValues)
-  model: ProductEntity;
+  @ManyToOne(() => ModelEntity, (model) => model.dataValues)
+  model: ModelEntity;
 }

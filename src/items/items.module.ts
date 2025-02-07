@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductEntity } from '../products/infrastructure/product.entity';
+import { ModelEntity } from '../models/infrastructure/model.entity';
 import { ItemEntity } from './infrastructure/item.entity';
-import { ProductsModule } from '../products/products.module';
+import { ModelsModule } from '../models/models.module';
 import { ItemsController } from './presentation/items.controller';
 import { ItemsService } from './infrastructure/items.service';
 import { UniqueProductIdentifierModule } from '../unique-product-identifier/unique.product.identifier.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ProductEntity, ItemEntity]),
-    ProductsModule,
+    TypeOrmModule.forFeature([ModelEntity, ItemEntity]),
+    ModelsModule,
     UniqueProductIdentifierModule,
   ],
   controllers: [ItemsController],

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ItemEntity } from './item.entity';
 import { Item } from '../domain/item';
-import { ProductEntity } from '../../products/infrastructure/product.entity';
+import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
@@ -12,9 +12,9 @@ export class ItemsService {
   constructor(
     @InjectRepository(ItemEntity)
     private itemsRepository: Repository<ItemEntity>,
-    @InjectRepository(ProductEntity)
-    private productsRepository: Repository<ProductEntity>,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
+    @InjectRepository(ModelEntity)
+    private modelRepository: Repository<ModelEntity>,
+    private uniqueModelIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   convertToDomain(
@@ -27,7 +27,7 @@ export class ItemsService {
   }
 
   async save(item: Item) {
-    const modelEntity = await this.productsRepository.findOne({
+    const modelEntity = await this.modelRepository.findOne({
       where: { id: item.model },
     });
     const itemEntity = await this.itemsRepository.save({
@@ -35,7 +35,7 @@ export class ItemsService {
       model: modelEntity,
     });
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
-      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
+      await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
     return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
   }
@@ -44,7 +44,7 @@ export class ItemsService {
     const itemEntity = await this.itemsRepository.findOne({ where: { id } });
     return this.convertToDomain(
       itemEntity,
-      await this.uniqueProductIdentifierService.findAllByReferencedId(
+      await this.uniqueModelIdentifierService.findAllByReferencedId(
         itemEntity.id,
       ),
     );
@@ -62,9 +62,7 @@ export class ItemsService {
       itemEntities.map(async (ie) =>
         this.convertToDomain(
           ie,
-          await this.uniqueProductIdentifierService.findAllByReferencedId(
-            ie.id,
-          ),
+          await this.uniqueModelIdentifierService.findAllByReferencedId(ie.id),
         ),
       ),
     );
