@@ -27,10 +27,10 @@ describe('ProductDataModelService', () => {
   });
 
   it('should create product data model', async () => {
-    const productDataModel = new ProductDataModel(undefined, 'v1', [
+    const productDataModel = new ProductDataModel(undefined, 'Laptop', 'v1', [
       new DataSection(undefined, [
-        new TextField(undefined, 'Serial number', '48399020'),
-        new TextField(undefined, 'Processor', '48399020'),
+        new TextField(undefined, 'Serial number'),
+        new TextField(undefined, 'Processor', { max: 7 }),
       ]),
     ]);
     const { id } = await service.save(productDataModel);

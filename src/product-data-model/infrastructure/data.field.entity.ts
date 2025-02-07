@@ -14,7 +14,7 @@ export class DataFieldEntity {
   })
   type: DataType;
   @Column({ type: 'jsonb' })
-  value: unknown;
+  options: Record<string, unknown>;
   @ManyToOne(() => DataSectionEntity, (dataSection) => dataSection.dataFields)
   section: DataSectionEntity;
 }

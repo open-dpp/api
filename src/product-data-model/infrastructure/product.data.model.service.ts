@@ -6,6 +6,7 @@ import {
   DataField,
   DataSection,
   DataType,
+  makeDataField,
   ProductDataModel,
   TextField,
 } from '../domain/product.data.model';
@@ -19,25 +20,18 @@ export class ProductDataModelService {
     private productDataModelEntityRepository: Repository<ProductDataModelEntity>,
   ) {}
 
-  convertDataFieldEntityToDomain(dataFieldEntity: DataFieldEntity): DataField {
-    const ClassType = { [DataType.TEXT_FIELD]: TextField };
-    return plainToInstance(ClassType[dataFieldEntity.type], {
-      id: dataFieldEntity.id,
-      type: dataFieldEntity.type,
-      name: dataFieldEntity.name,
-      value: dataFieldEntity.value,
-    });
-  }
-
   convertToDomain(productDataModelEntity: ProductDataModelEntity) {
     return new ProductDataModel(
       productDataModelEntity.id,
+      productDataModelEntity.name,
       'v1',
       productDataModelEntity.sections.map(
         (s) =>
           new DataSection(
             s.id,
-            s.dataFields.map((f) => this.convertDataFieldEntityToDomain(f)),
+            s.dataFields.map((f) =>
+              makeDataField(f.id, f.type, f.name, f.options),
+            ),
           ),
       ),
     );
@@ -48,12 +42,13 @@ export class ProductDataModelService {
       await this.productDataModelEntityRepository.save({
         id: productDataModel.id,
         version: productDataModel.version,
+        name: productDataModel.name,
         sections: productDataModel.sections.map((s) => ({
           id: s.id,
           dataFields: s.dataFields.map((f) => ({
             id: f.id,
             name: f.name,
-            value: f.value,
+            options: f.options,
             type: f.type,
           })),
         })),

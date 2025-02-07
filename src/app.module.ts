@@ -13,6 +13,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
 import * as path from 'path';
 import { generateConfig } from './database/config';
+import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +32,7 @@ import { generateConfig } from './database/config';
       }),
       inject: [ConfigService],
     }),
+    ProductDataModelModule,
     ItemsModule,
     ProductsModule,
     OrganizationsModule,
