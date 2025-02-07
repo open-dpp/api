@@ -4,10 +4,11 @@ import { ModelsController } from './presentation/models.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ModelEntity } from './infrastructure/model.entity';
 import { UniqueProductIdentifierModule } from '../unique-product-identifier/unique.product.identifier.module';
+import { DataValueEntity } from './infrastructure/data.value.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ModelEntity]),
+    TypeOrmModule.forFeature([ModelEntity, DataValueEntity]),
     UniqueProductIdentifierModule,
   ],
   controllers: [ModelsController],

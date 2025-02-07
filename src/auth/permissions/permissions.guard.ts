@@ -2,8 +2,6 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
-import { AuthRequest, KeycloakPermission } from '../auth-request';
-import { HAS_PERMISSION } from './permissions.decorator';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -19,13 +17,12 @@ export class PermissionsGuard implements CanActivate {
     if (isPublic) {
       return true;
     }
-    const request = context.switchToHttp().getRequest<AuthRequest>();
-    const permissions =
-      this.reflector.get<KeycloakPermission[]>(
-        HAS_PERMISSION,
-        context.getHandler(),
-      ) || [];
-    console.log(request.url, permissions);
+    // const request = context.switchToHttp().getRequest<AuthRequest>();
+    // const permissions =
+    //   this.reflector.get<KeycloakPermission[]>(
+    //     HAS_PERMISSION,
+    //     context.getHandler(),
+    //   ) || [];
     return true;
   }
 }

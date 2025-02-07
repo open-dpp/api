@@ -82,7 +82,6 @@ export class KeycloakAuthGuard implements CanActivate {
           },
         }),
       );
-      console.log(responseUserinfo.data);
       const user = {
         id: responseUserinfo.data.sub,
         username: responseUserinfo.data.preferred_username,
@@ -93,7 +92,7 @@ export class KeycloakAuthGuard implements CanActivate {
     }
     authContext.user = new User(keycloakId);
     request.authContext = authContext;
-    console.log(authContext);
+
     return true;
   }
 }
