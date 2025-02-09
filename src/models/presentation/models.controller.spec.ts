@@ -12,15 +12,23 @@ import { ModelsService } from '../infrastructure/models.service';
 import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { AuthContext } from '../../auth/auth-request';
-import { Model } from '../domain/model';
+import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
+import {
+  DataSection,
+  ProductDataModel,
+  TextField,
+} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 
 describe('ModelsController', () => {
   let app: INestApplication;
-  let service: ModelsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let modelsService: ModelsService;
+  let productDataModelService: ProductDataModelService;
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID());
 
@@ -28,9 +36,14 @@ describe('ModelsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ModelEntity, UserEntity]),
+        TypeOrmModule.forFeature([
+          ModelEntity,
+          UserEntity,
+          ProductDataModelEntity,
+        ]),
         ModelsModule,
         UniqueProductIdentifierModule,
+        ProductDataModelModule,
       ],
       providers: [
         {
@@ -42,11 +55,13 @@ describe('ModelsController', () => {
       ],
     }).compile();
 
-    service = moduleRef.get<ModelsService>(ModelsService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
     modelsService = moduleRef.get(ModelsService);
+    productDataModelService = moduleRef.get<ProductDataModelService>(
+      ProductDataModelService,
+    );
 
     app = moduleRef.createNestApplication();
 
@@ -60,18 +75,18 @@ describe('ModelsController', () => {
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(201);
-    const found = await service.findOne(response.body.id);
+    const found = await modelsService.findOne(response.body.id);
     expect(response.body.id).toEqual(found.id);
 
     const foundUniqueProductIdentifiers =
       await uniqueProductIdentifierService.findAllByReferencedId(found.id);
     expect(foundUniqueProductIdentifiers).toHaveLength(1);
     for (const uniqueProductIdentifier of foundUniqueProductIdentifiers) {
-      expect(uniqueProductIdentifier.getReference()).toEqual(found.id);
+      expect(uniqueProductIdentifier.referenceId).toEqual(found.id);
     }
     const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
     expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
-      [...foundUniqueProductIdentifiers].sort(sortFn),
+      [...foundUniqueProductIdentifiers].map((u) => u.toPlain()).sort(sortFn),
     );
   });
 
@@ -79,7 +94,7 @@ describe('ModelsController', () => {
     const modelNames = ['P1', 'P2'];
     const models = await Promise.all(
       modelNames.map(async (pn) => {
-        const model = new Model(undefined, pn, 'My desc');
+        const model = Model.fromPlain({ name: pn, description: 'My desc' });
         model.assignOwner(authContext.user);
         return await modelsService.save(model);
       }),
@@ -94,6 +109,51 @@ describe('ModelsController', () => {
         await uniqueProductIdentifierService.findAllByReferencedId(model.id),
       );
     }
+  });
+
+  it('assigns product data model to model', async () => {
+    const body = { name: 'My name', description: 'My desc' };
+    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+    model.assignOwner(authContext.user);
+    await modelsService.save(model);
+
+    const productDataModel = new ProductDataModel(undefined, 'Laptop', 'v1', [
+      new DataSection(undefined, [
+        new TextField(undefined, 'Title', { min: 2 }),
+        new TextField(undefined, 'Title 2', { min: 7 }),
+      ]),
+      new DataSection(undefined, [
+        new TextField(undefined, 'Title 3', { min: 8 }),
+      ]),
+    ]);
+    await productDataModelService.save(productDataModel);
+
+    const response = await request(app.getHttpServer())
+      .post(`/models/${model.id}/product-data-models/${productDataModel.id}`)
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(201);
+    const responseGet = await request(app.getHttpServer())
+      .get(`/models/${model.id}`)
+      .set('Authorization', 'Bearer token1');
+    expect(responseGet.body.dataValues).toEqual([
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[0].id,
+        dataFieldId: productDataModel.sections[0].dataFields[0].id,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[0].id,
+        dataFieldId: productDataModel.sections[0].dataFields[1].id,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[1].id,
+        dataFieldId: productDataModel.sections[1].dataFields[0].id,
+      }),
+    ]);
+    expect(responseGet.body.productDataModelId).toEqual(productDataModel.id);
   });
 
   afterAll(async () => {

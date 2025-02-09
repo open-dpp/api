@@ -42,7 +42,10 @@ describe('ModelsService', () => {
 
   it('should create a product', async () => {
     const user = new User(randomUUID());
-    const model = new Model(undefined, 'My product', 'This is my product');
+    const model = Model.fromPlain({
+      name: 'My product',
+      description: 'This is my product',
+    });
     model.assignOwner(user);
     const productDataModel = new ProductDataModel(undefined, 'Laptop', '1.0', [
       new DataSection(randomUUID(), [
@@ -61,24 +64,21 @@ describe('ModelsService', () => {
     expect(foundProduct.description).toEqual(model.description);
     expect(foundProduct.productDataModelId).toEqual(productDataModel.id);
     expect(foundProduct.dataValues).toEqual([
-      new DataValue(
-        expect.any(String),
-        undefined,
-        productDataModel.sections[0].id,
-        productDataModel.sections[0].dataFields[0].id,
-      ),
-      new DataValue(
-        expect.any(String),
-        undefined,
-        productDataModel.sections[0].id,
-        productDataModel.sections[0].dataFields[1].id,
-      ),
-      new DataValue(
-        expect.any(String),
-        undefined,
-        productDataModel.sections[1].id,
-        productDataModel.sections[1].dataFields[0].id,
-      ),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[0].id,
+        dataFieldId: productDataModel.sections[0].dataFields[0].id,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[0].id,
+        dataFieldId: productDataModel.sections[0].dataFields[1].id,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[1].id,
+        dataFieldId: productDataModel.sections[1].dataFields[0].id,
+      }),
     ]);
 
     expect((await userService.findOne(user.id)).id).toEqual(foundProduct.owner);

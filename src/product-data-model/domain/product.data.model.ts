@@ -170,8 +170,8 @@ export class ProductDataModel {
   public createInitialDataValues(): DataValue[] {
     return this.sections
       .map((s) =>
-        s.dataFields.map(
-          (f) => new DataValue(undefined, undefined, s.id, f.id),
+        s.dataFields.map((f) =>
+          DataValue.fromPlain({ dataSectionId: s.id, dataFieldId: f.id }),
         ),
       )
       .flat();

@@ -1,22 +1,32 @@
 import { randomUUID } from 'crypto';
+import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
 
 export class UniqueProductIdentifier {
-  private referenceId?: string;
+  @Expose({ name: 'referenceId' })
+  private _referenceId?: string;
 
-  constructor(
-    public readonly uuid: string = randomUUID(),
-    public readonly view:
-      | 'all'
-      | 'manufacturer'
-      | 'compliance'
-      | 'client' = 'all',
-  ) {}
+  @Expose()
+  readonly uuid: string = randomUUID();
 
-  public getReference() {
-    return this.referenceId;
+  @Expose()
+  readonly view: 'all' | 'manufacturer' | 'compliance' | 'client' = 'all';
+
+  public get referenceId() {
+    return this._referenceId;
   }
 
   public linkTo(id: string) {
-    this.referenceId = id;
+    this._referenceId = id;
+  }
+
+  static fromPlain(plain: Partial<UniqueProductIdentifier>) {
+    return plainToInstance(UniqueProductIdentifier, plain, {
+      excludeExtraneousValues: true,
+      exposeDefaultValues: true,
+    });
+  }
+
+  public toPlain() {
+    return instanceToPlain(this);
   }
 }

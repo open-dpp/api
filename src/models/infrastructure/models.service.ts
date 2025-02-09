@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ModelEntity } from './model.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { User } from '../../users/domain/user';
 import { UserEntity } from '../../users/infrastructure/user.entity';
@@ -21,26 +21,23 @@ export class ModelsService {
     modelEntity: ModelEntity,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    return new Model(
-      modelEntity.id,
-      modelEntity.name,
-      modelEntity.description,
-      uniqueProductIdentifiers,
-      modelEntity.productDataModelId,
-      modelEntity.dataValues
-        ? modelEntity.dataValues.map(
-            (dv) =>
-              new DataValue(
-                dv.id,
-                dv.value ?? undefined,
-                dv.dataSectionId,
-                dv.dataFieldId,
-              ),
-          )
+    return Model.fromPlain({
+      id: modelEntity.id,
+      name: modelEntity.name,
+      description: modelEntity.description,
+      uniqueProductIdentifiers: uniqueProductIdentifiers,
+      productDataModelId: modelEntity.productDataModelId ?? undefined,
+      dataValues: modelEntity.dataValues
+        ? modelEntity.dataValues.map((dv) => ({
+            id: dv.id,
+            value: dv.value ?? undefined,
+            dataSectionId: dv.dataSectionId,
+            dataFieldId: dv.dataFieldId,
+          }))
         : [],
-      modelEntity.createdByUserId,
-      modelEntity.createdAt,
-    );
+      owner: modelEntity.createdByUserId,
+      createdAt: modelEntity.createdAt,
+    });
   }
 
   async save(model: Model) {

@@ -32,7 +32,7 @@ describe('UniqueProductIdentifierService', () => {
     uniqueProductIdentifier.linkTo(referencedId);
     const { uuid } = await service.save(uniqueProductIdentifier);
     const found = await service.findOne(uuid);
-    expect(found.getReference()).toEqual(referencedId);
+    expect(found.referenceId).toEqual(referencedId);
   });
 
   it('should find all unique product identifiers with given referenced id', async () => {

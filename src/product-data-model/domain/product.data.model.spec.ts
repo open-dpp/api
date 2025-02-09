@@ -57,9 +57,21 @@ describe('ProductDataModel', () => {
     );
     const dataValues = productDataModel.createInitialDataValues();
     expect(dataValues).toEqual([
-      new DataValue(expect.any(String), undefined, 'section-1', 'field-1'),
-      new DataValue(expect.any(String), undefined, 'section-1', 'field-2'),
-      new DataValue(expect.any(String), undefined, 'section-2', 'field-3'),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-1',
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-2',
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'section-2',
+        dataFieldId: 'field-3',
+      }),
     ]);
   });
 
@@ -79,9 +91,21 @@ describe('ProductDataModel', () => {
       ],
     );
     const dataValues = [
-      new DataValue(undefined, 'value 1', 'section-1', 'field-1'),
-      new DataValue(undefined, 'value 2', 'section-1', 'field-2'),
-      new DataValue(undefined, 'value 3', 'section-2', 'field-3'),
+      DataValue.fromPlain({
+        value: 'value 1',
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-1',
+      }),
+      DataValue.fromPlain({
+        value: 'value 2',
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-2',
+      }),
+      DataValue.fromPlain({
+        value: 'value 3',
+        dataSectionId: 'section-2',
+        dataFieldId: 'field-3',
+      }),
     ];
     const validationOutput = productDataModel.validate(dataValues);
 
@@ -109,13 +133,16 @@ describe('ProductDataModel', () => {
       ],
     );
     const dataValues = [
-      new DataValue(undefined, 'value 1', 'section-1', 'field-1'),
-      new DataValue(
-        undefined,
-        { wrongType: 'crazyMan' },
-        'section-2',
-        'field-3',
-      ),
+      DataValue.fromPlain({
+        value: 'value 1',
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-1',
+      }),
+      DataValue.fromPlain({
+        value: { wrongType: 'crazyMan' },
+        dataSectionId: 'section-2',
+        dataFieldId: 'field-3',
+      }),
     ];
     const validationOutput = productDataModel.validate(dataValues);
 
