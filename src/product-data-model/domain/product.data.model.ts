@@ -1,6 +1,12 @@
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { DataValue } from '../../models/domain/model';
+import {
+  Expose,
+  instanceToPlain,
+  plainToInstance,
+  Type,
+} from 'class-transformer';
 
 export enum DataType {
   TEXT_FIELD = 'TextField',
@@ -51,24 +57,18 @@ export class DataFieldValidationResult {
 }
 
 export abstract class DataField {
+  @Expose()
+  readonly id: string = randomUUID();
+  @Expose()
+  readonly name: string;
+  @Expose()
+  readonly type: DataType;
+  @Expose()
+  readonly options: Record<string, unknown> = {};
   abstract validate(version: string, value: unknown): DataFieldValidationResult;
-  protected constructor(
-    public readonly id: string,
-    public readonly name: string,
-    public readonly type: DataType,
-    public readonly options: Record<string, unknown> = {},
-  ) {}
 }
 
 export class TextField extends DataField {
-  constructor(
-    id: string = randomUUID(),
-    name: string,
-    options?: Record<string, unknown>,
-  ) {
-    super(id, name, DataType.TEXT_FIELD, options);
-  }
-
   validate(version: string, value: unknown): DataFieldValidationResult {
     const result = z.string().safeParse(value);
     return new DataFieldValidationResult(
@@ -80,66 +80,40 @@ export class TextField extends DataField {
   }
 }
 
-export function makeDataField(
-  id: string,
-  type: DataType,
-  name: string,
-  options: Record<string, unknown>,
-) {
-  switch (type) {
-    case DataType.TEXT_FIELD:
-      return new TextField(id, name, options);
-    default:
-      throw new Error(`Unknown data field type: ${type}`);
-  }
-}
-
 export class DataSection {
-  constructor(
-    public readonly id: string = randomUUID(),
-    public readonly dataFields: DataField[],
-  ) {}
+  @Expose()
+  readonly id: string = randomUUID();
+  @Expose()
+  @Type(() => DataField, {
+    discriminator: {
+      property: 'type',
+      subTypes: [{ value: TextField, name: DataType.TEXT_FIELD }],
+    },
+    keepDiscriminatorProperty: true,
+  })
+  readonly dataFields: DataField[];
 }
 
 export class ProductDataModel {
-  constructor(
-    public readonly id: string = randomUUID(),
-    public readonly name: string,
-    public readonly version: string,
-    public readonly sections: DataSection[] = [],
-  ) {}
+  @Expose()
+  readonly id: string = randomUUID();
+  @Expose()
+  readonly name: string;
+  @Expose()
+  readonly version: string;
+  @Expose()
+  @Type(() => DataSection)
+  readonly sections: DataSection[] = [];
+
+  // TODO: Partial seems not to work with data field id not set. Even type-fest deep partial is not enough
   static fromPlain(plain: unknown): ProductDataModel {
-    const parsed = z
-      .object({
-        name: z.string(),
-        version: z.string(),
-        sections: z
-          .object({
-            dataFields: z
-              .object({
-                type: z.nativeEnum(DataType),
-                name: z.string(),
-                options: z.record(z.string(), z.unknown()),
-              })
-              .array(),
-          })
-          .array(),
-      })
-      .parse(plain);
-    return new ProductDataModel(
-      undefined,
-      parsed.name,
-      parsed.version,
-      parsed.sections.map(
-        (s) =>
-          new DataSection(
-            undefined,
-            s.dataFields.map((f) =>
-              makeDataField(undefined, f.type, f.name, f.options),
-            ),
-          ),
-      ),
-    );
+    return plainToInstance(ProductDataModel, plain, {
+      excludeExtraneousValues: true,
+      exposeDefaultValues: true,
+    });
+  }
+  toPlain() {
+    return instanceToPlain(this);
   }
   validate(
     values: DataValue[],

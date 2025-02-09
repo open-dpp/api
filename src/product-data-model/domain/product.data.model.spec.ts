@@ -1,8 +1,6 @@
 import {
   DataFieldValidationResult,
-  DataSection,
   ProductDataModel,
-  TextField,
 } from './product.data.model';
 import { DataValue } from '../../models/domain/model';
 
@@ -17,7 +15,7 @@ describe('ProductDataModel', () => {
             {
               type: 'TextField',
               name: 'Title',
-              options: { min: 2 },
+              options: { max: 2 },
             },
             {
               type: 'TextField',
@@ -30,31 +28,70 @@ describe('ProductDataModel', () => {
     };
 
     const productDataModel = ProductDataModel.fromPlain(plain);
-    expect(productDataModel).toEqual(
-      new ProductDataModel(expect.any(String), 'Laptop', '1.0', [
-        new DataSection(expect.any(String), [
-          new TextField(expect.any(String), 'Title', { min: 2 }),
-          new TextField(expect.any(String), 'Title 2', { min: 2 }),
-        ]),
-      ]),
-    );
+    expect(productDataModel.version).toEqual(plain.version);
+    expect(productDataModel.name).toEqual(plain.name);
+    expect(productDataModel.sections).toHaveLength(1);
+    for (const [index, section] of plain.sections.entries()) {
+      const currentSection = productDataModel.sections[index];
+      expect(currentSection.dataFields).toHaveLength(section.dataFields.length);
+
+      for (const [dataFieldIndex, dataField] of section.dataFields.entries()) {
+        const currentField = currentSection.dataFields[dataFieldIndex];
+        expect(currentField.type).toEqual(dataField.type);
+        expect(currentField.name).toEqual(dataField.name);
+        expect(currentField.options).toEqual(dataField.options);
+      }
+    }
+
+    expect(productDataModel.toPlain()).toEqual({
+      ...plain,
+      id: expect.any(String),
+      sections: plain.sections.map((s) => ({
+        id: expect.any(String),
+        ...s,
+        dataFields: s.dataFields.map((f) => ({ id: expect.any(String), ...f })),
+      })),
+    });
   });
 
+  const laptopModel = {
+    id: 'product-1',
+    name: 'Laptop',
+    version: '1.0',
+    sections: [
+      {
+        id: 'section-1',
+        dataFields: [
+          {
+            id: 'field-1',
+            type: 'TextField',
+            name: 'Title',
+            options: { min: 2 },
+          },
+          {
+            id: 'field-2',
+            type: 'TextField',
+            name: 'Title 2',
+            options: { min: 7 },
+          },
+        ],
+      },
+      {
+        id: 'section-2',
+        dataFields: [
+          {
+            id: 'field-3',
+            type: 'TextField',
+            name: 'Title 3',
+            options: { min: 8 },
+          },
+        ],
+      },
+    ],
+  };
+
   it('should create data values', () => {
-    const productDataModel = new ProductDataModel(
-      'product-1',
-      'Laptop',
-      '1.0',
-      [
-        new DataSection('section-1', [
-          new TextField('field-1', 'Title', { min: 2 }),
-          new TextField('field-2', 'Title 2', { min: 7 }),
-        ]),
-        new DataSection('section-2', [
-          new TextField('field-3', 'Title 3', { min: 8 }),
-        ]),
-      ],
-    );
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
     const dataValues = productDataModel.createInitialDataValues();
     expect(dataValues).toEqual([
       DataValue.fromPlain({
@@ -74,22 +111,10 @@ describe('ProductDataModel', () => {
       }),
     ]);
   });
-
+  //
   it('should validate values successfully', () => {
-    const productDataModel = new ProductDataModel(
-      'product-1',
-      'Laptop',
-      '1.0',
-      [
-        new DataSection('section-1', [
-          new TextField('field-1', 'Title 1', { min: 2 }),
-          new TextField('field-2', 'Title 2', { min: 7 }),
-        ]),
-        new DataSection('section-2', [
-          new TextField('field-3', 'Title 3', { min: 8 }),
-        ]),
-      ],
-    );
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+
     const dataValues = [
       DataValue.fromPlain({
         value: 'value 1',
@@ -111,27 +136,14 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
-      new DataFieldValidationResult('field-1', 'Title 1', true),
+      new DataFieldValidationResult('field-1', 'Title', true),
       new DataFieldValidationResult('field-2', 'Title 2', true),
       new DataFieldValidationResult('field-3', 'Title 3', true),
     ]);
   });
-
+  //
   it('should fail validation caused by missing field and wrong type', () => {
-    const productDataModel = new ProductDataModel(
-      'product-1',
-      'Laptop',
-      '1.0',
-      [
-        new DataSection('section-1', [
-          new TextField('field-1', 'Title 1', { min: 2 }),
-          new TextField('field-2', 'Title 2', { min: 7 }),
-        ]),
-        new DataSection('section-2', [
-          new TextField('field-3', 'Title 3', { min: 8 }),
-        ]),
-      ],
-    );
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
     const dataValues = [
       DataValue.fromPlain({
         value: 'value 1',
@@ -148,7 +160,7 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeFalsy();
     expect(validationOutput.validationResults).toEqual([
-      new DataFieldValidationResult('field-1', 'Title 1', true),
+      new DataFieldValidationResult('field-1', 'Title', true),
       new DataFieldValidationResult(
         'field-2',
         'Title 2',

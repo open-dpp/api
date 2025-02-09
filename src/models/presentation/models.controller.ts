@@ -69,11 +69,15 @@ export class ModelsController {
   async assignProductDataModelToModel(
     @Param('modelId') modelId: string,
     @Param('productDataModelId') productDataModelId: string,
+    @Request() req: AuthRequest,
   ) {
-    // TODO: Check if user has permission to access product data model and model
+    // TODO: Check if user has permission to access product data model
     const productDataModel =
       await this.productDataModelService.findOne(productDataModelId);
     const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(req.authContext.user)) {
+      throw new ForbiddenException();
+    }
     model.assignProductDataModel(productDataModel);
     return (await this.modelsService.save(model)).toPlain();
   }

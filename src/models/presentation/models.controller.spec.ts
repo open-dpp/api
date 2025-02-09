@@ -15,11 +15,7 @@ import { AuthContext } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import {
-  DataSection,
-  ProductDataModel,
-  TextField,
-} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
@@ -117,15 +113,35 @@ describe('ModelsController', () => {
     model.assignOwner(authContext.user);
     await modelsService.save(model);
 
-    const productDataModel = new ProductDataModel(undefined, 'Laptop', 'v1', [
-      new DataSection(undefined, [
-        new TextField(undefined, 'Title', { min: 2 }),
-        new TextField(undefined, 'Title 2', { min: 7 }),
-      ]),
-      new DataSection(undefined, [
-        new TextField(undefined, 'Title 3', { min: 8 }),
-      ]),
-    ]);
+    const productDataModel = ProductDataModel.fromPlain({
+      name: 'Laptop',
+      version: '1.0',
+      sections: [
+        {
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title',
+              options: { min: 2 },
+            },
+            {
+              type: 'TextField',
+              name: 'Title 2',
+              options: { min: 7 },
+            },
+          ],
+        },
+        {
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 3',
+              options: { min: 8 },
+            },
+          ],
+        },
+      ],
+    });
     await productDataModelService.save(productDataModel);
 
     const response = await request(app.getHttpServer())

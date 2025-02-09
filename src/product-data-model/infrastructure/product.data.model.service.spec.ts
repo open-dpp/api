@@ -4,11 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ProductDataModelService } from './product.data.model.service';
 import { ProductDataModelEntity } from './product.data.model.entity';
-import {
-  DataSection,
-  ProductDataModel,
-  TextField,
-} from '../domain/product.data.model';
+import { ProductDataModel } from '../domain/product.data.model';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -27,12 +23,25 @@ describe('ProductDataModelService', () => {
   });
 
   it('should create product data model', async () => {
-    const productDataModel = new ProductDataModel(undefined, 'Laptop', 'v1', [
-      new DataSection(undefined, [
-        new TextField(undefined, 'Serial number'),
-        new TextField(undefined, 'Processor', { max: 7 }),
-      ]),
-    ]);
+    const productDataModel = ProductDataModel.fromPlain({
+      name: 'Laptop',
+      version: 'v1',
+      sections: [
+        {
+          dataFields: [
+            {
+              name: 'Serial number',
+              type: 'TextField',
+            },
+            {
+              name: 'Processor',
+              type: 'TextField',
+            },
+          ],
+        },
+      ],
+    });
+
     const { id } = await service.save(productDataModel);
     const found = await service.findOne(id);
     expect(found).toEqual(productDataModel);

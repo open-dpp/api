@@ -11,11 +11,7 @@ import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/i
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import {
-  DataSection,
-  ProductDataModel,
-  TextField,
-} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -47,15 +43,35 @@ describe('ModelsService', () => {
       description: 'This is my product',
     });
     model.assignOwner(user);
-    const productDataModel = new ProductDataModel(undefined, 'Laptop', '1.0', [
-      new DataSection(randomUUID(), [
-        new TextField(randomUUID(), 'Title', { min: 2 }),
-        new TextField(randomUUID(), 'Title 2', { min: 7 }),
-      ]),
-      new DataSection(randomUUID(), [
-        new TextField(randomUUID(), 'Title 3', { min: 8 }),
-      ]),
-    ]);
+    const productDataModel = ProductDataModel.fromPlain({
+      name: 'Laptop',
+      version: '1.0',
+      sections: [
+        {
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title',
+              options: { min: 2 },
+            },
+            {
+              type: 'TextField',
+              name: 'Title 2',
+              options: { min: 7 },
+            },
+          ],
+        },
+        {
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 3',
+              options: { min: 8 },
+            },
+          ],
+        },
+      ],
+    });
 
     model.assignProductDataModel(productDataModel);
     const { id } = await modelsService.save(model);
