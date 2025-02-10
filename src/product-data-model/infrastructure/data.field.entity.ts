@@ -9,7 +9,7 @@ export class DataFieldEntity {
   @Column()
   name: string;
   @Column({
-    type: 'enum',
+    type: 'text',
     enum: DataType,
   })
   type: DataType;

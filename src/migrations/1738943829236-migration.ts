@@ -11,7 +11,7 @@ export class Migration1738943829236 implements MigrationInterface {
       `CREATE TABLE "data_section" ("id" uuid NOT NULL, "productDataModelId" uuid, CONSTRAINT "PK_334dc9e78d2d81885f33efa2cbc" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "data_field" ("id" uuid NOT NULL, "name" character varying NOT NULL, "type" "public"."data_field_type_enum" NOT NULL, "options" jsonb NOT NULL, "sectionId" uuid, CONSTRAINT "PK_3a8385bfd834043ee3e0eadc5b7" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "data_field" ("id" uuid NOT NULL, "name" character varying NOT NULL, "type" text NOT NULL, "options" jsonb NOT NULL, "sectionId" uuid, CONSTRAINT "PK_3a8385bfd834043ee3e0eadc5b7" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "data_value" ("id" uuid NOT NULL, "value" jsonb, "dataSectionId" uuid NOT NULL, "dataFieldId" uuid NOT NULL, "modelId" uuid, CONSTRAINT "PK_6064d0be9bb5a1130024c9f9421" PRIMARY KEY ("id"))`,
