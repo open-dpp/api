@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductDataModelEntity } from './product.data.model.entity';
-import { DataSection, ProductDataModel } from '../domain/product.data.model';
+import { ProductDataModel } from '../domain/product.data.model';
 
 @Injectable()
 export class ProductDataModelService {
@@ -15,7 +15,7 @@ export class ProductDataModelService {
     return ProductDataModel.fromPlain({
       id: productDataModelEntity.id,
       name: productDataModelEntity.name,
-      version: 'v1', // TODO: Replace hard coded version
+      version: productDataModelEntity.version,
       sections: productDataModelEntity.sections.map((s) => ({
         id: s.id,
         dataFields: s.dataFields.map((f) => ({

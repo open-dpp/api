@@ -25,7 +25,7 @@ describe('ProductDataModelService', () => {
   it('should create product data model', async () => {
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
-      version: 'v1',
+      version: 'v2',
       sections: [
         {
           dataFields: [

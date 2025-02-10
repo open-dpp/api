@@ -7,6 +7,8 @@ export class ProductDataModelEntity {
   id: string;
   @Column()
   name: string;
+  @Column()
+  version: string;
   @OneToMany(
     () => DataSectionEntity,
     (dataSection) => dataSection.productDataModel,
