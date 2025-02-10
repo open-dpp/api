@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -80,5 +81,26 @@ export class ModelsController {
     }
     model.assignProductDataModel(productDataModel);
     return (await this.modelsService.save(model)).toPlain();
+  }
+
+  @Patch(':modelId/data-values')
+  async updateDataValues(
+    @Param('modelId') modelId: string,
+    @Body() updateDataValues: unknown,
+    @Request() req: AuthRequest,
+  ) {
+    const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(req.authContext.user)) {
+      throw new ForbiddenException();
+    }
+    const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
+    const productDataModel = await this.productDataModelService.findOne(
+      mergedModel.productDataModelId,
+    );
+    const validationResult = productDataModel.validate(mergedModel.dataValues);
+    if (!validationResult.isValid) {
+      throw new BadRequestException(validationResult.toJson());
+    }
+    return (await this.modelsService.save(mergedModel)).toPlain();
   }
 }

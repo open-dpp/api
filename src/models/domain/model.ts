@@ -7,7 +7,7 @@ import {
   plainToInstance,
   Type,
 } from 'class-transformer';
-import { merge } from 'lodash';
+import { keyBy, keys, map, mergeWith, pick } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 
 export class DataValue {
@@ -88,8 +88,26 @@ export class Model {
     });
   }
 
-  public mergeWithPlain(plain: Partial<Model>): Model {
-    const mergedPlain = merge(plain, this.toPlain());
+  public mergeWithPlain(plain: unknown): Model {
+    const existingPlain = this.toPlain();
+    const mergedPlain = mergeWith(
+      {},
+      existingPlain,
+      pick(plain, keys(existingPlain)), // Ignore keys which are not defined in by model
+      (objValue, srcValue, key) => {
+        if (
+          key === 'dataValues' &&
+          Array.isArray(objValue) &&
+          Array.isArray(srcValue)
+        ) {
+          const map2 = keyBy(srcValue, 'id');
+          return map(objValue, (item) => ({
+            ...item,
+            ...(map2[item.id] ? { value: map2[item.id].value } : {}), // Merge only value if matching IDs
+          }));
+        }
+      },
+    );
     return Model.fromPlain(mergedPlain);
   }
 

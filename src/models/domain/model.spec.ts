@@ -81,15 +81,30 @@ describe('Model', () => {
     const model = Model.fromPlain({
       name: 'My Name',
       description: 'Some description',
+      dataValues: [
+        { id: 'd1', value: undefined, dataSectionId: 's1', dataFieldId: 'f1' },
+        { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
+        { id: 'd3', value: 'v3', dataSectionId: 's2', dataFieldId: 'f3' },
+      ],
     });
     const plain = {
       name: 'Plain name',
       owner: randomUUID(),
+      dataValues: [
+        { id: 'd1', value: 'v1', fieldToIgnore: 3, dataFieldId: 'f9' },
+        { id: 'd3', value: 'v3 new' },
+      ],
+      fieldToIgnore: 'hello',
     };
     const mergedModel = model.mergeWithPlain(plain);
     expect(mergedModel.id).toEqual(expect.any(String));
     expect(mergedModel.name).toEqual(plain.name);
     expect(mergedModel.description).toEqual(model.description);
     expect(mergedModel.owner).toEqual(plain.owner);
+    expect(mergedModel.dataValues).toEqual([
+      { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
+      { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
+      { id: 'd3', value: 'v3 new', dataSectionId: 's2', dataFieldId: 'f3' },
+    ]);
   });
 });

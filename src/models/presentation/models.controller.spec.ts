@@ -107,41 +107,54 @@ describe('ModelsController', () => {
     }
   });
 
+  const sectionId1 = randomUUID();
+  const sectionId2 = randomUUID();
+  const dataFieldId1 = randomUUID();
+  const dataFieldId2 = randomUUID();
+  const dataFieldId3 = randomUUID();
+
+  const laptopModel = {
+    name: 'Laptop',
+    version: '1.0',
+    sections: [
+      {
+        id: sectionId1,
+        dataFields: [
+          {
+            id: dataFieldId1,
+            type: 'TextField',
+            name: 'Title',
+            options: { min: 2 },
+          },
+          {
+            id: dataFieldId2,
+            type: 'TextField',
+            name: 'Title 2',
+            options: { min: 7 },
+          },
+        ],
+      },
+      {
+        id: sectionId2,
+        dataFields: [
+          {
+            id: dataFieldId3,
+            type: 'TextField',
+            name: 'Title 3',
+            options: { min: 8 },
+          },
+        ],
+      },
+    ],
+  };
+
   it('assigns product data model to model', async () => {
     const body = { name: 'My name', description: 'My desc' };
     const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
     model.assignOwner(authContext.user);
     await modelsService.save(model);
 
-    const productDataModel = ProductDataModel.fromPlain({
-      name: 'Laptop',
-      version: '1.0',
-      sections: [
-        {
-          dataFields: [
-            {
-              type: 'TextField',
-              name: 'Title',
-              options: { min: 2 },
-            },
-            {
-              type: 'TextField',
-              name: 'Title 2',
-              options: { min: 7 },
-            },
-          ],
-        },
-        {
-          dataFields: [
-            {
-              type: 'TextField',
-              name: 'Title 3',
-              options: { min: 8 },
-            },
-          ],
-        },
-      ],
-    });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
@@ -155,21 +168,81 @@ describe('ModelsController', () => {
     expect(responseGet.body.dataValues).toEqual([
       DataValue.fromPlain({
         id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[0].id,
+        dataSectionId: sectionId1,
+        dataFieldId: dataFieldId1,
       }),
       DataValue.fromPlain({
         id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[1].id,
+        dataSectionId: sectionId1,
+        dataFieldId: dataFieldId2,
       }),
       DataValue.fromPlain({
         id: expect.anything(),
-        dataSectionId: productDataModel.sections[1].id,
-        dataFieldId: productDataModel.sections[1].dataFields[0].id,
+        dataSectionId: sectionId2,
+        dataFieldId: dataFieldId3,
       }),
     ]);
     expect(responseGet.body.productDataModelId).toEqual(productDataModel.id);
+  });
+
+  it('update data values of model', async () => {
+    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+    model.assignOwner(authContext.user);
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+    const dataValue1 = model.dataValues[0];
+    const dataValue2 = model.dataValues[1];
+    const dataValue3 = model.dataValues[2];
+    const updatedValues = [
+      { id: dataValue1.id, value: 'value 1' },
+      { id: dataValue3.id, value: 'value 3' },
+    ];
+    const response = await request(app.getHttpServer())
+      .patch(`/models/${model.id}/data-values`)
+      .set('Authorization', 'Bearer token1')
+      .send(updatedValues);
+    expect(response.status).toEqual(200);
+    const expectedDataValues = [
+      {
+        ...dataValue1,
+        value: 'value 1',
+      },
+      {
+        ...dataValue2,
+      },
+      {
+        ...dataValue3,
+        value: 'value 3',
+      },
+    ];
+    expect(response.body.dataValues).toEqual(expectedDataValues);
+    const foundModel = await modelsService.findOne(response.body.id);
+    const sortFn = (a, b) => a.id.localeCompare(b.id);
+    expect([...foundModel.dataValues].sort(sortFn)).toEqual(
+      [...expectedDataValues].sort(sortFn),
+    );
+  });
+
+  it('update data values fails caused by validation', async () => {
+    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+    model.assignOwner(authContext.user);
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+    const dataValue1 = model.dataValues[0];
+    const dataValue3 = model.dataValues[2];
+    const updatedValues = [
+      { id: dataValue1.id, value: { wrongValue: 'value 1' } },
+      { id: dataValue3.id, value: 'value 3' },
+    ];
+    const response = await request(app.getHttpServer())
+      .patch(`/models/${model.id}/data-values`)
+      .set('Authorization', 'Bearer token1')
+      .send(updatedValues);
+    expect(response.status).toEqual(400);
   });
 
   afterAll(async () => {
