@@ -14,10 +14,10 @@ export class UniqueProductIdentifierService {
   convertToDomain(
     uniqueProductIdentifierEntity: UniqueProductIdentifierEntity,
   ) {
-    const uniqueProductIdentifier = new UniqueProductIdentifier(
-      uniqueProductIdentifierEntity.uuid,
-      uniqueProductIdentifierEntity.view,
-    );
+    const uniqueProductIdentifier = UniqueProductIdentifier.fromPlain({
+      uuid: uniqueProductIdentifierEntity.uuid,
+      view: uniqueProductIdentifierEntity.view,
+    });
     uniqueProductIdentifier.linkTo(uniqueProductIdentifierEntity.referencedId);
     return uniqueProductIdentifier;
   }
@@ -27,7 +27,7 @@ export class UniqueProductIdentifierService {
       await this.uniqueProductIdentifierRepository.save({
         uuid: uniqueProductIdentifier.uuid,
         view: uniqueProductIdentifier.view,
-        referencedId: uniqueProductIdentifier.getReference(),
+        referencedId: uniqueProductIdentifier.referenceId,
       }),
     );
   }

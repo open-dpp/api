@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -81,18 +82,17 @@ export class KeycloakAuthGuard implements CanActivate {
           },
         }),
       );
-      console.log(responseUserinfo.data);
       const user = {
         id: responseUserinfo.data.sub,
         username: responseUserinfo.data.preferred_username,
       };
       keycloakId = user.id;
     } catch (e) {
-      throw new Error(e.message);
+      throw new UnauthorizedException(e.message);
     }
     authContext.user = new User(keycloakId);
     request.authContext = authContext;
-    console.log(authContext);
+
     return true;
   }
 }

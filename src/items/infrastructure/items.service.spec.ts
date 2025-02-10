@@ -39,7 +39,10 @@ describe('ProductsService', () => {
   });
 
   it('should create and find item for a model', async () => {
-    const model = new Model(undefined, 'name', 'description');
+    const model = Model.fromPlain({
+      name: 'name',
+      description: 'description',
+    });
     model.assignOwner(new User(randomUUID()));
     const savedModel = await productService.save(model);
     const item = new Item();
@@ -51,10 +54,16 @@ describe('ProductsService', () => {
   });
 
   it('should create multiple items for a model and find them by model', async () => {
-    const model = new Model(undefined, 'name', 'description');
+    const model = Model.fromPlain({
+      name: 'name',
+      description: 'description',
+    });
     const user = new User(randomUUID());
     model.assignOwner(user);
-    const model2 = new Model(undefined, 'name', 'description');
+    const model2 = Model.fromPlain({
+      name: 'name',
+      description: 'description',
+    });
     model2.assignOwner(user);
     const savedModel1 = await productService.save(model);
     const savedModel2 = await productService.save(model2);

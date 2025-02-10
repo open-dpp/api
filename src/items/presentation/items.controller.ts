@@ -50,7 +50,11 @@ export class ItemsController {
   private itemToDto(item: Item) {
     return plainToInstance(GetItemDto, {
       id: item.id,
-      uniqueProductIdentifiers: item.uniqueProductIdentifiers,
+      uniqueProductIdentifiers: item.uniqueProductIdentifiers.map((u) => ({
+        uuid: u.uuid,
+        view: u.view,
+        referenceId: u.referenceId,
+      })),
     });
   }
 

@@ -4,13 +4,14 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ItemEntity } from '../../items/infrastructure/item.entity';
+import { DataValueEntity } from './data.value.entity';
 
 @Entity('model')
 export class ModelEntity {
@@ -45,6 +46,14 @@ export class ModelEntity {
   @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
   createdByUser: UserEntity;
 
-  @ManyToMany(() => ItemEntity, (item) => item.model)
+  @OneToMany(() => ItemEntity, (item) => item.model)
   items: ItemEntity[];
+
+  @OneToMany(() => DataValueEntity, (dataValue) => dataValue.model, {
+    cascade: ['insert', 'update'],
+  })
+  dataValues: DataValueEntity[];
+
+  @Column('uuid', { nullable: true })
+  productDataModelId: string;
 }
