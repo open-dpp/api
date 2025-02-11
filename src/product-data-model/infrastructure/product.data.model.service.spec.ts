@@ -22,29 +22,52 @@ describe('ProductDataModelService', () => {
     dataSource = module.get<DataSource>(DataSource);
   });
 
+  const laptopModelPlain = {
+    name: 'Laptop',
+    version: 'v2',
+    sections: [
+      {
+        dataFields: [
+          {
+            name: 'Serial number',
+            type: 'TextField',
+          },
+          {
+            name: 'Processor',
+            type: 'TextField',
+          },
+        ],
+      },
+    ],
+  };
+
   it('should create product data model', async () => {
     const productDataModel = ProductDataModel.fromPlain({
-      name: 'Laptop',
-      version: 'v2',
-      sections: [
-        {
-          dataFields: [
-            {
-              name: 'Serial number',
-              type: 'TextField',
-            },
-            {
-              name: 'Processor',
-              type: 'TextField',
-            },
-          ],
-        },
-      ],
+      ...laptopModelPlain,
     });
 
     const { id } = await service.save(productDataModel);
     const found = await service.findOne(id);
     expect(found).toEqual(productDataModel);
+  });
+
+  it('should return all product data models', async () => {
+    const laptopModel = ProductDataModel.fromPlain({ ...laptopModelPlain });
+    const phoneModel = ProductDataModel.fromPlain({
+      ...laptopModelPlain,
+      name: 'phone',
+    });
+    await service.save(laptopModel);
+    await service.save(phoneModel);
+    const foundAll = await service.findAll();
+    expect(foundAll).toContainEqual({
+      id: laptopModel.id,
+      name: laptopModel.name,
+    });
+    expect(foundAll).toContainEqual({
+      id: phoneModel.id,
+      name: phoneModel.name,
+    });
   });
 
   afterEach(async () => {
