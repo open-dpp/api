@@ -35,6 +35,16 @@ export class ProductDataModelService {
       ),
     );
   }
+
+  async findAll() {
+    return await this.productDataModelEntityRepository.find({
+      select: { id: true, name: true },
+      order: {
+        name: 'ASC',
+      },
+    });
+  }
+
   async findOne(id: string) {
     const productEntity = await this.productDataModelEntityRepository.findOne({
       where: { id },

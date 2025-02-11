@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../infrastructure/product.data.model.service';
 import { ProductDataModelEntity } from '../infrastructure/product.data.model.entity';
 import { ProductDataModelModule } from '../product.data.model.module';
+import { ProductDataModel } from '../domain/product.data.model';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
@@ -41,27 +42,29 @@ describe('ProductsDataModelController', () => {
     await app.init();
   });
 
+  const laptopPlain = {
+    version: '1.0',
+    name: 'Laptop',
+    sections: [
+      {
+        dataFields: [
+          {
+            type: 'TextField',
+            name: 'Title',
+            options: { min: 2 },
+          },
+          {
+            type: 'TextField',
+            name: 'Title 2',
+            options: { min: 2 },
+          },
+        ],
+      },
+    ],
+  };
+
   it(`/CREATE product data model`, async () => {
-    const body = {
-      version: '1.0',
-      name: 'Laptop',
-      sections: [
-        {
-          dataFields: [
-            {
-              type: 'TextField',
-              name: 'Title',
-              options: { min: 2 },
-            },
-            {
-              type: 'TextField',
-              name: 'Title 2',
-              options: { min: 2 },
-            },
-          ],
-        },
-      ],
-    };
+    const body = { ...laptopPlain };
     const response = await request(app.getHttpServer())
       .post('/product-data-models')
       .set('Authorization', 'Bearer token1')
@@ -70,6 +73,41 @@ describe('ProductsDataModelController', () => {
     expect(response.body.id).toBeDefined();
     const found = await service.findOne(response.body.id);
     expect(response.body).toEqual(found);
+  });
+
+  it(`/GET product data model`, async () => {
+    const productDataModel = ProductDataModel.fromPlain({ ...laptopPlain });
+    await service.save(productDataModel);
+    const response = await request(app.getHttpServer())
+      .get(`/product-data-models/${productDataModel.id}`)
+      .set('Authorization', 'Bearer token1')
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual(productDataModel.toPlain());
+  });
+
+  it(`/GET all product data models`, async () => {
+    const laptopModel = ProductDataModel.fromPlain({ ...laptopPlain });
+    const phoneModel = ProductDataModel.fromPlain({
+      ...laptopPlain,
+      name: 'phone',
+    });
+    await service.save(laptopModel);
+    await service.save(phoneModel);
+    const response = await request(app.getHttpServer())
+      .get(`/product-data-models`)
+      .set('Authorization', 'Bearer token1')
+      .send();
+    expect(response.status).toEqual(200);
+
+    expect(response.body).toContainEqual({
+      id: laptopModel.id,
+      name: laptopModel.name,
+    });
+    expect(response.body).toContainEqual({
+      id: phoneModel.id,
+      name: phoneModel.name,
+    });
   });
 
   afterAll(async () => {
