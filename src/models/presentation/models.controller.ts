@@ -59,10 +59,7 @@ export class ModelsController {
     if (!model.isOwnedBy(req.authContext.user)) {
       throw new ForbiddenException();
     }
-    const mergedModel = model.mergeWithPlain({
-      name: updateModelDto.name,
-      description: updateModelDto.description,
-    });
+    const mergedModel = model.mergeWithPlain(updateModelDto);
     return (await this.modelsService.save(mergedModel)).toPlain();
   }
 

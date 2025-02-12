@@ -24,7 +24,7 @@ export class ModelsService {
     return Model.fromPlain({
       id: modelEntity.id,
       name: modelEntity.name,
-      description: modelEntity.description,
+      description: modelEntity.description ?? undefined,
       uniqueProductIdentifiers: uniqueProductIdentifiers,
       productDataModelId: modelEntity.productDataModelId ?? undefined,
       dataValues: modelEntity.dataValues

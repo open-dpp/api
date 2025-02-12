@@ -30,7 +30,7 @@ export class ModelEntity {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @Column('char', {

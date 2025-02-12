@@ -32,7 +32,7 @@ export class Model {
   @Expose()
   name: string;
   @Expose()
-  description: string;
+  description: string | undefined;
 
   @Expose()
   @Type(() => UniqueProductIdentifier)
