@@ -12,6 +12,11 @@ export enum DataType {
   TEXT_FIELD = 'TextField',
 }
 
+export enum SectionType {
+  GROUP = 'Group',
+  REPEATABLE = 'Repeatable',
+}
+
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
   private _isValid: boolean = true;
@@ -83,6 +88,10 @@ export class TextField extends DataField {
 export class DataSection {
   @Expose()
   readonly id: string = randomUUID();
+  @Expose()
+  readonly name: string;
+  @Expose()
+  readonly type: SectionType;
   @Expose()
   @Type(() => DataField, {
     discriminator: {

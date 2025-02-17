@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ProductDataModelService } from './product.data.model.service';
 import { ProductDataModelEntity } from './product.data.model.entity';
-import { ProductDataModel } from '../domain/product.data.model';
+import { ProductDataModel, SectionType } from '../domain/product.data.model';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -27,6 +27,8 @@ describe('ProductDataModelService', () => {
     version: 'v2',
     sections: [
       {
+        name: 'Environment',
+        type: SectionType.GROUP,
         dataFields: [
           {
             name: 'Serial number',

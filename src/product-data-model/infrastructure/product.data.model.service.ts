@@ -18,6 +18,8 @@ export class ProductDataModelService {
       version: productDataModelEntity.version,
       sections: productDataModelEntity.sections.map((s) => ({
         id: s.id,
+        name: s.name,
+        type: s.type,
         dataFields: s.dataFields.map((f) => ({
           id: f.id,
           type: f.type,

@@ -11,7 +11,7 @@ import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../infrastructure/product.data.model.service';
 import { ProductDataModelEntity } from '../infrastructure/product.data.model.entity';
 import { ProductDataModelModule } from '../product.data.model.module';
-import { ProductDataModel } from '../domain/product.data.model';
+import { ProductDataModel, SectionType } from '../domain/product.data.model';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
@@ -47,6 +47,8 @@ describe('ProductsDataModelController', () => {
     name: 'Laptop',
     sections: [
       {
+        name: 'Section 1',
+        type: SectionType.GROUP,
         dataFields: [
           {
             type: 'TextField',

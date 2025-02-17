@@ -15,7 +15,10 @@ import { AuthContext } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  SectionType,
+} from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
@@ -119,6 +122,8 @@ describe('ModelsController', () => {
     sections: [
       {
         id: sectionId1,
+        name: 'Section name',
+        type: SectionType.GROUP,
         dataFields: [
           {
             id: dataFieldId1,
@@ -136,6 +141,8 @@ describe('ModelsController', () => {
       },
       {
         id: sectionId2,
+        name: 'Section name 2',
+        type: SectionType.GROUP,
         dataFields: [
           {
             id: dataFieldId3,

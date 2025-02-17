@@ -11,6 +11,8 @@ describe('ProductDataModel', () => {
       version: '1.0',
       sections: [
         {
+          type: 'group',
+          name: 'Umwelt',
           dataFields: [
             {
               type: 'TextField',
@@ -24,16 +26,34 @@ describe('ProductDataModel', () => {
             },
           ],
         },
+        {
+          name: 'Material',
+          type: 'repeatable',
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'rep field 1',
+              options: {},
+            },
+            {
+              type: 'TextField',
+              name: 'rep field 2',
+              options: {},
+            },
+          ],
+        },
       ],
     };
 
     const productDataModel = ProductDataModel.fromPlain(plain);
     expect(productDataModel.version).toEqual(plain.version);
     expect(productDataModel.name).toEqual(plain.name);
-    expect(productDataModel.sections).toHaveLength(1);
+    expect(productDataModel.sections).toHaveLength(2);
     for (const [index, section] of plain.sections.entries()) {
       const currentSection = productDataModel.sections[index];
       expect(currentSection.dataFields).toHaveLength(section.dataFields.length);
+      expect(currentSection.type).toEqual(section.type);
+      expect(currentSection.name).toEqual(section.name);
 
       for (const [dataFieldIndex, dataField] of section.dataFields.entries()) {
         const currentField = currentSection.dataFields[dataFieldIndex];
