@@ -7,9 +7,15 @@ import {
   plainToInstance,
   Type,
 } from 'class-transformer';
+import { groupBy } from 'lodash';
 
 export enum DataType {
   TEXT_FIELD = 'TextField',
+}
+
+export enum SectionType {
+  GROUP = 'Group',
+  REPEATABLE = 'Repeatable',
 }
 
 export class ValidationResult {
@@ -40,17 +46,30 @@ export class ValidationResult {
 }
 
 export class DataFieldValidationResult {
-  constructor(
-    public readonly dataFieldId: string,
-    public readonly dataFieldName: string,
-    public readonly isValid: boolean,
-    public readonly errorMessage?: string,
-  ) {}
+  @Expose()
+  readonly dataFieldId: string;
+  @Expose()
+  readonly dataFieldName: string;
+  @Expose()
+  readonly isValid: boolean;
+  @Expose()
+  readonly row?: number;
+  @Expose()
+  readonly errorMessage?: string;
+  static fromPlain(
+    plain: Partial<DataFieldValidationResult>,
+  ): DataFieldValidationResult {
+    return plainToInstance(DataFieldValidationResult, plain, {
+      excludeExtraneousValues: true,
+      exposeDefaultValues: true,
+    });
+  }
 
   toJson() {
     return {
       id: this.dataFieldId,
       name: this.dataFieldName,
+      ...(this.row ? { row: this.row } : {}),
       message: this.errorMessage,
     };
   }
@@ -71,18 +90,24 @@ export abstract class DataField {
 export class TextField extends DataField {
   validate(version: string, value: unknown): DataFieldValidationResult {
     const result = z.ostring().safeParse(value);
-    return new DataFieldValidationResult(
-      this.id,
-      this.name,
-      result.success,
-      !result.success ? result.error.issues[0].message : undefined,
-    );
+    return DataFieldValidationResult.fromPlain({
+      dataFieldId: this.id,
+      dataFieldName: this.name,
+      isValid: result.success,
+      errorMessage: !result.success
+        ? result.error.issues[0].message
+        : undefined,
+    });
   }
 }
 
-export class DataSection {
+export abstract class DataSection {
   @Expose()
   readonly id: string = randomUUID();
+  @Expose()
+  readonly name: string;
+  @Expose()
+  readonly type: SectionType;
   @Expose()
   @Type(() => DataField, {
     discriminator: {
@@ -92,6 +117,61 @@ export class DataSection {
     keepDiscriminatorProperty: true,
   })
   readonly dataFields: DataField[];
+  abstract validate(
+    version: string,
+    values: DataValue[],
+  ): DataFieldValidationResult[];
+}
+
+export class RepeaterSection extends DataSection {
+  validate(version: string, values: DataValue[]): DataFieldValidationResult[] {
+    const validations = [];
+    const sectionValues = groupBy(
+      values.filter((v) => v.dataSectionId === this.id),
+      'row',
+    );
+    for (const [row, dataValuesOfRow] of Object.entries(sectionValues)) {
+      for (const dataField of this.dataFields) {
+        const dataValue = dataValuesOfRow.find(
+          (v) => v.dataFieldId === dataField.id,
+        );
+        validations.push(
+          dataValue
+            ? dataField.validate(version, dataValue.value)
+            : DataFieldValidationResult.fromPlain({
+                dataFieldId: dataField.id,
+                dataFieldName: dataField.name,
+                isValid: false,
+                row: Number(row),
+                errorMessage: `Value for data field is missing`,
+              }),
+        );
+      }
+    }
+    return validations;
+  }
+}
+export class GroupSection extends DataSection {
+  validate(version: string, values: DataValue[]): DataFieldValidationResult[] {
+    const validations = [];
+    const sectionValues = values.filter((v) => v.dataSectionId === this.id);
+    for (const dataField of this.dataFields) {
+      const dataValue = sectionValues.find(
+        (v) => v.dataFieldId === dataField.id,
+      );
+      validations.push(
+        dataValue
+          ? dataField.validate(version, dataValue.value)
+          : DataFieldValidationResult.fromPlain({
+              dataFieldId: dataField.id,
+              dataFieldName: dataField.name,
+              isValid: false,
+              errorMessage: `Value for data field is missing`,
+            }),
+      );
+    }
+    return validations;
+  }
 }
 
 export class ProductDataModel {
@@ -102,7 +182,16 @@ export class ProductDataModel {
   @Expose()
   readonly version: string;
   @Expose()
-  @Type(() => DataSection)
+  @Type(() => DataSection, {
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { value: RepeaterSection, name: SectionType.REPEATABLE },
+        { value: GroupSection, name: SectionType.GROUP },
+      ],
+    },
+    keepDiscriminatorProperty: true,
+  })
   readonly sections: DataSection[] = [];
 
   // TODO: Partial seems not to work with data field id not set. Even type-fest deep partial is not enough
@@ -125,24 +214,15 @@ export class ProductDataModel {
         ? this.sections
         : this.sections.filter((s) => includeSectionIds.includes(s.id));
     for (const section of sectionsToValidate) {
-      for (const dataField of section.dataFields) {
-        const dataValue = values.find((v) => v.dataFieldId === dataField.id);
-        validationOutput.addValidationResult(
-          dataValue
-            ? dataField.validate(this.version, dataValue.value)
-            : new DataFieldValidationResult(
-                dataField.id,
-                dataField.name,
-                false,
-                `Value for data field is missing`,
-              ),
-        );
-      }
+      section
+        .validate(this.version, values)
+        .map((v) => validationOutput.addValidationResult(v));
     }
     return validationOutput;
   }
   public createInitialDataValues(): DataValue[] {
     return this.sections
+      .filter((s) => s.type === SectionType.GROUP)
       .map((s) =>
         s.dataFields.map((f) =>
           DataValue.fromPlain({ dataSectionId: s.id, dataFieldId: f.id }),

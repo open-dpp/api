@@ -13,7 +13,7 @@ import { ModelsService } from '../infrastructure/models.service';
 import { CreateModelDto } from './dto/create-model.dto';
 import { UpdateModelDto } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
-import { Model } from '../domain/model';
+import { DataValue, Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 
 @Controller('models')
@@ -99,5 +99,26 @@ export class ModelsController {
       throw new BadRequestException(validationResult.toJson());
     }
     return (await this.modelsService.save(mergedModel)).toPlain();
+  }
+
+  @Post(':modelId/data-values')
+  async addDataValues(
+    @Param('modelId') modelId: string,
+    @Body() addedDataValues: unknown[],
+    @Request() req: AuthRequest,
+  ) {
+    const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(req.authContext.user)) {
+      throw new ForbiddenException();
+    }
+    model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
+    const productDataModel = await this.productDataModelService.findOne(
+      model.productDataModelId,
+    );
+    const validationResult = productDataModel.validate(model.dataValues);
+    if (!validationResult.isValid) {
+      throw new BadRequestException(validationResult.toJson());
+    }
+    return (await this.modelsService.save(model)).toPlain();
   }
 }

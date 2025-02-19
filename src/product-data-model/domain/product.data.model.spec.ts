@@ -1,6 +1,7 @@
 import {
   DataFieldValidationResult,
   ProductDataModel,
+  SectionType,
 } from './product.data.model';
 import { DataValue } from '../../models/domain/model';
 
@@ -11,6 +12,8 @@ describe('ProductDataModel', () => {
       version: '1.0',
       sections: [
         {
+          type: SectionType.GROUP,
+          name: 'Umwelt',
           dataFields: [
             {
               type: 'TextField',
@@ -24,16 +27,34 @@ describe('ProductDataModel', () => {
             },
           ],
         },
+        {
+          name: 'Material',
+          type: SectionType.REPEATABLE,
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'rep field 1',
+              options: {},
+            },
+            {
+              type: 'TextField',
+              name: 'rep field 2',
+              options: {},
+            },
+          ],
+        },
       ],
     };
 
     const productDataModel = ProductDataModel.fromPlain(plain);
     expect(productDataModel.version).toEqual(plain.version);
     expect(productDataModel.name).toEqual(plain.name);
-    expect(productDataModel.sections).toHaveLength(1);
+    expect(productDataModel.sections).toHaveLength(2);
     for (const [index, section] of plain.sections.entries()) {
       const currentSection = productDataModel.sections[index];
       expect(currentSection.dataFields).toHaveLength(section.dataFields.length);
+      expect(currentSection.type).toEqual(section.type);
+      expect(currentSection.name).toEqual(section.name);
 
       for (const [dataFieldIndex, dataField] of section.dataFields.entries()) {
         const currentField = currentSection.dataFields[dataFieldIndex];
@@ -61,6 +82,8 @@ describe('ProductDataModel', () => {
     sections: [
       {
         id: 'section-1',
+        name: 'Section 1',
+        type: SectionType.GROUP,
         dataFields: [
           {
             id: 'field-1',
@@ -78,11 +101,32 @@ describe('ProductDataModel', () => {
       },
       {
         id: 'section-2',
+        name: 'Section 2',
+        type: SectionType.REPEATABLE,
         dataFields: [
           {
             id: 'field-3',
             type: 'TextField',
             name: 'Title 3',
+            options: { min: 8 },
+          },
+          {
+            id: 'field-4',
+            type: 'TextField',
+            name: 'Title 4',
+            options: { min: 8 },
+          },
+        ],
+      },
+      {
+        id: 'section-3',
+        name: 'Section 3',
+        type: SectionType.GROUP,
+        dataFields: [
+          {
+            id: 'field-5',
+            type: 'TextField',
+            name: 'Title 5',
             options: { min: 8 },
           },
         ],
@@ -106,8 +150,8 @@ describe('ProductDataModel', () => {
       }),
       DataValue.fromPlain({
         id: expect.anything(),
-        dataSectionId: 'section-2',
-        dataFieldId: 'field-3',
+        dataSectionId: 'section-3',
+        dataFieldId: 'field-5',
       }),
     ]);
   });
@@ -130,15 +174,91 @@ describe('ProductDataModel', () => {
         value: 'value 3',
         dataSectionId: 'section-2',
         dataFieldId: 'field-3',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        value: 'value 4',
+        dataSectionId: 'section-2',
+        dataFieldId: 'field-4',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        value: 'value 5',
+        dataSectionId: 'section-3',
+        dataFieldId: 'field-5',
       }),
     ];
     const validationOutput = productDataModel.validate(dataValues);
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
-      new DataFieldValidationResult('field-1', 'Title', true),
-      new DataFieldValidationResult('field-2', 'Title 2', true),
-      new DataFieldValidationResult('field-3', 'Title 3', true),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-1',
+        dataFieldName: 'Title',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-2',
+        dataFieldName: 'Title 2',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-3',
+        dataFieldName: 'Title 3',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-4',
+        dataFieldName: 'Title 4',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-5',
+        dataFieldName: 'Title 5',
+        isValid: true,
+      }),
+    ]);
+  });
+
+  it('should validate values successfully if there are no data values for repeatable section', () => {
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+
+    const dataValues = [
+      DataValue.fromPlain({
+        value: 'value 1',
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-1',
+      }),
+      DataValue.fromPlain({
+        value: 'value 2',
+        dataSectionId: 'section-1',
+        dataFieldId: 'field-2',
+      }),
+      DataValue.fromPlain({
+        value: 'value 5',
+        dataSectionId: 'section-3',
+        dataFieldId: 'field-5',
+      }),
+    ];
+    const validationOutput = productDataModel.validate(dataValues);
+
+    expect(validationOutput.isValid).toBeTruthy();
+    expect(validationOutput.validationResults).toEqual([
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-1',
+        dataFieldName: 'Title',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-2',
+        dataFieldName: 'Title 2',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-5',
+        dataFieldName: 'Title 5',
+        isValid: true,
+      }),
     ]);
   });
   //
@@ -151,28 +271,50 @@ describe('ProductDataModel', () => {
         dataFieldId: 'field-1',
       }),
       DataValue.fromPlain({
-        value: { wrongType: 'crazyMan' },
+        value: 'value 4',
         dataSectionId: 'section-2',
-        dataFieldId: 'field-3',
+        dataFieldId: 'field-4',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        value: { wrongType: 'crazyMan' },
+        dataSectionId: 'section-3',
+        dataFieldId: 'field-5',
       }),
     ];
     const validationOutput = productDataModel.validate(dataValues);
 
     expect(validationOutput.isValid).toBeFalsy();
     expect(validationOutput.validationResults).toEqual([
-      new DataFieldValidationResult('field-1', 'Title', true),
-      new DataFieldValidationResult(
-        'field-2',
-        'Title 2',
-        false,
-        'Value for data field is missing',
-      ),
-      new DataFieldValidationResult(
-        'field-3',
-        'Title 3',
-        false,
-        'Expected string, received object',
-      ),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-1',
+        dataFieldName: 'Title',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-2',
+        dataFieldName: 'Title 2',
+        isValid: false,
+        errorMessage: 'Value for data field is missing',
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-3',
+        dataFieldName: 'Title 3',
+        isValid: false,
+        row: 0,
+        errorMessage: 'Value for data field is missing',
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-4',
+        dataFieldName: 'Title 4',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-5',
+        dataFieldName: 'Title 5',
+        isValid: false,
+        errorMessage: 'Expected string, received object',
+      }),
     ]);
   });
 });

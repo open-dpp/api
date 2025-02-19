@@ -15,7 +15,10 @@ import { AuthContext } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  SectionType,
+} from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
@@ -109,9 +112,12 @@ describe('ModelsController', () => {
 
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
+  const sectionId3 = randomUUID();
   const dataFieldId1 = randomUUID();
   const dataFieldId2 = randomUUID();
   const dataFieldId3 = randomUUID();
+  const dataFieldId4 = randomUUID();
+  const dataFieldId5 = randomUUID();
 
   const laptopModel = {
     name: 'Laptop',
@@ -119,6 +125,8 @@ describe('ModelsController', () => {
     sections: [
       {
         id: sectionId1,
+        name: 'Section name',
+        type: SectionType.GROUP,
         dataFields: [
           {
             id: dataFieldId1,
@@ -136,11 +144,32 @@ describe('ModelsController', () => {
       },
       {
         id: sectionId2,
+        name: 'Section name 2',
+        type: SectionType.GROUP,
         dataFields: [
           {
             id: dataFieldId3,
             type: 'TextField',
             name: 'Title 3',
+            options: { min: 8 },
+          },
+        ],
+      },
+      {
+        id: sectionId3,
+        name: 'Repeating Section',
+        type: SectionType.REPEATABLE,
+        dataFields: [
+          {
+            id: dataFieldId4,
+            type: 'TextField',
+            name: 'Title 4',
+            options: { min: 8 },
+          },
+          {
+            id: dataFieldId5,
+            type: 'TextField',
+            name: 'Title 5',
             options: { min: 8 },
           },
         ],
@@ -243,6 +272,96 @@ describe('ModelsController', () => {
       .set('Authorization', 'Bearer token1')
       .send(updatedValues);
     expect(response.status).toEqual(400);
+    expect(response.body).toEqual({
+      errors: [
+        {
+          id: dataFieldId1,
+          message: 'Expected string, received object',
+          name: 'Title',
+        },
+      ],
+      isValid: false,
+    });
+  });
+
+  it('add data values to model', async () => {
+    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+    model.assignOwner(authContext.user);
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+    const existingDataValues = model.dataValues;
+    const addedValues = [
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId4,
+        value: 'value 4',
+        row: 0,
+      },
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId5,
+        value: 'value 5',
+        row: 0,
+      },
+    ];
+    const response = await request(app.getHttpServer())
+      .post(`/models/${model.id}/data-values`)
+      .set('Authorization', 'Bearer token1')
+      .send(addedValues);
+    expect(response.status).toEqual(201);
+    const expected = [
+      ...existingDataValues,
+      ...addedValues.map((value) => ({ id: expect.any(String), ...value })),
+    ];
+    expect(response.body.dataValues).toEqual(expected);
+
+    const foundModel = await modelsService.findOne(response.body.id);
+    const sortFn = (a, b) => {
+      return a.id.localeCompare(b.id);
+    };
+    expect([...foundModel.dataValues].sort(sortFn)).toEqual(
+      [...response.body.dataValues].sort(sortFn),
+    );
+  });
+
+  it('add data values to model fails due to validation errors', async () => {
+    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+    model.assignOwner(authContext.user);
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+    const addedValues = [
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId4,
+        value: { invalid: 'field' },
+        row: 0,
+      },
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId5,
+        value: 'value 5',
+        row: 0,
+      },
+    ];
+    const response = await request(app.getHttpServer())
+      .post(`/models/${model.id}/data-values`)
+      .set('Authorization', 'Bearer token1')
+      .send(addedValues);
+    expect(response.status).toEqual(400);
+    expect(response.body).toEqual({
+      errors: [
+        {
+          id: dataFieldId4,
+          message: 'Expected string, received object',
+          name: 'Title 4',
+        },
+      ],
+      isValid: false,
+    });
   });
 
   afterAll(async () => {

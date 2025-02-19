@@ -11,7 +11,10 @@ import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/i
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  SectionType,
+} from '../../product-data-model/domain/product.data.model';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -48,6 +51,8 @@ describe('ModelsService', () => {
       version: '1.0',
       sections: [
         {
+          name: 'Section 1',
+          type: SectionType.GROUP,
           dataFields: [
             {
               type: 'TextField',
@@ -62,6 +67,8 @@ describe('ModelsService', () => {
           ],
         },
         {
+          name: 'Section 2',
+          type: SectionType.GROUP,
           dataFields: [
             {
               type: 'TextField',
@@ -70,10 +77,28 @@ describe('ModelsService', () => {
             },
           ],
         },
+        {
+          name: 'Section 3',
+          type: SectionType.REPEATABLE,
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 4',
+              options: { min: 8 },
+            },
+          ],
+        },
       ],
     });
 
     model.assignProductDataModel(productDataModel);
+    model.addDataValues([
+      DataValue.fromPlain({
+        dataSectionId: productDataModel.sections[2].id,
+        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        row: 0,
+      }),
+    ]);
     const { id } = await modelsService.save(model);
     const foundProduct = await modelsService.findOne(id);
     expect(foundProduct.name).toEqual(model.name);
@@ -94,6 +119,12 @@ describe('ModelsService', () => {
         id: expect.anything(),
         dataSectionId: productDataModel.sections[1].id,
         dataFieldId: productDataModel.sections[1].dataFields[0].id,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: productDataModel.sections[2].id,
+        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        row: 0,
       }),
     ]);
 
