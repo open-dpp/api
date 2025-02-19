@@ -1,4 +1,4 @@
-import { Model } from './model';
+import { DataValue, Model } from './model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 
@@ -75,6 +75,118 @@ describe('Model', () => {
     expect(model.owner).toEqual(plain.owner);
     expect(model.dataValues).toEqual(plain.dataValues);
     expect(model.productDataModelId).toEqual(plain.productDataModelId);
+  });
+
+  it('add data values', () => {
+    const plain = {
+      name: 'My name',
+      description: 'Some description',
+      dataValues: [
+        {
+          id: 'd1',
+          value: undefined,
+          dataSectionId: 'sid1',
+          dataFieldId: 'fieldId1',
+        },
+      ],
+    };
+    const model = Model.fromPlain(plain);
+    model.addDataValues([
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId2',
+        dataSectionId: 'sid2',
+        value: 'value 2',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId3',
+        dataSectionId: 'sid2',
+        value: 'value 3',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId2',
+        dataSectionId: 'sid2',
+        value: 'value 4',
+        row: 1,
+      }),
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId3',
+        dataSectionId: 'sid2',
+        value: 'value 5',
+        row: 1,
+      }),
+    ]);
+    expect(model.dataValues).toEqual([
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid1',
+        dataFieldId: 'fieldId1',
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId2',
+        value: 'value 2',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId3',
+        value: 'value 3',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId2',
+        value: 'value 4',
+        row: 1,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId3',
+        value: 'value 5',
+        row: 1,
+      }),
+    ]);
+  });
+
+  it('add data values fails if data values already exist', () => {
+    const plain = {
+      name: 'My name',
+      description: 'Some description',
+      dataValues: [
+        {
+          id: 'd1',
+          value: undefined,
+          dataSectionId: 'sid1',
+          dataFieldId: 'fieldId1',
+          row: 0,
+        },
+      ],
+    };
+    const model = Model.fromPlain(plain);
+    expect(() =>
+      model.addDataValues([
+        DataValue.fromPlain({
+          dataFieldId: 'fieldId2',
+          dataSectionId: 'sid1',
+          value: 'value 2',
+          row: 0,
+        }),
+        DataValue.fromPlain({
+          dataFieldId: 'fieldId1',
+          dataSectionId: 'sid1',
+          value: 'value 1',
+          row: 0,
+        }),
+      ]),
+    ).toThrowError(
+      'Data value for section sid1, field fieldId1, row 0 already exists',
+    );
   });
 
   it('is merged with plain', () => {

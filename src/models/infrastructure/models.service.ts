@@ -33,6 +33,7 @@ export class ModelsService {
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
+            row: dv.row ?? undefined,
           }))
         : [],
       owner: modelEntity.createdByUserId,
@@ -49,6 +50,7 @@ export class ModelsService {
       dataValueEntity.value = dv.value;
       dataValueEntity.dataSectionId = dv.dataSectionId;
       dataValueEntity.dataFieldId = dv.dataFieldId;
+      dataValueEntity.row = dv.row;
       return dataValueEntity;
     });
     const modelEntity = await this.modelRepository.save({

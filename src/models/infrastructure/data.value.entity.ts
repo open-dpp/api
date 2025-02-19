@@ -7,6 +7,8 @@ export class DataValueEntity {
   id: string;
   @Column('jsonb', { nullable: true })
   value: unknown;
+  @Column('integer', { nullable: true })
+  row: number;
   @Column('uuid')
   dataSectionId: string;
   @Column('uuid')

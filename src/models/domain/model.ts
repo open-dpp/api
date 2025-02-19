@@ -19,6 +19,8 @@ export class DataValue {
   readonly dataSectionId: string;
   @Expose()
   readonly dataFieldId: string;
+  @Expose()
+  readonly row?: number;
 
   static fromPlain(plain: Partial<DataValue>) {
     return plainToInstance(DataValue, plain, {
@@ -64,6 +66,24 @@ export class Model {
 
   public assignOwner(user: User) {
     this.owner = user.id;
+  }
+
+  public addDataValues(dataValues: DataValue[]) {
+    for (const dataValue of dataValues) {
+      if (
+        this.dataValues.find(
+          (d) =>
+            d.dataFieldId === dataValue.dataFieldId &&
+            d.dataSectionId === dataValue.dataSectionId &&
+            d.row === dataValue.row,
+        )
+      ) {
+        throw new Error(
+          `Data value for section ${dataValue.dataSectionId}, field ${dataValue.dataFieldId}, row ${dataValue.row} already exists`,
+        );
+      }
+    }
+    this.dataValues.push(...dataValues);
   }
 
   public assignProductDataModel(productDataModel: ProductDataModel) {
