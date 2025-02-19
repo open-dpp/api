@@ -5,6 +5,7 @@ import { ProductDataModelController } from './presentation/product.data.model.co
 import { ProductDataModelService } from './infrastructure/product.data.model.service';
 import { DataFieldEntity } from './infrastructure/data.field.entity';
 import { DataSectionEntity } from './infrastructure/data.section.entity';
+import { ProductDataModelImportService } from './infrastructure/product.data.model.import.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { DataSectionEntity } from './infrastructure/data.section.entity';
     ]),
   ],
   controllers: [ProductDataModelController],
-  providers: [ProductDataModelService],
+  providers: [ProductDataModelService, ProductDataModelImportService],
   exports: [ProductDataModelService],
 })
 export class ProductDataModelModule {}

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductDataModelEntity } from './product.data.model.entity';
 import { ProductDataModel } from '../domain/product.data.model';
+import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 
 @Injectable()
 export class ProductDataModelService {
@@ -38,12 +39,17 @@ export class ProductDataModelService {
     );
   }
 
-  async findAll() {
+  async findAll(
+    where?:
+      | FindOptionsWhere<ProductDataModelEntity>[]
+      | FindOptionsWhere<ProductDataModelEntity>,
+  ) {
     return await this.productDataModelEntityRepository.find({
       select: { id: true, name: true },
       order: {
         name: 'ASC',
       },
+      where,
     });
   }
 

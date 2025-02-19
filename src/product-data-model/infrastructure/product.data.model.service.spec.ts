@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { ProductDataModelService } from './product.data.model.service';
 import { ProductDataModelEntity } from './product.data.model.entity';
 import { ProductDataModel, SectionType } from '../domain/product.data.model';
+import { randomUUID } from 'crypto';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -51,6 +52,19 @@ describe('ProductDataModelService', () => {
     const { id } = await service.save(productDataModel);
     const found = await service.findOne(id);
     expect(found).toEqual(productDataModel);
+  });
+
+  it('should return product data models by name', async () => {
+    const productDataModel = ProductDataModel.fromPlain({
+      ...laptopModelPlain,
+      name: `${randomUUID()}-data-model`,
+    });
+
+    await service.save(productDataModel);
+    const found = await service.findAll({ name: productDataModel.name });
+    expect(found).toEqual([
+      { id: productDataModel.id, name: productDataModel.name },
+    ]);
   });
 
   it('should return all product data models', async () => {
