@@ -7,6 +7,7 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { User } from '../../users/domain/user';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import { DataValueEntity } from './data.value.entity';
 
 @Injectable()
 export class ModelsService {
@@ -20,32 +21,50 @@ export class ModelsService {
     modelEntity: ModelEntity,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    return new Model(
-      modelEntity.id,
-      modelEntity.name,
-      modelEntity.description,
-      uniqueProductIdentifiers,
-      modelEntity.createdByUserId,
-      modelEntity.createdAt,
-    );
+    return Model.fromPlain({
+      id: modelEntity.id,
+      name: modelEntity.name,
+      description: modelEntity.description ?? undefined,
+      uniqueProductIdentifiers: uniqueProductIdentifiers,
+      productDataModelId: modelEntity.productDataModelId ?? undefined,
+      dataValues: modelEntity.dataValues
+        ? modelEntity.dataValues.map((dv) => ({
+            id: dv.id,
+            value: dv.value ?? undefined,
+            dataSectionId: dv.dataSectionId,
+            dataFieldId: dv.dataFieldId,
+            row: dv.row ?? undefined,
+          }))
+        : [],
+      owner: modelEntity.createdByUserId,
+      createdAt: modelEntity.createdAt,
+    });
   }
 
-  async save(product: Model) {
+  async save(model: Model) {
     const userEntity = new UserEntity();
-    userEntity.id = product.owner;
-    const productEntity = await this.modelRepository.save({
-      id: product.id,
-      name: product.name,
-      description: product.description,
+    userEntity.id = model.owner;
+    const dataValueEntities = model.dataValues.map((dv) => {
+      const dataValueEntity = new DataValueEntity();
+      dataValueEntity.id = dv.id;
+      dataValueEntity.value = dv.value;
+      dataValueEntity.dataSectionId = dv.dataSectionId;
+      dataValueEntity.dataFieldId = dv.dataFieldId;
+      dataValueEntity.row = dv.row;
+      return dataValueEntity;
+    });
+    const modelEntity = await this.modelRepository.save({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+      productDataModelId: model.productDataModelId,
+      dataValues: dataValueEntities,
       createdByUser: userEntity,
     });
-    for (const uniqueProductIdentifier of product.uniqueProductIdentifiers) {
+    for (const uniqueProductIdentifier of model.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
-    return this.convertToDomain(
-      productEntity,
-      product.uniqueProductIdentifiers,
-    );
+    return this.convertToDomain(modelEntity, model.uniqueProductIdentifiers);
   }
 
   async findAllByUser(user: User) {
@@ -67,6 +86,7 @@ export class ModelsService {
   async findOne(id: string) {
     const productEntity = await this.modelRepository.findOne({
       where: { id },
+      relations: ['dataValues'],
     });
     return this.convertToDomain(
       productEntity,

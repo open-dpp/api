@@ -20,7 +20,7 @@ describe('Item', () => {
       uniqueProductIdentifier1,
       uniqueProductIdentifier2,
     ]);
-    expect(uniqueProductIdentifier1.getReference()).toEqual(item.id);
-    expect(uniqueProductIdentifier2.getReference()).toEqual(item.id);
+    expect(uniqueProductIdentifier1.referenceId).toEqual(item.id);
+    expect(uniqueProductIdentifier2.referenceId).toEqual(item.id);
   });
 });
