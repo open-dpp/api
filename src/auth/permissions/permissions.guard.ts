@@ -25,7 +25,7 @@ export class PermissionsGuard implements CanActivate {
         HAS_PERMISSION,
         context.getHandler(),
       ) || [];
-    console.log(request.url, permissions);
+    console.log('URL & Permissions', request.url, permissions);
     return true;
   }
 }

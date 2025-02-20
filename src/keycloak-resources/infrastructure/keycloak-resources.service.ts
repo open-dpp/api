@@ -1,4 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +18,7 @@ export class KeycloakResourcesService {
   private readonly kcAdminClient = new KcAdminClient({
     baseUrl: this.configService.get('KEYCLOAK_NETWORK_URL'),
   });
+  private readonly realm: string = this.configService.get('KEYCLOAK_REALM');
 
   constructor(
     private reflector: Reflector,
@@ -19,11 +26,21 @@ export class KeycloakResourcesService {
     private configService: ConfigService,
   ) {}
 
+  async reloadToken() {
+    await this.kcAdminClient.auth({
+      grantType: 'password',
+      clientId: 'admin-cli',
+      username: 'admin',
+      password: 'admin',
+    });
+  }
+
   async createResource(
     authContext: AuthContext,
     resourceName: string,
     uris: string[],
   ) {
+    await this.reloadToken();
     const url = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/authz/protection/resource_set`;
 
     // const keycloakId = null;
@@ -57,19 +74,54 @@ export class KeycloakResourcesService {
   }
 
   async createGroup(authContext: AuthContext, groupName: string) {
-    await this.kcAdminClient.auth({
-      grantType: 'password',
-      clientId: 'admin-cli',
-      username: 'admin',
-      password: 'admin',
-    });
-    await this.kcAdminClient.groups.create({
+    await this.reloadToken();
+    const createdGroup = await this.kcAdminClient.groups.create({
       name: groupName,
-      realm: 'open-dpp',
+      realm: this.realm,
     });
     await this.kcAdminClient.users.addToGroup({
       id: authContext.user.id,
-      groupId: groupName,
+      groupId: createdGroup.id,
+      realm: this.realm,
+    });
+  }
+
+  async inviteUserToGroup(
+    authContext: AuthContext,
+    groupId: string,
+    userId: string,
+  ) {
+    await this.reloadToken();
+    const keycloakUser = await this.kcAdminClient.users.findOne({
+      id: authContext.keycloakUser.sub,
+      realm: this.realm,
+    });
+    if (!keycloakUser) {
+      console.log('user not found');
+      throw new UnauthorizedException();
+    }
+    console.log(authContext.permissions);
+    const groups = await this.kcAdminClient.users.listGroups({
+      id: userId,
+      realm: this.realm,
+    });
+    console.log(groups);
+    if (!groups.some((g) => g.id === groupId)) {
+      throw new ForbiddenException();
+    }
+    const keycloakUserRequester = await this.kcAdminClient.users.findOne({
+      id: userId,
+    });
+    if (
+      !keycloakUserRequester ||
+      keycloakUserRequester.groups.includes(groupId)
+    ) {
+      throw new BadRequestException();
+    }
+    await this.kcAdminClient.users.addToGroup({
+      id: userId,
+      groupId: groupId,
+      realm: this.realm,
     });
   }
 }

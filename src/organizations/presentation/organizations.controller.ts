@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { OrganizationsService } from '../infrastructure/organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { Organization } from '../domain/organization';
-import { HasPermissions } from '../../auth/permissions/permissions.decorator';
+import { AuthRequest } from '../../auth/auth-request';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -22,14 +22,30 @@ export class OrganizationsController {
   }
 
   @Get()
-  @HasPermissions()
-  findAll() {
-    return this.organizationsService.findAll();
+  findAll(@Request() req: AuthRequest) {
+    return this.organizationsService.findAllWhereMember(req.authContext);
   }
 
   @Get(':id')
-  @HasPermissions()
   findOne(@Param('id') id: string) {
     return this.organizationsService.findOne(id);
+  }
+
+  @Post(':organizationId/invite')
+  inviteUser(
+    @Request() req: AuthRequest,
+    @Param('organizationId') organizationId: string,
+    @Body() body: { email: string },
+  ) {
+    return this.organizationsService.inviteUser(
+      req.authContext,
+      organizationId,
+      body.email,
+    );
+  }
+
+  @Get(':id/members')
+  getMembers(@Param('id') id: string) {
+    return this.organizationsService.getMembersOfOrganization(id);
   }
 }

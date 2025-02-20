@@ -11,6 +11,8 @@ import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../auth-request';
 import { HttpService } from '@nestjs/axios';
 import { User } from '../../users/domain/user';
+import { UsersService } from '../../users/infrastructure/users.service';
+import { KeycloakUserInToken } from './KeycloakUserInToken';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -18,6 +20,7 @@ export class KeycloakAuthGuard implements CanActivate {
     private reflector: Reflector,
     private httpService: HttpService,
     private configService: ConfigService,
+    private readonly usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -61,7 +64,7 @@ export class KeycloakAuthGuard implements CanActivate {
       data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
       data.append('audience', 'backend');
       data.append('response_mode', 'permissions');
-      const responsePermissions = await firstValueFrom(
+      /* const responsePermissions = await firstValueFrom(
         this.httpService.post<any>(urlPermissions, data, {
           headers: {
             authorization: `Bearer ${accessToken}`,
@@ -71,7 +74,7 @@ export class KeycloakAuthGuard implements CanActivate {
       );
       responsePermissions.data.forEach((p) => {
         authContext.permissions.push(p);
-      });
+      }); */
 
       const responseUserinfo = await firstValueFrom(
         this.httpService.post<any>(urlUserinfo, data, {
@@ -81,18 +84,15 @@ export class KeycloakAuthGuard implements CanActivate {
           },
         }),
       );
-      console.log(responseUserinfo.data);
-      const user = {
-        id: responseUserinfo.data.sub,
-        username: responseUserinfo.data.preferred_username,
-      };
-      keycloakId = user.id;
+      const user: KeycloakUserInToken = responseUserinfo.data;
+      keycloakId = user.sub;
+      authContext.keycloakUser = user;
+      await this.usersService.create(user, true);
+      authContext.user = new User(keycloakId, user.email);
     } catch (e) {
       throw new Error(e.message);
     }
-    authContext.user = new User(keycloakId);
     request.authContext = authContext;
-    console.log(authContext);
     return true;
   }
 }

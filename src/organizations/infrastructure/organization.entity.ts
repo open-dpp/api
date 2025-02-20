@@ -3,7 +3,9 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToMany,
+  ManyToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -26,10 +28,36 @@ export class OrganizationEntity {
   @Column()
   name: string;
 
-  @ManyToMany(
-    () => UserEntity,
-    (preventionCourse) => preventionCourse.organizations,
-    { cascade: ['insert'], onDelete: 'CASCADE', onUpdate: 'CASCADE' },
-  )
-  users: UserEntity[];
+  @Column('char', {
+    name: 'createdByUserId',
+  })
+  createdByUserId: string;
+
+  @ManyToOne(() => UserEntity, (user) => user.creatorOfOrganizations, {
+    cascade: ['insert'],
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
+  createdByUser: UserEntity;
+
+  @Column('char', {
+    name: 'ownedByUserId',
+  })
+  ownedByUserId: string;
+
+  @ManyToOne(() => UserEntity, (user) => user.ownerOfOrganizations, {
+    cascade: ['insert'],
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'ownedByUserId', referencedColumnName: 'id' }])
+  ownedByUser: UserEntity;
+
+  @ManyToMany(() => UserEntity, (user) => user.organizations, {
+    cascade: ['insert'],
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  members: UserEntity[];
 }
