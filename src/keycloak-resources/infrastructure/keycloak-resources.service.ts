@@ -124,4 +124,23 @@ export class KeycloakResourcesService {
       realm: this.realm,
     });
   }
+
+  async getUsers() {
+    await this.reloadToken();
+    return this.kcAdminClient.users.find({ realm: this.realm });
+  }
+
+  async findKeycloakUserByEmail(email: string) {
+    await this.reloadToken();
+    const users = await this.kcAdminClient.users.find({
+      realm: this.realm,
+      email: email,
+    });
+    if (users.length === 0) {
+      return null;
+    } else if (users.length > 1) {
+      this.logger.warn('More than one user found for email');
+    }
+    return users[0];
+  }
 }

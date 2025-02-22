@@ -40,7 +40,7 @@ describe('ModelsService', () => {
   });
 
   it('should create a product', async () => {
-    const user = new User(randomUUID());
+    const user = new User(randomUUID(), 'test@test.test');
     const model = Model.fromPlain({
       name: 'My product',
       description: 'This is my product',

@@ -25,7 +25,7 @@ describe('ItemsController', () => {
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID());
+  authContext.user = new User(randomUUID(), 'test@test.test');
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -88,7 +88,7 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID()));
+    model.assignOwner(new User(randomUUID(), 'test@test.test'));
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/models/${model.id}/items`)
@@ -128,7 +128,7 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID()));
+    model.assignOwner(new User(randomUUID(), 'test@test.test'));
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
@@ -187,7 +187,7 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID()));
+    model.assignOwner(new User(randomUUID(), 'test@test.test'));
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);

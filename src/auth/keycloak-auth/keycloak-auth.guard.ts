@@ -14,6 +14,7 @@ import { HttpService } from '@nestjs/axios';
 import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
+import { IS_PUBLIC } from '../public/public.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -28,7 +29,7 @@ export class KeycloakAuthGuard implements CanActivate {
     // const [req] = context.getArgs();
     const request = context.switchToHttp().getRequest();
     const isPublic = this.reflector.get<boolean>(
-      'public',
+      IS_PUBLIC,
       context.getHandler(),
     );
     if (isPublic) {
@@ -54,7 +55,7 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const accessToken = parts[1];
 
-    const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
+    // const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
     const urlUserinfo = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
 
     let keycloakId = null;

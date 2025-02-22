@@ -13,6 +13,9 @@ export class UsersService {
   ) {}
 
   convertToDomain(userEntity: UserEntity) {
+    if (!userEntity) {
+      return null;
+    }
     return new User(userEntity.id, userEntity.email);
   }
 

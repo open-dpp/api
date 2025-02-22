@@ -31,12 +31,15 @@ export class OrganizationsService {
   }
 
   convertToDomain(organizationEntity: OrganizationEntity) {
+    const members = organizationEntity.members
+      ? organizationEntity.members.map((u) => new User(u.id, u.email))
+      : [];
     return new Organization(
       organizationEntity.id,
       organizationEntity.name,
-      organizationEntity.members
-        ? organizationEntity.members.map((u) => new User(u.id, u.email))
-        : [],
+      members,
+      organizationEntity.createdByUserId,
+      organizationEntity.ownedByUserId,
     );
   }
 
@@ -50,12 +53,16 @@ export class OrganizationsService {
         authContext,
         'organization-' + organization.id,
       );
+      const members: Array<UserEntity> = organization.members.map((u) =>
+        this.convertUserToEntity(u),
+      );
+      if (!members.find((m) => m.id === authContext.user.id)) {
+        members.push(this.convertUserToEntity(authContext.user));
+      }
       const entity: Partial<OrganizationEntity> = {
         id: organization.id,
         name: organization.name,
-        members: organization.members
-          ? organization.members.map((u) => this.convertUserToEntity(u))
-          : [],
+        members,
         createdByUserId: authContext.user.id,
         ownedByUserId: authContext.user.id,
       };
@@ -103,13 +110,20 @@ export class OrganizationsService {
     await queryRunner.startTransaction();
     const org = await this.findOne(organizationId);
     const users = await this.usersService.find({ where: { email } });
-    if (users.length === 0) {
-      throw new NotFoundException();
-    }
     if (users.length > 1) {
       throw new InternalServerErrorException();
     }
-    const userToInvite = users[0];
+    let userToInvite: User | null = null;
+    if (users.length === 0) {
+      const keycloakUser =
+        await this.keycloakResourcesService.findKeycloakUserByEmail(email);
+      userToInvite = new User(keycloakUser.id, keycloakUser.email);
+    } else if (users.length === 1) {
+      userToInvite = users[0];
+    }
+    if (!userToInvite) {
+      throw new NotFoundException(); // TODO: Fix user enumeration
+    }
     if (org.members.find((member) => member.id === userToInvite.id)) {
       throw new BadRequestException();
     }
