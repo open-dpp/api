@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../auth-request';
 import { HttpService } from '@nestjs/axios';
 import { User } from '../../users/domain/user';
+import { IS_PUBLIC } from '../public/public.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -25,7 +26,7 @@ export class KeycloakAuthGuard implements CanActivate {
     // const [req] = context.getArgs();
     const request = context.switchToHttp().getRequest();
     const isPublic = this.reflector.get<boolean>(
-      'public',
+      IS_PUBLIC,
       context.getHandler(),
     );
     if (isPublic) {
