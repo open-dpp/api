@@ -6,13 +6,26 @@ import {
 } from '@nestjs/common';
 import { AuthContext } from '../src/auth/auth-request';
 import { User } from '../src/users/domain/user';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC } from '../src/auth/public/public.decorator';
 
 export class KeycloakAuthTestingGuard implements CanActivate {
-  constructor(private readonly tokenToUserMap: Map<string, User>) {}
+  constructor(
+    private readonly tokenToUserMap: Map<string, User>,
+    private reflector?: Reflector,
+  ) {}
   async canActivate(context: ExecutionContext) {
     // const [req] = context.getArgs();
-
     const request = context.switchToHttp().getRequest();
+    if (this.reflector) {
+      const isPublic = this.reflector.get<boolean>(
+        IS_PUBLIC,
+        context.getHandler(),
+      );
+      if (isPublic) {
+        return isPublic;
+      }
+    }
 
     const header = request.headers.authorization;
     if (!header) {
