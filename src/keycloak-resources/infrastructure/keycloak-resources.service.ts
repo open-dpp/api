@@ -30,8 +30,8 @@ export class KeycloakResourcesService {
     await this.kcAdminClient.auth({
       grantType: 'password',
       clientId: 'admin-cli',
-      username: 'admin',
-      password: 'admin',
+      username: this.configService.get('KEYCLOAK_ADMIN_USERNAME'),
+      password: this.configService.get('KEYCLOAK_ADMIN_PASSWORD'),
     });
   }
 
