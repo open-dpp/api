@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { Organization } from '../domain/organization';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
+import { AuthContext } from '../../auth/auth-request';
 
 describe('OrganizationsService', () => {
   let service: OrganizationsService;
@@ -31,7 +32,10 @@ describe('OrganizationsService', () => {
     const name = `My Organization ${uuid4()}`;
     const organization = new Organization(randomUUID(), name, []);
 
-    const { id } = await service.save(organization);
+    const user = new User(randomUUID(), 'test@test.test');
+    const authContext = new AuthContext();
+    authContext.user = user;
+    const { id } = await service.save(authContext, organization);
     const found = await service.findOne(id);
     expect(found.name).toEqual(name);
   });
@@ -39,11 +43,13 @@ describe('OrganizationsService', () => {
   it('should add members to organization', async () => {
     const name = `My Organization ${uuid4()}`;
     const organization = new Organization(randomUUID(), name, []);
-    const user = new User(randomUUID());
-    const user2 = new User(randomUUID());
+    const user = new User(randomUUID(), 'test@test.test');
+    const user2 = new User(randomUUID(), 'test2@test.test');
     organization.join(user);
     organization.join(user2);
-    await service.save(organization);
+    const authContext = new AuthContext();
+    authContext.user = user;
+    await service.save(authContext, organization);
     const found = await service.findOne(organization.id);
     expect(found.members).toEqual([user, user2]);
   });

@@ -25,7 +25,7 @@ describe('Model', () => {
       name: 'My model',
       description: 'This is my model',
     });
-    const user = new User(randomUUID());
+    const user = new User(randomUUID(), 'test@test.test');
     model.assignOwner(user);
     expect(model.owner).toEqual(user.id);
   });

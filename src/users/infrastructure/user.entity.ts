@@ -1,4 +1,5 @@
 import {
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -25,10 +26,17 @@ export class UserEntity {
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date | null;
 
-  @ManyToMany(() => OrganizationEntity, (organization) => organization.users, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @Column()
+  email: string;
+
+  @ManyToMany(
+    () => OrganizationEntity,
+    (organization) => organization.members,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinTable({
     name: 'organization_user',
     joinColumns: [{ name: 'user_id', referencedColumnName: 'id' }],
@@ -40,4 +48,10 @@ export class UserEntity {
 
   @OneToMany(() => ModelEntity, (product) => product)
   models: ModelEntity[];
+
+  @OneToMany(() => OrganizationEntity, (org) => org.createdByUserId)
+  creatorOfOrganizations: OrganizationEntity[];
+
+  @OneToMany(() => OrganizationEntity, (org) => org.ownedByUserId)
+  ownerOfOrganizations: OrganizationEntity[];
 }

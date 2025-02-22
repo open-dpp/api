@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ModelEntity } from './model.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Model } from '../domain/model';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { User } from '../../users/domain/user';
-import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { DataValueEntity } from './data.value.entity';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 @Injectable()
 export class ModelsService {
@@ -15,6 +15,7 @@ export class ModelsService {
     @InjectRepository(ModelEntity)
     private modelRepository: Repository<ModelEntity>,
     private uniqueModelIdentifierService: UniqueProductIdentifierService,
+    private readonly usersService: UsersService,
   ) {}
 
   convertToDomain(
@@ -42,8 +43,10 @@ export class ModelsService {
   }
 
   async save(model: Model) {
-    const userEntity = new UserEntity();
-    userEntity.id = model.owner;
+    const userEntity = await this.usersService.findOne(model.owner);
+    if (!userEntity) {
+      throw new BadRequestException();
+    }
     const dataValueEntities = model.dataValues.map((dv) => {
       const dataValueEntity = new DataValueEntity();
       dataValueEntity.id = dv.id;

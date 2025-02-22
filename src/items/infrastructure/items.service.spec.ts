@@ -43,7 +43,7 @@ describe('ProductsService', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID()));
+    model.assignOwner(new User(randomUUID(), 'test@test.test'));
     const savedModel = await productService.save(model);
     const item = new Item();
     item.defineModel(savedModel.id);
@@ -58,7 +58,7 @@ describe('ProductsService', () => {
       name: 'name',
       description: 'description',
     });
-    const user = new User(randomUUID());
+    const user = new User(randomUUID(), 'test@test.test');
     model.assignOwner(user);
     const model2 = Model.fromPlain({
       name: 'name',
