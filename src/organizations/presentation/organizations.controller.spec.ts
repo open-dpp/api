@@ -26,7 +26,7 @@ describe('OrganizationController', () => {
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', new User('user1')]]),
+            new Map([['token1', new User('user1', 'test@test.test')]]),
           ),
         },
       ],

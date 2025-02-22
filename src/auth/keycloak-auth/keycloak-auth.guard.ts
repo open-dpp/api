@@ -12,6 +12,9 @@ import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../auth-request';
 import { HttpService } from '@nestjs/axios';
 import { User } from '../../users/domain/user';
+import { UsersService } from '../../users/infrastructure/users.service';
+import { KeycloakUserInToken } from './KeycloakUserInToken';
+import { IS_PUBLIC } from '../public/public.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -19,13 +22,14 @@ export class KeycloakAuthGuard implements CanActivate {
     private reflector: Reflector,
     private httpService: HttpService,
     private configService: ConfigService,
+    private readonly usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
     // const [req] = context.getArgs();
     const request = context.switchToHttp().getRequest();
     const isPublic = this.reflector.get<boolean>(
-      'public',
+      IS_PUBLIC,
       context.getHandler(),
     );
     if (isPublic) {
@@ -51,7 +55,7 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const accessToken = parts[1];
 
-    const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
+    // const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
     const urlUserinfo = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
 
     let keycloakId = null;
@@ -62,7 +66,7 @@ export class KeycloakAuthGuard implements CanActivate {
       data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
       data.append('audience', 'backend');
       data.append('response_mode', 'permissions');
-      const responsePermissions = await firstValueFrom(
+      /* const responsePermissions = await firstValueFrom(
         this.httpService.post<any>(urlPermissions, data, {
           headers: {
             authorization: `Bearer ${accessToken}`,
@@ -72,7 +76,7 @@ export class KeycloakAuthGuard implements CanActivate {
       );
       responsePermissions.data.forEach((p) => {
         authContext.permissions.push(p);
-      });
+      }); */
 
       const responseUserinfo = await firstValueFrom(
         this.httpService.post<any>(urlUserinfo, data, {
@@ -82,17 +86,15 @@ export class KeycloakAuthGuard implements CanActivate {
           },
         }),
       );
-      const user = {
-        id: responseUserinfo.data.sub,
-        username: responseUserinfo.data.preferred_username,
-      };
-      keycloakId = user.id;
+      const user: KeycloakUserInToken = responseUserinfo.data;
+      keycloakId = user.sub;
+      authContext.keycloakUser = user;
+      await this.usersService.create(user, true);
+      authContext.user = new User(keycloakId, user.email);
     } catch (e) {
       throw new UnauthorizedException(e.message);
     }
-    authContext.user = new User(keycloakId);
     request.authContext = authContext;
-
     return true;
   }
 }

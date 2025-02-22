@@ -29,7 +29,7 @@ describe('ModelsController', () => {
   let modelsService: ModelsService;
   let productDataModelService: ProductDataModelService;
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID());
+  authContext.user = new User(randomUUID(), 'test@test.test');
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
