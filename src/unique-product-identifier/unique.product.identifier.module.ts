@@ -7,6 +7,7 @@ import { ModelsService } from '../models/infrastructure/models.service';
 import { ModelEntity } from '../models/infrastructure/model.entity';
 import { ProductDataModelService } from '../product-data-model/infrastructure/product.data.model.service';
 import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProductDataModelEntity } from '../product-data-model/infrastructure/pro
       ModelEntity,
       ProductDataModelEntity,
     ]),
+    UsersModule,
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [

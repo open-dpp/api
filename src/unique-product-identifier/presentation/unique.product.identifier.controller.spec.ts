@@ -31,7 +31,7 @@ describe('ModelsController', () => {
   let productDataModelService: ProductDataModelService;
   const reflector: Reflector = new Reflector();
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID());
+  authContext.user = new User(randomUUID(), `${randomUUID()}@example.com`);
 
   beforeEach(() => {
     jest.spyOn(reflector, 'get').mockReturnValue(false);
