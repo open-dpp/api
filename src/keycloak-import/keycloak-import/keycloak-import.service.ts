@@ -1,17 +1,13 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const KeycloakAdminClient = require('fix-esm').require(
-  '@keycloak/keycloak-admin-client',
-).default;
+import KcAdminClient from '@keycloak/keycloak-admin-client';
 
 @Injectable()
 export class KeycloakImportService implements OnApplicationBootstrap {
   constructor(private readonly configService: ConfigService) {}
 
   async onApplicationBootstrap() {
-    const authClient = new KeycloakAdminClient({
+    const authClient = new KcAdminClient({
       baseUrl: this.configService.get('KEYCLOAK_NETWORK_URL'),
       realmName: this.configService.get('KEYCLOAK_ADMIN_REALM'),
     });
