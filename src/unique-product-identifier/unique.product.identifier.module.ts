@@ -8,6 +8,8 @@ import { ModelEntity } from '../models/infrastructure/model.entity';
 import { ProductDataModelService } from '../product-data-model/infrastructure/product.data.model.service';
 import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
 import { UsersModule } from '../users/users.module';
+import { ItemsService } from '../items/infrastructure/items.service';
+import { ItemEntity } from '../items/infrastructure/item.entity';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { UsersModule } from '../users/users.module';
       UniqueProductIdentifierEntity,
       ModelEntity,
       ProductDataModelEntity,
+      ItemEntity,
     ]),
     UsersModule,
   ],
@@ -23,6 +26,7 @@ import { UsersModule } from '../users/users.module';
     UniqueProductIdentifierService,
     ModelsService,
     ProductDataModelService,
+    ItemsService,
   ],
   exports: [UniqueProductIdentifierService],
 })

@@ -4,6 +4,8 @@ import { ModelsService } from '../../models/infrastructure/models.service';
 import { Public } from '../../auth/public/public.decorator';
 import { View } from '../domain/view';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ItemsService } from '../../items/infrastructure/items.service';
+import { Model } from '../../models/domain/model';
 
 @Controller('unique-product-identifiers')
 export class UniqueProductIdentifierController {
@@ -11,6 +13,7 @@ export class UniqueProductIdentifierController {
     private readonly modelsService: ModelsService,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly productDataModelService: ProductDataModelService,
+    private readonly itemService: ItemsService,
   ) {}
 
   @Public()
@@ -18,9 +21,18 @@ export class UniqueProductIdentifierController {
   async findOne(@Param('id') id: string) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOne(id);
-    const model = await this.modelsService.findOne(
-      uniqueProductIdentifier.referenceId,
-    );
+    let model: Model;
+    try {
+      const item = await this.itemService.findById(
+        uniqueProductIdentifier.referenceId,
+      );
+      model = await this.modelsService.findOne(item.model);
+    } catch (NotFoundException) {
+      model = await this.modelsService.findOne(
+        uniqueProductIdentifier.referenceId,
+      );
+    }
+
     const productDataModel = await this.productDataModelService.findOne(
       model.productDataModelId,
     );
