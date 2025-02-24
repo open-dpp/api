@@ -13,10 +13,12 @@ import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
 import { ItemEntity } from './item.entity';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
-  let productService: ModelsService;
+  let modelsService: ModelsService;
+  let usersService: UsersService;
   let dataSource: DataSource;
 
   beforeEach(async () => {
@@ -30,21 +32,30 @@ describe('ProductsService', () => {
           ItemEntity,
         ]),
       ],
-      providers: [ItemsService, ModelsService, UniqueProductIdentifierService],
+      providers: [
+        ItemsService,
+        ModelsService,
+        UniqueProductIdentifierService,
+        UsersService,
+      ],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
     itemService = module.get<ItemsService>(ItemsService);
-    productService = module.get<ModelsService>(ModelsService);
+    modelsService = module.get<ModelsService>(ModelsService);
+    usersService = module.get<UsersService>(UsersService);
   });
 
   it('should create and find item for a model', async () => {
+    const user = new User(randomUUID(), 'test@test.test');
+    await usersService.save(user);
     const model = Model.fromPlain({
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID(), 'test@test.test'));
-    const savedModel = await productService.save(model);
+
+    model.assignOwner(user);
+    const savedModel = await modelsService.save(model);
     const item = new Item();
     item.defineModel(savedModel.id);
     const savedItem = await itemService.save(item);
@@ -59,14 +70,15 @@ describe('ProductsService', () => {
       description: 'description',
     });
     const user = new User(randomUUID(), 'test@test.test');
+    await usersService.save(user);
     model.assignOwner(user);
     const model2 = Model.fromPlain({
       name: 'name',
       description: 'description',
     });
     model2.assignOwner(user);
-    const savedModel1 = await productService.save(model);
-    const savedModel2 = await productService.save(model2);
+    const savedModel1 = await modelsService.save(model);
+    const savedModel2 = await modelsService.save(model2);
     const item1 = new Item();
     item1.defineModel(savedModel1.id);
     const item2 = new Item();

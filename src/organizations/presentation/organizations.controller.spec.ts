@@ -10,11 +10,16 @@ import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.test
 import { OrganizationsService } from '../infrastructure/organizations.service';
 import { OrganizationsModule } from '../organizations.module';
 import { User } from '../../users/domain/user';
+import { AuthContext } from '../../auth/auth-request';
+import { randomUUID } from 'crypto';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 
 describe('OrganizationController', () => {
   let app: INestApplication;
   let service: OrganizationsService;
-
+  const authContext = new AuthContext();
+  authContext.user = new User(randomUUID(), 'test@example.com');
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
@@ -26,11 +31,18 @@ describe('OrganizationController', () => {
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', new User('user1', 'test@test.test')]]),
+            new Map([['token1', authContext.user]]),
           ),
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
 
     service = moduleRef.get<OrganizationsService>(OrganizationsService);
     app = moduleRef.createNestApplication();

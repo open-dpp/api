@@ -32,6 +32,13 @@ export class UsersService {
     return entities.map((entity) => this.convertToDomain(entity));
   }
 
+  async save(user: User) {
+    const userEntity = new UserEntity();
+    userEntity.id = user.id;
+    userEntity.email = user.email;
+    return this.convertToDomain(await this.userRepository.save(user));
+  }
+
   async create(keycloakUser: KeycloakUserInToken, ignoreIfExists?: boolean) {
     const find = await this.userRepository.findOne({
       where: { id: keycloakUser.sub },

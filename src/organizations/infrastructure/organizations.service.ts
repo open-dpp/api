@@ -27,6 +27,7 @@ export class OrganizationsService {
   convertUserToEntity(user: User) {
     const userEntity = new UserEntity();
     userEntity.id = user.id;
+    userEntity.email = user.email;
     return userEntity;
   }
 

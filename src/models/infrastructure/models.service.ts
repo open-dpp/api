@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ModelEntity } from './model.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -45,7 +45,7 @@ export class ModelsService {
   async save(model: Model) {
     const userEntity = await this.usersService.findOne(model.owner);
     if (!userEntity) {
-      throw new BadRequestException();
+      throw new ForbiddenException();
     }
     const dataValueEntities = model.dataValues.map((dv) => {
       const dataValueEntity = new DataValueEntity();
