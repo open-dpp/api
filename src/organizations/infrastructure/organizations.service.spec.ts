@@ -10,10 +10,15 @@ import { Organization } from '../domain/organization';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { AuthContext } from '../../auth/auth-request';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('OrganizationsService', () => {
-  let service: OrganizationsService;
+  let organizationsService: OrganizationsService;
   let dataSource: DataSource;
+  const authContext = new AuthContext();
+  authContext.user = new User(randomUUID(), 'test@test.test');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,37 +26,41 @@ describe('OrganizationsService', () => {
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
-      providers: [OrganizationsService],
-    }).compile();
+      providers: [OrganizationsService, UsersService, KeycloakResourcesService],
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
 
-    service = module.get<OrganizationsService>(OrganizationsService);
+    organizationsService =
+      module.get<OrganizationsService>(OrganizationsService);
     dataSource = module.get<DataSource>(DataSource);
   });
 
   it('should create an organization', async () => {
     const name = `My Organization ${uuid4()}`;
-    const organization = new Organization(randomUUID(), name, []);
-
-    const user = new User(randomUUID(), 'test@test.test');
-    const authContext = new AuthContext();
-    authContext.user = user;
-    const { id } = await service.save(authContext, organization);
-    const found = await service.findOne(id);
+    const organization = new Organization(randomUUID(), name, [
+      authContext.user,
+    ]);
+    const { id } = await organizationsService.save(authContext, organization);
+    const found = await organizationsService.findOne(id);
     expect(found.name).toEqual(name);
   });
 
   it('should add members to organization', async () => {
     const name = `My Organization ${uuid4()}`;
     const organization = new Organization(randomUUID(), name, []);
-    const user = new User(randomUUID(), 'test@test.test');
+
     const user2 = new User(randomUUID(), 'test2@test.test');
-    organization.join(user);
+    organization.join(authContext.user);
     organization.join(user2);
-    const authContext = new AuthContext();
-    authContext.user = user;
-    await service.save(authContext, organization);
-    const found = await service.findOne(organization.id);
-    expect(found.members).toEqual([user, user2]);
+    await organizationsService.save(authContext, organization);
+    const found = await organizationsService.findOne(organization.id);
+    expect(found.members).toEqual([authContext.user, user2]);
   });
   afterEach(async () => {
     await dataSource.destroy();

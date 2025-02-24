@@ -24,6 +24,28 @@ import {
   ProductDataModel,
   SectionType,
 } from '../../product-data-model/domain/product.data.model';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+
+jest.mock('@keycloak/keycloak-admin-client', () => {
+  return {
+    __esModule: true, // Ensure Jest understands it's an ES module
+    default: jest.fn(() => ({
+      auth: jest.fn().mockResolvedValue(undefined),
+      users: {
+        find: jest.fn().mockResolvedValue([]), // Mock user retrieval returning empty array
+        create: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
+        update: jest.fn().mockResolvedValue(undefined),
+        del: jest.fn().mockResolvedValue(undefined),
+      },
+      realms: {
+        find: jest
+          .fn()
+          .mockResolvedValue([{ id: 'mock-realm-id', realm: 'test-realm' }]),
+      },
+    })),
+  };
+});
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -60,7 +82,14 @@ describe('ModelsController', () => {
           ),
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
 
     modelsService = moduleRef.get(ModelsService);
     productDataModelService = moduleRef.get<ProductDataModelService>(
@@ -126,7 +155,6 @@ describe('ModelsController', () => {
   };
 
   it(`/GET public view for unique product identifier`, async () => {
-    jest.spyOn(reflector, 'get').mockReturnValue(true);
     const productDataModel = ProductDataModel.fromPlain({ ...laptopModel });
     await productDataModelService.save(productDataModel);
     const model = Model.fromPlain({
@@ -179,6 +207,7 @@ describe('ModelsController', () => {
     model.assignOwner(authContext.user);
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
+    jest.spyOn(reflector, 'get').mockReturnValue(true);
     const response = await request(app.getHttpServer()).get(
       `/unique-product-identifiers/${uuid}/view`,
     );

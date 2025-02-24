@@ -17,11 +17,15 @@ import { ItemsService } from '../infrastructure/items.service';
 import { ItemsModule } from '../items.module';
 import { Item } from '../domain/item';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
+  let usersService: UsersService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   const authContext = new AuthContext();
@@ -43,8 +47,16 @@ describe('ItemsController', () => {
           ),
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
 
+    usersService = moduleRef.get(UsersService);
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
     uniqueProductIdentifierService = moduleRef.get(
@@ -88,7 +100,9 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID(), 'test@test.test'));
+    const user = new User(randomUUID(), 'test@test.test');
+    await usersService.save(user);
+    model.assignOwner(user);
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/models/${model.id}/items`)
@@ -101,6 +115,7 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
+
     model.assignOwner(authContext.user);
     await modelsService.save(model);
     const item = new Item();
@@ -128,7 +143,9 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID(), 'test@test.test'));
+    const user = new User(randomUUID(), 'test@test.test');
+    await usersService.save(user);
+    model.assignOwner(user);
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
@@ -187,7 +204,9 @@ describe('ItemsController', () => {
       name: 'name',
       description: 'description',
     });
-    model.assignOwner(new User(randomUUID(), 'test@test.test'));
+    const user = new User(randomUUID(), 'test@test.test');
+    await usersService.save(user);
+    model.assignOwner(user);
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
