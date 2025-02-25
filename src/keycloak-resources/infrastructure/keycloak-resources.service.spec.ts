@@ -3,6 +3,21 @@ import { KeycloakResourcesService } from './keycloak-resources.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 
+jest.mock('@keycloak/keycloak-admin-client', () => {
+  return {
+    __esModule: true, // Ensure Jest understands it's an ES module
+    default: jest.fn(() => ({
+      auth: jest.fn(),
+      users: {
+        find: jest.fn(),
+      },
+      groups: {
+        create: jest.fn(),
+      },
+    })),
+  };
+});
+
 describe('KeycloakResourcesService', () => {
   let service: KeycloakResourcesService;
 

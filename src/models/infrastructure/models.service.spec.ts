@@ -41,6 +41,7 @@ describe('ModelsService', () => {
 
   it('should create a product', async () => {
     const user = new User(randomUUID(), 'test@test.test');
+    await userService.save(user);
     const model = Model.fromPlain({
       name: 'My product',
       description: 'This is my product',

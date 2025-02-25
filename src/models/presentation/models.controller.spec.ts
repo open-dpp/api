@@ -22,6 +22,8 @@ import {
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -29,7 +31,7 @@ describe('ModelsController', () => {
   let modelsService: ModelsService;
   let productDataModelService: ProductDataModelService;
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID(), 'test@test.test');
+  authContext.user = new User(randomUUID(), 'test@example.com');
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -52,7 +54,14 @@ describe('ModelsController', () => {
           ),
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
 
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,

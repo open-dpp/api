@@ -1,6 +1,12 @@
+import { Expose } from 'class-transformer';
+
 export class User {
-  constructor(
-    public readonly id: string,
-    public readonly email: string,
-  ) {}
+  @Expose()
+  public readonly id: string;
+  @Expose()
+  public readonly email: string;
+  constructor(id: string, email: string) {
+    this.id = id;
+    this.email = email;
+  }
 }

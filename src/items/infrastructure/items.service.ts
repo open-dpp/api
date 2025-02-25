@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ItemEntity } from './item.entity';
@@ -42,6 +42,9 @@ export class ItemsService {
 
   async findById(id: string) {
     const itemEntity = await this.itemsRepository.findOne({ where: { id } });
+    if (itemEntity === undefined) {
+      throw new NotFoundException('Item could not be found');
+    }
     return this.convertToDomain(
       itemEntity,
       await this.uniqueModelIdentifierService.findAllByReferencedId(
