@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Equal, Repository } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { Organization } from '../domain/organization';
@@ -35,44 +35,38 @@ export class OrganizationsService {
     const members = organizationEntity.members
       ? organizationEntity.members.map((u) => new User(u.id, u.email))
       : [];
-    return new Organization(
-      organizationEntity.id,
-      organizationEntity.name,
+    return Organization.fromPlain({
+      id: organizationEntity.id,
+      name: organizationEntity.name,
       members,
-      organizationEntity.createdByUserId,
-      organizationEntity.ownedByUserId,
-    );
+      createdByUserId: organizationEntity.createdByUserId,
+      ownedByUserId: organizationEntity.ownedByUserId,
+    });
   }
 
-  async save(authContext: AuthContext, organization: Organization) {
+  async save(organization: Organization) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     let result: Organization | null = null;
     try {
-      await this.keycloakResourcesService.createGroup(
-        authContext,
-        'organization-' + organization.id,
-      );
+      await this.keycloakResourcesService.createGroup(organization);
       const members: Array<UserEntity> = organization.members.map((u) =>
         this.convertUserToEntity(u),
       );
-      if (!members.find((m) => m.id === authContext.user.id)) {
-        members.push(this.convertUserToEntity(authContext.user));
-      }
       const entity: Partial<OrganizationEntity> = {
         id: organization.id,
         name: organization.name,
         members,
-        createdByUserId: authContext.user.id,
-        ownedByUserId: authContext.user.id,
+        createdByUserId: organization.createdByUserId,
+        ownedByUserId: organization.ownedByUserId,
       };
       const savedEntity = await this.organizationRepository.save(entity);
       await queryRunner.commitTransaction();
       result = this.convertToDomain(savedEntity);
     } catch (err) {
-      console.log(err);
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }
@@ -91,9 +85,9 @@ export class OrganizationsService {
 
   async findOne(id: string) {
     return this.convertToDomain(
-      await this.organizationRepository.findOne({
-        where: { id },
-        relations: { members: true },
+      await this.organizationRepository.findOneOrFail({
+        where: { id: Equal(id) },
+        relations: { members: true, models: true },
       }),
     );
   }
@@ -110,7 +104,9 @@ export class OrganizationsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     const org = await this.findOne(organizationId);
-    const users = await this.usersService.find({ where: { email } });
+    const users = await this.usersService.find({
+      where: { email: Equal(email) },
+    });
     if (users.length > 1) {
       throw new InternalServerErrorException();
     }
@@ -148,9 +144,9 @@ export class OrganizationsService {
     return (
       await this.organizationRepository.find({
         where: {
-          members: {
-            id: authContext.user.id,
-          },
+          members: Equal({
+            id: Equal(authContext.user.id),
+          }),
         },
         relations: {
           members: true,

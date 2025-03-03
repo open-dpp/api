@@ -63,6 +63,6 @@ export class OrganizationEntity {
   })
   members: UserEntity[];
 
-  @OneToMany(() => ModelEntity, (product) => product)
+  @OneToMany(() => ModelEntity, (model) => model.ownedByOrganization)
   models: ModelEntity[];
 }

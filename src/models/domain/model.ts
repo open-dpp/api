@@ -9,6 +9,7 @@ import {
 import { keyBy, keys, map, mergeWith, pick } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
+import { User } from '../../users/domain/user';
 
 export class DataValue {
   @Expose()
@@ -42,8 +43,13 @@ export class Model {
 
   @Expose()
   readonly id: string = randomUUID();
-  @Expose()
-  ownedByOrganizationId: string | undefined;
+
+  @Expose({ name: 'ownedByOrganizationId' })
+  private _ownedByOrganizationId: string | undefined;
+
+  @Expose({ name: 'createdByUserId' })
+  private _createdByUserId: string | undefined;
+
   readonly createdAt: Date | undefined;
 
   @Expose({ name: 'productDataModelId' })
@@ -61,19 +67,35 @@ export class Model {
     return this._dataValues;
   }
 
-  static fromPlain(plain: Partial<Model>) {
+  static create(data: {
+    name: string;
+    user: User;
+    organization: Organization;
+  }) {
+    return Model.fromPlain({
+      name: data.name,
+      ownedByOrganizationId: data.organization.id,
+      createdByUserId: data.user.id,
+    });
+  }
+
+  static fromPlain<V>(plain: V) {
     return plainToInstance(Model, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this.ownedByOrganizationId === organization.id;
+  public get createdByUserId() {
+    return this._createdByUserId;
   }
 
-  public assignOrganization(organization: Organization) {
-    this.ownedByOrganizationId = organization.id;
+  public get ownedByOrganizationId() {
+    return this._ownedByOrganizationId;
+  }
+
+  public isOwnedBy(organization: Organization) {
+    return this._ownedByOrganizationId === organization.id;
   }
 
   public addDataValues(dataValues: DataValue[]) {

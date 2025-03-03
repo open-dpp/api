@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -14,81 +15,106 @@ import { UpdateModelDto } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { Organization } from '../../organizations/domain/organization';
 
-@Controller('models')
+@Controller('/organizations/:orgaId/models')
 export class ModelsController {
   constructor(
     private readonly modelsService: ModelsService,
+    private readonly organizationService: OrganizationsService,
     private readonly productDataModelService: ProductDataModelService,
   ) {}
 
   @Post()
   async create(
+    @Param('orgaId') organizationId: string,
     @Body() createModelDto: CreateModelDto,
     @Request() req: AuthRequest,
   ) {
-    const model = Model.fromPlain({
+    const organization = await this.organizationService.findOne(organizationId);
+    if (organization === undefined) {
+      throw new ForbiddenException();
+    }
+    const model = Model.create({
       name: createModelDto.name,
-      description: createModelDto.description,
+      user: req.authContext.user,
+      organization: organization,
     });
     model.createUniqueProductIdentifier();
-    // model.assignOwner(req.authContext.user);
     return (await this.modelsService.save(model)).toPlain();
   }
 
   @Get()
-  async findAll(@Request() req: AuthRequest) {
-    return (await this.modelsService.findAllByUser(req.authContext.user)).map(
+  async findAll(
+    @Param('orgaId') organizationId: string,
+    @Request() req: AuthRequest,
+  ) {
+    const organization = await this.organizationService.findOne(organizationId);
+    if (!organization.isMember(req.authContext.user)) {
+      throw new ForbiddenException();
+    }
+    return (await this.modelsService.findAllByOrganization(organizationId)).map(
       (m) => m.toPlain(),
     );
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return (await this.modelsService.findOne(id)).toPlain();
-  }
-
-  @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateModelDto: UpdateModelDto,
+  @Get(':modelId')
+  async findOne(
+    @Param('orgaId') organizationId: string,
+    @Param('modelId') id: string,
+    @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(id);
-    /* if (!model.isOwnedBy(req.authContext.user)) {
-      throw new ForbiddenException();
-    } */
-    // TODO: check if member of organization
+    const organization = await this.organizationService.findOne(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
+    return model.toPlain();
+  }
+
+  @Patch(':modelId')
+  async update(
+    @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
+    @Body() updateModelDto: UpdateModelDto,
+    @Request() req: AuthRequest,
+  ) {
+    const model = await this.modelsService.findOne(modelId);
+    const organization = await this.organizationService.findOne(organizationId);
+
+    this.hasPermissionsOrFail(organization, model, req);
     const mergedModel = model.mergeWithPlain(updateModelDto);
     return (await this.modelsService.save(mergedModel)).toPlain();
   }
 
   @Post(':modelId/product-data-models/:productDataModelId')
   async assignProductDataModelToModel(
+    @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
     @Param('productDataModelId') productDataModelId: string,
+    @Request() req: AuthRequest,
   ) {
     // TODO: Check if user has permission to access product data model
     const productDataModel =
       await this.productDataModelService.findOne(productDataModelId);
     const model = await this.modelsService.findOne(modelId);
-    /* if (!model.isOwnedBy(req.authContext.user)) {
-      throw new ForbiddenException();
-    } */
-    // TODO: check if member of organization
+    const organization = await this.organizationService.findOne(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
+
     model.assignProductDataModel(productDataModel);
     return (await this.modelsService.save(model)).toPlain();
   }
 
   @Patch(':modelId/data-values')
   async updateDataValues(
+    @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
     @Body() updateDataValues: unknown,
+    @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(modelId);
-    /* if (!model.isOwnedBy(req.authContext.user)) {
-      throw new ForbiddenException();
-    } */
-    // TODO: check if member of organization
+    const organization = await this.organizationService.findOne(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
+
     const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
     const productDataModel = await this.productDataModelService.findOne(
       mergedModel.productDataModelId,
@@ -102,14 +128,14 @@ export class ModelsController {
 
   @Post(':modelId/data-values')
   async addDataValues(
+    @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
     @Body() addedDataValues: unknown[],
+    @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(modelId);
-    /* if (!model.isOwnedBy(req.authContext.user)) {
-      throw new ForbiddenException();
-    } */
-    // TODO: check if member of organization
+    const organization = await this.organizationService.findOne(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
     model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
     const productDataModel = await this.productDataModelService.findOne(
       model.productDataModelId,
@@ -119,5 +145,21 @@ export class ModelsController {
       throw new BadRequestException(validationResult.toJson());
     }
     return (await this.modelsService.save(model)).toPlain();
+  }
+
+  private hasPermissionsOrFail(
+    organization: Organization,
+    model: Model,
+    req: AuthRequest,
+  ) {
+    if (
+      organization === undefined ||
+      !organization.isMember(req.authContext.user)
+    ) {
+      throw new ForbiddenException();
+    }
+    if (!model.isOwnedBy(organization)) {
+      throw new ForbiddenException();
+    }
   }
 }

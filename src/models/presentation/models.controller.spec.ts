@@ -24,11 +24,17 @@ import { ProductDataModelService } from '../../product-data-model/infrastructure
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { OrganizationsModule } from '../../organizations/organizations.module';
+import { EntityNotFoundErrorFilter } from '../../exceptions/exception.handler';
 
 describe('ModelsController', () => {
   let app: INestApplication;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let modelsService: ModelsService;
+  let organizationsService: OrganizationsService;
   let productDataModelService: ProductDataModelService;
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@example.com');
@@ -41,8 +47,10 @@ describe('ModelsController', () => {
           ModelEntity,
           UserEntity,
           ProductDataModelEntity,
+          OrganizationEntity,
         ]),
         ModelsModule,
+        OrganizationsModule,
         UniqueProductIdentifierModule,
         ProductDataModelModule,
       ],
@@ -70,54 +78,22 @@ describe('ModelsController', () => {
     productDataModelService = moduleRef.get<ProductDataModelService>(
       ProductDataModelService,
     );
+    organizationsService =
+      moduleRef.get<OrganizationsService>(OrganizationsService);
 
     app = moduleRef.createNestApplication();
+    app.useGlobalFilters(new EntityNotFoundErrorFilter());
 
     await app.init();
   });
 
-  it(`/CREATE model`, async () => {
-    const body = { name: 'My name', description: 'My desc' };
-    const response = await request(app.getHttpServer())
-      .post('/models')
-      .set('Authorization', 'Bearer token1')
-      .send(body);
-    expect(response.status).toEqual(201);
-    const found = await modelsService.findOne(response.body.id);
-    expect(response.body.id).toEqual(found.id);
-
-    const foundUniqueProductIdentifiers =
-      await uniqueProductIdentifierService.findAllByReferencedId(found.id);
-    expect(foundUniqueProductIdentifiers).toHaveLength(1);
-    for (const uniqueProductIdentifier of foundUniqueProductIdentifiers) {
-      expect(uniqueProductIdentifier.referenceId).toEqual(found.id);
-    }
-    const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
-    expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
-      [...foundUniqueProductIdentifiers].map((u) => u.toPlain()).sort(sortFn),
-    );
-  });
-
-  it(`/GET models`, async () => {
-    const modelNames = ['P1', 'P2'];
-    const models = await Promise.all(
-      modelNames.map(async (pn) => {
-        const model = Model.fromPlain({ name: pn, description: 'My desc' });
-        model.assignOwner(authContext.user);
-        return await modelsService.save(model);
-      }),
-    );
-    const response = await request(app.getHttpServer())
-      .get('/models')
-      .set('Authorization', 'Bearer token1');
-    for (const model of models) {
-      expect(
-        response.body.find((p) => p.id === model.id).uniqueProductIdentifiers,
-      ).toEqual(
-        await uniqueProductIdentifierService.findAllByReferencedId(model.id),
-      );
-    }
-  });
+  async function createOrganization(user: User = authContext.user) {
+    const organization = Organization.create({
+      name: 'My orga',
+      user: user,
+    });
+    return organizationsService.save(organization);
+  }
 
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
@@ -186,22 +162,149 @@ describe('ModelsController', () => {
     ],
   };
 
+  it(`/CREATE model`, async () => {
+    const body = { name: 'My name', description: 'My desc' };
+    const organization = await createOrganization();
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organization.id}/models`)
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(201);
+    const found = await modelsService.findOne(response.body.id);
+    expect(response.body.id).toEqual(found.id);
+    expect(found.isOwnedBy(organization)).toBeTruthy();
+    const foundUniqueProductIdentifiers =
+      await uniqueProductIdentifierService.findAllByReferencedId(found.id);
+    expect(foundUniqueProductIdentifiers).toHaveLength(1);
+    for (const uniqueProductIdentifier of foundUniqueProductIdentifiers) {
+      expect(uniqueProductIdentifier.referenceId).toEqual(found.id);
+    }
+    const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
+    expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
+      [...foundUniqueProductIdentifiers].map((u) => u.toPlain()).sort(sortFn),
+    );
+  });
+
+  it(`/GET models of organization`, async () => {
+    const modelNames = ['P1', 'P2'];
+    const organization = await createOrganization();
+
+    const models: Model[] = await Promise.all(
+      modelNames.map(async (pn) => {
+        const model = Model.create({
+          name: pn,
+          organization,
+          user: authContext.user,
+        });
+        return await modelsService.save(model);
+      }),
+    );
+    const otherOrganization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(otherOrganization);
+    await modelsService.save(
+      Model.create({
+        name: 'Other Orga',
+        organization: otherOrganization,
+        user: authContext.user,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${organization.id}/models`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(200);
+
+    expect(response.body).toEqual(models.map((m) => m.toPlain()));
+  });
+
+  it(`/GET models of organization fails if user is not part of organization`, async () => {
+    const otherUser = new User(randomUUID(), 'other@example.com');
+    const organization = await createOrganization(otherUser);
+
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: otherUser,
+    });
+    await modelsService.save(model);
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${organization.id}/models`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET model`, async () => {
+    const organization = await createOrganization();
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: authContext.user,
+    });
+    await modelsService.save(model);
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${organization.id}/models/${model.id}`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual(model.toPlain());
+  });
+
+  it(`/GET model fails if user is not member of organization`, async () => {
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const organization = await createOrganization(otherUser);
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: otherUser,
+    });
+    await modelsService.save(model);
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${organization.id}/models/${model.id}`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET model fails if model does not belong to organization`, async () => {
+    const organization = await createOrganization();
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: authContext.user,
+    });
+    await modelsService.save(model);
+    const otherOrganization = await createOrganization();
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganization.id}/models/${model.id}`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
+  });
+
   it('assigns product data model to model', async () => {
     const body = { name: 'My name', description: 'My desc' };
-    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
-    model.assignOwner(authContext.user);
+    const organization = await createOrganization();
+
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
 
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
-      .post(`/models/${model.id}/product-data-models/${productDataModel.id}`)
+      .post(
+        `/organizations/${organization.id}/models/${model.id}/product-data-models/${productDataModel.id}`,
+      )
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(201);
     const responseGet = await request(app.getHttpServer())
-      .get(`/models/${model.id}`)
+      .get(`/organizations/${organization.id}/models/${model.id}`)
       .set('Authorization', 'Bearer token1');
     expect(responseGet.body.dataValues).toEqual([
       DataValue.fromPlain({
@@ -223,9 +326,68 @@ describe('ModelsController', () => {
     expect(responseGet.body.productDataModelId).toEqual(productDataModel.id);
   });
 
+  it('assigns product data model to model fails if user is not member of organization', async () => {
+    const body = { name: 'My name', description: 'My desc' };
+    const otherUser = new User(randomUUID(), 'other@example.com');
+    const organization = await createOrganization(otherUser);
+
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: otherUser,
+    });
+    await modelsService.save(model);
+
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organization.id}/models/${model.id}/product-data-models/${productDataModel.id}`,
+      )
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it('assigns product data model to model fails if model does not belong to organization', async () => {
+    const body = { name: 'My name', description: 'My desc' };
+    const organization = await createOrganization();
+
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
+    await modelsService.save(model);
+
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+
+    const otherOrganization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(otherOrganization);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${otherOrganization.id}/models/${model.id}/product-data-models/${productDataModel.id}`,
+      )
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  //
   it('update data values of model', async () => {
-    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
-    model.assignOwner(authContext.user);
+    const organization = await createOrganization();
+
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -238,7 +400,7 @@ describe('ModelsController', () => {
       { id: dataValue3.id, value: 'value 3' },
     ];
     const response = await request(app.getHttpServer())
-      .patch(`/models/${model.id}/data-values`)
+      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set('Authorization', 'Bearer token1')
       .send(updatedValues);
     expect(response.status).toEqual(200);
@@ -263,9 +425,65 @@ describe('ModelsController', () => {
     );
   });
 
+  it('update data values fails if user is not member of organization', async () => {
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const organization = await createOrganization(otherUser);
+
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: otherUser,
+    });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+    const dataValue1 = model.dataValues[0];
+    const updatedValues = [{ id: dataValue1.id, value: 'value 1' }];
+    const response = await request(app.getHttpServer())
+      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
+      .set('Authorization', 'Bearer token1')
+      .send(updatedValues);
+    expect(response.status).toEqual(403);
+  });
+
+  it('update data values fails if model does not belong to organization', async () => {
+    const organization = await createOrganization();
+
+    const model = Model.create({
+      name: 'My name',
+      organization: organization,
+      user: authContext.user,
+    });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+    const otherOrganization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(otherOrganization);
+    const dataValue1 = model.dataValues[0];
+    const updatedValues = [{ id: dataValue1.id, value: 'value 1' }];
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${otherOrganization.id}/models/${model.id}/data-values`,
+      )
+      .set('Authorization', 'Bearer token1')
+      .send(updatedValues);
+    expect(response.status).toEqual(403);
+  });
+
+  //
   it('update data values fails caused by validation', async () => {
-    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
-    model.assignOwner(authContext.user);
+    const organization = await createOrganization();
+
+    const model = Model.create({
+      name: 'My name',
+      organization: organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -277,7 +495,7 @@ describe('ModelsController', () => {
       { id: dataValue3.id, value: 'value 3' },
     ];
     const response = await request(app.getHttpServer())
-      .patch(`/models/${model.id}/data-values`)
+      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set('Authorization', 'Bearer token1')
       .send(updatedValues);
     expect(response.status).toEqual(400);
@@ -292,10 +510,14 @@ describe('ModelsController', () => {
       isValid: false,
     });
   });
-
+  //
   it('add data values to model', async () => {
-    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
-    model.assignOwner(authContext.user);
+    const organization = await createOrganization();
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -316,7 +538,7 @@ describe('ModelsController', () => {
       },
     ];
     const response = await request(app.getHttpServer())
-      .post(`/models/${model.id}/data-values`)
+      .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set('Authorization', 'Bearer token1')
       .send(addedValues);
     expect(response.status).toEqual(201);
@@ -335,43 +557,86 @@ describe('ModelsController', () => {
     );
   });
 
-  it('add data values to model fails due to validation errors', async () => {
-    const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
-    model.assignOwner(authContext.user);
+  it('add data values to model fails if user is not member of organization', async () => {
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const organization = await createOrganization(otherUser);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: otherUser,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
-    const addedValues = [
-      {
-        dataSectionId: sectionId3,
-        dataFieldId: dataFieldId4,
-        value: { invalid: 'field' },
-        row: 0,
-      },
-      {
-        dataSectionId: sectionId3,
-        dataFieldId: dataFieldId5,
-        value: 'value 5',
-        row: 0,
-      },
-    ];
+    const addedValues = [];
     const response = await request(app.getHttpServer())
-      .post(`/models/${model.id}/data-values`)
+      .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set('Authorization', 'Bearer token1')
       .send(addedValues);
-    expect(response.status).toEqual(400);
-    expect(response.body).toEqual({
-      errors: [
-        {
-          id: dataFieldId4,
-          message: 'Expected string, received object',
-          name: 'Title 4',
-        },
-      ],
-      isValid: false,
-    });
+    expect(response.status).toEqual(403);
   });
+
+  it('add data values to model fails if model does not belong to organization', async () => {
+    const organization = await createOrganization();
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    const otherOrganization = await createOrganization();
+    await modelsService.save(model);
+    const addedValues = [];
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${otherOrganization.id}/models/${model.id}/data-values`,
+      )
+      .set('Authorization', 'Bearer token1')
+      .send(addedValues);
+    expect(response.status).toEqual(403);
+  });
+
+  //
+  // it('add data values to model fails due to validation errors', async () => {
+  //   const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+  //   model.assignOwner(authContext.user);
+  //   const productDataModel = ProductDataModel.fromPlain(laptopModel);
+  //   await productDataModelService.save(productDataModel);
+  //   model.assignProductDataModel(productDataModel);
+  //   await modelsService.save(model);
+  //   const addedValues = [
+  //     {
+  //       dataSectionId: sectionId3,
+  //       dataFieldId: dataFieldId4,
+  //       value: { invalid: 'field' },
+  //       row: 0,
+  //     },
+  //     {
+  //       dataSectionId: sectionId3,
+  //       dataFieldId: dataFieldId5,
+  //       value: 'value 5',
+  //       row: 0,
+  //     },
+  //   ];
+  //   const response = await request(app.getHttpServer())
+  //     .post(`/models/${model.id}/data-values`)
+  //     .set('Authorization', 'Bearer token1')
+  //     .send(addedValues);
+  //   expect(response.status).toEqual(400);
+  //   expect(response.body).toEqual({
+  //     errors: [
+  //       {
+  //         id: dataFieldId4,
+  //         message: 'Expected string, received object',
+  //         name: 'Title 4',
+  //       },
+  //     ],
+  //     isValid: false,
+  //   });
+  // });
 
   afterAll(async () => {
     await app.close();

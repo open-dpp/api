@@ -13,12 +13,12 @@ export class OrganizationsController {
     @Request() req: AuthRequest,
     @Body() createOrganizationDto: CreateOrganizationDto,
   ) {
-    const organization = new Organization(
-      undefined,
-      createOrganizationDto.name,
-      [],
-    );
-    return this.organizationsService.save(req.authContext, organization);
+    const organization = Organization.create({
+      name: createOrganizationDto.name,
+      user: req.authContext.user,
+    });
+
+    return this.organizationsService.save(organization);
   }
 
   @Get()

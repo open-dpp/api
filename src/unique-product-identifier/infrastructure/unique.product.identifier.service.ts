@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Equal, Repository } from 'typeorm';
 import { UniqueProductIdentifierEntity } from './unique.product.identifier.entity';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 
@@ -34,8 +34,8 @@ export class UniqueProductIdentifierService {
 
   async findOne(uuid: string) {
     return this.convertToDomain(
-      await this.uniqueProductIdentifierRepository.findOne({
-        where: { uuid },
+      await this.uniqueProductIdentifierRepository.findOneOrFail({
+        where: { uuid: Equal(uuid) },
       }),
     );
   }
@@ -43,7 +43,7 @@ export class UniqueProductIdentifierService {
   async findAllByReferencedId(referenceId: string) {
     const uniqueProductIdentifiers =
       await this.uniqueProductIdentifierRepository.find({
-        where: { referencedId: referenceId },
+        where: { referencedId: Equal(referenceId) },
       });
     return uniqueProductIdentifiers.map((permalink) =>
       this.convertToDomain(permalink),

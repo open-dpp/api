@@ -21,5 +21,15 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector:
+          "ObjectExpression > .properties[key.name='where']:has(.value.properties > " +
+          '.value:not(CallExpression, ObjectExpression:has(.properties > .value:matches(CallExpression))))',
+        message:
+          'Unsafe where condition, that can leak data. Use Equal() instead.',
+      },
+    ],
   },
 };

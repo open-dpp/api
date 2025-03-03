@@ -3,10 +3,10 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryColumn,
+  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
@@ -37,6 +37,7 @@ export class ModelEntity {
   @Column('char', {
     name: 'createdByUserId',
   })
+  @RelationId((model: ModelEntity) => model.createdByUser)
   createdByUserId: string;
 
   @ManyToOne(() => UserEntity, (user) => user.createdModels, {
@@ -44,12 +45,12 @@ export class ModelEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
   createdByUser: UserEntity;
 
   @Column('char', {
     name: 'ownedByOrganizationId',
   })
+  @RelationId((model: ModelEntity) => model.ownedByOrganization)
   ownedByOrganizationId: string;
 
   @ManyToOne(() => OrganizationEntity, (org) => org.models, {
@@ -57,7 +58,6 @@ export class ModelEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn([{ name: 'ownedByOrganizationId', referencedColumnName: 'id' }])
   ownedByOrganization: OrganizationEntity;
 
   @OneToMany(() => ItemEntity, (item) => item.model)
