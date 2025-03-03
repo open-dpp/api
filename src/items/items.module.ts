@@ -9,7 +9,7 @@ import { UniqueProductIdentifierModule } from '../unique-product-identifier/uniq
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
 import { UsersModule } from '../users/users.module';
-import { KeycloakResourcesService } from '../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 
 @Module({
   imports: [
@@ -17,9 +17,10 @@ import { KeycloakResourcesService } from '../keycloak-resources/infrastructure/k
     ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,
+    KeycloakResourcesModule,
   ],
   controllers: [ItemsController],
-  providers: [ItemsService, OrganizationsService, KeycloakResourcesService],
+  providers: [ItemsService, OrganizationsService],
   exports: [ItemsService],
 })
 export class ItemsModule {}

@@ -144,22 +144,14 @@ export class OrganizationsService {
     return (
       await this.organizationRepository.find({
         where: {
-          members: Equal({
+          members: {
             id: Equal(authContext.user.id),
-          }),
+          },
         },
         relations: {
           members: true,
         },
       })
     ).map((o) => this.convertToDomain(o));
-  }
-
-  async getMembersOfOrganization(id: string) {
-    const organization = await this.findOne(id);
-    if (!organization) {
-      throw new NotFoundException();
-    }
-    return organization.members;
   }
 }

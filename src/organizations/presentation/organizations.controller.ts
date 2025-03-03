@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Request,
+} from '@nestjs/common';
 import { OrganizationsService } from '../infrastructure/organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { Organization } from '../domain/organization';
@@ -45,7 +53,11 @@ export class OrganizationsController {
   }
 
   @Get(':id/members')
-  getMembers(@Param('id') id: string) {
-    return this.organizationsService.getMembersOfOrganization(id);
+  async getMembers(@Param('id') id: string) {
+    const organization = await this.findOne(id);
+    if (!organization) {
+      throw new NotFoundException();
+    }
+    return organization.members;
   }
 }
