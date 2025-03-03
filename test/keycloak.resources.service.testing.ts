@@ -1,6 +1,6 @@
 import { Expose, plainToInstance } from 'class-transformer';
-import { AuthContext } from '../src/auth/auth-request';
 import { randomUUID } from 'crypto';
+import { Organization } from '../src/organizations/domain/organization';
 
 type KeycloakUser = {
   id: string;
@@ -28,11 +28,11 @@ export class KeycloakResourcesServiceTesting {
   async getUsers() {
     return this.users;
   }
-  async createGroup(authContext: AuthContext, groupName: string) {
+  async createGroup(organization: Organization) {
     const group = {
       id: randomUUID(),
-      name: groupName,
-      members: [{ id: authContext.user.id, email: authContext.user.email }],
+      name: organization.name,
+      members: organization.members.map((m) => ({ id: m.id, email: m.email })),
     };
     this.groups.push(group);
   }

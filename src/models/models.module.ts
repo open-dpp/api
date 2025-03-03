@@ -8,6 +8,7 @@ import { DataValueEntity } from './infrastructure/data.value.entity';
 import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
 import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
 import { UsersModule } from '../users/users.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersModule } from '../users/users.module';
       ProductDataModelEntity,
     ]),
     ProductDataModelModule,
+    OrganizationsModule,
     UniqueProductIdentifierModule,
     UsersModule,
   ],

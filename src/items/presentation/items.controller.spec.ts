@@ -20,12 +20,15 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
-  let usersService: UsersService;
+  let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   const authContext = new AuthContext();
@@ -35,16 +38,24 @@ describe('ItemsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ModelEntity, UserEntity]),
+        TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
         ItemsModule,
         UniqueProductIdentifierModule,
       ],
       providers: [
+        OrganizationsService,
+        UsersService,
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
             new Map([['token1', authContext.user]]),
           ),
+        },
+        {
+          provide: KeycloakResourcesService,
+          useValue: KeycloakResourcesServiceTesting.fromPlain({
+            users: [{ id: authContext.user.id, email: authContext.user.email }],
+          }),
         },
       ],
     })
@@ -56,12 +67,12 @@ describe('ItemsController', () => {
       )
       .compile();
 
-    usersService = moduleRef.get(UsersService);
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
+    organizationsService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
 
@@ -69,14 +80,19 @@ describe('ItemsController', () => {
   });
 
   it(`/CREATE item`, async () => {
-    const model = Model.fromPlain({
-      name: 'name',
-      description: 'description',
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
     });
-    model.assignOwner(authContext.user);
+    await organizationsService.save(organization);
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
-      .post(`/models/${model.id}/items`)
+      .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(201);
     const found = await itemsService.findById(response.body.id);
@@ -95,35 +111,71 @@ describe('ItemsController', () => {
     });
   });
 
-  it(`/CREATE item fails cause of missing permissions`, async () => {
-    const model = Model.fromPlain({
-      name: 'name',
-      description: 'description',
+  it(`/CREATE item fails if user is not member of organization`, async () => {
+    const otherUser = new User(randomUUID(), 'other@example.com');
+    const organization = Organization.create({
+      name: 'My orga',
+      user: otherUser,
     });
-    const user = new User(randomUUID(), 'test@test.test');
-    await usersService.save(user);
-    model.assignOwner(user);
+    await organizationsService.save(organization);
+
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: otherUser,
+    });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
-      .post(`/models/${model.id}/items`)
+      .post(`/organizations/${organization.id}/models/${model.id}/items`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/CREATE item fails if model does not belong to organization`, async () => {
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(organization);
+
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: authContext.user,
+    });
+    await modelsService.save(model);
+    const otherOrganization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(otherOrganization);
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(403);
   });
 
   it(`/GET item`, async () => {
-    const model = Model.fromPlain({
-      name: 'name',
-      description: 'description',
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
     });
+    await organizationsService.save(organization);
 
-    model.assignOwner(authContext.user);
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
-      .get(`/models/${model.id}/items/${item.id}`)
+      .get(
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
+      )
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
@@ -137,31 +189,72 @@ describe('ItemsController', () => {
       ],
     });
   });
-
-  it(`/GET item fails caused by missing permissions`, async () => {
-    const model = Model.fromPlain({
-      name: 'name',
-      description: 'description',
+  //
+  it(`/GET item fails if user is not member of organization`, async () => {
+    const otherUser = new User(randomUUID(), 'other@example.com');
+    const organization = Organization.create({
+      name: 'My orga',
+      user: otherUser,
     });
-    const user = new User(randomUUID(), 'test@test.test');
-    await usersService.save(user);
-    model.assignOwner(user);
+    await organizationsService.save(organization);
+
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: otherUser,
+    });
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
-      .get(`/models/${model.id}/items/${item.id}`)
+      .get(
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
+      )
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET item fails if model does not belong to organization`, async () => {
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(organization);
+
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: authContext.user,
+    });
+    await modelsService.save(model);
+    const item = new Item();
+    item.defineModel(model.id);
+    await itemsService.save(item);
+    const otherOrganization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(otherOrganization);
+    const response = await request(app.getHttpServer())
+      .get(
+        `/organizations/${otherOrganization.id}/models/${model.id}/items/${item.id}`,
+      )
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(403);
   });
 
   it(`/GET all item`, async () => {
-    const model = Model.fromPlain({
-      name: 'name',
-      description: 'description',
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
     });
-    model.assignOwner(authContext.user);
+    await organizationsService.save(organization);
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
@@ -172,7 +265,7 @@ describe('ItemsController', () => {
     item2.defineModel(model.id);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
-      .get(`/models/${model.id}/items`)
+      .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([
@@ -198,15 +291,19 @@ describe('ItemsController', () => {
       },
     ]);
   });
-
-  it(`/GET all item fails caused by missing permissions`, async () => {
-    const model = Model.fromPlain({
-      name: 'name',
-      description: 'description',
+  //
+  it(`/GET all item fails if user is not member of organization`, async () => {
+    const otherUser = new User(randomUUID(), 'other@example.com');
+    const organization = Organization.create({
+      name: 'My orga',
+      user: otherUser,
     });
-    const user = new User(randomUUID(), 'test@test.test');
-    await usersService.save(user);
-    model.assignOwner(user);
+    await organizationsService.save(organization);
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: otherUser,
+    });
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
@@ -215,7 +312,36 @@ describe('ItemsController', () => {
     item2.defineModel(model.id);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
-      .get(`/models/${model.id}/items`)
+      .get(`/organizations/${organization.id}/models/${model.id}/items`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET all item fails if model does not belong to organization`, async () => {
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(organization);
+    const model = Model.create({
+      name: 'name',
+      organization,
+      user: authContext.user,
+    });
+    await modelsService.save(model);
+    const item = new Item();
+    item.defineModel(model.id);
+    await itemsService.save(item);
+    const item2 = new Item();
+    item2.defineModel(model.id);
+    await itemsService.save(item2);
+    const otherOrganization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(otherOrganization);
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(403);
   });

@@ -1,6 +1,7 @@
 import { DataValue, Model } from './model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
+import { Organization } from '../../organizations/domain/organization';
 
 describe('Model', () => {
   it('should create unique product identifiers on model creation', () => {
@@ -20,14 +21,15 @@ describe('Model', () => {
     expect(uniqueModelIdentifier2.referenceId).toEqual(model.id);
   });
 
-  it('should assign owner for model', () => {
-    const model = Model.fromPlain({
-      name: 'My model',
-      description: 'This is my model',
-    });
-    const user = new User(randomUUID(), 'test@test.test');
-    model.assignOwner(user);
-    expect(model.owner).toEqual(user.id);
+  it('should create new model', () => {
+    const user = new User(randomUUID(), 'test@example.com');
+    const organization = Organization.create({ name: 'My orga', user });
+    const model = Model.create({ name: 'My model', user, organization });
+
+    expect(model.isOwnedBy(organization)).toBeTruthy();
+    expect(
+      model.isOwnedBy(Organization.create({ name: 'My orga', user })),
+    ).toBeFalsy();
   });
 
   it('is created from plain with defaults', () => {
@@ -42,7 +44,6 @@ describe('Model', () => {
     expect(model.uniqueProductIdentifiers).toEqual([]);
     expect(model.productDataModelId).toBeUndefined();
     expect(model.dataValues).toEqual([]);
-    expect(model.owner).toBeUndefined();
     expect(model.createdAt).toBeUndefined();
   });
 
@@ -66,13 +67,18 @@ describe('Model', () => {
           dataFieldId: 'dataField 2',
         },
       ],
-      owner: randomUUID(),
+      createdByUserId: randomUUID(),
+      ownedByOrganizationId: randomUUID(),
     };
     const model = Model.fromPlain(plain);
     expect(model.id).toEqual(plain.id);
     expect(model.name).toEqual(plain.name);
     expect(model.description).toEqual(plain.description);
-    expect(model.owner).toEqual(plain.owner);
+    expect(
+      model.isOwnedBy(
+        Organization.fromPlain({ id: plain.ownedByOrganizationId }),
+      ),
+    ).toBeTruthy();
     expect(model.dataValues).toEqual(plain.dataValues);
     expect(model.productDataModelId).toEqual(plain.productDataModelId);
   });
@@ -201,7 +207,7 @@ describe('Model', () => {
     });
     const plain = {
       name: 'Plain name',
-      owner: randomUUID(),
+      ownedByOrganizationId: randomUUID(),
       dataValues: [
         { id: 'd1', value: 'v1', fieldToIgnore: 3, dataFieldId: 'f9' },
         { id: 'd3', value: 'v3 new' },
@@ -212,7 +218,11 @@ describe('Model', () => {
     expect(mergedModel.id).toEqual(expect.any(String));
     expect(mergedModel.name).toEqual(plain.name);
     expect(mergedModel.description).toEqual(model.description);
-    expect(mergedModel.owner).toEqual(plain.owner);
+    expect(
+      mergedModel.isOwnedBy(
+        Organization.fromPlain({ id: plain.ownedByOrganizationId }),
+      ),
+    ).toBeTruthy();
     expect(mergedModel.dataValues).toEqual([
       { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
       { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },

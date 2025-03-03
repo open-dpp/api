@@ -1,19 +1,20 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ModelEntity } from './model.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Equal, Repository } from 'typeorm';
 import { Model } from '../domain/model';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
-import { User } from '../../users/domain/user';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { DataValueEntity } from './data.value.entity';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
 @Injectable()
 export class ModelsService {
   constructor(
     @InjectRepository(ModelEntity)
     private modelRepository: Repository<ModelEntity>,
+    private organizationService: OrganizationsService,
     private uniqueModelIdentifierService: UniqueProductIdentifierService,
     private readonly usersService: UsersService,
   ) {}
@@ -37,16 +38,19 @@ export class ModelsService {
             row: dv.row ?? undefined,
           }))
         : [],
-      owner: modelEntity.createdByUserId,
+      createdByUserId: modelEntity.createdByUserId,
+      ownedByOrganizationId: modelEntity.ownedByOrganizationId,
       createdAt: modelEntity.createdAt,
     });
   }
 
   async save(model: Model) {
-    const userEntity = await this.usersService.findOne(model.owner);
-    if (!userEntity) {
-      throw new ForbiddenException();
-    }
+    const userEntity = await this.usersService.findOneAndFail(
+      model.createdByUserId,
+    );
+    const organizationEntity = await this.organizationService.findOne(
+      model.ownedByOrganizationId,
+    );
     const dataValueEntities = model.dataValues.map((dv) => {
       const dataValueEntity = new DataValueEntity();
       dataValueEntity.id = dv.id;
@@ -63,6 +67,7 @@ export class ModelsService {
       productDataModelId: model.productDataModelId,
       dataValues: dataValueEntities,
       createdByUser: userEntity,
+      ownedByOrganization: organizationEntity,
     });
     for (const uniqueProductIdentifier of model.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
@@ -70,9 +75,10 @@ export class ModelsService {
     return this.convertToDomain(modelEntity, model.uniqueProductIdentifiers);
   }
 
-  async findAllByUser(user: User) {
+  async findAllByOrganization(organizationId: string) {
     const productEntities = await this.modelRepository.find({
-      where: { createdByUserId: user.id },
+      where: { ownedByOrganizationId: Equal(organizationId) },
+      order: { name: 'ASC' },
     });
     return await Promise.all(
       productEntities.map(async (entity: ModelEntity) => {
@@ -86,15 +92,15 @@ export class ModelsService {
     );
   }
 
-  async findOne(id: string) {
-    const productEntity = await this.modelRepository.findOne({
-      where: { id },
+  async findOne(id: string): Promise<Model> {
+    const modelEntity = await this.modelRepository.findOneOrFail({
+      where: { id: Equal(id) },
       relations: ['dataValues'],
     });
     return this.convertToDomain(
-      productEntity,
+      modelEntity,
       await this.uniqueModelIdentifierService.findAllByReferencedId(
-        productEntity.id,
+        modelEntity.id,
       ),
     );
   }

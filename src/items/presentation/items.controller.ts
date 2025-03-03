@@ -12,17 +12,23 @@ import { Item } from '../domain/item';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
-@Controller('models/:modelId/items')
+@Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
   constructor(
     private readonly itemsService: ItemsService,
+    private readonly organizationsService: OrganizationsService,
     private readonly modelsService: ModelsService,
   ) {}
 
   @Post()
-  async create(@Param('modelId') modelId: string, @Request() req: AuthRequest) {
-    await this.checkPermission(req, modelId);
+  async create(
+    @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
+    @Request() req: AuthRequest,
+  ) {
+    await this.hasPermissionOrFail(organizationId, modelId, req);
     const item = new Item();
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
@@ -30,8 +36,12 @@ export class ItemsController {
   }
 
   @Get()
-  async getAll(@Param('modelId') modelId: string, @Request() req: AuthRequest) {
-    await this.checkPermission(req, modelId);
+  async getAll(
+    @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
+    @Request() req: AuthRequest,
+  ) {
+    await this.hasPermissionOrFail(organizationId, modelId, req);
     return (await this.itemsService.findAllByModel(modelId)).map((item) =>
       this.itemToDto(item),
     );
@@ -39,11 +49,12 @@ export class ItemsController {
 
   @Get(':id')
   async get(
+    @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
     @Param('id') itemId: string,
     @Request() req: AuthRequest,
   ) {
-    await this.checkPermission(req, modelId);
+    await this.hasPermissionOrFail(organizationId, modelId, req);
     return this.itemToDto(await this.itemsService.findById(itemId));
   }
 
@@ -58,9 +69,18 @@ export class ItemsController {
     });
   }
 
-  private async checkPermission(req: AuthRequest, modelId: string) {
+  private async hasPermissionOrFail(
+    organizationId: string,
+    modelId: string,
+    req: AuthRequest,
+  ) {
+    const organization =
+      await this.organizationsService.findOne(organizationId);
+    if (!organization.isMember(req.authContext.user)) {
+      throw new ForbiddenException();
+    }
     const model = await this.modelsService.findOne(modelId);
-    if (!model.isOwnedBy(req.authContext.user)) {
+    if (!model.isOwnedBy(organization)) {
       throw new ForbiddenException();
     }
   }

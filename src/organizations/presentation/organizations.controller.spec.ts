@@ -14,6 +14,7 @@ import { AuthContext } from '../../auth/auth-request';
 import { randomUUID } from 'crypto';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { EntityNotFoundErrorFilter } from '../../exceptions/exception.handler';
 
 describe('OrganizationController', () => {
   let app: INestApplication;
@@ -46,6 +47,7 @@ describe('OrganizationController', () => {
 
     service = moduleRef.get<OrganizationsService>(OrganizationsService);
     app = moduleRef.createNestApplication();
+    app.useGlobalFilters(new EntityNotFoundErrorFilter());
 
     await app.init();
   });

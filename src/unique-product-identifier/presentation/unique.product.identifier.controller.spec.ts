@@ -26,6 +26,8 @@ import {
 } from '../../product-data-model/domain/product.data.model';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -51,6 +53,7 @@ describe('ModelsController', () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let productDataModelService: ProductDataModelService;
+  let organizationsService: OrganizationsService;
   const reflector: Reflector = new Reflector();
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), `${randomUUID()}@example.com`);
@@ -92,6 +95,7 @@ describe('ModelsController', () => {
       .compile();
 
     modelsService = moduleRef.get(ModelsService);
+    organizationsService = moduleRef.get(OrganizationsService);
     productDataModelService = moduleRef.get<ProductDataModelService>(
       ProductDataModelService,
     );
@@ -157,10 +161,17 @@ describe('ModelsController', () => {
   it(`/GET public view for unique product identifier`, async () => {
     const productDataModel = ProductDataModel.fromPlain({ ...laptopModel });
     await productDataModelService.save(productDataModel);
+    const organization = Organization.create({
+      name: 'My orga',
+      user: authContext.user,
+    });
+    await organizationsService.save(organization);
     const model = Model.fromPlain({
       name: 'Model Y',
       description: 'My desc',
       productDataModelId: productDataModel.id,
+      ownedByOrganizationId: organization.id,
+      createdByUserId: authContext.user.id,
       dataValues: [
         DataValue.fromPlain({
           id: randomUUID(),
@@ -204,7 +215,6 @@ describe('ModelsController', () => {
         }),
       ],
     });
-    model.assignOwner(authContext.user);
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockReturnValue(true);

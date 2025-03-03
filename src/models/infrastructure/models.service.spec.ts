@@ -5,7 +5,7 @@ import { ModelEntity } from './model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityNotFoundError } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { DataValue, Model } from '../domain/model';
@@ -15,11 +15,17 @@ import {
   ProductDataModel,
   SectionType,
 } from '../../product-data-model/domain/product.data.model';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
-  let userService: UsersService;
+  let organizationService: OrganizationsService;
   let dataSource: DataSource;
+  const user = new User(randomUUID(), 'test@test.test');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,24 +35,37 @@ describe('ModelsService', () => {
           ModelEntity,
           UniqueProductIdentifierEntity,
           UserEntity,
+          OrganizationEntity,
         ]),
       ],
-      providers: [ModelsService, UniqueProductIdentifierService, UsersService],
+      providers: [
+        ModelsService,
+        UniqueProductIdentifierService,
+        UsersService,
+        OrganizationsService,
+        {
+          provide: KeycloakResourcesService,
+          useValue: KeycloakResourcesServiceTesting.fromPlain({
+            users: [{ id: user.id, email: user.email }],
+          }),
+        },
+      ],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
     modelsService = module.get<ModelsService>(ModelsService);
-    userService = module.get<UsersService>(UsersService);
+    organizationService =
+      module.get<OrganizationsService>(OrganizationsService);
   });
 
-  it('should create a product', async () => {
-    const user = new User(randomUUID(), 'test@test.test');
-    await userService.save(user);
-    const model = Model.fromPlain({
+  it('should create a model', async () => {
+    const organization = Organization.create({ name: 'My orga', user: user });
+    await organizationService.save(organization);
+    const model = Model.create({
       name: 'My product',
-      description: 'This is my product',
+      user,
+      organization,
     });
-    model.assignOwner(user);
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
@@ -101,11 +120,11 @@ describe('ModelsService', () => {
       }),
     ]);
     const { id } = await modelsService.save(model);
-    const foundProduct = await modelsService.findOne(id);
-    expect(foundProduct.name).toEqual(model.name);
-    expect(foundProduct.description).toEqual(model.description);
-    expect(foundProduct.productDataModelId).toEqual(productDataModel.id);
-    expect(foundProduct.dataValues).toEqual([
+    const foundModel = await modelsService.findOne(id);
+    expect(foundModel.name).toEqual(model.name);
+    expect(foundModel.description).toEqual(model.description);
+    expect(foundModel.productDataModelId).toEqual(productDataModel.id);
+    expect(foundModel.dataValues).toEqual([
       DataValue.fromPlain({
         id: expect.anything(),
         dataSectionId: productDataModel.sections[0].id,
@@ -128,8 +147,42 @@ describe('ModelsService', () => {
         row: 0,
       }),
     ]);
+    expect(foundModel.createdByUserId).toEqual(user.id);
+    expect(foundModel.isOwnedBy(organization)).toBeTruthy();
+  });
 
-    expect((await userService.findOne(user.id)).id).toEqual(foundProduct.owner);
+  it('fails if requested model could not be found', async () => {
+    await expect(modelsService.findOne(randomUUID())).rejects.toThrow(
+      EntityNotFoundError,
+    );
+  });
+
+  it('should find all models of organization', async () => {
+    const organization = Organization.create({ name: 'My orga', user: user });
+    await organizationService.save(organization);
+    const model1 = Model.create({
+      name: 'Product A',
+      user,
+      organization,
+    });
+    const model2 = Model.create({
+      name: 'Product B',
+      user,
+      organization,
+    });
+    const model3 = Model.create({
+      name: 'Product C',
+      user,
+      organization,
+    });
+    await modelsService.save(model1);
+    await modelsService.save(model2);
+    await modelsService.save(model3);
+
+    const foundModels = await modelsService.findAllByOrganization(
+      organization.id,
+    );
+    expect(foundModels).toEqual([model1, model2, model3]);
   });
 
   afterEach(async () => {

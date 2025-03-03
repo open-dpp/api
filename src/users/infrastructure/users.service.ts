@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { Equal, FindManyOptions, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { User } from '../domain/user';
 import { KeycloakUserInToken } from '../../auth/keycloak-auth/KeycloakUserInToken';
@@ -20,9 +20,16 @@ export class UsersService {
   }
 
   async findOne(id: string) {
+    const userFound = await this.userRepository.findOne({
+      where: { id: Equal(id) },
+    });
+    return userFound ? this.convertToDomain(userFound) : undefined;
+  }
+
+  async findOneAndFail(id: string) {
     return this.convertToDomain(
-      await this.userRepository.findOne({
-        where: { id },
+      await this.userRepository.findOneOrFail({
+        where: { id: Equal(id) },
       }),
     );
   }
@@ -40,9 +47,7 @@ export class UsersService {
   }
 
   async create(keycloakUser: KeycloakUserInToken, ignoreIfExists?: boolean) {
-    const find = await this.userRepository.findOne({
-      where: { id: keycloakUser.sub },
-    });
+    const find = await this.findOne(keycloakUser.sub);
     if (find && !ignoreIfExists) {
       throw new BadRequestException();
     }

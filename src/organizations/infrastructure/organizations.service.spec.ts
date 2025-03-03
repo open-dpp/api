@@ -5,7 +5,7 @@ import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from './organization.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { v4 as uuid4 } from 'uuid';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityNotFoundError } from 'typeorm';
 import { Organization } from '../domain/organization';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
@@ -43,22 +43,27 @@ describe('OrganizationsService', () => {
 
   it('should create an organization', async () => {
     const name = `My Organization ${uuid4()}`;
-    const organization = new Organization(randomUUID(), name, [
-      authContext.user,
-    ]);
-    const { id } = await organizationsService.save(authContext, organization);
+    const organization = Organization.create({ name, user: authContext.user });
+    const { id } = await organizationsService.save(organization);
     const found = await organizationsService.findOne(id);
     expect(found.name).toEqual(name);
+    expect(found.createdByUserId).toEqual(organization.createdByUserId);
+  });
+
+  it('fails if requested organization could not be found', async () => {
+    await expect(organizationsService.findOne(randomUUID())).rejects.toThrow(
+      EntityNotFoundError,
+    );
   });
 
   it('should add members to organization', async () => {
     const name = `My Organization ${uuid4()}`;
-    const organization = new Organization(randomUUID(), name, []);
+    const organization = Organization.create({ name, user: authContext.user });
 
     const user2 = new User(randomUUID(), 'test2@test.test');
     organization.join(authContext.user);
     organization.join(user2);
-    await organizationsService.save(authContext, organization);
+    await organizationsService.save(organization);
     const found = await organizationsService.findOne(organization.id);
     expect(found.members).toEqual([authContext.user, user2]);
   });
