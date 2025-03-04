@@ -13,6 +13,7 @@ import { User } from '../../users/domain/user';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { AuthContext } from '../../auth/auth-request';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
 export class OrganizationsService {
@@ -84,12 +85,14 @@ export class OrganizationsService {
   }
 
   async findOne(id: string) {
-    return this.convertToDomain(
-      await this.organizationRepository.findOneOrFail({
-        where: { id: Equal(id) },
-        relations: { members: true, models: true },
-      }),
-    );
+    const organizationEntity = await this.organizationRepository.findOne({
+      where: { id: Equal(id) },
+      relations: { members: true, models: true },
+    });
+    if (!organizationEntity) {
+      throw new NotFoundInDatabaseException(Organization.name);
+    }
+    return this.convertToDomain(organizationEntity);
   }
 
   async inviteUser(

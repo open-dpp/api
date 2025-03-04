@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Equal, Repository } from 'typeorm';
 import { UniqueProductIdentifierEntity } from './unique.product.identifier.entity';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
 export class UniqueProductIdentifierService {
@@ -33,11 +34,14 @@ export class UniqueProductIdentifierService {
   }
 
   async findOne(uuid: string) {
-    return this.convertToDomain(
-      await this.uniqueProductIdentifierRepository.findOneOrFail({
+    const uniqueProductIdentifierEntity =
+      await this.uniqueProductIdentifierRepository.findOne({
         where: { uuid: Equal(uuid) },
-      }),
-    );
+      });
+    if (!uniqueProductIdentifierEntity) {
+      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name);
+    }
+    return this.convertToDomain(uniqueProductIdentifierEntity);
   }
 
   async findAllByReferencedId(referenceId: string) {

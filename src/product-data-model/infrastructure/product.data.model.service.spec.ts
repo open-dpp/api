@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource, EntityNotFoundError } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { ProductDataModelService } from './product.data.model.service';
 import { ProductDataModelEntity } from './product.data.model.entity';
 import { ProductDataModel, SectionType } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -46,7 +47,7 @@ describe('ProductDataModelService', () => {
 
   it('fails if requested product data model could not be found', async () => {
     await expect(service.findOne(randomUUID())).rejects.toThrow(
-      EntityNotFoundError,
+      new NotFoundInDatabaseException(ProductDataModel.name),
     );
   });
 

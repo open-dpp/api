@@ -28,7 +28,7 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationsModule } from '../../organizations/organizations.module';
-import { EntityNotFoundErrorFilter } from '../../exceptions/exception.handler';
+import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -82,7 +82,7 @@ describe('ModelsController', () => {
       moduleRef.get<OrganizationsService>(OrganizationsService);
 
     app = moduleRef.createNestApplication();
-    app.useGlobalFilters(new EntityNotFoundErrorFilter());
+    app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
 
     await app.init();
   });

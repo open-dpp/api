@@ -4,10 +4,11 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UniqueProductIdentifierEntity } from './unique.product.identifier.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource, EntityNotFoundError } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { v4 as uuid4 } from 'uuid';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;
@@ -38,7 +39,7 @@ describe('UniqueProductIdentifierService', () => {
 
   it('fails if requested unique product identifier model could not be found', async () => {
     await expect(service.findOne(randomUUID())).rejects.toThrow(
-      EntityNotFoundError,
+      new NotFoundInDatabaseException(UniqueProductIdentifier.name),
     );
   });
 

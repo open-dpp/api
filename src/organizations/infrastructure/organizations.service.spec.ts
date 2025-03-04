@@ -5,7 +5,7 @@ import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from './organization.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { v4 as uuid4 } from 'uuid';
-import { DataSource, EntityNotFoundError } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Organization } from '../domain/organization';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
@@ -13,6 +13,7 @@ import { AuthContext } from '../../auth/auth-request';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('OrganizationsService', () => {
   let organizationsService: OrganizationsService;
@@ -52,7 +53,7 @@ describe('OrganizationsService', () => {
 
   it('fails if requested organization could not be found', async () => {
     await expect(organizationsService.findOne(randomUUID())).rejects.toThrow(
-      EntityNotFoundError,
+      new NotFoundInDatabaseException(Organization.name),
     );
   });
 

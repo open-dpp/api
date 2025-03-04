@@ -5,7 +5,7 @@ import { ModelEntity } from './model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { DataSource, EntityNotFoundError } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { DataValue, Model } from '../domain/model';
@@ -20,6 +20,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -153,7 +154,7 @@ describe('ModelsService', () => {
 
   it('fails if requested model could not be found', async () => {
     await expect(modelsService.findOne(randomUUID())).rejects.toThrow(
-      EntityNotFoundError,
+      new NotFoundInDatabaseException(Model.name),
     );
   });
 

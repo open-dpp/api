@@ -4,6 +4,7 @@ import { Equal, Repository } from 'typeorm';
 import { ProductDataModelEntity } from './product.data.model.entity';
 import { ProductDataModel } from '../domain/product.data.model';
 import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
 export class ProductDataModelService {
@@ -54,11 +55,13 @@ export class ProductDataModelService {
   }
 
   async findOne(id: string) {
-    const productEntity =
-      await this.productDataModelEntityRepository.findOneOrFail({
-        where: { id: Equal(id) },
-        relations: ['sections', 'sections.dataFields'],
-      });
+    const productEntity = await this.productDataModelEntityRepository.findOne({
+      where: { id: Equal(id) },
+      relations: ['sections', 'sections.dataFields'],
+    });
+    if (!productEntity) {
+      throw new NotFoundInDatabaseException(ProductDataModel.name);
+    }
     return this.convertToDomain(productEntity);
   }
 }

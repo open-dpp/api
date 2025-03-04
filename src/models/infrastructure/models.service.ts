@@ -8,6 +8,7 @@ import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/
 import { DataValueEntity } from './data.value.entity';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
 export class ModelsService {
@@ -93,10 +94,13 @@ export class ModelsService {
   }
 
   async findOne(id: string): Promise<Model> {
-    const modelEntity = await this.modelRepository.findOneOrFail({
+    const modelEntity = await this.modelRepository.findOne({
       where: { id: Equal(id) },
       relations: ['dataValues'],
     });
+    if (!modelEntity) {
+      throw new NotFoundInDatabaseException(Model.name);
+    }
     return this.convertToDomain(
       modelEntity,
       await this.uniqueModelIdentifierService.findAllByReferencedId(

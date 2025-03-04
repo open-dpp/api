@@ -4,6 +4,7 @@ import { Equal, FindManyOptions, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { User } from '../domain/user';
 import { KeycloakUserInToken } from '../../auth/keycloak-auth/KeycloakUserInToken';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
 export class UsersService {
@@ -13,9 +14,6 @@ export class UsersService {
   ) {}
 
   convertToDomain(userEntity: UserEntity) {
-    if (!userEntity) {
-      return null;
-    }
     return new User(userEntity.id, userEntity.email);
   }
 
@@ -27,11 +25,13 @@ export class UsersService {
   }
 
   async findOneAndFail(id: string) {
-    return this.convertToDomain(
-      await this.userRepository.findOneOrFail({
-        where: { id: Equal(id) },
-      }),
-    );
+    const userEntity = await this.userRepository.findOne({
+      where: { id: Equal(id) },
+    });
+    if (!userEntity) {
+      throw new NotFoundInDatabaseException(User.name);
+    }
+    return this.convertToDomain(userEntity);
   }
 
   async find(options?: FindManyOptions<UserEntity>) {

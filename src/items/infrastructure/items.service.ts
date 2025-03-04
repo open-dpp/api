@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Equal, Repository } from 'typeorm';
 import { ItemEntity } from './item.entity';
@@ -6,6 +6,8 @@ import { Item } from '../domain/item';
 import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { Model } from '../../models/domain/model';
 
 @Injectable()
 export class ItemsService {
@@ -27,9 +29,12 @@ export class ItemsService {
   }
 
   async save(item: Item) {
-    const modelEntity = await this.modelRepository.findOneOrFail({
+    const modelEntity = await this.modelRepository.findOne({
       where: { id: Equal(item.model) },
     });
+    if (!modelEntity) {
+      throw new NotFoundInDatabaseException(Model.name);
+    }
     const itemEntity = await this.itemsRepository.save({
       id: item.id,
       model: modelEntity,
@@ -41,11 +46,11 @@ export class ItemsService {
   }
 
   async findById(id: string) {
-    const itemEntity = await this.itemsRepository.findOneOrFail({
+    const itemEntity = await this.itemsRepository.findOne({
       where: { id: Equal(id) },
     });
-    if (itemEntity === undefined) {
-      throw new NotFoundException('Item could not be found');
+    if (!itemEntity) {
+      throw new NotFoundInDatabaseException(Item.name);
     }
     return this.convertToDomain(
       itemEntity,

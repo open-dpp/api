@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { DataSource, EntityNotFoundError } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { Model } from '../../models/domain/model';
@@ -19,6 +19,7 @@ import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resource
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
@@ -63,7 +64,7 @@ describe('ProductsService', () => {
 
   it('fails if requested item could not be found', async () => {
     await expect(itemService.findById(randomUUID())).rejects.toThrow(
-      EntityNotFoundError,
+      new NotFoundInDatabaseException(Item.name),
     );
   });
 
