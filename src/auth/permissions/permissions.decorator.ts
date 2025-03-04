@@ -1,7 +1,13 @@
 import { SetMetadata } from '@nestjs/common';
-import { KeycloakPermission } from '../auth-request';
+import { ResourcePermission } from './permissions.service';
 
-export const HAS_PERMISSION = 'has_permissions';
+export const REQUIRED_PERMISSIONS = 'required_permissions';
 
-export const HasPermissions = (...args: KeycloakPermission[]) =>
-  SetMetadata(HAS_PERMISSION, args);
+/**
+ * Decorator to specify required permissions for a route
+ * @example
+ * @HasPermissions([{ type: 'organization', resource: 'org123', scopes: ['read'] }])
+ * @HasPermissions([{ type: 'item', resource: 'item456' }])
+ */
+export const HasPermissions = (permissions: ResourcePermission[]) =>
+  SetMetadata(REQUIRED_PERMISSIONS, permissions);

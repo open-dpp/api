@@ -15,6 +15,7 @@ import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -23,6 +24,7 @@ export class KeycloakAuthGuard implements CanActivate {
     private httpService: HttpService,
     private configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly keycloakResourcesService: KeycloakResourcesService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -55,7 +57,7 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const accessToken = parts[1];
 
-    // const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
+    const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
     const urlUserinfo = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
 
     let keycloakId = null;
@@ -66,7 +68,7 @@ export class KeycloakAuthGuard implements CanActivate {
       data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
       data.append('audience', 'backend');
       data.append('response_mode', 'permissions');
-      /* const responsePermissions = await firstValueFrom(
+      const responsePermissions = await firstValueFrom(
         this.httpService.post<any>(urlPermissions, data, {
           headers: {
             authorization: `Bearer ${accessToken}`,
@@ -76,7 +78,7 @@ export class KeycloakAuthGuard implements CanActivate {
       );
       responsePermissions.data.forEach((p) => {
         authContext.permissions.push(p);
-      }); */
+      });
 
       const responseUserinfo = await firstValueFrom(
         this.httpService.post<any>(urlUserinfo, data, {

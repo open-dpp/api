@@ -1,5 +1,6 @@
 import { User } from '../users/domain/user';
 import { KeycloakUserInToken } from './keycloak-auth/KeycloakUserInToken';
+import { Request } from 'express';
 
 export const AUTH_CONTEXT = 'authContext';
 

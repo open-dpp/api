@@ -13,8 +13,8 @@ import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
 import * as path from 'path';
 import { generateConfig } from './database/config';
-import { PermissionsGuard } from './auth/permissions/permissions.guard';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
+import { PermissionsModule } from './auth/permissions/permissions.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 @Module({
@@ -43,6 +43,7 @@ import { ProductDataModelModule } from './product-data-model/product.data.model.
     KeycloakImportModule,
     UniqueProductIdentifierModule,
     AuthModule,
+    PermissionsModule,
     HttpModule,
     KeycloakResourcesModule,
   ],
@@ -51,10 +52,7 @@ import { ProductDataModelModule } from './product-data-model/product.data.model.
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,
     },
-    {
-      provide: APP_GUARD,
-      useClass: PermissionsGuard,
-    },
+    // KeycloakPermissionsGuard is now provided by PermissionsModule
   ],
 })
 export class AppModule {}

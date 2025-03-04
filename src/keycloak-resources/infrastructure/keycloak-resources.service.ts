@@ -5,12 +5,10 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../../auth/auth-request';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class KeycloakResourcesService {
@@ -21,9 +19,8 @@ export class KeycloakResourcesService {
   private readonly realm: string = this.configService.get('KEYCLOAK_REALM');
 
   constructor(
-    private reflector: Reflector,
-    private httpService: HttpService,
     private configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {}
 
   async reloadToken() {
@@ -41,36 +38,26 @@ export class KeycloakResourcesService {
     uris: string[],
   ) {
     await this.reloadToken();
-    const url = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/authz/protection/resource_set`;
-
-    // const keycloakId = null;
-    try {
-      const data = {
+    await this.kcAdminClient.clients.createResource(
+      {
+        id: 'backend',
+        realm: this.realm,
+      },
+      {
         name: resourceName,
         type: `urn:backend:${resourceName}`,
+        uris,
         ownerManagedAccess: true,
         attributes: {
-          owner: authContext.user.id,
+          owner: [authContext.user.id],
         },
-        uris: uris,
         scopes: [
           {
             name: 'read',
           },
         ],
-      };
-      const response = await firstValueFrom(
-        this.httpService.post<any>(url, data, {
-          headers: {
-            authorization: `Bearer ${authContext.token}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
-      this.logger.log(response.data);
-    } catch (e) {
-      throw new Error(e.message);
-    }
+      },
+    );
   }
 
   async createGroup(authContext: AuthContext, groupName: string) {
