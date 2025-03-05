@@ -1,6 +1,5 @@
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
-import { User } from '../../users/domain/user';
 import {
   Expose,
   instanceToPlain,
@@ -9,6 +8,8 @@ import {
 } from 'class-transformer';
 import { keyBy, keys, map, mergeWith, pick } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Organization } from '../../organizations/domain/organization';
+import { User } from '../../users/domain/user';
 
 export class DataValue {
   @Expose()
@@ -42,30 +43,59 @@ export class Model {
 
   @Expose()
   readonly id: string = randomUUID();
-  @Expose({ name: 'productDataModelId' })
-  private _productDataModelId: string | undefined = undefined;
-  @Expose({ name: 'dataValues' })
-  @Type(() => DataValue)
-  private _dataValues: DataValue[] = [];
 
-  @Expose()
-  owner: string | undefined;
+  @Expose({ name: 'ownedByOrganizationId' })
+  private _ownedByOrganizationId: string | undefined;
+
+  @Expose({ name: 'createdByUserId' })
+  private _createdByUserId: string | undefined;
+
   readonly createdAt: Date | undefined;
 
-  public get dataValues() {
-    return this._dataValues;
-  }
+  @Expose({ name: 'productDataModelId' })
+  private _productDataModelId: string | undefined = undefined;
 
   public get productDataModelId() {
     return this._productDataModelId;
   }
 
-  public isOwnedBy(user: User) {
-    return this.owner === user.id;
+  @Expose({ name: 'dataValues' })
+  @Type(() => DataValue)
+  private _dataValues: DataValue[] = [];
+
+  public get dataValues() {
+    return this._dataValues;
   }
 
-  public assignOwner(user: User) {
-    this.owner = user.id;
+  static create(data: {
+    name: string;
+    user: User;
+    organization: Organization;
+  }) {
+    return Model.fromPlain({
+      name: data.name,
+      ownedByOrganizationId: data.organization.id,
+      createdByUserId: data.user.id,
+    });
+  }
+
+  static fromPlain<V>(plain: V) {
+    return plainToInstance(Model, plain, {
+      excludeExtraneousValues: true,
+      exposeDefaultValues: true,
+    });
+  }
+
+  public get createdByUserId() {
+    return this._createdByUserId;
+  }
+
+  public get ownedByOrganizationId() {
+    return this._ownedByOrganizationId;
+  }
+
+  public isOwnedBy(organization: Organization) {
+    return this._ownedByOrganizationId === organization.id;
   }
 
   public addDataValues(dataValues: DataValue[]) {
@@ -99,13 +129,6 @@ export class Model {
     uniqueProductIdentifier.linkTo(this.id);
     this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
     return uniqueProductIdentifier;
-  }
-
-  static fromPlain(plain: Partial<Model>) {
-    return plainToInstance(Model, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
   }
 
   public mergeWithPlain(plain: unknown): Model {
