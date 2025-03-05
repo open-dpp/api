@@ -14,12 +14,19 @@ import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
 import { ItemEntity } from './item.entity';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
   let modelsService: ModelsService;
-  let usersService: UsersService;
+  let organizationsService: OrganizationsService;
   let dataSource: DataSource;
+  const user = new User(randomUUID(), 'test@test.test');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,31 +37,46 @@ describe('ProductsService', () => {
           UniqueProductIdentifierEntity,
           UserEntity,
           ItemEntity,
+          OrganizationEntity,
         ]),
       ],
       providers: [
         ItemsService,
         ModelsService,
         UniqueProductIdentifierService,
+        OrganizationsService,
         UsersService,
+        {
+          provide: KeycloakResourcesService,
+          useValue: KeycloakResourcesServiceTesting.fromPlain({
+            users: [{ id: user.id, email: user.email }],
+          }),
+        },
       ],
     }).compile();
 
     dataSource = module.get<DataSource>(DataSource);
     itemService = module.get<ItemsService>(ItemsService);
     modelsService = module.get<ModelsService>(ModelsService);
-    usersService = module.get<UsersService>(UsersService);
+    organizationsService =
+      module.get<OrganizationsService>(OrganizationsService);
+  });
+
+  it('fails if requested item could not be found', async () => {
+    await expect(itemService.findById(randomUUID())).rejects.toThrow(
+      new NotFoundInDatabaseException(Item.name),
+    );
   });
 
   it('should create and find item for a model', async () => {
-    const user = new User(randomUUID(), 'test@test.test');
-    await usersService.save(user);
-    const model = Model.fromPlain({
+    const organization = Organization.create({ name: 'My Orga', user });
+    await organizationsService.save(organization);
+    const model = Model.create({
       name: 'name',
-      description: 'description',
+      user,
+      organization,
     });
 
-    model.assignOwner(user);
     const savedModel = await modelsService.save(model);
     const item = new Item();
     item.defineModel(savedModel.id);
@@ -65,18 +87,18 @@ describe('ProductsService', () => {
   });
 
   it('should create multiple items for a model and find them by model', async () => {
-    const model = Model.fromPlain({
+    const organization = Organization.create({ name: 'My Orga', user });
+    await organizationsService.save(organization);
+    const model = Model.create({
       name: 'name',
-      description: 'description',
+      user,
+      organization,
     });
-    const user = new User(randomUUID(), 'test@test.test');
-    await usersService.save(user);
-    model.assignOwner(user);
-    const model2 = Model.fromPlain({
+    const model2 = Model.create({
       name: 'name',
-      description: 'description',
+      user,
+      organization,
     });
-    model2.assignOwner(user);
     const savedModel1 = await modelsService.save(model);
     const savedModel2 = await modelsService.save(model2);
     const item1 = new Item();

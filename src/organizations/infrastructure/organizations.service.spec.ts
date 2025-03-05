@@ -13,6 +13,7 @@ import { AuthContext } from '../../auth/auth-request';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 describe('OrganizationsService', () => {
   let organizationsService: OrganizationsService;
@@ -43,22 +44,27 @@ describe('OrganizationsService', () => {
 
   it('should create an organization', async () => {
     const name = `My Organization ${uuid4()}`;
-    const organization = new Organization(randomUUID(), name, [
-      authContext.user,
-    ]);
-    const { id } = await organizationsService.save(authContext, organization);
+    const organization = Organization.create({ name, user: authContext.user });
+    const { id } = await organizationsService.save(organization);
     const found = await organizationsService.findOne(id);
     expect(found.name).toEqual(name);
+    expect(found.createdByUserId).toEqual(organization.createdByUserId);
+  });
+
+  it('fails if requested organization could not be found', async () => {
+    await expect(organizationsService.findOne(randomUUID())).rejects.toThrow(
+      new NotFoundInDatabaseException(Organization.name),
+    );
   });
 
   it('should add members to organization', async () => {
     const name = `My Organization ${uuid4()}`;
-    const organization = new Organization(randomUUID(), name, []);
+    const organization = Organization.create({ name, user: authContext.user });
 
     const user2 = new User(randomUUID(), 'test2@test.test');
     organization.join(authContext.user);
     organization.join(user2);
-    await organizationsService.save(authContext, organization);
+    await organizationsService.save(organization);
     const found = await organizationsService.findOne(organization.id);
     expect(found.members).toEqual([authContext.user, user2]);
   });

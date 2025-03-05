@@ -10,6 +10,7 @@ import { ProductDataModelEntity } from '../product-data-model/infrastructure/pro
 import { UsersModule } from '../users/users.module';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { ItemEntity } from '../items/infrastructure/item.entity';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ItemEntity } from '../items/infrastructure/item.entity';
       ProductDataModelEntity,
       ItemEntity,
     ]),
+    OrganizationsModule,
     UsersModule,
   ],
   controllers: [UniqueProductIdentifierController],

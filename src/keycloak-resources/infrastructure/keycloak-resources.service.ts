@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthContext } from '../../auth/auth-request';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { HttpService } from '@nestjs/axios';
+import { Organization } from '../../organizations/domain/organization';
 
 @Injectable()
 export class KeycloakResourcesService {
@@ -60,14 +61,15 @@ export class KeycloakResourcesService {
     );
   }
 
-  async createGroup(authContext: AuthContext, groupName: string) {
+  async createGroup(organization: Organization) {
     await this.reloadToken();
+    const name = `organization-${organization.name}`;
     const createdGroup = await this.kcAdminClient.groups.create({
-      name: groupName,
+      name: name,
       realm: this.realm,
     });
     await this.kcAdminClient.users.addToGroup({
-      id: authContext.user.id,
+      id: organization.createdByUserId,
       groupId: createdGroup.id,
       realm: this.realm,
     });

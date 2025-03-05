@@ -46,8 +46,8 @@ export class UserEntity {
   })
   organizations: OrganizationEntity[];
 
-  @OneToMany(() => ModelEntity, (product) => product)
-  models: ModelEntity[];
+  @OneToMany(() => ModelEntity, (model) => model.createdByUser)
+  createdModels: ModelEntity[];
 
   @OneToMany(() => OrganizationEntity, (org) => org.createdByUserId)
   creatorOfOrganizations: OrganizationEntity[];

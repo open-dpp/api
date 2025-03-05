@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { Equal, FindManyOptions, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { User } from '../domain/user';
 import { KeycloakUserInToken } from '../../auth/keycloak-auth/KeycloakUserInToken';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
 export class UsersService {
@@ -13,18 +14,24 @@ export class UsersService {
   ) {}
 
   convertToDomain(userEntity: UserEntity) {
-    if (!userEntity) {
-      return null;
-    }
     return new User(userEntity.id, userEntity.email);
   }
 
   async findOne(id: string) {
-    return this.convertToDomain(
-      await this.userRepository.findOne({
-        where: { id },
-      }),
-    );
+    const userFound = await this.userRepository.findOne({
+      where: { id: Equal(id) },
+    });
+    return userFound ? this.convertToDomain(userFound) : undefined;
+  }
+
+  async findOneAndFail(id: string) {
+    const userEntity = await this.userRepository.findOne({
+      where: { id: Equal(id) },
+    });
+    if (!userEntity) {
+      throw new NotFoundInDatabaseException(User.name);
+    }
+    return this.convertToDomain(userEntity);
   }
 
   async find(options?: FindManyOptions<UserEntity>) {
@@ -40,9 +47,7 @@ export class UsersService {
   }
 
   async create(keycloakUser: KeycloakUserInToken, ignoreIfExists?: boolean) {
-    const find = await this.userRepository.findOne({
-      where: { id: keycloakUser.sub },
-    });
+    const find = await this.findOne(keycloakUser.sub);
     if (find && !ignoreIfExists) {
       throw new BadRequestException();
     }
