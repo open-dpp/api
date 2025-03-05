@@ -36,7 +36,7 @@ export default [
 
       parserOptions: {
         project: 'tsconfig.json',
-        tsconfigRootDir: '/Users/mrudolph/Development/api',
+        tsconfigRootDir: __dirname,
       },
     },
 
