@@ -4,9 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ProductDataModelService } from './product.data.model.service';
 import { ProductDataModelEntity } from './product.data.model.entity';
-import { ProductDataModel, SectionType } from '../domain/product.data.model';
+import { ProductDataModel } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { SectionType } from '../domain/section';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -21,6 +22,7 @@ describe('ProductDataModelService', () => {
       providers: [ProductDataModelService],
     }).compile();
     service = module.get<ProductDataModelService>(ProductDataModelService);
+
     dataSource = module.get<DataSource>(DataSource);
   });
 

@@ -20,14 +20,12 @@ import { DataValue, Model } from '../../models/domain/model';
 import * as request from 'supertest';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import {
-  ProductDataModel,
-  SectionType,
-} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { SectionType } from '../../product-data-model/domain/section';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {

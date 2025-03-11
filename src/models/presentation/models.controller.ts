@@ -33,7 +33,7 @@ export class ModelsController {
     @Request() req: AuthRequest,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
-    if (organization === undefined) {
+    if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
     const model = Model.create({

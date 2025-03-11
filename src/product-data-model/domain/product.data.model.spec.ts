@@ -1,9 +1,7 @@
-import {
-  DataFieldValidationResult,
-  ProductDataModel,
-  SectionType,
-} from './product.data.model';
+import { ProductDataModel } from './product.data.model';
 import { DataValue } from '../../models/domain/model';
+import { DataFieldValidationResult } from './data.field';
+import { SectionType } from './section';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {
@@ -261,7 +259,7 @@ describe('ProductDataModel', () => {
       }),
     ]);
   });
-  //
+
   it('should fail validation caused by missing field and wrong type', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     const dataValues = [

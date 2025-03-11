@@ -11,7 +11,8 @@ import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../infrastructure/product.data.model.service';
 import { ProductDataModelEntity } from '../infrastructure/product.data.model.entity';
 import { ProductDataModelModule } from '../product.data.model.module';
-import { ProductDataModel, SectionType } from '../domain/product.data.model';
+import { ProductDataModel } from '../domain/product.data.model';
+import { SectionType } from '../domain/section';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
