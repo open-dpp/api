@@ -492,7 +492,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
       )
       .set('Authorization', 'Bearer token1')
       .send(body);
@@ -514,7 +514,7 @@ describe('ProductsDataModelDraftController', () => {
     const body = { name: 'Processor', type: SectionType.GROUP };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${orgaId}/product-data-model-drafts/${draftId}/sections/${sectionId}`,
+        `/organizations/${orgaId}/product-data-model-drafts/${draftId}/sections/${sectionId}/data-fields`,
       )
       .set('Authorization', 'Bearer token1')
       .send(body);
@@ -527,7 +527,7 @@ describe('ProductsDataModelDraftController', () => {
 
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrgaId}/product-data-model-drafts/${draftId}/sections/${sectionId}`,
+        `/organizations/${otherOrgaId}/product-data-model-drafts/${draftId}/sections/${sectionId}/data-fields`,
       )
       .set('Authorization', 'Bearer token1')
       .send({});

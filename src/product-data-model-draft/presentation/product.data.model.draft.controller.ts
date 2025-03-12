@@ -134,7 +134,7 @@ export class ProductDataModelDraftController {
     ).toPlain();
   }
 
-  @Post(':draftId/sections/:sectionId')
+  @Post(':draftId/sections/:sectionId/data-fields')
   async addDataFieldToSection(
     @Param('orgaId') organizationId: string,
     @Param('sectionId') sectionId: string,
