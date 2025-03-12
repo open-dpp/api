@@ -8,6 +8,8 @@ import {
 } from 'class-transformer';
 import { DataFieldValidationResult } from './data.field';
 import { DataSection, sectionSubTypes, SectionType } from './section';
+import { User } from '../../users/domain/user';
+import { Organization } from '../../organizations/domain/organization';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -36,6 +38,11 @@ export class ValidationResult {
   }
 }
 
+export enum VisibilityLevel {
+  PUBLIC = 'Public',
+  PRIVATE = 'Private',
+}
+
 export class ProductDataModel {
   @Expose()
   readonly id: string = randomUUID();
@@ -43,6 +50,14 @@ export class ProductDataModel {
   readonly name: string;
   @Expose()
   readonly version: string;
+  @Expose({ name: 'createdByUserId' })
+  private _createdByUserId?: string;
+
+  @Expose({ name: 'ownedByOrganizationId' })
+  private _ownedByOrganizationId?: string;
+
+  @Expose({ name: 'visibility' })
+  private _visibility: VisibilityLevel = VisibilityLevel.PRIVATE;
 
   @Expose()
   @Type(() => DataSection, {
@@ -54,11 +69,42 @@ export class ProductDataModel {
   })
   readonly sections: DataSection[] = [];
 
-  static create(plain: { name: string }) {
+  static create(plain: {
+    name: string;
+    user: User;
+    organization: Organization;
+    visibility?: VisibilityLevel;
+  }) {
     return ProductDataModel.fromPlain({
       ...plain,
       version: '1.0.0',
+      ownedByOrganizationId: plain.organization.id,
+      createdByUserId: plain.user.id,
     });
+  }
+
+  publish() {
+    this._visibility = VisibilityLevel.PUBLIC;
+  }
+
+  public isOwnedBy(organization: Organization) {
+    return this.ownedByOrganizationId === organization.id;
+  }
+
+  public isPublic() {
+    return this.visibility === VisibilityLevel.PUBLIC;
+  }
+
+  public get visibility() {
+    return this._visibility;
+  }
+
+  public get createdByUserId() {
+    return this._createdByUserId;
+  }
+
+  public get ownedByOrganizationId() {
+    return this._ownedByOrganizationId;
   }
 
   // TODO: Partial seems not to work with data field id not set. Even type-fest deep partial is not enough

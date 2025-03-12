@@ -4,31 +4,64 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ProductDataModelService } from './product.data.model.service';
 import { ProductDataModelEntity } from './product.data.model.entity';
-import { ProductDataModel } from '../domain/product.data.model';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../domain/section';
+import { User } from '../../users/domain/user';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
   let dataSource: DataSource;
+  const user = new User(randomUUID(), 'test@example.com');
+  const organization = Organization.create({ name: 'Firma Y', user });
+  let organizationService: OrganizationsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ProductDataModelEntity]),
+        TypeOrmModule.forFeature([
+          ProductDataModelEntity,
+          OrganizationEntity,
+          UserEntity,
+        ]),
       ],
-      providers: [ProductDataModelService],
+      providers: [
+        ProductDataModelService,
+        OrganizationsService,
+        UsersService,
+        {
+          provide: KeycloakResourcesService,
+          useValue: KeycloakResourcesServiceTesting.fromPlain({
+            users: [{ id: user.id, email: user.email }],
+          }),
+        },
+      ],
     }).compile();
     service = module.get<ProductDataModelService>(ProductDataModelService);
-
+    organizationService =
+      module.get<OrganizationsService>(OrganizationsService);
+    await organizationService.save(organization);
     dataSource = module.get<DataSource>(DataSource);
   });
 
   const laptopModelPlain = {
     name: 'Laptop',
     version: 'v2',
+    visibility: VisibilityLevel.PUBLIC,
+    ownedByOrganizationId: organization.id,
+    createdByUserId: user.id,
     sections: [
       {
         name: 'Environment',
@@ -70,28 +103,72 @@ describe('ProductDataModelService', () => {
     });
 
     await service.save(productDataModel);
-    const found = await service.findAll({ name: productDataModel.name });
+    const found = await service.findByName(productDataModel.name);
     expect(found).toEqual([
-      { id: productDataModel.id, name: productDataModel.name },
+      {
+        id: productDataModel.id,
+        name: productDataModel.name,
+        version: productDataModel.version,
+      },
     ]);
   });
 
-  it('should return all product data models', async () => {
-    const laptopModel = ProductDataModel.fromPlain({ ...laptopModelPlain });
+  it('should return all product data models belonging to organization and which are public', async () => {
+    const laptopModel = ProductDataModel.fromPlain({
+      ...laptopModelPlain,
+      visibility: VisibilityLevel.PRIVATE,
+    });
     const phoneModel = ProductDataModel.fromPlain({
       ...laptopModelPlain,
       name: 'phone',
+      visibility: VisibilityLevel.PRIVATE,
+    });
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherOrganization = Organization.create({
+      name: 'Firma Y',
+      user: otherUser,
+    });
+    await organizationService.save(otherOrganization);
+    const publicModel = ProductDataModel.create({
+      name: 'publicModel',
+      user: otherUser,
+      organization: otherOrganization,
+      visibility: VisibilityLevel.PUBLIC,
+    });
+
+    const privateModel = ProductDataModel.create({
+      name: 'privateModel',
+      user: otherUser,
+      organization: otherOrganization,
+      visibility: VisibilityLevel.PRIVATE,
     });
     await service.save(laptopModel);
     await service.save(phoneModel);
-    const foundAll = await service.findAll();
+    await service.save(publicModel);
+    await service.save(privateModel);
+
+    const foundAll =
+      await service.findAllAccessibleByOrganization(organization);
+
     expect(foundAll).toContainEqual({
       id: laptopModel.id,
       name: laptopModel.name,
+      version: laptopModel.version,
     });
     expect(foundAll).toContainEqual({
       id: phoneModel.id,
       name: phoneModel.name,
+      version: phoneModel.version,
+    });
+    expect(foundAll).toContainEqual({
+      id: publicModel.id,
+      name: publicModel.name,
+      version: publicModel.version,
+    });
+    expect(foundAll).not.toContainEqual({
+      id: privateModel.id,
+      name: privateModel.name,
+      version: privateModel.version,
     });
   });
 

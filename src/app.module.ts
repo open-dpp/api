@@ -17,6 +17,7 @@ import { PermissionsGuard } from './auth/permissions/permissions.guard';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
+import { ProductDataModelDraftModule } from './product-data-model-draft/product.data.model.draft.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -35,6 +36,7 @@ import { ProductDataModelModule } from './product-data-model/product.data.model.
       }),
       inject: [ConfigService],
     }),
+    ProductDataModelDraftModule,
     ProductDataModelModule,
     ItemsModule,
     ModelsModule,

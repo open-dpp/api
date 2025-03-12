@@ -24,6 +24,7 @@ import { DataSectionDraft } from '../domain/section.draft';
 import { DataFieldDraft } from '../domain/data.field.draft';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -226,12 +227,13 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
     await service.save(laptopDraft);
-
+    const body = { visibility: VisibilityLevel.PUBLIC };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}/publish`,
       )
-      .set('Authorization', 'Bearer token1');
+      .set('Authorization', 'Bearer token1')
+      .send(body);
     expect(response.status).toEqual(201);
     expect(response.body).toEqual(
       (await productDataModelService.findOne(response.body.id)).toPlain(),

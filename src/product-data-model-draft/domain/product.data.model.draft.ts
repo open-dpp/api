@@ -10,7 +10,10 @@ import { DataSectionDraft } from './section.draft';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { omit } from 'lodash';
 import * as semver from 'semver';
 
@@ -126,13 +129,12 @@ export class ProductDataModelDraft {
     this.sections.push(section);
   }
 
-  publish(createdByUser: User): ProductDataModel {
+  publish(createdByUser: User, visibility: VisibilityLevel): ProductDataModel {
     const plain = omit(this.toPlain(), [
       'id',
       'version',
       'sections',
       'createdByUserId',
-      'ownedByOrganizationId',
     ]);
 
     const lastPublished = this.publications.slice(-1);
@@ -144,6 +146,8 @@ export class ProductDataModelDraft {
     const published = ProductDataModel.fromPlain({
       ...plain,
       version: versionToPublish,
+      createdByUserId: createdByUser.id,
+      visibility,
       sections: this.sections.map((s) => s.publish()),
     });
     this.publications.push({ id: published.id, version: published.version });

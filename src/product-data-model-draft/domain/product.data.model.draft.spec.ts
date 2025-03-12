@@ -7,6 +7,7 @@ import { DataFieldType } from '../../product-data-model/domain/data.field';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
+import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 
 describe('ProductDataModelDraft', () => {
   const user = new User(randomUUID(), 'test@example.com');
@@ -79,13 +80,17 @@ describe('ProductDataModelDraft', () => {
   it('is published', () => {
     const productDataModelDraft = ProductDataModelDraft.fromPlain(laptopModel);
     const otherUser = new User(randomUUID(), 'test@example.com');
-    const publishedProductDataModel = productDataModelDraft.publish(otherUser);
+    const publishedProductDataModel = productDataModelDraft.publish(
+      otherUser,
+      VisibilityLevel.PUBLIC,
+    );
     const expected = {
       name: productDataModelDraft.name,
       id: expect.any(String),
       version: '1.0.0',
-      // ownedByOrganizationId: organization.id,
-      // createdByUserId: otherUser.id,
+      ownedByOrganizationId: organization.id,
+      createdByUserId: otherUser.id,
+      visibility: VisibilityLevel.PUBLIC,
       sections: [
         {
           id: expect.any(String),
@@ -135,7 +140,10 @@ describe('ProductDataModelDraft', () => {
         version: '1.0.0',
       },
     ]);
-    const againPublished = productDataModelDraft.publish(otherUser);
+    const againPublished = productDataModelDraft.publish(
+      otherUser,
+      VisibilityLevel.PRIVATE,
+    );
     expect(againPublished.version).toEqual('2.0.0');
     expect(productDataModelDraft.publications).toEqual([
       {

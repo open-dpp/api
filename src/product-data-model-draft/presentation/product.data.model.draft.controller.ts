@@ -13,12 +13,17 @@ import { ProductDataModelDraftService } from '../infrastructure/product.data.mod
 import { ProductDataModelDraft } from '../domain/product.data.model.draft';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { AuthRequest } from '../../auth/auth-request';
-import { SectionType } from '../../product-data-model/domain/section';
 import { DataSectionDraft } from '../domain/section.draft';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldDraft } from '../domain/data.field.draft';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { CreateProductDataModelDraftDto } from './dto/create.product.data.model.draft.dto';
+import { CreateSectionDraftDto } from './dto/create.section.draft.dto';
+import { CreateDataFieldDraftDto } from './dto/create.data.field.draft.dto';
+import { UpdateProductDataModelDraftDto } from './dto/update.product.data.model.draft.dto';
+import { PublishDto } from './dto/publish.dto';
+import { UpdateDataFieldDraftDto } from './dto/update.data.field.draft.dto';
+import { UpdateSectionDraftDto } from './dto/update.section.draft.dto';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
@@ -32,7 +37,7 @@ export class ProductDataModelDraftController {
   async create(
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
-    @Body() createProductDataModelDraftDto: { name: string },
+    @Body() createProductDataModelDraftDto: CreateProductDataModelDraftDto,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
     if (!organization.isMember(req.authContext.user)) {
@@ -69,7 +74,7 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() modifyProductDataModelDraftDto: { name: string },
+    @Body() modifyProductDataModelDraftDto: UpdateProductDataModelDraftDto,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
     const foundProductDataModelDraft =
@@ -89,7 +94,7 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() createSectionDraftDto: { name: string; type: SectionType },
+    @Body() createSectionDraftDto: CreateSectionDraftDto,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
 
@@ -111,6 +116,7 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
+    @Body() publishDto: PublishDto,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
 
@@ -121,6 +127,7 @@ export class ProductDataModelDraftController {
 
     const publishedProductDataModel = foundProductDataModelDraft.publish(
       req.authContext.user,
+      publishDto.visibility,
     );
     return (
       await this.productDataModelService.save(publishedProductDataModel)
@@ -134,11 +141,7 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
     @Body()
-    createDataFieldDraftDto: {
-      name: string;
-      type: DataFieldType;
-      options?: Record<string, unknown>;
-    },
+    createDataFieldDraftDto: CreateDataFieldDraftDto,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
 
@@ -182,9 +185,7 @@ export class ProductDataModelDraftController {
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
     @Body()
-    modifySectionDraftDto: {
-      name?: string;
-    },
+    modifySectionDraftDto: UpdateSectionDraftDto,
     @Request() req: AuthRequest,
   ) {
     const organization = await this.organizationService.findOne(organizationId);
@@ -207,10 +208,7 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Param('fieldId') fieldId: string,
     @Body()
-    modifyDataFieldDraftDto: {
-      name?: string;
-      options?: Record<string, unknown>;
-    },
+    modifyDataFieldDraftDto: UpdateDataFieldDraftDto,
     @Request() req: AuthRequest,
   ) {
     const organization = await this.organizationService.findOne(organizationId);

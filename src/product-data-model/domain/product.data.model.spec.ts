@@ -1,13 +1,19 @@
-import { ProductDataModel } from './product.data.model';
+import { ProductDataModel, VisibilityLevel } from './product.data.model';
 import { DataValue } from '../../models/domain/model';
 import { DataFieldValidationResult } from './data.field';
 import { SectionType } from './section';
+import { randomUUID } from 'crypto';
+import { User } from '../../users/domain/user';
+import { Organization } from '../../organizations/domain/organization';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {
     const plain = {
       name: 'Laptop',
       version: '1.0',
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+      visibility: VisibilityLevel.PUBLIC,
       sections: [
         {
           type: SectionType.GROUP,
@@ -131,6 +137,24 @@ describe('ProductDataModel', () => {
       },
     ],
   };
+
+  it('is published', () => {
+    const user = new User(randomUUID(), 'test@example.com');
+    const organization = Organization.create({ name: 'Orga', user });
+    const otherOrganization = Organization.create({ name: 'Orga', user });
+    const dataModel = ProductDataModel.create({
+      name: 'laptop',
+      user,
+      organization,
+      visibility: VisibilityLevel.PRIVATE,
+    });
+    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
+    expect(dataModel.isOwnedBy(otherOrganization)).toBeFalsy();
+    dataModel.publish();
+    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
+    expect(dataModel.isPublic()).toBeTruthy();
+    expect(dataModel.visibility).toEqual(VisibilityLevel.PUBLIC);
+  });
 
   it('should create data values', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
