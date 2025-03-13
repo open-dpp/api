@@ -12,7 +12,7 @@ async function bootstrap() {
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
   );
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: '*',
   });
