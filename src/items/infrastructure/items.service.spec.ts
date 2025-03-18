@@ -20,6 +20,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { PermissionsModule } from '../../auth/permissions/permissions.module';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
@@ -39,6 +40,7 @@ describe('ProductsService', () => {
           ItemEntity,
           OrganizationEntity,
         ]),
+        PermissionsModule,
       ],
       providers: [
         ItemsService,
@@ -46,14 +48,12 @@ describe('ProductsService', () => {
         UniqueProductIdentifierService,
         OrganizationsService,
         UsersService,
-        {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [{ id: user.id, email: user.email }],
-          }),
-        },
+        KeycloakResourcesService,
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useClass(KeycloakResourcesServiceTesting)
+      .compile();
 
     dataSource = module.get<DataSource>(DataSource);
     itemService = module.get<ItemsService>(ItemsService);

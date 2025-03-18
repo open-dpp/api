@@ -4,11 +4,9 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
 import { AuthContext } from '../auth-request';
 import { HttpService } from '@nestjs/axios';
 import { User } from '../../users/domain/user';
@@ -16,15 +14,20 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
+  private readonly PUBLIC_KEY =
+    'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtOVDaYfkFeq2eQvx5IcT04MPTGq8iPM0iEf+9LJ9YYkPR2BmEodqDmV9p6XgkHg0/JoRI8JPZVKe9wTmVO+KEvwQF/U9uaCSe0xVfaYv3YkaxsKzoKEfXNluFgQG0jm+NRzUdeUj8MbHUAbOkaS+UBgrqF8pASxdyqjBJ5kcQsZ5KeXj1eUmUPVMwcnoXju+e1h7a1ql0vyUlkrH6pkMStglkkXNYtaTa8dByO7+LOQzoTEzECsLFt5p0WTLMxR1Lutr//nK+ELMN562gUOlipbBjS420YWWW184Bnx3mK2mg2Ldn4GHBex9mjDb5ECEc/eNylgVwwaNinJ2T/WhIQIDAQAB';
+
   constructor(
     private reflector: Reflector,
     private httpService: HttpService,
     private configService: ConfigService,
     private readonly usersService: UsersService,
     private readonly keycloakResourcesService: KeycloakResourcesService,
+    private jwtService: JwtService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -57,46 +60,36 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const accessToken = parts[1];
 
-    const urlPermissions = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/token`;
-    const urlUserinfo = `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get('KEYCLOAK_REALM')}/protocol/openid-connect/userinfo`;
-
-    let keycloakId = null;
     const authContext = new AuthContext();
+    let keycloakId = null;
     authContext.permissions = [];
-    try {
-      const data = new URLSearchParams();
-      data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
-      data.append('audience', 'backend');
-      data.append('response_mode', 'permissions');
-      const responsePermissions = await firstValueFrom(
-        this.httpService.post<any>(urlPermissions, data, {
-          headers: {
-            authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }),
-      );
-      responsePermissions.data.forEach((p) => {
-        authContext.permissions.push(p);
-      });
 
-      const responseUserinfo = await firstValueFrom(
-        this.httpService.post<any>(urlUserinfo, data, {
-          headers: {
-            authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }),
-      );
-      const user: KeycloakUserInToken = responseUserinfo.data;
-      keycloakId = user.sub;
-      authContext.keycloakUser = user;
-      await this.usersService.create(user, true);
-      authContext.user = new User(keycloakId, user.email);
-    } catch (e) {
-      throw new UnauthorizedException(e.message);
-    }
+    const payload = await this.jwtService.verifyAsync(accessToken, {
+      algorithms: ['RS256'],
+      publicKey: this.formatPublicKey(this.PUBLIC_KEY),
+    });
+    keycloakId = payload.sub;
+    const user: KeycloakUserInToken = payload;
+    keycloakId = user.sub;
+    authContext.keycloakUser = user;
+    await this.usersService.create(user, true);
+    authContext.user = new User(keycloakId, user.email);
+    const memberships = payload.memberships || ([] as string[]);
+    memberships.forEach((membership: string) => {
+      authContext.permissions.push({
+        type: 'organization',
+        resource: membership.substring(
+          membership.lastIndexOf('organization-') + 13,
+        ),
+        scopes: ['organization:access'],
+      });
+    });
     request.authContext = authContext;
     return true;
+  }
+
+  private formatPublicKey(publicKey: string): string {
+    // Format the public key with the proper PEM headers if needed
+    return `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----`;
   }
 }

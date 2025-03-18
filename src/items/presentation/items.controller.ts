@@ -1,11 +1,4 @@
-import {
-  Controller,
-  ForbiddenException,
-  Get,
-  Param,
-  Post,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
 import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
@@ -13,6 +6,7 @@ import { ModelsService } from '../../models/infrastructure/models.service';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { PermissionsService } from '../../auth/permissions/permissions.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -20,6 +14,7 @@ export class ItemsController {
     private readonly itemsService: ItemsService,
     private readonly organizationsService: OrganizationsService,
     private readonly modelsService: ModelsService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   @Post()
@@ -28,7 +23,10 @@ export class ItemsController {
     @Param('modelId') modelId: string,
     @Request() req: AuthRequest,
   ) {
-    await this.hasPermissionOrFail(organizationId, modelId, req);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     const item = new Item();
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
@@ -41,7 +39,10 @@ export class ItemsController {
     @Param('modelId') modelId: string,
     @Request() req: AuthRequest,
   ) {
-    await this.hasPermissionOrFail(organizationId, modelId, req);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     return (await this.itemsService.findAllByModel(modelId)).map((item) =>
       this.itemToDto(item),
     );
@@ -54,7 +55,10 @@ export class ItemsController {
     @Param('id') itemId: string,
     @Request() req: AuthRequest,
   ) {
-    await this.hasPermissionOrFail(organizationId, modelId, req);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     return this.itemToDto(await this.itemsService.findById(itemId));
   }
 
@@ -67,21 +71,5 @@ export class ItemsController {
         referenceId: u.referenceId,
       })),
     });
-  }
-
-  private async hasPermissionOrFail(
-    organizationId: string,
-    modelId: string,
-    req: AuthRequest,
-  ) {
-    const organization =
-      await this.organizationsService.findOne(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
-    const model = await this.modelsService.findOne(modelId);
-    if (!model.isOwnedBy(organization)) {
-      throw new ForbiddenException();
-    }
   }
 }

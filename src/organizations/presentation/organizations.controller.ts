@@ -11,10 +11,14 @@ import { OrganizationsService } from '../infrastructure/organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { Organization } from '../domain/organization';
 import { AuthRequest } from '../../auth/auth-request';
+import { PermissionsService } from '../../auth/permissions/permissions.service';
 
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(
+    private readonly organizationsService: OrganizationsService,
+    private readonly permissionsService: PermissionsService,
+  ) {}
 
   @Post()
   create(
@@ -30,21 +34,36 @@ export class OrganizationsController {
   }
 
   @Get()
-  findAll(@Request() req: AuthRequest) {
-    return this.organizationsService.findAllWhereMember(req.authContext);
+  async findAll(@Request() req: AuthRequest) {
+    return (
+      await this.organizationsService.findAllWhereMember(req.authContext)
+    ).filter((organization) =>
+      this.permissionsService.canAccessOrganizationOrFail(
+        organization.id,
+        req.authContext,
+      ),
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Request() req: AuthRequest) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      id,
+      req.authContext,
+    );
     return this.organizationsService.findOne(id);
   }
 
   @Post(':organizationId/invite')
-  inviteUser(
+  async inviteUser(
     @Request() req: AuthRequest,
     @Param('organizationId') organizationId: string,
     @Body() body: { email: string },
   ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     return this.organizationsService.inviteUser(
       req.authContext,
       organizationId,
@@ -53,8 +72,12 @@ export class OrganizationsController {
   }
 
   @Get(':id/members')
-  async getMembers(@Param('id') id: string) {
-    const organization = await this.findOne(id);
+  async getMembers(@Param('id') id: string, @Request() req: AuthRequest) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      id,
+      req.authContext,
+    );
+    const organization = await this.findOne(id, req);
     if (!organization) {
       throw new NotFoundException();
     }

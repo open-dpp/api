@@ -14,6 +14,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { PermissionsModule } from '../../auth/permissions/permissions.module';
 
 describe('OrganizationsService', () => {
   let organizationsService: OrganizationsService;
@@ -26,6 +27,7 @@ describe('OrganizationsService', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        PermissionsModule,
       ],
       providers: [OrganizationsService, UsersService, KeycloakResourcesService],
     })

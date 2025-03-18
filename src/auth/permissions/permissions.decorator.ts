@@ -1,9 +1,10 @@
 import { SetMetadata } from '@nestjs/common';
-import { ResourcePermission } from './permissions.service';
+import { ResourcePermission } from './resource-permission.interface';
 
 export const REQUIRED_PERMISSIONS = 'required_permissions';
 
 /**
+ * @Deprecated
  * Decorator to specify required permissions for a route
  * @example
  * @HasPermissions([{ type: 'organization', resource: 'org123', scopes: ['read'] }])

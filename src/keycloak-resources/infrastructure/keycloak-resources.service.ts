@@ -63,14 +63,86 @@ export class KeycloakResourcesService {
 
   async createGroup(organization: Organization) {
     await this.reloadToken();
-    const name = `organization-${organization.name}`;
+    const name = `organization-${organization.id}`;
+    /* const clients = await this.kcAdminClient.clients.find({
+      realm: this.realm,
+      clientId: 'backend',
+    });
+    if (clients.length === 0) {
+      throw new Error('Backend client not found');
+    }
+    if (clients.length > 1) {
+      throw new Error('Backend client not found');
+    }
+    const client = clients[0]; */
     const createdGroup = await this.kcAdminClient.groups.create({
-      name: name,
+      name,
       realm: this.realm,
     });
-    await this.kcAdminClient.users.addToGroup({
-      id: organization.createdByUserId,
-      groupId: createdGroup.id,
+    if (
+      !organization.members.some(
+        (member) => member.id === organization.createdByUserId,
+      )
+    ) {
+      await this.kcAdminClient.users.addToGroup({
+        id: organization.createdByUserId,
+        groupId: createdGroup.id,
+        realm: this.realm,
+      });
+    }
+    for (const member of organization.members) {
+      await this.kcAdminClient.users.addToGroup({
+        id: member.id,
+        groupId: createdGroup.id,
+        realm: this.realm,
+      });
+    }
+    /* await this.kcAdminClient.clients.createResource(
+      {
+        id: client.id,
+        realm: this.realm,
+      },
+      {
+        name: `resource-${name}`,
+        type: `urn:backend:${name}`,
+        uris: ['*'],
+        scopes: [
+          {
+            name: 'organization:access',
+          },
+        ],
+      },
+    );
+    const policyRep: any = {
+      name: `policy-${name}`,
+      type: 'group',
+      groups: [`/${name}`],
+    };
+    const policy = await this.kcAdminClient.clients.createPolicy(
+      {
+        id: client.id,
+        realm: this.realm,
+        type: 'group',
+      },
+      policyRep,
+    );
+    await this.kcAdminClient.clients.createPermission(
+      {
+        id: client.id,
+        realm: this.realm,
+        type: 'group',
+      },
+      {
+        name: `permission-${name}`,
+        policies: [policy.id],
+      },
+    ); */
+  }
+
+  async removeGroup(groupId: string) {
+    await this.reloadToken();
+    await this.kcAdminClient.groups.del({
+      id: groupId,
       realm: this.realm,
     });
   }
@@ -89,12 +161,10 @@ export class KeycloakResourcesService {
       console.log('user not found');
       throw new UnauthorizedException();
     }
-    console.log(authContext.permissions);
     const groups = await this.kcAdminClient.users.listGroups({
       id: userId,
       realm: this.realm,
     });
-    console.log(groups);
     if (!groups.some((g) => g.id === groupId)) {
       throw new ForbiddenException();
     }
@@ -131,5 +201,19 @@ export class KeycloakResourcesService {
       this.logger.warn('More than one user found for email');
     }
     return users[0];
+  }
+
+  async getGroupForOrganization(organizationId: string) {
+    await this.reloadToken();
+    const groups = await this.kcAdminClient.groups.find({
+      search: `organization-${organizationId}`,
+      realm: this.realm,
+    });
+    if (groups.length > 1) {
+      throw new Error('More than one group found for organization');
+    } else if (groups.length === 0) {
+      return null;
+    }
+    return groups[0];
   }
 }

@@ -8,8 +8,9 @@ import {
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { REQUIRED_PERMISSIONS } from './permissions.decorator';
-import { PermissionsService, ResourcePermission } from './permissions.service';
+import { PermissionsService } from './permissions.service';
 import { AuthRequest } from '../auth-request';
+import { ResourcePermission } from './resource-permission.interface';
 
 @Injectable()
 export class KeycloakPermissionsGuard implements CanActivate {

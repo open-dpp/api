@@ -14,6 +14,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { AuthContext } from '../../auth/auth-request';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { PermissionsService } from '../../auth/permissions/permissions.service';
 
 @Injectable()
 export class OrganizationsService {
@@ -23,6 +24,7 @@ export class OrganizationsService {
     private readonly dataSource: DataSource,
     private readonly keycloakResourcesService: KeycloakResourcesService,
     private readonly usersService: UsersService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   convertUserToEntity(user: User) {

@@ -23,6 +23,8 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
+import { PermissionsModule } from '../../auth/permissions/permissions.module';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -30,6 +32,7 @@ describe('ItemsController', () => {
   let modelsService: ModelsService;
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
+  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
 
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@test.test');
@@ -41,15 +44,14 @@ describe('ItemsController', () => {
         TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
         ItemsModule,
         UniqueProductIdentifierModule,
+        PermissionsModule,
       ],
       providers: [
         OrganizationsService,
         UsersService,
         {
           provide: APP_GUARD,
-          useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.user]]),
-          ),
+          useValue: keycloakAuthTestingGuard,
         },
         {
           provide: KeycloakResourcesService,
@@ -93,7 +95,14 @@ describe('ItemsController', () => {
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(201);
     const found = await itemsService.findById(response.body.id);
     const foundUniqueProductIdentifiers =
@@ -127,7 +136,10 @@ describe('ItemsController', () => {
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -151,7 +163,10 @@ describe('ItemsController', () => {
     await organizationsService.save(otherOrganization);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -176,7 +191,14 @@ describe('ItemsController', () => {
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       id: item.id,
@@ -211,7 +233,10 @@ describe('ItemsController', () => {
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -240,7 +265,10 @@ describe('ItemsController', () => {
       .get(
         `/organizations/${otherOrganization.id}/models/${model.id}/items/${item.id}`,
       )
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -266,7 +294,14 @@ describe('ItemsController', () => {
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([
       {
@@ -313,7 +348,10 @@ describe('ItemsController', () => {
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -342,7 +380,10 @@ describe('ItemsController', () => {
     await organizationsService.save(otherOrganization);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 

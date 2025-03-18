@@ -9,6 +9,7 @@ import { ProductDataModelModule } from '../product-data-model/product.data.model
 import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
 import { UsersModule } from '../users/users.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
+import { PermissionsModule } from '../auth/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { OrganizationsModule } from '../organizations/organizations.module';
     OrganizationsModule,
     UniqueProductIdentifierModule,
     UsersModule,
+    PermissionsModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],
