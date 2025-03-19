@@ -1,6 +1,9 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ProductDataModelService } from './product.data.model.service';
-import { ProductDataModel } from '../domain/product.data.model';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../domain/product.data.model';
 
 @Injectable()
 export class ProductDataModelImportService implements OnApplicationBootstrap {
@@ -13,6 +16,7 @@ export class ProductDataModelImportService implements OnApplicationBootstrap {
       const productDataModel = ProductDataModel.fromPlain({
         name,
         version: '1.0.0',
+        visibility: VisibilityLevel.PUBLIC,
         sections: [
           {
             name: 'Technische Spezifikation',
