@@ -14,7 +14,6 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { AuthContext } from '../../auth/auth-request';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { PermissionsService } from '../../auth/permissions/permissions.service';
 
 @Injectable()
 export class OrganizationsService {
@@ -24,7 +23,6 @@ export class OrganizationsService {
     private readonly dataSource: DataSource,
     private readonly keycloakResourcesService: KeycloakResourcesService,
     private readonly usersService: UsersService,
-    private readonly permissionsService: PermissionsService,
   ) {}
 
   convertUserToEntity(user: User) {
@@ -132,11 +130,11 @@ export class OrganizationsService {
     try {
       org.members.push({ id: userToInvite.id, email: userToInvite.email });
       await this.organizationRepository.save(org);
-      /* await this.keycloakResourcesService.inviteUserToGroup(
+      await this.keycloakResourcesService.inviteUserToGroup(
         authContext,
         'organization-' + organizationId,
         userToInvite.id,
-      ); */
+      );
     } catch (err) {
       console.log('Error:', err);
       await queryRunner.rollbackTransaction();

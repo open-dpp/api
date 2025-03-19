@@ -2,6 +2,7 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { AuthContext } from '../../auth/auth-request';
 
 @Injectable()
 export class UsersSyncOnStartupService implements OnApplicationBootstrap {
@@ -38,6 +39,27 @@ export class UsersSyncOnStartupService implements OnApplicationBootstrap {
       if (!keycloakGroup) {
         console.log('Creating group for organization', organization.id);
         await this.keycloakResourcesServices.createGroup(organization);
+      }
+      for (const member of organization.members) {
+        try {
+          const authContext = new AuthContext();
+          authContext.keycloakUser = {
+            sub: organization.createdByUserId,
+            email: '',
+            name: '',
+            preferred_username: '',
+            email_verified: true,
+          };
+          await this.keycloakResourcesServices.inviteUserToGroup(
+            authContext,
+            organization.id,
+            member.id,
+          );
+        } catch (exception) {
+          if (exception.status !== 400) {
+            console.warn(exception);
+          }
+        }
       }
     }
     this.logger.log('Finished syncing users from Keycloak to database');

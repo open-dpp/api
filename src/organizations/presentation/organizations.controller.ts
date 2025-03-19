@@ -38,7 +38,7 @@ export class OrganizationsController {
     return (
       await this.organizationsService.findAllWhereMember(req.authContext)
     ).filter((organization) =>
-      this.permissionsService.canAccessOrganizationOrFail(
+      this.permissionsService.canAccessOrganization(
         organization.id,
         req.authContext,
       ),
