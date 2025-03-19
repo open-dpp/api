@@ -27,6 +27,7 @@ export class UniqueProductIdentifierController {
         uniqueProductIdentifier.referenceId,
       );
       model = await this.modelsService.findOne(item.model);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (NotFoundException) {
       model = await this.modelsService.findOne(
         uniqueProductIdentifier.referenceId,
