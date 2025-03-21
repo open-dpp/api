@@ -235,9 +235,16 @@ describe('ProductsDataModelDraftController', () => {
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body).toEqual(
-      (await productDataModelService.findOne(response.body.id)).toPlain(),
+    const foundDraft = await productDataModelDraftService.findOne(
+      response.body.id,
     );
+    expect(foundDraft.publications).toEqual([
+      { id: expect.any(String), version: '1.0.0' },
+    ]);
+    const foundModel = await productDataModelService.findOne(
+      foundDraft.publications[0].id,
+    );
+    expect(foundModel.id).toEqual(foundDraft.publications[0].id);
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {

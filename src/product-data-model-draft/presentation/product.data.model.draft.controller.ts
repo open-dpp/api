@@ -129,8 +129,10 @@ export class ProductDataModelDraftController {
       req.authContext.user,
       publishDto.visibility,
     );
+    await this.productDataModelService.save(publishedProductDataModel);
+
     return (
-      await this.productDataModelService.save(publishedProductDataModel)
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
