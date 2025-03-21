@@ -8,8 +8,6 @@ import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.test
 import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModelDraftService } from '../infrastructure/product.data.model.draft.service';
-import { ProductDataModelDraftEntity } from '../infrastructure/product.data.model.draft.entity';
 import { ProductDataModelDraftModule } from '../product.data.model.draft.module';
 import { Organization } from '../../organizations/domain/organization';
 import { UserEntity } from '../../users/infrastructure/user.entity';
@@ -25,24 +23,35 @@ import { DataFieldDraft } from '../domain/data.field.draft';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDraftDoc,
+  ProductDataModelDraftSchema,
+} from '../infrastructure/product.data.model.draft.schema';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { ProductDataModelDraftService } from '../infrastructure/product.data.model.draft.service';
+import { Connection } from 'mongoose';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
-  let service: ProductDataModelDraftService;
   const authContext = new AuthContext();
   let organizationsService: OrganizationsService;
   let productDataModelDraftService: ProductDataModelDraftService;
   let productDataModelService: ProductDataModelService;
   authContext.user = new User(randomUUID(), 'test@test.test');
+  let mongoConnection: Connection;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ProductDataModelDraftEntity,
-          UserEntity,
-          OrganizationEntity,
+        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDraftDoc.name,
+            schema: ProductDataModelDraftSchema,
+          },
         ]),
         OrganizationsModule,
         ProductDataModelDraftModule,
@@ -64,18 +73,17 @@ describe('ProductsDataModelDraftController', () => {
       )
       .compile();
 
-    service = moduleRef.get<ProductDataModelDraftService>(
-      ProductDataModelDraftService,
-    );
     app = moduleRef.createNestApplication();
     organizationsService =
       moduleRef.get<OrganizationsService>(OrganizationsService);
-    productDataModelDraftService = moduleRef.get<ProductDataModelDraftService>(
-      ProductDataModelDraftService,
-    );
+
     productDataModelService = moduleRef.get<ProductDataModelService>(
       ProductDataModelService,
     );
+    productDataModelDraftService = moduleRef.get<ProductDataModelDraftService>(
+      ProductDataModelDraftService,
+    );
+    mongoConnection = moduleRef.get<Connection>(getConnectionToken());
 
     await app.init();
   });
@@ -106,7 +114,7 @@ describe('ProductsDataModelDraftController', () => {
       type: DataFieldType.TEXT_FIELD,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     return {
       orgaId: organization.id,
       sectionId: section.id,
@@ -132,7 +140,7 @@ describe('ProductsDataModelDraftController', () => {
       type: DataFieldType.TEXT_FIELD,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const otherOrganization = await createOrganization();
     return {
       otherOrgaId: otherOrganization.id,
@@ -155,7 +163,7 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(response.body).toEqual(found.toPlain());
   });
 
@@ -177,7 +185,7 @@ describe('ProductsDataModelDraftController', () => {
       organization,
       user: authContext.user,
     });
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const body = { name: 'My final laptop draft' };
     const response = await request(app.getHttpServer())
       .patch(
@@ -226,7 +234,7 @@ describe('ProductsDataModelDraftController', () => {
       type: DataFieldType.TEXT_FIELD,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const body = { visibility: VisibilityLevel.PUBLIC };
     const response = await request(app.getHttpServer())
       .post(
@@ -307,7 +315,7 @@ describe('ProductsDataModelDraftController', () => {
       organization,
       user: authContext.user,
     });
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const body = { name: 'Technical Specs', type: SectionType.GROUP };
     const response = await request(app.getHttpServer())
       .post(
@@ -320,7 +328,7 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.body.sections).toEqual([
       { ...body, id: expect.any(String), dataFields: [] },
     ]);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(response.body).toEqual(found.toPlain());
   });
 
@@ -359,14 +367,14 @@ describe('ProductsDataModelDraftController', () => {
       type: SectionType.GROUP,
     });
     laptopDraft.addSection(section);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .get(
         `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}`,
       )
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(response.body).toEqual(found.toPlain());
   });
 
@@ -398,7 +406,7 @@ describe('ProductsDataModelDraftController', () => {
       type: SectionType.GROUP,
     });
     laptopDraft.addSection(section);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const body = { name: 'Technical Specs' };
     const response = await request(app.getHttpServer())
       .patch(
@@ -407,7 +415,7 @@ describe('ProductsDataModelDraftController', () => {
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(found.findSectionOrFail(section.id)).toEqual({
       ...section,
       _name: body.name,
@@ -447,14 +455,14 @@ describe('ProductsDataModelDraftController', () => {
       type: SectionType.GROUP,
     });
     laptopDraft.addSection(section);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .delete(
         `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(found.sections).toEqual([]);
   });
 
@@ -491,7 +499,7 @@ describe('ProductsDataModelDraftController', () => {
       type: SectionType.GROUP,
     });
     laptopDraft.addSection(section);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const body = {
       name: 'Processor',
       type: SectionType.GROUP,
@@ -512,7 +520,7 @@ describe('ProductsDataModelDraftController', () => {
         options: { min: 2 },
       },
     ]);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(response.body).toEqual(found.toPlain());
   });
 
@@ -559,7 +567,7 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const body = { name: 'Memory', options: { max: 8 } };
     const response = await request(app.getHttpServer())
       .patch(
@@ -568,7 +576,7 @@ describe('ProductsDataModelDraftController', () => {
       .set('Authorization', 'Bearer token1')
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(found.sections[0].dataFields).toEqual([
       { ...dataField, _name: body.name, options: body.options },
     ]);
@@ -614,7 +622,7 @@ describe('ProductsDataModelDraftController', () => {
       type: DataFieldType.TEXT_FIELD,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-    await service.save(laptopDraft);
+    await productDataModelDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .delete(
         `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
@@ -623,7 +631,7 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(200);
     expect(response.body.id).toBeDefined();
     expect(response.body.sections[0].dataFields).toEqual([]);
-    const found = await service.findOne(response.body.id);
+    const found = await productDataModelDraftService.findOne(response.body.id);
     expect(response.body).toEqual(found.toPlain());
   });
 
@@ -652,5 +660,6 @@ describe('ProductsDataModelDraftController', () => {
 
   afterAll(async () => {
     await app.close();
+    await mongoConnection.close();
   });
 });

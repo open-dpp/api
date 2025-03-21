@@ -87,4 +87,5 @@ jobs:
           DB_USERNAME: admin
           DB_PASSWORD: admin
           DB_DATABASE: management
+          MONGO_DB_PORT: 27017
         run: npm test

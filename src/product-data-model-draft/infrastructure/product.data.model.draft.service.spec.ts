@@ -1,60 +1,43 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { ProductDataModelDraftEntity } from './product.data.model.draft.entity';
 import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { ProductDataModelDraftService } from './product.data.model.draft.service';
 import { SectionType } from '../../product-data-model/domain/section';
 import { ProductDataModelDraft } from '../domain/product.data.model.draft';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { User } from '../../users/domain/user';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { UsersService } from '../../users/infrastructure/users.service';
+import { MongooseModule, getConnectionToken } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
+import { ProductDataModelDraftService } from './product.data.model.draft.service';
+import {
+  ProductDataModelDraftDoc,
+  ProductDataModelDraftSchema,
+} from './product.data.model.draft.schema';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Organization } from '../../organizations/domain/organization';
+import { DataSectionDraft } from '../domain/section.draft';
 import { DataFieldDraft } from '../domain/data.field.draft';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
-import { DataSectionDraft } from '../domain/section.draft';
+import { User } from '../../users/domain/user';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 
-describe('ProductDataModelDraftService', () => {
+describe('ProductDataModelDraftMongoService', () => {
   let service: ProductDataModelDraftService;
-  let dataSource: DataSource;
-  let organizationService: OrganizationsService;
+  let mongoConnection: Connection;
 
-  const user = new User(randomUUID(), 'test@test.test');
-
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ProductDataModelDraftEntity,
-          UserEntity,
-          OrganizationEntity,
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDraftDoc.name,
+            schema: ProductDataModelDraftSchema,
+          },
         ]),
       ],
-      providers: [
-        ProductDataModelDraftService,
-        UsersService,
-        OrganizationsService,
-        {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [{ id: user.id, email: user.email }],
-          }),
-        },
-      ],
+      providers: [ProductDataModelDraftService],
     }).compile();
     service = module.get<ProductDataModelDraftService>(
       ProductDataModelDraftService,
     );
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
-    dataSource = module.get<DataSource>(DataSource);
+    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   const laptopModelPlain = {
@@ -88,29 +71,26 @@ describe('ProductDataModelDraftService', () => {
     ],
   };
 
+  it('saves draft', async () => {
+    const productDataModelDraft = ProductDataModelDraft.fromPlain({
+      ...laptopModelPlain,
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+    });
+    const { id } = await service.save(productDataModelDraft);
+    const found = await service.findOne(id);
+    expect(found).toEqual(productDataModelDraft);
+  });
+
   it('fails if requested product data model draft could not be found', async () => {
     await expect(service.findOne(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(ProductDataModelDraft.name),
     );
   });
 
-  it('should create product data model draft', async () => {
-    const organization = Organization.create({ name: 'My orga', user: user });
-    await organizationService.save(organization);
-    const productDataModelDraft = ProductDataModelDraft.fromPlain({
-      ...laptopModelPlain,
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
-    });
-
-    const { id } = await service.save(productDataModelDraft);
-    const found = await service.findOne(id);
-    expect(found).toEqual(productDataModelDraft);
-  });
-
   it('should delete section on product data model draft', async () => {
+    const user = new User(randomUUID(), 'test@example.com');
     const organization = Organization.create({ name: 'My orga', user: user });
-    await organizationService.save(organization);
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'laptop',
       organization,
@@ -140,8 +120,9 @@ describe('ProductDataModelDraftService', () => {
   });
 
   it('should delete data fields of product data model draft', async () => {
+    const user = new User(randomUUID(), 'test@example.com');
     const organization = Organization.create({ name: 'My orga', user: user });
-    await organizationService.save(organization);
+
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'draft',
       organization,
@@ -171,8 +152,10 @@ describe('ProductDataModelDraftService', () => {
   });
 
   it('should return all product data model drafts by organization', async () => {
+    const user = new User(randomUUID(), 'test@example.com');
+
     const organization = Organization.create({ name: 'My orga', user: user });
-    await organizationService.save(organization);
+
     const laptopDraft = ProductDataModelDraft.create({
       name: 'laptop',
       organization,
@@ -189,7 +172,7 @@ describe('ProductDataModelDraftService', () => {
       name: 'My orga',
       user: user,
     });
-    await organizationService.save(otherOrganization);
+
     await service.save(
       ProductDataModelDraft.create({
         name: 'other draft',
@@ -204,7 +187,7 @@ describe('ProductDataModelDraftService', () => {
     ]);
   });
 
-  afterEach(async () => {
-    await dataSource.destroy();
+  afterAll(async () => {
+    await mongoConnection.close(); // Close connection after tests
   });
 });
