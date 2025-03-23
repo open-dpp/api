@@ -1,23 +1,33 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { AuthContext } from '../../auth/auth-request';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class UsersSyncOnStartupService implements OnApplicationBootstrap {
-  private readonly logger: Logger = new Logger(UsersSyncOnStartupService.name);
+export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
+  private readonly logger: Logger = new Logger(
+    KeycloakSyncOnStartupService.name,
+  );
 
   constructor(
     private readonly usersService: UsersService,
     private readonly keycloakResourcesServices: KeycloakResourcesService,
     private readonly organizationsService: OrganizationsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async onApplicationBootstrap() {
+    if (this.configService.get('NODE_ENV') === 'test') {
+      return;
+    }
+    await this.sync();
+  }
+
+  async sync() {
     this.logger.log('Syncing users from Keycloak to database');
     const keycloakUsers = await this.keycloakResourcesServices.getUsers();
-    this.logger.log(`Found ${keycloakUsers.length} users`);
     for (const keycloakUser of keycloakUsers) {
       const user = await this.usersService.findOne(keycloakUser.id);
       if (!user) {
@@ -30,6 +40,12 @@ export class UsersSyncOnStartupService implements OnApplicationBootstrap {
         });
       }
     }
+    this.logger.log('Syncing users from DB to Keycloak');
+    const users = await this.usersService.find();
+    for (const user of users) {
+      await this.keycloakResourcesServices.createUser(user);
+    }
+    this.logger.log('Syncing organizations from DB to Keycloak');
     const organizations = await this.organizationsService.findAll();
     for (const organization of organizations) {
       const keycloakGroup =
@@ -37,7 +53,6 @@ export class UsersSyncOnStartupService implements OnApplicationBootstrap {
           organization.id,
         );
       if (!keycloakGroup) {
-        console.log('Creating group for organization', organization.id);
         await this.keycloakResourcesServices.createGroup(organization);
       }
       for (const member of organization.members) {

@@ -4,7 +4,6 @@ import { ModelsModule } from './models/models.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { KeycloakImportModule } from './keycloak-import/keycloak-import.module';
 import { UniqueProductIdentifierModule } from './unique-product-identifier/unique.product.identifier.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
@@ -17,6 +16,8 @@ import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources
 import { PermissionsModule } from './auth/permissions/permissions.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
+import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,12 +41,12 @@ import { ProductDataModelModule } from './product-data-model/product.data.model.
     ModelsModule,
     OrganizationsModule,
     UsersModule,
-    KeycloakImportModule,
     UniqueProductIdentifierModule,
     AuthModule,
     PermissionsModule,
     HttpModule,
     KeycloakResourcesModule,
+    KeycloakSyncOnStartupModule,
   ],
   providers: [
     {

@@ -24,8 +24,6 @@ import {
   ProductDataModel,
   SectionType,
 } from '../../product-data-model/domain/product.data.model';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
@@ -36,14 +34,23 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
       auth: jest.fn().mockResolvedValue(undefined),
       users: {
         find: jest.fn().mockResolvedValue([]), // Mock user retrieval returning empty array
+        findOne: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
         create: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
         update: jest.fn().mockResolvedValue(undefined),
         del: jest.fn().mockResolvedValue(undefined),
+        addToGroup: jest.fn().mockResolvedValue(undefined),
+        listGroups: jest.fn().mockResolvedValue([{ id: 'mock-group-id' }]),
       },
       realms: {
         find: jest
           .fn()
           .mockResolvedValue([{ id: 'mock-realm-id', realm: 'test-realm' }]),
+      },
+      groups: {
+        find: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue({ id: 'mock-group-id' }),
+        update: jest.fn().mockResolvedValue(undefined),
+        del: jest.fn().mockResolvedValue(undefined),
       },
     })),
   };
@@ -85,14 +92,7 @@ describe('ModelsController', () => {
           ),
         },
       ],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: authContext.user.id, email: authContext.user.email }],
-        }),
-      )
-      .compile();
+    }).compile();
 
     modelsService = moduleRef.get(ModelsService);
     organizationsService = moduleRef.get(OrganizationsService);

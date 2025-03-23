@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthContext } from '../../auth/auth-request';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Organization } from '../../organizations/domain/organization';
+import { User } from '../../users/domain/user';
 
 @Injectable()
 export class KeycloakResourcesService {
@@ -56,6 +57,24 @@ export class KeycloakResourcesService {
         ],
       },
     );
+  }
+
+  async createUser(user: User) {
+    await this.reloadToken();
+    const findUser = await this.findKeycloakUserByEmail(user.email);
+    if (findUser) {
+      return;
+    }
+    await this.kcAdminClient.users.create({
+      realm: this.realm,
+      username: user.email,
+      email: user.email,
+      emailVerified: true,
+      enabled: true,
+      attributes: {
+        preferred_username: user.email,
+      },
+    });
   }
 
   async createGroup(organization: Organization) {
