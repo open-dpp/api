@@ -17,7 +17,7 @@ import { PermissionsGuard } from './auth/permissions/permissions.guard';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
-import { ProductDataModelDraftModule } from './product-data-model-draft/product.data.model.draft.module';
+import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
 import { MongooseModule } from '@nestjs/mongoose';
 @Module({
   imports: [

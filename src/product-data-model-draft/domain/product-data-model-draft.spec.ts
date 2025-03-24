@@ -1,6 +1,6 @@
-import { ProductDataModelDraft } from './product.data.model.draft';
-import { DataFieldDraft } from './data.field.draft';
-import { DataSectionDraft } from './section.draft';
+import { ProductDataModelDraft } from './product-data-model-draft';
+import { DataFieldDraft } from './data-field-draft';
+import { DataSectionDraft } from './section-draft';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { SectionType } from '../../product-data-model/domain/section';
 import { DataFieldType } from '../../product-data-model/domain/data.field';

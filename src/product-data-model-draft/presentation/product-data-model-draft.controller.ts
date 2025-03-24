@@ -9,28 +9,28 @@ import {
   Post,
   Request,
 } from '@nestjs/common';
-import { ProductDataModelDraft } from '../domain/product.data.model.draft';
+import { ProductDataModelDraft } from '../domain/product-data-model-draft';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { AuthRequest } from '../../auth/auth-request';
-import { DataSectionDraft } from '../domain/section.draft';
+import { DataSectionDraft } from '../domain/section-draft';
 import { Organization } from '../../organizations/domain/organization';
-import { DataFieldDraft } from '../domain/data.field.draft';
+import { DataFieldDraft } from '../domain/data-field-draft';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
-import { CreateProductDataModelDraftDto } from './dto/create.product.data.model.draft.dto';
-import { CreateSectionDraftDto } from './dto/create.section.draft.dto';
-import { CreateDataFieldDraftDto } from './dto/create.data.field.draft.dto';
-import { UpdateProductDataModelDraftDto } from './dto/update.product.data.model.draft.dto';
+import { CreateProductDataModelDraftDto } from './dto/create-product-data-model-draft.dto';
+import { CreateSectionDraftDto } from './dto/create-section-draft.dto';
+import { CreateDataFieldDraftDto } from './dto/create-data-field-draft.dto';
+import { UpdateProductDataModelDraftDto } from './dto/update-product-data-model-draft.dto';
 import { PublishDto } from './dto/publish.dto';
-import { UpdateDataFieldDraftDto } from './dto/update.data.field.draft.dto';
-import { UpdateSectionDraftDto } from './dto/update.section.draft.dto';
-import { ProductDataModelDraftService } from '../infrastructure/product.data.model.draft.service';
+import { UpdateDataFieldDraftDto } from './dto/update-data-field-draft.dto';
+import { UpdateSectionDraftDto } from './dto/update-section-draft.dto';
+import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
   constructor(
     private readonly organizationService: OrganizationsService,
     private readonly productDataModelService: ProductDataModelService,
-    private readonly productDataModelDraftMongoService: ProductDataModelDraftService,
+    private readonly productDataModelDraftService: ProductDataModelDraftService,
   ) {}
 
   @Post()
@@ -39,12 +39,13 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() createProductDataModelDraftDto: CreateProductDataModelDraftDto,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
     return (
-      await this.productDataModelDraftMongoService.save(
+      await this.productDataModelDraftService.save(
         ProductDataModelDraft.create({
           ...createProductDataModelDraftDto,
           organization,
@@ -60,9 +61,10 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
@@ -76,18 +78,17 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() modifyProductDataModelDraftDto: UpdateProductDataModelDraftDto,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
     foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
 
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -98,10 +99,11 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() createSectionDraftDto: CreateSectionDraftDto,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
@@ -109,9 +111,7 @@ export class ProductDataModelDraftController {
       DataSectionDraft.create(createSectionDraftDto),
     );
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -122,10 +122,11 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() publishDto: PublishDto,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
@@ -136,9 +137,7 @@ export class ProductDataModelDraftController {
     await this.productDataModelService.save(publishedProductDataModel);
 
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -151,10 +150,11 @@ export class ProductDataModelDraftController {
     @Body()
     createDataFieldDraftDto: CreateDataFieldDraftDto,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
@@ -163,9 +163,7 @@ export class ProductDataModelDraftController {
       DataFieldDraft.create(createDataFieldDraftDto),
     );
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -176,18 +174,17 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
     foundProductDataModelDraft.deleteSection(sectionId);
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -200,18 +197,17 @@ export class ProductDataModelDraftController {
     modifySectionDraftDto: UpdateSectionDraftDto,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
     foundProductDataModelDraft.modifySection(sectionId, modifySectionDraftDto);
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -225,10 +221,11 @@ export class ProductDataModelDraftController {
     modifyDataFieldDraftDto: UpdateDataFieldDraftDto,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
@@ -238,9 +235,7 @@ export class ProductDataModelDraftController {
       modifyDataFieldDraftDto,
     );
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -252,18 +247,17 @@ export class ProductDataModelDraftController {
     @Param('fieldId') fieldId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftMongoService.findOne(draftId);
+      await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
     foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
     return (
-      await this.productDataModelDraftMongoService.save(
-        foundProductDataModelDraft,
-      )
+      await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
   }
 
@@ -272,11 +266,12 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
-    return await this.productDataModelDraftMongoService.findAllByOrganization(
+    return await this.productDataModelDraftService.findAllByOrganization(
       organization.id,
     );
   }

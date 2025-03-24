@@ -75,7 +75,7 @@ export class ItemsController {
     req: AuthRequest,
   ) {
     const organization =
-      await this.organizationsService.findOne(organizationId);
+      await this.organizationsService.findOneOrFail(organizationId);
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }

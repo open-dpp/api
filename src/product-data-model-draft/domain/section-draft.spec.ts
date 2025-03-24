@@ -1,5 +1,5 @@
-import { DataSectionDraft } from './section.draft';
-import { DataFieldDraft } from './data.field.draft';
+import { DataSectionDraft } from './section-draft';
+import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../product-data-model/domain/section';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
 import { NotFoundError } from '../../exceptions/domain.errors';

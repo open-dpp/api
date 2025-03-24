@@ -32,7 +32,7 @@ export class ProductDataModelController {
     @Request() req: AuthRequest,
   ) {
     const organization =
-      await this.organizationsService.findOne(organizationId);
+      await this.organizationsService.findOneOrFail(organizationId);
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
@@ -46,7 +46,7 @@ export class ProductDataModelController {
     req: AuthRequest,
   ) {
     if (!productDataModel.isPublic()) {
-      const organization = await this.organizationsService.findOne(
+      const organization = await this.organizationsService.findOneOrFail(
         productDataModel.ownedByOrganizationId,
       );
       if (

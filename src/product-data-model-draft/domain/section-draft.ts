@@ -5,7 +5,7 @@ import {
   Type,
 } from 'class-transformer';
 import { randomUUID } from 'crypto';
-import { DataFieldDraft } from './data.field.draft';
+import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../product-data-model/domain/section';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';

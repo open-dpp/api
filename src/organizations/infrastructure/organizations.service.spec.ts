@@ -46,15 +46,15 @@ describe('OrganizationsService', () => {
     const name = `My Organization ${uuid4()}`;
     const organization = Organization.create({ name, user: authContext.user });
     const { id } = await organizationsService.save(organization);
-    const found = await organizationsService.findOne(id);
+    const found = await organizationsService.findOneOrFail(id);
     expect(found.name).toEqual(name);
     expect(found.createdByUserId).toEqual(organization.createdByUserId);
   });
 
   it('fails if requested organization could not be found', async () => {
-    await expect(organizationsService.findOne(randomUUID())).rejects.toThrow(
-      new NotFoundInDatabaseException(Organization.name),
-    );
+    await expect(
+      organizationsService.findOneOrFail(randomUUID()),
+    ).rejects.toThrow(new NotFoundInDatabaseException(Organization.name));
   });
 
   it('should add members to organization', async () => {
@@ -65,7 +65,7 @@ describe('OrganizationsService', () => {
     organization.join(authContext.user);
     organization.join(user2);
     await organizationsService.save(organization);
-    const found = await organizationsService.findOne(organization.id);
+    const found = await organizationsService.findOneOrFail(organization.id);
     expect(found.members).toEqual([authContext.user, user2]);
   });
   afterEach(async () => {

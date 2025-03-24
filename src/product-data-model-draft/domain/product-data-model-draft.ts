@@ -5,8 +5,8 @@ import {
   plainToInstance,
   Type,
 } from 'class-transformer';
-import { DataFieldDraft } from './data.field.draft';
-import { DataSectionDraft } from './section.draft';
+import { DataFieldDraft } from './data-field-draft';
+import { DataSectionDraft } from './section-draft';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';

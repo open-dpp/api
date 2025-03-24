@@ -52,7 +52,7 @@ export abstract class DataField {
 
 export class TextField extends DataField {
   validate(version: string, value: unknown): DataFieldValidationResult {
-    const result = z.ostring().safeParse(value);
+    const result = z.string().optional().safeParse(value);
     return DataFieldValidationResult.fromPlain({
       dataFieldId: this.id,
       dataFieldName: this.name,

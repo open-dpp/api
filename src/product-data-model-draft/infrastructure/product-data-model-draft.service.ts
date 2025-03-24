@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ProductDataModelDraftDoc } from './product.data.model.draft.schema';
-import { ProductDataModelDraft } from '../domain/product.data.model.draft';
+import { ProductDataModelDraftDoc } from './product-data-model-draft.schema';
+import { ProductDataModelDraft } from '../domain/product-data-model-draft';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
 @Injectable()
@@ -67,7 +67,7 @@ export class ProductDataModelDraftService {
     });
   }
 
-  async findOne(id: string) {
+  async findOneOrFail(id: string) {
     const draftDoc = await this.productDataModelDraftDoc.findById(id).exec();
     if (!draftDoc) {
       throw new NotFoundInDatabaseException(ProductDataModelDraft.name);

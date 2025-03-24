@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { SectionType } from '../../product-data-model/domain/section';
-import { ProductDataModelDraft } from '../domain/product.data.model.draft';
+import { ProductDataModelDraft } from '../domain/product-data-model-draft';
 import { MongooseModule, getConnectionToken } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { ProductDataModelDraftService } from './product.data.model.draft.service';
+import { ProductDataModelDraftService } from './product-data-model-draft.service';
 import {
   ProductDataModelDraftDoc,
   ProductDataModelDraftSchema,
-} from './product.data.model.draft.schema';
+} from './product-data-model-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Organization } from '../../organizations/domain/organization';
-import { DataSectionDraft } from '../domain/section.draft';
-import { DataFieldDraft } from '../domain/data.field.draft';
+import { DataSectionDraft } from '../domain/section-draft';
+import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
 import { User } from '../../users/domain/user';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
@@ -78,12 +78,12 @@ describe('ProductDataModelDraftMongoService', () => {
       createdByUserId: randomUUID(),
     });
     const { id } = await service.save(productDataModelDraft);
-    const found = await service.findOne(id);
+    const found = await service.findOneOrFail(id);
     expect(found).toEqual(productDataModelDraft);
   });
 
   it('fails if requested product data model draft could not be found', async () => {
-    await expect(service.findOne(randomUUID())).rejects.toThrow(
+    await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(ProductDataModelDraft.name),
     );
   });
@@ -115,7 +115,7 @@ describe('ProductDataModelDraftMongoService', () => {
     await service.save(productDataModelDraft);
     productDataModelDraft.deleteSection(section1.id);
     const { id } = await service.save(productDataModelDraft);
-    const found = await service.findOne(id);
+    const found = await service.findOneOrFail(id);
     expect(found.sections).toEqual([section2]);
   });
 
@@ -147,7 +147,7 @@ describe('ProductDataModelDraftMongoService', () => {
     await service.save(productDataModelDraft);
     productDataModelDraft.deleteDataFieldOfSection(section.id, dataField2.id);
     await service.save(productDataModelDraft);
-    const found = await service.findOne(productDataModelDraft.id);
+    const found = await service.findOneOrFail(productDataModelDraft.id);
     expect(found.sections[0].dataFields).toEqual([dataField1]);
   });
 

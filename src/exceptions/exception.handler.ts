@@ -1,4 +1,3 @@
-import { EntityNotFoundError } from 'typeorm';
 import {
   ArgumentsHost,
   Catch,
@@ -10,7 +9,7 @@ import { NotFoundError } from './domain.errors';
 
 @Catch(NotFoundInDatabaseException)
 export class NotFoundInDatabaseExceptionFilter implements ExceptionFilter {
-  catch(exception: EntityNotFoundError, host: ArgumentsHost) {
+  catch(exception: NotFoundInDatabaseException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
@@ -25,7 +24,7 @@ export class NotFoundInDatabaseExceptionFilter implements ExceptionFilter {
 
 @Catch(NotFoundError)
 export class NotFoundExceptionFilter implements ExceptionFilter {
-  catch(exception: EntityNotFoundError, host: ArgumentsHost) {
+  catch(exception: NotFoundError, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();

@@ -1,4 +1,4 @@
-import { DataFieldDraft } from './data.field.draft';
+import { DataFieldDraft } from './data-field-draft';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
 
 describe('DataField', () => {
