@@ -17,7 +17,7 @@ import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
@@ -27,6 +27,12 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
 import { SectionType } from '../../product-data-model/domain/section';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../../product-data-model/infrastructure/product-data-model.schema';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -46,6 +52,13 @@ describe('ModelsController', () => {
           UserEntity,
           ProductDataModelEntity,
           OrganizationEntity,
+        ]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
         ]),
         ModelsModule,
         OrganizationsModule,

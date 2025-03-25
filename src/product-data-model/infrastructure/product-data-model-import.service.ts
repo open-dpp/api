@@ -1,5 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { ProductDataModelService } from './product.data.model.service';
+import { ProductDataModelService } from './product-data-model.service';
 import {
   ProductDataModel,
   VisibilityLevel,

@@ -6,7 +6,7 @@ import {
   Query,
   Request,
 } from '@nestjs/common';
-import { ProductDataModelService } from '../infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../infrastructure/product-data-model.service';
 import { ProductDataModel } from '../domain/product.data.model';
 import { AuthRequest } from '../../auth/auth-request';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
@@ -20,9 +20,8 @@ export class ProductDataModelController {
 
   @Get(':id')
   async get(@Param('id') id: string, @Request() req: AuthRequest) {
-    const found = await this.productDataModelService.findOne(id);
+    const found = await this.productDataModelService.findOneOrFail(id);
     await this.hasPermissionsOrFail(found, req);
-
     return found.toPlain();
   }
 

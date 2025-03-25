@@ -3,7 +3,7 @@ import { UniqueProductIdentifierService } from '../infrastructure/unique.product
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { Public } from '../../auth/public/public.decorator';
 import { View } from '../domain/view';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Model } from '../../models/domain/model';
 
@@ -34,7 +34,7 @@ export class UniqueProductIdentifierController {
       );
     }
 
-    const productDataModel = await this.productDataModelService.findOne(
+    const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );
     return View.fromPlain({
