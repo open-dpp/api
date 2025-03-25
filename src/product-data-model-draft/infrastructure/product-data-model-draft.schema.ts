@@ -15,7 +15,7 @@ class PublicationDoc {
 const PublicationSchema = SchemaFactory.createForClass(PublicationDoc);
 
 @Schema() // No separate _id for embedded documents
-class DataFieldDoc {
+class DataFieldDraftDoc {
   @Prop({ required: true })
   _id: string;
   @Prop({ required: true })
@@ -25,10 +25,10 @@ class DataFieldDoc {
   @Prop({ required: true, type: MongooseSchema.Types.Mixed }) // Accepts any JSON object
   options: Record<string, unknown>;
 }
-const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
+const DataFieldDraftSchema = SchemaFactory.createForClass(DataFieldDraftDoc);
 
 @Schema() // No separate _id for embedded documents
-class SectionDoc {
+class SectionDraftDoc {
   @Prop({ required: true })
   _id: string;
 
@@ -37,10 +37,10 @@ class SectionDoc {
 
   @Prop({ required: true, enum: SectionType })
   type: SectionType;
-  @Prop({ type: [DataFieldSchema], default: [] })
-  dataFields: DataFieldDoc[];
+  @Prop({ type: [DataFieldDraftSchema], default: [] })
+  dataFields: DataFieldDraftDoc[];
 }
-const SectionSchema = SchemaFactory.createForClass(SectionDoc);
+const SectionDraftSchema = SchemaFactory.createForClass(SectionDraftDoc);
 
 export enum ProductDataModelDraftDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -66,8 +66,8 @@ export class ProductDataModelDraftDoc extends Document {
   @Prop({ type: [PublicationSchema], default: [] })
   publications: PublicationDoc[];
 
-  @Prop({ type: [SectionSchema], default: [] })
-  sections: SectionDoc[];
+  @Prop({ type: [SectionDraftSchema], default: [] })
+  sections: SectionDraftDoc[];
 
   @Prop({ required: true })
   createdByUserId: string;

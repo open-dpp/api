@@ -5,12 +5,17 @@ import { UniqueProductIdentifierEntity } from './infrastructure/unique.product.i
 import { UniqueProductIdentifierController } from './presentation/unique.product.identifier.controller';
 import { ModelsService } from '../models/infrastructure/models.service';
 import { ModelEntity } from '../models/infrastructure/model.entity';
-import { ProductDataModelService } from '../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
 import { UsersModule } from '../users/users.module';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { ItemEntity } from '../items/infrastructure/item.entity';
 import { OrganizationsModule } from '../organizations/organizations.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../product-data-model/infrastructure/product-data-model.schema';
 
 @Module({
   imports: [
@@ -19,6 +24,12 @@ import { OrganizationsModule } from '../organizations/organizations.module';
       ModelEntity,
       ProductDataModelEntity,
       ItemEntity,
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: ProductDataModelDoc.name,
+        schema: ProductDataModelSchema,
+      },
     ]),
     OrganizationsModule,
     UsersModule,

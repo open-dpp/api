@@ -21,7 +21,7 @@ import { SectionType } from '../../product-data-model/domain/section';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../product-data-model/domain/data.field';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
@@ -31,6 +31,10 @@ import {
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
 import { Connection } from 'mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../../product-data-model/infrastructure/product-data-model.schema';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -51,6 +55,10 @@ describe('ProductsDataModelDraftController', () => {
           {
             name: ProductDataModelDraftDoc.name,
             schema: ProductDataModelDraftSchema,
+          },
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
           },
         ]),
         OrganizationsModule,
@@ -251,7 +259,7 @@ describe('ProductsDataModelDraftController', () => {
     expect(foundDraft.publications).toEqual([
       { id: expect.any(String), version: '1.0.0' },
     ]);
-    const foundModel = await productDataModelService.findOne(
+    const foundModel = await productDataModelService.findOneOrFail(
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);

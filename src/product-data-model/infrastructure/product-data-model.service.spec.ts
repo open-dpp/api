@@ -1,9 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { ProductDataModelService } from './product.data.model.service';
-import { ProductDataModelEntity } from './product.data.model.entity';
+import { ProductDataModelService } from './product-data-model.service';
 import {
   ProductDataModel,
   VisibilityLevel,
@@ -13,47 +9,35 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { SectionType } from '../domain/section';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { UsersService } from '../../users/infrastructure/users.service';
+import { Connection } from 'mongoose';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from './product-data-model.schema';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
-  let dataSource: DataSource;
   const user = new User(randomUUID(), 'test@example.com');
   const organization = Organization.create({ name: 'Firma Y', user });
-  let organizationService: OrganizationsService;
+  let mongoConnection: Connection;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ProductDataModelEntity,
-          OrganizationEntity,
-          UserEntity,
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
         ]),
       ],
-      providers: [
-        ProductDataModelService,
-        OrganizationsService,
-        UsersService,
-        {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [{ id: user.id, email: user.email }],
-          }),
-        },
-      ],
+      providers: [ProductDataModelService],
     }).compile();
     service = module.get<ProductDataModelService>(ProductDataModelService);
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
-    await organizationService.save(organization);
-    dataSource = module.get<DataSource>(DataSource);
+    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   const laptopModelPlain = {
@@ -81,7 +65,7 @@ describe('ProductDataModelService', () => {
   };
 
   it('fails if requested product data model could not be found', async () => {
-    await expect(service.findOne(randomUUID())).rejects.toThrow(
+    await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(ProductDataModel.name),
     );
   });
@@ -92,7 +76,7 @@ describe('ProductDataModelService', () => {
     });
 
     const { id } = await service.save(productDataModel);
-    const found = await service.findOne(id);
+    const found = await service.findOneOrFail(id);
     expect(found).toEqual(productDataModel);
   });
 
@@ -128,7 +112,6 @@ describe('ProductDataModelService', () => {
       name: 'Firma Y',
       user: otherUser,
     });
-    await organizationService.save(otherOrganization);
     const publicModel = ProductDataModel.create({
       name: 'publicModel',
       user: otherUser,
@@ -172,7 +155,7 @@ describe('ProductDataModelService', () => {
     });
   });
 
-  afterEach(async () => {
-    await dataSource.destroy();
+  afterAll(async () => {
+    await mongoConnection.close();
   });
 });

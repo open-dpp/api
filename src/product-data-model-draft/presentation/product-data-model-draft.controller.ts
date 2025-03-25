@@ -15,7 +15,7 @@ import { AuthRequest } from '../../auth/auth-request';
 import { DataSectionDraft } from '../domain/section-draft';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldDraft } from '../domain/data-field-draft';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { CreateProductDataModelDraftDto } from './dto/create-product-data-model-draft.dto';
 import { CreateSectionDraftDto } from './dto/create-section-draft.dto';
 import { CreateDataFieldDraftDto } from './dto/create-data-field-draft.dto';

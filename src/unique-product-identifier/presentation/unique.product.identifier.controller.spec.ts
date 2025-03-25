@@ -5,7 +5,7 @@ import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { UniqueProductIdentifierEntity } from '../infrastructure/unique.product.identifier.entity';
 import { INestApplication } from '@nestjs/common';
@@ -26,6 +26,12 @@ import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resource
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { SectionType } from '../../product-data-model/domain/section';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../../product-data-model/infrastructure/product-data-model.schema';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -69,6 +75,13 @@ describe('ModelsController', () => {
           UserEntity,
           ProductDataModelEntity,
           UniqueProductIdentifierEntity,
+        ]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
         ]),
         ModelsModule,
         UniqueProductIdentifierModule,

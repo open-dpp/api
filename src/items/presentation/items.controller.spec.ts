@@ -23,6 +23,12 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../../product-data-model/infrastructure/product-data-model.schema';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -39,6 +45,13 @@ describe('ItemsController', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
+        ]),
         ItemsModule,
         UniqueProductIdentifierModule,
       ],

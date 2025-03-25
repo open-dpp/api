@@ -8,7 +8,7 @@ import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.test
 import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModelService } from '../infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../infrastructure/product-data-model.service';
 import { ProductDataModelEntity } from '../infrastructure/product.data.model.entity';
 import { ProductDataModelModule } from '../product.data.model.module';
 import {
@@ -23,11 +23,19 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Organization } from '../../organizations/domain/organization';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../infrastructure/product-data-model.schema';
+import { Connection } from 'mongoose';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
   let service: ProductDataModelService;
   let organizationsService: OrganizationsService;
+  let mongoConnection: Connection;
 
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@test.test');
@@ -44,6 +52,13 @@ describe('ProductsDataModelController', () => {
           ProductDataModelEntity,
           UserEntity,
           OrganizationEntity,
+        ]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
         ]),
         ProductDataModelModule,
         OrganizationsModule,
@@ -68,6 +83,7 @@ describe('ProductsDataModelController', () => {
     service = moduleRef.get<ProductDataModelService>(ProductDataModelService);
     organizationsService =
       moduleRef.get<OrganizationsService>(OrganizationsService);
+    mongoConnection = moduleRef.get<Connection>(getConnectionToken());
     await organizationsService.save(organization);
     app = moduleRef.createNestApplication();
 
@@ -216,5 +232,6 @@ describe('ProductsDataModelController', () => {
 
   afterAll(async () => {
     await app.close();
+    await mongoConnection.close();
   });
 });
