@@ -26,9 +26,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       # Step 3: Install dependencies
@@ -48,7 +48,7 @@ jobs:
     steps:
       # Step 1: Checkout code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Start database
         run: |
@@ -56,7 +56,7 @@ jobs:
 
       # Step 2: Set up Node.js
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }} # Use your project's Node.js version
 
@@ -80,6 +80,7 @@ jobs:
           DB_USERNAME: admin
           DB_PASSWORD: admin
           DB_DATABASE: management
+          MONGO_DB_PORT: 27017
         run: npm test
 
   build-publish-docker-image:

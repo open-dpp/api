@@ -6,6 +6,8 @@ import { ProductDataModelService } from './infrastructure/product.data.model.ser
 import { DataFieldEntity } from './infrastructure/data.field.entity';
 import { DataSectionEntity } from './infrastructure/data.section.entity';
 import { ProductDataModelImportService } from './infrastructure/product.data.model.import.service';
+import { OrganizationsModule } from '../organizations/organizations.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { ProductDataModelImportService } from './infrastructure/product.data.mod
       DataSectionEntity,
       DataFieldEntity,
     ]),
+    OrganizationsModule,
+    UsersModule,
   ],
   controllers: [ProductDataModelController],
   providers: [ProductDataModelService, ProductDataModelImportService],

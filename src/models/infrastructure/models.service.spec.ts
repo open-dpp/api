@@ -11,16 +11,14 @@ import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/i
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import {
-  ProductDataModel,
-  SectionType,
-} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { SectionType } from '../../product-data-model/domain/section';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;

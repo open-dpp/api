@@ -11,20 +11,42 @@ import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../infrastructure/product.data.model.service';
 import { ProductDataModelEntity } from '../infrastructure/product.data.model.entity';
 import { ProductDataModelModule } from '../product.data.model.module';
-import { ProductDataModel, SectionType } from '../domain/product.data.model';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../domain/product.data.model';
+import { SectionType } from '../domain/section';
+import { OrganizationsModule } from '../../organizations/organizations.module';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { Organization } from '../../organizations/domain/organization';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
   let service: ProductDataModelService;
+  let organizationsService: OrganizationsService;
+
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@test.test');
+  const organization = Organization.create({
+    name: 'Company',
+    user: authContext.user,
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ProductDataModelEntity]),
+        TypeOrmModule.forFeature([
+          ProductDataModelEntity,
+          UserEntity,
+          OrganizationEntity,
+        ]),
         ProductDataModelModule,
+        OrganizationsModule,
       ],
       providers: [
         {
@@ -34,9 +56,19 @@ describe('ProductsDataModelController', () => {
           ),
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
 
     service = moduleRef.get<ProductDataModelService>(ProductDataModelService);
+    organizationsService =
+      moduleRef.get<OrganizationsService>(OrganizationsService);
+    await organizationsService.save(organization);
     app = moduleRef.createNestApplication();
 
     await app.init();
@@ -45,6 +77,9 @@ describe('ProductsDataModelController', () => {
   const laptopPlain = {
     version: '1.0',
     name: 'Laptop',
+    visibility: VisibilityLevel.PRIVATE,
+    ownedByOrganizationId: organization.id,
+    createdByUserId: authContext.user.id,
     sections: [
       {
         name: 'Section 1',
@@ -65,17 +100,14 @@ describe('ProductsDataModelController', () => {
     ],
   };
 
-  it(`/CREATE product data model`, async () => {
-    const body = { ...laptopPlain };
-    const response = await request(app.getHttpServer())
-      .post('/product-data-models')
-      .set('Authorization', 'Bearer token1')
-      .send(body);
-    expect(response.status).toEqual(201);
-    expect(response.body.id).toBeDefined();
-    const found = await service.findOne(response.body.id);
-    expect(response.body).toEqual(found);
-  });
+  async function createOrganization(user: User = authContext.user) {
+    const organization = Organization.create({
+      name: 'My orga',
+      user: user,
+    });
+    return organizationsService.save(organization);
+  }
+  const userHasNotThePermissionsTxt = `fails if user has not the permissions`;
 
   it(`/GET product data model`, async () => {
     const productDataModel = ProductDataModel.fromPlain({ ...laptopPlain });
@@ -88,28 +120,98 @@ describe('ProductsDataModelController', () => {
     expect(response.body).toEqual(productDataModel.toPlain());
   });
 
-  it(`/GET all product data models`, async () => {
+  it(`/GET product data model ${userHasNotThePermissionsTxt}`, async () => {
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherOrganization = await createOrganization(otherUser);
+    const productDataModel = ProductDataModel.create({
+      name: 'laptop',
+      organization: otherOrganization,
+      user: otherUser,
+    });
+    await service.save(productDataModel);
+    const response = await request(app.getHttpServer())
+      .get(`/product-data-models/${productDataModel.id}`)
+      .set('Authorization', 'Bearer token1')
+      .send();
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET product data model if it is public`, async () => {
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherOrganization = await createOrganization(otherUser);
+    const productDataModel = ProductDataModel.create({
+      name: 'laptop',
+      organization: otherOrganization,
+      user: otherUser,
+      visibility: VisibilityLevel.PUBLIC,
+    });
+    await service.save(productDataModel);
+    const response = await request(app.getHttpServer())
+      .get(`/product-data-models/${productDataModel.id}`)
+      .set('Authorization', 'Bearer token1')
+      .send();
+    expect(response.status).toEqual(200);
+  });
+
+  it(`/GET all product data models which belong to the organization or which are public`, async () => {
     const laptopModel = ProductDataModel.fromPlain({ ...laptopPlain });
     const phoneModel = ProductDataModel.fromPlain({
       ...laptopPlain,
       name: 'phone',
     });
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherOrganization = await createOrganization(otherUser);
+    const publicModel = ProductDataModel.create({
+      name: 'publicModel',
+      user: otherUser,
+      organization: otherOrganization,
+      visibility: VisibilityLevel.PUBLIC,
+    });
+    const notAccessibleModel = ProductDataModel.create({
+      name: 'privateModel',
+      user: otherUser,
+      organization: otherOrganization,
+      visibility: VisibilityLevel.PRIVATE,
+    });
+
     await service.save(laptopModel);
     await service.save(phoneModel);
+    await service.save(publicModel);
+    await service.save(notAccessibleModel);
     const response = await request(app.getHttpServer())
-      .get(`/product-data-models`)
-      .set('Authorization', 'Bearer token1')
-      .send();
+      .get(`/product-data-models?organization=${organization.id}`)
+      .set('Authorization', 'Bearer token1');
     expect(response.status).toEqual(200);
 
     expect(response.body).toContainEqual({
       id: laptopModel.id,
       name: laptopModel.name,
+      version: laptopModel.version,
     });
     expect(response.body).toContainEqual({
       id: phoneModel.id,
       name: phoneModel.name,
+      version: phoneModel.version,
     });
+    expect(response.body).toContainEqual({
+      id: publicModel.id,
+      name: publicModel.name,
+      version: publicModel.version,
+    });
+    expect(response.body).not.toContainEqual({
+      id: notAccessibleModel.id,
+      name: notAccessibleModel.name,
+      version: notAccessibleModel.version,
+    });
+  });
+
+  it(`/GET all product data models which belong to the organization or which are public ${userHasNotThePermissionsTxt}`, async () => {
+    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherOrganization = await createOrganization(otherUser);
+    const response = await request(app.getHttpServer())
+      .get(`/product-data-models?organization=${otherOrganization.id}`)
+      .set('Authorization', 'Bearer token1');
+    expect(response.status).toEqual(403);
   });
 
   afterAll(async () => {

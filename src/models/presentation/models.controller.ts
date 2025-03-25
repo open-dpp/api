@@ -32,8 +32,9 @@ export class ModelsController {
     @Body() createModelDto: CreateModelDto,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
-    if (organization === undefined) {
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
+    if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
     const model = Model.create({
@@ -50,7 +51,8 @@ export class ModelsController {
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
@@ -66,7 +68,8 @@ export class ModelsController {
     @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(id);
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     this.hasPermissionsOrFail(organization, model, req);
     return model.toPlain();
   }
@@ -79,7 +82,8 @@ export class ModelsController {
     @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(modelId);
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     this.hasPermissionsOrFail(organization, model, req);
     const mergedModel = model.mergeWithPlain(updateModelDto);
@@ -97,7 +101,8 @@ export class ModelsController {
     const productDataModel =
       await this.productDataModelService.findOne(productDataModelId);
     const model = await this.modelsService.findOne(modelId);
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     this.hasPermissionsOrFail(organization, model, req);
 
     model.assignProductDataModel(productDataModel);
@@ -112,7 +117,8 @@ export class ModelsController {
     @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(modelId);
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     this.hasPermissionsOrFail(organization, model, req);
 
     const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
@@ -134,7 +140,8 @@ export class ModelsController {
     @Request() req: AuthRequest,
   ) {
     const model = await this.modelsService.findOne(modelId);
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     this.hasPermissionsOrFail(organization, model, req);
     model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
     const productDataModel = await this.productDataModelService.findOne(

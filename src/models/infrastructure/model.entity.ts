@@ -40,11 +40,7 @@ export class ModelEntity {
   @RelationId((model: ModelEntity) => model.createdByUser)
   createdByUserId: string;
 
-  @ManyToOne(() => UserEntity, (user) => user.createdModels, {
-    cascade: ['insert'],
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(() => UserEntity, (user) => user.createdModels)
   createdByUser: UserEntity;
 
   @Column('char', {
@@ -54,7 +50,6 @@ export class ModelEntity {
   ownedByOrganizationId: string;
 
   @ManyToOne(() => OrganizationEntity, (org) => org.models, {
-    cascade: ['insert'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
