@@ -28,7 +28,7 @@ describe('OrganizationsController (Unit)', () => {
     // Create mock services
     const mockOrganizationsService = {
       save: jest.fn(),
-      findOne: jest.fn(),
+      findOneOrFail: jest.fn(),
       findAllWhereMember: jest.fn(),
       inviteUser: jest.fn(),
     };
@@ -151,7 +151,9 @@ describe('OrganizationsController (Unit)', () => {
       jest
         .spyOn(permissionsService, 'canAccessOrganizationOrFail')
         .mockResolvedValue(true);
-      jest.spyOn(organizationsService, 'findOne').mockResolvedValue(mockOrg);
+      jest
+        .spyOn(organizationsService, 'findOneOrFail')
+        .mockResolvedValue(mockOrg);
 
       // Execute
       const result = await controller.findOne(orgId, mockRequest);
@@ -241,7 +243,9 @@ describe('OrganizationsController (Unit)', () => {
       jest
         .spyOn(permissionsService, 'canAccessOrganizationOrFail')
         .mockResolvedValue(true);
-      jest.spyOn(organizationsService, 'findOne').mockResolvedValue(mockOrg);
+      jest
+        .spyOn(organizationsService, 'findOneOrFail')
+        .mockResolvedValue(mockOrg);
 
       // Execute
       const result = await controller.getMembers(orgId, mockRequest);
@@ -277,7 +281,7 @@ describe('OrganizationsController (Unit)', () => {
         .spyOn(permissionsService, 'canAccessOrganizationOrFail')
         .mockResolvedValue(true);
       jest
-        .spyOn(organizationsService, 'findOne')
+        .spyOn(organizationsService, 'findOneOrFail')
         .mockRejectedValue(new NotFoundException());
 
       // Execute & Verify

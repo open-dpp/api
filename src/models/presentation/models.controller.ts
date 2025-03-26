@@ -83,7 +83,10 @@ export class ModelsController {
     const model = await this.modelsService.findOne(id);
     const organization =
       await this.organizationService.findOneOrFail(organizationId);
-    this.hasPermissionsOrFail(organization, model, req);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organization.id,
+      req.authContext,
+    );
     return model.toPlain();
   }
 
@@ -99,8 +102,7 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.organizationService.findOneOrFail(organizationId);
 
     const mergedModel = model.mergeWithPlain(updateModelDto);
     return (await this.modelsService.save(mergedModel)).toPlain();
@@ -123,7 +125,10 @@ export class ModelsController {
     const model = await this.modelsService.findOne(modelId);
     const organization =
       await this.organizationService.findOneOrFail(organizationId);
-    this.hasPermissionsOrFail(organization, model, req);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organization.id,
+      req.authContext,
+    );
 
     model.assignProductDataModel(productDataModel);
     return (await this.modelsService.save(model)).toPlain();
@@ -143,7 +148,10 @@ export class ModelsController {
     const model = await this.modelsService.findOne(modelId);
     const organization =
       await this.organizationService.findOneOrFail(organizationId);
-    this.hasPermissionsOrFail(organization, model, req);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organization.id,
+      req.authContext,
+    );
 
     const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
     const productDataModel = await this.productDataModelService.findOneOrFail(
@@ -168,8 +176,7 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.organizationService.findOneOrFail(organizationId);
     model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,

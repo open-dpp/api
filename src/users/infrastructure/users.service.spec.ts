@@ -25,6 +25,7 @@ describe('UsersService', () => {
     createdModels: [],
     creatorOfOrganizations: [],
     ownerOfOrganizations: [],
+    createdProductModels: [],
   };
 
   const mockKeycloakUser = {

@@ -1,5 +1,8 @@
 import { NestFactory } from '@nestjs/core';
-import { NotFoundInDatabaseExceptionFilter } from './exceptions/exception.handler';
+import {
+  NotFoundExceptionFilter,
+  NotFoundInDatabaseExceptionFilter,
+} from './exceptions/exception.handler';
 
 // Mock NestFactory before importing bootstrap function
 jest.mock('@nestjs/core', () => ({
@@ -7,6 +10,7 @@ jest.mock('@nestjs/core', () => ({
     create: jest.fn().mockResolvedValue({
       useGlobalFilters: jest.fn(),
       enableCors: jest.fn(),
+      useGlobalPipes: jest.fn(),
       listen: jest.fn().mockResolvedValue(undefined),
     }),
   },
@@ -23,6 +27,7 @@ describe('Bootstrap', () => {
     mockApp = {
       useGlobalFilters: jest.fn().mockReturnThis(),
       enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn(),
       listen: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -41,6 +46,7 @@ describe('Bootstrap', () => {
 
     expect(mockApp.useGlobalFilters).toHaveBeenCalledWith(
       expect.any(NotFoundInDatabaseExceptionFilter),
+      expect.any(NotFoundExceptionFilter),
     );
 
     expect(mockApp.enableCors).toHaveBeenCalledWith({
