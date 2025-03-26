@@ -51,10 +51,10 @@ export class ProductDataModel {
   @Expose()
   readonly version: string;
   @Expose({ name: 'createdByUserId' })
-  private _createdByUserId?: string;
+  private _createdByUserId: string;
 
   @Expose({ name: 'ownedByOrganizationId' })
-  private _ownedByOrganizationId?: string;
+  private _ownedByOrganizationId: string;
 
   @Expose({ name: 'visibility' })
   private _visibility: VisibilityLevel = VisibilityLevel.PRIVATE;
