@@ -4,7 +4,6 @@ import { AuthContext } from '../../auth/auth-request';
 
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { UniqueProductIdentifierEntity } from '../infrastructure/unique.product.identifier.entity';
@@ -73,7 +72,6 @@ describe('ModelsController', () => {
         TypeOrmModule.forFeature([
           ModelEntity,
           UserEntity,
-          ProductDataModelEntity,
           UniqueProductIdentifierEntity,
         ]),
         MongooseTestingModule,

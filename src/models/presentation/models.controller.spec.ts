@@ -16,7 +16,6 @@ import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
@@ -47,12 +46,7 @@ describe('ModelsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ModelEntity,
-          UserEntity,
-          ProductDataModelEntity,
-          OrganizationEntity,
-        ]),
+        TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
