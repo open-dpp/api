@@ -124,46 +124,6 @@ export class KeycloakResourcesService {
         realm: this.realm,
       });
     }
-    /* await this.kcAdminClient.clients.createResource(
-      {
-        id: client.id,
-        realm: this.realm,
-      },
-      {
-        name: `resource-${name}`,
-        type: `urn:backend:${name}`,
-        uris: ['*'],
-        scopes: [
-          {
-            name: 'organization:access',
-          },
-        ],
-      },
-    );
-    const policyRep: any = {
-      name: `policy-${name}`,
-      type: 'group',
-      groups: [`/${name}`],
-    };
-    const policy = await this.kcAdminClient.clients.createPolicy(
-      {
-        id: client.id,
-        realm: this.realm,
-        type: 'group',
-      },
-      policyRep,
-    );
-    await this.kcAdminClient.clients.createPermission(
-      {
-        id: client.id,
-        realm: this.realm,
-        type: 'group',
-      },
-      {
-        name: `permission-${name}`,
-        policies: [policy.id],
-      },
-    ); */
   }
 
   async removeGroup(groupId: string) {
@@ -185,7 +145,6 @@ export class KeycloakResourcesService {
       realm: this.realm,
     });
     if (!keycloakUser) {
-      console.log('user not found');
       throw new UnauthorizedException();
     }
     const groups = await this.kcAdminClient.users.listGroups({

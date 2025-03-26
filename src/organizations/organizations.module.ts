@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from './infrastructure/organization.entity';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { UsersModule } from '../users/users.module';
-import { PermissionsModule } from '../auth/permissions/permissions.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [

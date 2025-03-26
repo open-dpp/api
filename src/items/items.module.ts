@@ -10,7 +10,7 @@ import { OrganizationsService } from '../organizations/infrastructure/organizati
 import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
 import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { PermissionsModule } from '../auth/permissions/permissions.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [

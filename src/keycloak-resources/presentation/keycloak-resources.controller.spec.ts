@@ -55,11 +55,11 @@ describe('KeycloakResourcesController', () => {
       // Arrange
       const mockAuthContext = new AuthContext();
       mockAuthContext.user = new User(randomUUID(), 'test@test.test');
-      
+
       const mockRequest = {
         authContext: mockAuthContext,
       };
-      
+
       jest.spyOn(service, 'createResource').mockResolvedValue(undefined);
 
       // Act

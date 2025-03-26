@@ -22,7 +22,7 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
 
 describe('KeycloakResourcesModule', () => {
   let module: TestingModule;
-  
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -31,18 +31,22 @@ describe('KeycloakResourcesModule', () => {
       ],
     }).compile();
   });
-  
+
   it('should be defined', () => {
     expect(module).toBeDefined();
   });
-  
+
   it('should provide KeycloakResourcesService', () => {
-    const service = module.get<KeycloakResourcesService>(KeycloakResourcesService);
+    const service = module.get<KeycloakResourcesService>(
+      KeycloakResourcesService,
+    );
     expect(service).toBeDefined();
   });
-  
+
   it('should provide KeycloakResourcesController', () => {
-    const controller = module.get<KeycloakResourcesController>(KeycloakResourcesController);
+    const controller = module.get<KeycloakResourcesController>(
+      KeycloakResourcesController,
+    );
     expect(controller).toBeDefined();
   });
 });

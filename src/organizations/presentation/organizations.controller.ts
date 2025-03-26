@@ -11,7 +11,7 @@ import { OrganizationsService } from '../infrastructure/organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { Organization } from '../domain/organization';
 import { AuthRequest } from '../../auth/auth-request';
-import { PermissionsService } from '../../auth/permissions/permissions.service';
+import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('organizations')
 export class OrganizationsController {

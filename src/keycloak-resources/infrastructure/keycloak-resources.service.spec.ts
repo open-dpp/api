@@ -23,6 +23,7 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
         findOne: jest.fn(),
         listGroups: jest.fn(),
         addToGroup: jest.fn(),
+        create: jest.fn(),
       },
       groups: {
         create: jest.fn(),
@@ -144,9 +145,41 @@ describe('KeycloakResourcesService', () => {
       });
 
       // The addToGroup would be called for members
-      // Note: In the real code, it checks if members are already in the list
-      // These expectations depend on the implementation of createGroup in service
       expect(mockKcAdminClient.users.addToGroup).toHaveBeenCalled();
+    });
+
+    it('should handle the edge cases when creator and owner differ from members', async () => {
+      // For testing the edge cases in createGroup where owner/creator aren't in members list
+      // Use the spy approach instead of trying to modify readonly properties
+
+      const creatorId = 'creator-id';
+      const ownerId = 'owner-id';
+
+      // Create a mock organization object with the necessary property stubs
+      const mockOrganization = {
+        id: 'test-org-id',
+        createdByUserId: creatorId,
+        ownedByUserId: ownerId,
+        members: [], // Empty members to trigger the condition
+      };
+
+      // Mock the createGroup response
+      mockKcAdminClient.groups.create.mockResolvedValue({ id: 'group-id' });
+
+      await service.createGroup(mockOrganization as any);
+
+      // Verify the right calls were made
+      expect(mockKcAdminClient.users.addToGroup).toHaveBeenCalledWith({
+        id: creatorId,
+        groupId: 'group-id',
+        realm: 'master',
+      });
+
+      expect(mockKcAdminClient.users.addToGroup).toHaveBeenCalledWith({
+        id: ownerId,
+        groupId: 'group-id',
+        realm: 'master',
+      });
     });
   });
 
@@ -233,6 +266,26 @@ describe('KeycloakResourcesService', () => {
       await expect(
         service.inviteUserToGroup(authContext, 'group-id', 'user-id'),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw UnauthorizedException if requested user not found', async () => {
+      mockKcAdminClient.users.findOne
+        .mockResolvedValueOnce({ id: authContext.user.id })
+        .mockResolvedValueOnce(null);
+
+      mockKcAdminClient.users.listGroups.mockResolvedValueOnce([
+        { name: 'organization-group-id' },
+      ]);
+
+      // Spy on console.log to verify it gets called
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await expect(
+        service.inviteUserToGroup(authContext, 'group-id', 'nonexistent-user'),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('user requester not found');
+      consoleLogSpy.mockRestore();
     });
 
     it('should add user to group successfully', async () => {
@@ -340,6 +393,37 @@ describe('KeycloakResourcesService', () => {
       await expect(service.getGroupForOrganization('org-id')).rejects.toThrow(
         'More than one group found for organization',
       );
+    });
+  });
+
+  describe('createUser', () => {
+    it('should not create user if already exists', async () => {
+      const user = new User(randomUUID(), 'existing@test.test');
+      mockKcAdminClient.users.find.mockResolvedValue([{ id: 'existing-id' }]);
+
+      await service.createUser(user);
+
+      expect(mockKcAdminClient.auth).toHaveBeenCalled();
+      expect(mockKcAdminClient.users.create).not.toHaveBeenCalled();
+    });
+
+    it('should create user if not exists', async () => {
+      const user = new User(randomUUID(), 'new@test.test');
+      mockKcAdminClient.users.find.mockResolvedValue([]);
+
+      await service.createUser(user);
+
+      expect(mockKcAdminClient.auth).toHaveBeenCalled();
+      expect(mockKcAdminClient.users.create).toHaveBeenCalledWith({
+        realm: 'master',
+        username: user.email,
+        email: user.email,
+        emailVerified: true,
+        enabled: true,
+        attributes: {
+          preferred_username: user.email,
+        },
+      });
     });
   });
 });

@@ -16,7 +16,7 @@ import { AuthRequest } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { PermissionsService } from '../../auth/permissions/permissions.service';
+import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {

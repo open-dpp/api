@@ -1,4 +1,7 @@
-import { KeycloakResource, KEYCLOAK_RESOURCE_NAME_PREFIX } from './KeycloakResource';
+import {
+  KeycloakResource,
+  KEYCLOAK_RESOURCE_NAME_PREFIX,
+} from './KeycloakResource';
 import { KeycloakResourceType } from './KeycloakResourceType';
 
 describe('KeycloakResource', () => {

@@ -24,7 +24,7 @@ import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { PermissionsModule } from '../../auth/permissions/permissions.module';
+import { PermissionsModule } from '../../permissions/permissions.module';
 
 describe('ItemsController', () => {
   let app: INestApplication;

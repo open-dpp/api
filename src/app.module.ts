@@ -13,7 +13,7 @@ import { ItemsModule } from './items/items.module';
 import * as path from 'path';
 import { generateConfig } from './database/config';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
-import { PermissionsModule } from './auth/permissions/permissions.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';

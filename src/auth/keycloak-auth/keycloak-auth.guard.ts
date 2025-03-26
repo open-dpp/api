@@ -8,27 +8,22 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AuthContext } from '../auth-request';
-import { HttpService } from '@nestjs/axios';
 import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private httpService: HttpService,
     private configService: ConfigService,
     private readonly usersService: UsersService,
-    private readonly keycloakResourcesService: KeycloakResourcesService,
     private jwtService: JwtService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
-    // const [req] = context.getArgs();
     const request = context.switchToHttp().getRequest();
     const isPublic = this.reflector.get<boolean>(
       IS_PUBLIC,

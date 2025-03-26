@@ -19,7 +19,7 @@ import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { PermissionsModule } from '../../auth/permissions/permissions.module';
+import { PermissionsModule } from '../../permissions/permissions.module';
 import { ConfigModule } from '@nestjs/config';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';

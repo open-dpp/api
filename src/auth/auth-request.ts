@@ -1,7 +1,7 @@
 import { User } from '../users/domain/user';
 import { KeycloakUserInToken } from './keycloak-auth/KeycloakUserInToken';
 import { Request } from 'express';
-import { ResourcePermission } from './permissions/resource-permission.interface';
+import { ResourcePermission } from '../permissions/resource-permission.interface';
 
 export const AUTH_CONTEXT = 'authContext';
 

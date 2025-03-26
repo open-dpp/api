@@ -20,7 +20,8 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { PermissionsModule } from '../../auth/permissions/permissions.module';
+import { PermissionsModule } from '../../permissions/permissions.module';
+import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
@@ -112,6 +113,79 @@ describe('ProductsService', () => {
 
     const foundItems = await itemService.findAllByModel(savedModel1.id);
     expect(foundItems).toEqual([item1, item2]);
+  });
+
+  it('should throw an error when saving item with non-existent model', async () => {
+    const item = new Item();
+    const nonExistentModelId = randomUUID();
+    item.defineModel(nonExistentModelId);
+
+    await expect(itemService.save(item)).rejects.toThrow(
+      new NotFoundInDatabaseException(Model.name),
+    );
+  });
+
+  it('should save item with unique product identifiers', async () => {
+    // Create organization and model
+    const organization = Organization.create({ name: 'Org with UPIs', user });
+    await organizationsService.save(organization);
+    const model = Model.create({
+      name: 'Model with UPIs',
+      user,
+      organization,
+    });
+    const savedModel = await modelsService.save(model);
+
+    // Create item with unique product identifiers
+    const item = new Item();
+    item.defineModel(savedModel.id);
+
+    // Add unique product identifiers to the item
+    const upi1 = item.createUniqueProductIdentifier();
+    const upi2 = item.createUniqueProductIdentifier();
+
+    // Save the item
+    const savedItem = await itemService.save(item);
+
+    // Verify the saved item has the unique product identifiers
+    expect(savedItem.uniqueProductIdentifiers).toHaveLength(2);
+    expect(savedItem.uniqueProductIdentifiers[0].uuid).toBe(upi1.uuid);
+    expect(savedItem.uniqueProductIdentifiers[1].uuid).toBe(upi2.uuid);
+
+    // Verify the identifiers are linked to the item
+    expect(savedItem.uniqueProductIdentifiers[0].referenceId).toBe(item.id);
+    expect(savedItem.uniqueProductIdentifiers[1].referenceId).toBe(item.id);
+
+    // Retrieve the item and verify UPIs are still there
+    const foundItem = await itemService.findById(item.id);
+    expect(foundItem.uniqueProductIdentifiers).toHaveLength(2);
+  });
+
+  it('should correctly convert item entity to domain object', () => {
+    // Create a mock ItemEntity
+    const itemId = randomUUID();
+    const modelId = randomUUID();
+    const itemEntity = {
+      id: itemId,
+      modelId: modelId,
+    } as ItemEntity;
+
+    // Create mock UPIs
+    const upi1 = new UniqueProductIdentifier();
+    upi1.linkTo(itemId);
+    const upi2 = new UniqueProductIdentifier();
+    upi2.linkTo(itemId);
+    const upis = [upi1, upi2];
+
+    // Convert to domain object
+    const item = itemService.convertToDomain(itemEntity, upis);
+
+    // Verify conversion
+    expect(item).toBeInstanceOf(Item);
+    expect(item.id).toBe(itemId);
+    expect(item.model).toBe(modelId);
+    expect(item.uniqueProductIdentifiers).toEqual(upis);
+    expect(item.uniqueProductIdentifiers).toHaveLength(2);
   });
 
   afterEach(async () => {

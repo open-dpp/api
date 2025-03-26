@@ -31,13 +31,16 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
     for (const keycloakUser of keycloakUsers) {
       const user = await this.usersService.findOne(keycloakUser.id);
       if (!user) {
-        await this.usersService.create({
-          sub: keycloakUser.id,
-          name: keycloakUser.firstName + ' ' + keycloakUser.lastName,
-          email: keycloakUser.email,
-          email_verified: keycloakUser.emailVerified,
-          preferred_username: keycloakUser.username,
-        });
+        await this.usersService.create(
+          {
+            sub: keycloakUser.id,
+            name: keycloakUser.firstName + ' ' + keycloakUser.lastName,
+            email: keycloakUser.email,
+            email_verified: keycloakUser.emailVerified,
+            preferred_username: keycloakUser.username,
+          },
+          true,
+        );
       }
     }
     this.logger.log('Syncing users from DB to Keycloak');

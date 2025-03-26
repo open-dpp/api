@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { AuthContext } from '../auth-request';
+import { KeycloakResourcesService } from '../keycloak-resources/infrastructure/keycloak-resources.service';
+import { AuthContext } from '../auth/auth-request';
 import { ResourcePermission } from './resource-permission.interface';
 
 @Injectable()

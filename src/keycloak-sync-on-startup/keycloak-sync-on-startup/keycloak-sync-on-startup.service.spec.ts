@@ -4,49 +4,25 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Logger } from '@nestjs/common';
-import { Organization } from '../../organizations/domain/organization';
-import { User } from '../../users/domain/user';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../../users/users.module';
-
-jest.mock('@keycloak/keycloak-admin-client', () => {
-  return {
-    __esModule: true, // Ensure Jest understands it's an ES module
-    default: jest.fn(() => ({
-      auth: jest.fn().mockResolvedValue(undefined),
-      users: {
-        find: jest.fn().mockResolvedValue([]), // Mock user retrieval returning empty array
-        findOne: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
-        create: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
-        update: jest.fn().mockResolvedValue(undefined),
-        del: jest.fn().mockResolvedValue(undefined),
-        addToGroup: jest.fn().mockResolvedValue(undefined),
-        listGroups: jest.fn().mockResolvedValue([{ id: 'mock-group-id' }]),
-      },
-      realms: {
-        find: jest
-          .fn()
-          .mockResolvedValue([{ id: 'mock-realm-id', realm: 'test-realm' }]),
-      },
-      groups: {
-        find: jest.fn().mockResolvedValue([]),
-        create: jest.fn().mockResolvedValue({ id: 'mock-group-id' }),
-        update: jest.fn().mockResolvedValue(undefined),
-        del: jest.fn().mockResolvedValue(undefined),
-      },
-    })),
-  };
-});
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import {
+  keycloakUsers,
+  org1,
+  organizations,
+  user1org1,
+  user2org1,
+} from '../../../test/users-and-orgs';
 
 describe('UsersSyncOnStartupService', () => {
   let service: KeycloakSyncOnStartupService;
   let usersService: UsersService;
   let keycloakResourcesService: KeycloakResourcesService;
   let organizationsService: OrganizationsService;
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule, UsersModule],
+      imports: [ConfigModule, TypeOrmTestingModule, UsersModule],
       providers: [
         KeycloakSyncOnStartupService,
         KeycloakResourcesService,
@@ -83,46 +59,13 @@ describe('UsersSyncOnStartupService', () => {
 
   describe('onApplicationBootstrap', () => {
     it('should sync users from Keycloak to database', async () => {
-      // Mock data
-      const keycloakUsers = [
-        {
-          id: 'user1',
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          emailVerified: true,
-          username: 'johndoe',
-        },
-        {
-          id: 'user2',
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'jane@example.com',
-          emailVerified: true,
-          username: 'janesmith',
-        },
-      ];
-
-      const organization = Organization.fromPlain({
-        id: 'org1',
-        name: 'Organization 1',
-        members: [
-          new User('user1', 'john@example.com'),
-          new User('user2', 'jane@example.com'),
-        ],
-        createdByUserId: 'user1',
-        ownedByUserId: 'user1',
-      });
-
-      const organizations = [organization];
-
       // Setup mocks
       jest
         .spyOn(keycloakResourcesService, 'getUsers')
         .mockResolvedValue(keycloakUsers);
       jest
         .spyOn(usersService, 'findOne')
-        .mockResolvedValueOnce(new User('user1', 'john@example.com')) // First user exists
+        .mockResolvedValueOnce(user1org1) // First user exists
         .mockResolvedValueOnce(undefined); // Second user doesn't exist
       jest
         .spyOn(organizationsService, 'findAll')
@@ -130,25 +73,27 @@ describe('UsersSyncOnStartupService', () => {
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
         .mockResolvedValue(null); // Group doesn't exist, will be created
+      jest.spyOn(usersService, 'create');
+      jest.spyOn(keycloakResourcesService, 'createGroup');
+      jest.spyOn(keycloakResourcesService, 'inviteUserToGroup');
 
       // Execute
       await service.sync();
 
       // Verify
       expect(keycloakResourcesService.getUsers).toHaveBeenCalledTimes(1);
-      expect(usersService.findOne).toHaveBeenCalledTimes(2);
-      expect(usersService.findOne).toHaveBeenCalledWith('user1');
-      expect(usersService.findOne).toHaveBeenCalledWith('user2');
+      expect(usersService.findOne).toHaveBeenCalledTimes(4);
+      expect(usersService.findOne).toHaveBeenCalledWith(user1org1.id);
+      expect(usersService.findOne).toHaveBeenCalledWith(user2org1.id);
 
-      // Should only create the second user (first one exists)
+      // Should only create the second user (the first one exists)
       expect(usersService.create).toHaveBeenCalledTimes(1);
-      expect(usersService.create).toHaveBeenCalledWith({
-        sub: 'user2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        email_verified: true,
-        preferred_username: 'janesmith',
-      });
+      expect(usersService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: user2org1.id,
+        }),
+        true,
+      );
 
       // Organizations
       expect(organizationsService.findAll).toHaveBeenCalledTimes(1);
@@ -157,12 +102,12 @@ describe('UsersSyncOnStartupService', () => {
       ).toHaveBeenCalledTimes(1);
       expect(
         keycloakResourcesService.getGroupForOrganization,
-      ).toHaveBeenCalledWith('org1');
+      ).toHaveBeenCalledWith(org1.id);
       expect(keycloakResourcesService.createGroup).toHaveBeenCalledTimes(1);
       expect(keycloakResourcesService.createGroup).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'org1',
-          name: 'Organization 1',
+          id: org1.id,
+          name: org1.name,
         }),
       );
 
@@ -173,19 +118,6 @@ describe('UsersSyncOnStartupService', () => {
     });
 
     it('should handle case when keycloak group exists', async () => {
-      // Mock data
-      const keycloakUsers = [];
-
-      const organization = Organization.fromPlain({
-        id: 'org1',
-        name: 'Organization 1',
-        members: [new User('user1', 'john@example.com')],
-        createdByUserId: 'user1',
-        ownedByUserId: 'user1',
-      });
-
-      const organizations = [organization];
-
       // Setup mocks
       jest
         .spyOn(keycloakResourcesService, 'getUsers')
@@ -196,6 +128,8 @@ describe('UsersSyncOnStartupService', () => {
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
         .mockResolvedValue({ id: 'group1', name: 'organization-org1' }); // Group exists
+      jest.spyOn(keycloakResourcesService, 'createGroup');
+      jest.spyOn(keycloakResourcesService, 'inviteUserToGroup');
 
       // Execute
       await service.sync();
@@ -206,25 +140,12 @@ describe('UsersSyncOnStartupService', () => {
       ).toHaveBeenCalledTimes(1);
       expect(keycloakResourcesService.createGroup).not.toHaveBeenCalled(); // Group exists, shouldn't create
       expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        1,
+        2,
       );
     });
 
     it('should handle error when inviting user to group', async () => {
       console.warn = jest.fn(); // Mock console.warn
-
-      // Mock data
-      const keycloakUsers = [];
-
-      const organization = Organization.fromPlain({
-        id: 'org1',
-        name: 'Organization 1',
-        members: [new User('user1', 'john@example.com')],
-        createdByUserId: 'user1',
-        ownedByUserId: 'user1',
-      });
-
-      const organizations = [organization];
 
       // Setup mocks
       jest
@@ -235,7 +156,7 @@ describe('UsersSyncOnStartupService', () => {
         .mockResolvedValue(organizations);
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
-        .mockResolvedValue({ id: 'group1', name: 'organization-org1' });
+        .mockResolvedValue({ id: 'group1', name: `organization-${org1.id}` });
 
       // Mock inviteUserToGroup to throw a non-400 error
       jest
@@ -247,26 +168,13 @@ describe('UsersSyncOnStartupService', () => {
 
       // Verify
       expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        1,
+        2,
       );
-      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledTimes(2);
     });
 
     it('should not log error when inviting user fails with 400 status', async () => {
       console.warn = jest.fn(); // Mock console.warn
-
-      // Mock data
-      const keycloakUsers = [];
-
-      const organization = Organization.fromPlain({
-        id: 'org1',
-        name: 'Organization 1',
-        members: [new User('user1', 'john@example.com')],
-        createdByUserId: 'user1',
-        ownedByUserId: 'user1',
-      });
-
-      const organizations = [organization];
 
       // Setup mocks
       jest
@@ -289,7 +197,7 @@ describe('UsersSyncOnStartupService', () => {
 
       // Verify
       expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        1,
+        2,
       );
       expect(console.warn).not.toHaveBeenCalled(); // Should not log 400 errors
     });

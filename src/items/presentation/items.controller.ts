@@ -6,7 +6,7 @@ import { ModelsService } from '../../models/infrastructure/models.service';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { PermissionsService } from '../../auth/permissions/permissions.service';
+import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
