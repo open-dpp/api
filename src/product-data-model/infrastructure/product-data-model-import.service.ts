@@ -1,20 +1,22 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { ProductDataModelService } from './product.data.model.service';
-import { ProductDataModel } from '../domain/product.data.model';
+import { ProductDataModelService } from './product-data-model.service';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../domain/product.data.model';
 
 @Injectable()
 export class ProductDataModelImportService implements OnApplicationBootstrap {
   constructor(private productDataModelService: ProductDataModelService) {}
   async onApplicationBootstrap() {
     const name = 'Standard Laptop';
-    const found = await this.productDataModelService.findAll({
-      name,
-    });
+    const found = await this.productDataModelService.findByName(name);
 
     if (found.length === 0) {
       const productDataModel = ProductDataModel.fromPlain({
         name,
         version: '1.0.0',
+        visibility: VisibilityLevel.PUBLIC,
         sections: [
           {
             name: 'Technische Spezifikation',

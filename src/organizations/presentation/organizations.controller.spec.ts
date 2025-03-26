@@ -76,7 +76,7 @@ describe('OrganizationController', () => {
         .send(body);
 
       expect(response.status).toEqual(201);
-      const found = await service.findOne(response.body.id);
+      const found = await service.findOneOrFail(response.body.id);
       expect(response.body.id).toEqual(found.id);
       expect(response.body.name).toEqual(body.name);
       expect(response.body.ownedByUserId).toEqual(userId);

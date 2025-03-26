@@ -11,17 +11,26 @@ import { KeycloakAuthGuard } from './auth/keycloak-auth/keycloak-auth.guard';
 import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
 import * as path from 'path';
-import { generateConfig } from './database/config';
+import { generateConfig, generateMongoConfig } from './database/config';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
 import { PermissionsModule } from './permissions/permissions.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
+import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
+import { MongooseModule } from '@nestjs/mongoose';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        ...generateMongoConfig(configService),
+      }),
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -36,6 +45,7 @@ import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak
       }),
       inject: [ConfigService],
     }),
+    ProductDataModelDraftModule,
     ProductDataModelModule,
     ItemsModule,
     ModelsModule,

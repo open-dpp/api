@@ -15,12 +15,9 @@ import { AuthContext } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import {
-  ProductDataModel,
-  SectionType,
-} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
@@ -30,6 +27,13 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
+import { SectionType } from '../../product-data-model/domain/section';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../../product-data-model/infrastructure/product-data-model.schema';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -50,6 +54,13 @@ describe('ModelsController', () => {
           UserEntity,
           ProductDataModelEntity,
           OrganizationEntity,
+        ]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
         ]),
         ModelsModule,
         OrganizationsModule,
@@ -190,6 +201,17 @@ describe('ModelsController', () => {
     expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
       [...foundUniqueProductIdentifiers].map((u) => u.toPlain()).sort(sortFn),
     );
+  });
+
+  it(`/CREATE model fails if user is not member of organization`, async () => {
+    const body = { name: 'My name', description: 'My desc' };
+    const otherUser = new User(randomUUID(), 'other@example.com');
+    const organization = await createOrganization(otherUser);
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organization.id}/models`)
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(403);
   });
 
   it(`/GET models of organization`, async () => {

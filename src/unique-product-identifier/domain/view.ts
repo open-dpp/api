@@ -1,15 +1,15 @@
 import { Expose, plainToInstance } from 'class-transformer';
 import { groupBy } from 'lodash';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { DataValue, Model } from '../../models/domain/model';
 import {
   DataField,
-  DataType,
-  ProductDataModel,
-  SectionType,
-} from '../../product-data-model/domain/product.data.model';
-import { DataValue, Model } from '../../models/domain/model';
+  DataFieldType,
+} from '../../product-data-model/domain/data.field';
+import { SectionType } from '../../product-data-model/domain/section';
 
 type RowView = {
-  fields: { type: DataType; value: unknown; name: string }[];
+  fields: { type: DataFieldType; value: unknown; name: string }[];
 };
 
 type SectionView = {

@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { z } from 'zod';
 import { DataValue } from '../../models/domain/model';
 import {
   Expose,
@@ -7,16 +6,10 @@ import {
   plainToInstance,
   Type,
 } from 'class-transformer';
-import { groupBy } from 'lodash';
-
-export enum DataType {
-  TEXT_FIELD = 'TextField',
-}
-
-export enum SectionType {
-  GROUP = 'Group',
-  REPEATABLE = 'Repeatable',
-}
+import { DataFieldValidationResult } from './data.field';
+import { DataSection, sectionSubTypes, SectionType } from './section';
+import { User } from '../../users/domain/user';
+import { Organization } from '../../organizations/domain/organization';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -45,133 +38,9 @@ export class ValidationResult {
   }
 }
 
-export class DataFieldValidationResult {
-  @Expose()
-  readonly dataFieldId: string;
-  @Expose()
-  readonly dataFieldName: string;
-  @Expose()
-  readonly isValid: boolean;
-  @Expose()
-  readonly row?: number;
-  @Expose()
-  readonly errorMessage?: string;
-  static fromPlain(
-    plain: Partial<DataFieldValidationResult>,
-  ): DataFieldValidationResult {
-    return plainToInstance(DataFieldValidationResult, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
-  }
-
-  toJson() {
-    return {
-      id: this.dataFieldId,
-      name: this.dataFieldName,
-      ...(this.row ? { row: this.row } : {}),
-      message: this.errorMessage,
-    };
-  }
-}
-
-export abstract class DataField {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly name: string;
-  @Expose()
-  readonly type: DataType;
-  @Expose()
-  readonly options: Record<string, unknown> = {};
-  abstract validate(version: string, value: unknown): DataFieldValidationResult;
-}
-
-export class TextField extends DataField {
-  validate(version: string, value: unknown): DataFieldValidationResult {
-    const result = z.ostring().safeParse(value);
-    return DataFieldValidationResult.fromPlain({
-      dataFieldId: this.id,
-      dataFieldName: this.name,
-      isValid: result.success,
-      errorMessage: !result.success
-        ? result.error.issues[0].message
-        : undefined,
-    });
-  }
-}
-
-export abstract class DataSection {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly name: string;
-  @Expose()
-  readonly type: SectionType;
-  @Expose()
-  @Type(() => DataField, {
-    discriminator: {
-      property: 'type',
-      subTypes: [{ value: TextField, name: DataType.TEXT_FIELD }],
-    },
-    keepDiscriminatorProperty: true,
-  })
-  readonly dataFields: DataField[];
-  abstract validate(
-    version: string,
-    values: DataValue[],
-  ): DataFieldValidationResult[];
-}
-
-export class RepeaterSection extends DataSection {
-  validate(version: string, values: DataValue[]): DataFieldValidationResult[] {
-    const validations = [];
-    const sectionValues = groupBy(
-      values.filter((v) => v.dataSectionId === this.id),
-      'row',
-    );
-    for (const [row, dataValuesOfRow] of Object.entries(sectionValues)) {
-      for (const dataField of this.dataFields) {
-        const dataValue = dataValuesOfRow.find(
-          (v) => v.dataFieldId === dataField.id,
-        );
-        validations.push(
-          dataValue
-            ? dataField.validate(version, dataValue.value)
-            : DataFieldValidationResult.fromPlain({
-                dataFieldId: dataField.id,
-                dataFieldName: dataField.name,
-                isValid: false,
-                row: Number(row),
-                errorMessage: `Value for data field is missing`,
-              }),
-        );
-      }
-    }
-    return validations;
-  }
-}
-export class GroupSection extends DataSection {
-  validate(version: string, values: DataValue[]): DataFieldValidationResult[] {
-    const validations = [];
-    const sectionValues = values.filter((v) => v.dataSectionId === this.id);
-    for (const dataField of this.dataFields) {
-      const dataValue = sectionValues.find(
-        (v) => v.dataFieldId === dataField.id,
-      );
-      validations.push(
-        dataValue
-          ? dataField.validate(version, dataValue.value)
-          : DataFieldValidationResult.fromPlain({
-              dataFieldId: dataField.id,
-              dataFieldName: dataField.name,
-              isValid: false,
-              errorMessage: `Value for data field is missing`,
-            }),
-      );
-    }
-    return validations;
-  }
+export enum VisibilityLevel {
+  PUBLIC = 'Public',
+  PRIVATE = 'Private',
 }
 
 export class ProductDataModel {
@@ -181,18 +50,62 @@ export class ProductDataModel {
   readonly name: string;
   @Expose()
   readonly version: string;
+  @Expose({ name: 'createdByUserId' })
+  private _createdByUserId?: string;
+
+  @Expose({ name: 'ownedByOrganizationId' })
+  private _ownedByOrganizationId?: string;
+
+  @Expose({ name: 'visibility' })
+  private _visibility: VisibilityLevel = VisibilityLevel.PRIVATE;
+
   @Expose()
   @Type(() => DataSection, {
     discriminator: {
       property: 'type',
-      subTypes: [
-        { value: RepeaterSection, name: SectionType.REPEATABLE },
-        { value: GroupSection, name: SectionType.GROUP },
-      ],
+      subTypes: sectionSubTypes,
     },
     keepDiscriminatorProperty: true,
   })
   readonly sections: DataSection[] = [];
+
+  static create(plain: {
+    name: string;
+    user: User;
+    organization: Organization;
+    visibility?: VisibilityLevel;
+  }) {
+    return ProductDataModel.fromPlain({
+      ...plain,
+      version: '1.0.0',
+      ownedByOrganizationId: plain.organization.id,
+      createdByUserId: plain.user.id,
+    });
+  }
+
+  publish() {
+    this._visibility = VisibilityLevel.PUBLIC;
+  }
+
+  public isOwnedBy(organization: Organization) {
+    return this.ownedByOrganizationId === organization.id;
+  }
+
+  public isPublic() {
+    return this.visibility === VisibilityLevel.PUBLIC;
+  }
+
+  public get visibility() {
+    return this._visibility;
+  }
+
+  public get createdByUserId() {
+    return this._createdByUserId;
+  }
+
+  public get ownedByOrganizationId() {
+    return this._ownedByOrganizationId;
+  }
 
   // TODO: Partial seems not to work with data field id not set. Even type-fest deep partial is not enough
   static fromPlain(plain: unknown): ProductDataModel {
@@ -201,9 +114,11 @@ export class ProductDataModel {
       exposeDefaultValues: true,
     });
   }
+
   toPlain() {
     return instanceToPlain(this);
   }
+
   validate(
     values: DataValue[],
     includeSectionIds: string[] = [],

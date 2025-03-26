@@ -10,6 +10,11 @@ import { ProductDataModelEntity } from '../product-data-model/infrastructure/pro
 import { UsersModule } from '../users/users.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../product-data-model/infrastructure/product-data-model.schema';
 
 @Module({
   imports: [
@@ -17,6 +22,12 @@ import { PermissionsModule } from '../permissions/permissions.module';
       ModelEntity,
       DataValueEntity,
       ProductDataModelEntity,
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: ProductDataModelDoc.name,
+        schema: ProductDataModelSchema,
+      },
     ]),
     ProductDataModelModule,
     OrganizationsModule,

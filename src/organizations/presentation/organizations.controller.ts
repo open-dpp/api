@@ -51,7 +51,7 @@ export class OrganizationsController {
       id,
       req.authContext,
     );
-    return this.organizationsService.findOne(id);
+    return this.organizationsService.findOneOrFail(id);
   }
 
   @Post(':organizationId/invite')

@@ -49,7 +49,7 @@ export class ModelsService {
     const userEntity = await this.usersService.findOneAndFail(
       model.createdByUserId,
     );
-    const organizationEntity = await this.organizationService.findOne(
+    const organizationEntity = await this.organizationService.findOneOrFail(
       model.ownedByOrganizationId,
     );
     const dataValueEntities = model.dataValues.map((dv) => {

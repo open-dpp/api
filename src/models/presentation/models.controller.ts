@@ -14,7 +14,7 @@ import { CreateModelDto } from './dto/create-model.dto';
 import { UpdateModelDto } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product.data.model.service';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 
@@ -37,8 +37,9 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const organization = await this.organizationService.findOne(organizationId);
-    if (organization === undefined) {
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
+    if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
     const model = Model.create({
@@ -59,7 +60,8 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const organization = await this.organizationService.findOne(organizationId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
@@ -79,6 +81,9 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(id);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
     return model.toPlain();
   }
 
@@ -94,6 +99,8 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
 
     const mergedModel = model.mergeWithPlain(updateModelDto);
     return (await this.modelsService.save(mergedModel)).toPlain();
@@ -112,8 +119,11 @@ export class ModelsController {
     );
     // TODO: Check if user has permission to access product data model
     const productDataModel =
-      await this.productDataModelService.findOne(productDataModelId);
+      await this.productDataModelService.findOneOrFail(productDataModelId);
     const model = await this.modelsService.findOne(modelId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
 
     model.assignProductDataModel(productDataModel);
     return (await this.modelsService.save(model)).toPlain();
@@ -131,9 +141,12 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
+    this.hasPermissionsOrFail(organization, model, req);
 
     const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
-    const productDataModel = await this.productDataModelService.findOne(
+    const productDataModel = await this.productDataModelService.findOneOrFail(
       mergedModel.productDataModelId,
     );
     const validationResult = productDataModel.validate(mergedModel.dataValues);
@@ -155,8 +168,10 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
     model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
-    const productDataModel = await this.productDataModelService.findOne(
+    const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );
     const validationResult = productDataModel.validate(model.dataValues);

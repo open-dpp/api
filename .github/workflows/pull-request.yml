@@ -1,0 +1,92 @@
+name: Run tests, linting and type checking on pull request
+
+
+on:
+  pull_request:
+    branches:
+      - main
+
+
+env:
+  NODE_VERSION: 23
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # Needed to provision an ephemeral certificate for cosign
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+      - name: Run linter
+        run: npm run lint
+
+  check-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install
+      - name: Run type checks
+        run: npm run check-ts
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # Needed to provision an ephemeral certificate for cosign
+      id-token: write
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start database
+        run: |
+          docker compose -f docker-compose-tests.yml up -d
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }} # Use your project's Node.js version
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Wait for Postgres to be ready
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          echo "Waiting for PostgreSQL to start..."
+          until pg_isready -h localhost -p 20003 -U open-dpp; do
+            sleep 1
+          done
+
+      # Step 5: Run tests
+      - name: Run tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 20003
+          DB_USERNAME: admin
+          DB_PASSWORD: admin
+          DB_DATABASE: management
+          MONGO_DB_HOST: localhost
+          MONGO_DB_PORT: 27017
+        run: npm test

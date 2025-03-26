@@ -9,3 +9,12 @@ services:
       POSTGRES_DB: 'management'
     ports:
       - '20003:5432'
+  api-mongo-db:
+    ports:
+      - '27017:27017'
+    container_name: api-mongo-db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=management
+    image: mongo:6.0

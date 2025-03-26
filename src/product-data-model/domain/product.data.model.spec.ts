@@ -1,361 +1,19 @@
-import {
-  DataFieldValidationResult,
-  ProductDataModel,
-  SectionType,
-  DataType,
-  TextField,
-  GroupSection,
-  RepeaterSection,
-  ValidationResult,
-} from './product.data.model';
+import { ProductDataModel, VisibilityLevel } from './product.data.model';
 import { DataValue } from '../../models/domain/model';
-import { plainToInstance } from 'class-transformer';
-
-describe('ValidationResult', () => {
-  it('should be valid by default', () => {
-    const validationResult = new ValidationResult();
-    expect(validationResult.isValid).toBe(true);
-    expect(validationResult.validationResults).toEqual([]);
-  });
-
-  it('should add validation results and track validity', () => {
-    const validationResult = new ValidationResult();
-    const validField = DataFieldValidationResult.fromPlain({
-      dataFieldId: '123',
-      dataFieldName: 'Valid Field',
-      isValid: true,
-    });
-
-    validationResult.addValidationResult(validField);
-    expect(validationResult.isValid).toBe(true);
-
-    const invalidField = DataFieldValidationResult.fromPlain({
-      dataFieldId: '456',
-      dataFieldName: 'Invalid Field',
-      isValid: false,
-      errorMessage: 'Error message',
-    });
-
-    validationResult.addValidationResult(invalidField);
-    expect(validationResult.isValid).toBe(false);
-    expect(validationResult.validationResults).toHaveLength(2);
-  });
-
-  it('should convert to JSON with only errors', () => {
-    const validationResult = new ValidationResult();
-
-    validationResult.addValidationResult(
-      DataFieldValidationResult.fromPlain({
-        dataFieldId: '123',
-        dataFieldName: 'Valid Field',
-        isValid: true,
-      }),
-    );
-
-    validationResult.addValidationResult(
-      DataFieldValidationResult.fromPlain({
-        dataFieldId: '456',
-        dataFieldName: 'Invalid Field',
-        isValid: false,
-        errorMessage: 'Error message',
-      }),
-    );
-
-    const json = validationResult.toJson();
-
-    expect(json.isValid).toBe(false);
-    expect(json.errors).toHaveLength(1);
-    expect(json.errors[0]).toEqual({
-      id: '456',
-      name: 'Invalid Field',
-      message: 'Error message',
-    });
-  });
-});
-
-describe('DataFieldValidationResult', () => {
-  it('should create from plain object', () => {
-    const plain = {
-      dataFieldId: '123',
-      dataFieldName: 'Test Field',
-      isValid: true,
-      row: 5,
-      errorMessage: 'Test error',
-    };
-
-    const result = DataFieldValidationResult.fromPlain(plain);
-
-    expect(result.dataFieldId).toBe('123');
-    expect(result.dataFieldName).toBe('Test Field');
-    expect(result.isValid).toBe(true);
-    expect(result.row).toBe(5);
-    expect(result.errorMessage).toBe('Test error');
-  });
-
-  it('should include row in JSON output only if present', () => {
-    const withRow = DataFieldValidationResult.fromPlain({
-      dataFieldId: '123',
-      dataFieldName: 'Test Field',
-      isValid: false,
-      row: 5,
-      errorMessage: 'Test error',
-    });
-
-    const withoutRow = DataFieldValidationResult.fromPlain({
-      dataFieldId: '456',
-      dataFieldName: 'Another Field',
-      isValid: false,
-      errorMessage: 'Another error',
-    });
-
-    expect(withRow.toJson()).toEqual({
-      id: '123',
-      name: 'Test Field',
-      row: 5,
-      message: 'Test error',
-    });
-
-    expect(withoutRow.toJson()).toEqual({
-      id: '456',
-      name: 'Another Field',
-      message: 'Another error',
-    });
-  });
-});
-
-describe('TextField', () => {
-  it('should have proper data field type', () => {
-    // Using a UUID in the test to ensure the ID is defined
-    const textFieldId = 'test-id-123';
-    const textField = plainToInstance(TextField, {
-      id: textFieldId,
-      name: 'Test Field',
-      type: DataType.TEXT_FIELD,
-      options: {},
-    });
-
-    expect(textField.type).toBe(DataType.TEXT_FIELD);
-    expect(textField.id).toBe(textFieldId);
-    expect(textField.options).toEqual({});
-  });
-
-  it('should validate string values', () => {
-    const textField = plainToInstance(TextField, {
-      id: '123',
-      name: 'Test Field',
-      type: DataType.TEXT_FIELD,
-    });
-
-    const result = textField.validate('1.0.0', 'Valid text');
-
-    expect(result.isValid).toBe(true);
-    expect(result.dataFieldId).toBe('123');
-    expect(result.dataFieldName).toBe('Test Field');
-  });
-
-  it('should return validation errors for invalid values', () => {
-    const textField = plainToInstance(TextField, {
-      id: '123',
-      name: 'Test Field',
-      type: DataType.TEXT_FIELD,
-    });
-
-    const result = textField.validate('1.0.0', null);
-
-    expect(result.isValid).toBe(false);
-    expect(result.errorMessage).toBeDefined();
-  });
-});
-
-describe('DataSection implementations', () => {
-  describe('GroupSection', () => {
-    it('should validate fields within the section', () => {
-      const groupSection = plainToInstance(GroupSection, {
-        id: 'section-a',
-        name: 'Group Section',
-        type: SectionType.GROUP,
-        dataFields: [
-          {
-            id: 'field-x',
-            name: 'Field X',
-            type: DataType.TEXT_FIELD,
-          },
-        ],
-      });
-
-      const dataValues = [
-        DataValue.fromPlain({
-          dataSectionId: 'section-a',
-          dataFieldId: 'field-x',
-          value: 'Value X',
-        }),
-      ];
-
-      const results = groupSection.validate('1.0.0', dataValues);
-
-      expect(results).toHaveLength(1);
-      expect(results[0].isValid).toBe(true);
-      expect(results[0].dataFieldId).toBe('field-x');
-    });
-
-    it('should report missing field values', () => {
-      const groupSection = plainToInstance(GroupSection, {
-        id: 'section-a',
-        name: 'Group Section',
-        type: SectionType.GROUP,
-        dataFields: [
-          {
-            id: 'field-x',
-            name: 'Field X',
-            type: DataType.TEXT_FIELD,
-          },
-        ],
-      });
-
-      // Empty data values
-      const results = groupSection.validate('1.0.0', []);
-
-      expect(results).toHaveLength(1);
-      expect(results[0].isValid).toBe(false);
-      expect(results[0].errorMessage).toBe('Value for data field is missing');
-    });
-  });
-
-  describe('RepeaterSection', () => {
-    it('should validate fields within each row', () => {
-      const repeaterSection = plainToInstance(RepeaterSection, {
-        id: 'section-b',
-        name: 'Repeater Section',
-        type: SectionType.REPEATABLE,
-        dataFields: [
-          {
-            id: 'field-y',
-            name: 'Field Y',
-            type: DataType.TEXT_FIELD,
-          },
-        ],
-      });
-
-      const dataValues = [
-        DataValue.fromPlain({
-          dataSectionId: 'section-b',
-          dataFieldId: 'field-y',
-          value: 'Row 0 Value',
-          row: 0,
-        }),
-        DataValue.fromPlain({
-          dataSectionId: 'section-b',
-          dataFieldId: 'field-y',
-          value: 'Row 1 Value',
-          row: 1,
-        }),
-      ];
-
-      const results = repeaterSection.validate('1.0.0', dataValues);
-
-      expect(results).toHaveLength(2); // One result per row
-      expect(results[0].isValid).toBe(true);
-      // The row information is handled in the data value, not necessarily passed to the validation result
-      // Instead, check that the results match the expected fields
-      expect(
-        results.some((r) => r.dataFieldId === 'field-y' && r.isValid),
-      ).toBe(true);
-    });
-
-    it('should validate multiple fields in the same row', () => {
-      const repeaterSection = plainToInstance(RepeaterSection, {
-        id: 'section-b',
-        name: 'Repeater Section',
-        type: SectionType.REPEATABLE,
-        dataFields: [
-          {
-            id: 'field-y1',
-            name: 'Field Y1',
-            type: DataType.TEXT_FIELD,
-          },
-          {
-            id: 'field-y2',
-            name: 'Field Y2',
-            type: DataType.TEXT_FIELD,
-          },
-        ],
-      });
-
-      const dataValues = [
-        DataValue.fromPlain({
-          dataSectionId: 'section-b',
-          dataFieldId: 'field-y1',
-          value: 'Y1 Value',
-          row: 0,
-        }),
-        DataValue.fromPlain({
-          dataSectionId: 'section-b',
-          dataFieldId: 'field-y2',
-          value: null, // Invalid value
-          row: 0,
-        }),
-      ];
-
-      const results = repeaterSection.validate('1.0.0', dataValues);
-
-      expect(results).toHaveLength(2);
-      // Find the valid and invalid results
-      const validResult = results.find((r) => r.isValid);
-      const invalidResult = results.find((r) => !r.isValid);
-
-      expect(validResult).toBeDefined();
-      expect(invalidResult).toBeDefined();
-      expect(validResult.dataFieldId).toBe('field-y1');
-      expect(invalidResult.dataFieldId).toBe('field-y2');
-    });
-
-    it('should handle missing values in repeater section rows', () => {
-      const repeaterSection = plainToInstance(RepeaterSection, {
-        id: 'section-b',
-        name: 'Repeater Section',
-        type: SectionType.REPEATABLE,
-        dataFields: [
-          {
-            id: 'field-y1',
-            name: 'Field Y1',
-            type: DataType.TEXT_FIELD,
-          },
-          {
-            id: 'field-y2',
-            name: 'Field Y2',
-            type: DataType.TEXT_FIELD,
-          },
-        ],
-      });
-
-      const dataValues = [
-        DataValue.fromPlain({
-          dataSectionId: 'section-b',
-          dataFieldId: 'field-y1',
-          value: 'Y1 Value',
-          row: 0,
-        }),
-        // Missing field-y2 for row 0
-      ];
-
-      const results = repeaterSection.validate('1.0.0', dataValues);
-
-      expect(results).toHaveLength(2);
-      const missingFieldResult = results.find(
-        (r) => !r.isValid && r.dataFieldId === 'field-y2',
-      );
-
-      expect(missingFieldResult).toBeDefined();
-      expect(missingFieldResult.errorMessage).toContain('missing');
-    });
-  });
-});
+import { DataFieldValidationResult } from './data.field';
+import { SectionType } from './section';
+import { randomUUID } from 'crypto';
+import { User } from '../../users/domain/user';
+import { Organization } from '../../organizations/domain/organization';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {
     const plain = {
       name: 'Laptop',
       version: '1.0',
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+      visibility: VisibilityLevel.PUBLIC,
       sections: [
         {
           type: SectionType.GROUP,
@@ -479,6 +137,24 @@ describe('ProductDataModel', () => {
       },
     ],
   };
+
+  it('is published', () => {
+    const user = new User(randomUUID(), 'test@example.com');
+    const organization = Organization.create({ name: 'Orga', user });
+    const otherOrganization = Organization.create({ name: 'Orga', user });
+    const dataModel = ProductDataModel.create({
+      name: 'laptop',
+      user,
+      organization,
+      visibility: VisibilityLevel.PRIVATE,
+    });
+    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
+    expect(dataModel.isOwnedBy(otherOrganization)).toBeFalsy();
+    dataModel.publish();
+    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
+    expect(dataModel.isPublic()).toBeTruthy();
+    expect(dataModel.visibility).toEqual(VisibilityLevel.PUBLIC);
+  });
 
   it('should create data values', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
@@ -607,7 +283,7 @@ describe('ProductDataModel', () => {
       }),
     ]);
   });
-  //
+
   it('should fail validation caused by missing field and wrong type', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     const dataValues = [

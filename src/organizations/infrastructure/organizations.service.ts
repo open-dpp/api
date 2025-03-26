@@ -84,7 +84,7 @@ export class OrganizationsService {
     ).map((o) => this.convertToDomain(o));
   }
 
-  async findOne(id: string) {
+  async findOneOrFail(id: string) {
     const organizationEntity = await this.organizationRepository.findOne({
       where: { id: Equal(id) },
       relations: { members: true, models: true },
@@ -106,7 +106,7 @@ export class OrganizationsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const org = await this.findOne(organizationId);
+    const org = await this.findOneOrFail(organizationId);
     const users = await this.usersService.find({
       where: { email: Equal(email) },
     });
