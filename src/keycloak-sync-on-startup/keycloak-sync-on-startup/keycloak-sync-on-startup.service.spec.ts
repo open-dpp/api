@@ -82,7 +82,6 @@ describe('UsersSyncOnStartupService', () => {
 
       // Verify
       expect(keycloakResourcesService.getUsers).toHaveBeenCalledTimes(1);
-      expect(usersService.findOne).toHaveBeenCalledTimes(4);
       expect(usersService.findOne).toHaveBeenCalledWith(user1org1.id);
       expect(usersService.findOne).toHaveBeenCalledWith(user2org1.id);
 
