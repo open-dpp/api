@@ -8,6 +8,7 @@ import { DataValueEntity } from './infrastructure/data.value.entity';
 import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
 import { UsersModule } from '../users/users.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductDataModelDoc,
@@ -27,6 +28,7 @@ import {
     OrganizationsModule,
     UniqueProductIdentifierModule,
     UsersModule,
+    PermissionsModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],

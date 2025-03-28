@@ -11,9 +11,10 @@ import { IS_PUBLIC } from '../src/auth/public/public.decorator';
 
 export class KeycloakAuthTestingGuard implements CanActivate {
   constructor(
-    private readonly tokenToUserMap: Map<string, User>,
+    public tokenToUserMap: Map<string, User>,
     private reflector?: Reflector,
   ) {}
+
   async canActivate(context: ExecutionContext) {
     // const [req] = context.getArgs();
     const request = context.switchToHttp().getRequest();
@@ -43,11 +44,20 @@ export class KeycloakAuthTestingGuard implements CanActivate {
       );
     }
 
-    const accessToken = parts[1];
+    const accessToken = parts[1]; // uses [organizationOneId, organizationTwoId, ...] as permissions
+    const decoded = Buffer.from(accessToken, 'base64').toString();
+    const permissions = decoded.substring(1, decoded.length - 1).split(',');
 
     if (this.tokenToUserMap.has(accessToken)) {
       const authContext = new AuthContext();
       authContext.user = this.tokenToUserMap.get(accessToken);
+      authContext.permissions = permissions.map((permission) => {
+        return {
+          type: 'organization',
+          resource: permission,
+          scopes: ['organization:access'],
+        };
+      });
       request.authContext = authContext;
       return true;
     } else {

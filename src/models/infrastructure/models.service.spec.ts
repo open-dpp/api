@@ -15,6 +15,8 @@ import { ProductDataModel } from '../../product-data-model/domain/product.data.m
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { PermissionsModule } from '../../permissions/permissions.module';
+import { ConfigModule } from '@nestjs/config';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
@@ -36,20 +38,20 @@ describe('ModelsService', () => {
           UserEntity,
           OrganizationEntity,
         ]),
+        ConfigModule,
+        PermissionsModule,
       ],
       providers: [
         ModelsService,
         UniqueProductIdentifierService,
         UsersService,
         OrganizationsService,
-        {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [{ id: user.id, email: user.email }],
-          }),
-        },
+        KeycloakResourcesService,
       ],
-    }).compile();
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useClass(KeycloakResourcesServiceTesting)
+      .compile();
 
     dataSource = module.get<DataSource>(DataSource);
     modelsService = module.get<ModelsService>(ModelsService);
