@@ -6,7 +6,6 @@ import { ModelEntity } from './infrastructure/model.entity';
 import { UniqueProductIdentifierModule } from '../unique-product-identifier/unique.product.identifier.module';
 import { DataValueEntity } from './infrastructure/data.value.entity';
 import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
-import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
 import { UsersModule } from '../users/users.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -17,11 +16,7 @@ import {
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      ModelEntity,
-      DataValueEntity,
-      ProductDataModelEntity,
-    ]),
+    TypeOrmModule.forFeature([ModelEntity, DataValueEntity]),
     MongooseModule.forFeature([
       {
         name: ProductDataModelDoc.name,
