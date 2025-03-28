@@ -56,7 +56,12 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
           organization.id,
         );
       if (!keycloakGroup) {
-        await this.keycloakResourcesServices.createGroup(organization);
+        try {
+          await this.keycloakResourcesServices.createGroup(organization);
+        } catch (exception) {
+          // IGNORE
+          console.log(exception);
+        }
       }
       for (const member of organization.members) {
         try {
