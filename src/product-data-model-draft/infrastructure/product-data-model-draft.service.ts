@@ -31,13 +31,16 @@ export class ProductDataModelDraftService {
             type: d.type,
             options: d.options,
           })),
+          parentId: s.parentId,
+          subSections: s.subSections,
         })),
         createdByUserId: productDataModel.createdByUserId,
         ownedByOrganizationId: productDataModel.ownedByOrganizationId,
       },
       {
         new: true, // Return the updated document
-        upsert: true, // Create a new document if none found
+        upsert: true,
+        runValidators: true,
       },
     );
 
@@ -60,6 +63,8 @@ export class ProductDataModelDraftService {
           name: f.name,
           options: f.options,
         })),
+        subSections: s.subSections,
+        parentId: s.parentId,
       })),
       publications: plainDoc.publications,
       createdByUserId: plainDoc.createdByUserId,

@@ -1,7 +1,7 @@
 import { DataSectionDraft } from './section-draft';
 import { DataFieldDraft } from './data-field-draft';
-import { SectionType } from '../../product-data-model/domain/section';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError } from '../../exceptions/domain.errors';
 
 describe('DataSectionDraft', () => {
@@ -17,9 +17,10 @@ describe('DataSectionDraft', () => {
     expect(section1.id).toBeDefined();
     expect(section1.type).toEqual(SectionType.GROUP);
     expect(section1.dataFields).toEqual([]);
+    expect(section1.parentId).toBeUndefined();
+    expect(section1.subSections).toEqual([]);
     expect(section2.id).toBeDefined();
     expect(section2.type).toEqual(SectionType.REPEATABLE);
-    expect(section2.dataFields).toEqual([]);
   });
 
   it('is renamed', () => {
@@ -139,6 +140,26 @@ describe('DataSectionDraft', () => {
     );
   });
 
+  it('should add child section', () => {
+    const section = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+    });
+    const childSection1 = DataSectionDraft.create({
+      name: 'Sub specification 1',
+      type: SectionType.GROUP,
+    });
+    const childSection2 = DataSectionDraft.create({
+      name: 'Sub specification 2',
+      type: SectionType.REPEATABLE,
+    });
+    section.addSubSection(childSection1);
+    section.addSubSection(childSection2);
+    expect(section.subSections).toEqual([childSection1.id, childSection2.id]);
+    expect(childSection1.parentId).toEqual(section.id);
+    expect(childSection2.parentId).toEqual(section.id);
+  });
+
   it('should publish section draft', () => {
     const section = DataSectionDraft.create({
       name: 'Technical specification',
@@ -156,6 +177,7 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       dataFields: [{ ...dataField1.publish() }],
+      subSections: [],
     });
   });
 });

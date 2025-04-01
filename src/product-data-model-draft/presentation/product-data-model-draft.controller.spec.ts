@@ -17,10 +17,10 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
-import { SectionType } from '../../product-data-model/domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -336,7 +336,7 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
     expect(response.body.sections).toEqual([
-      { ...body, id: expect.any(String), dataFields: [] },
+      { ...body, id: expect.any(String), dataFields: [], subSections: [] },
     ]);
     const found = await productDataModelDraftService.findOneOrFail(
       response.body.id,

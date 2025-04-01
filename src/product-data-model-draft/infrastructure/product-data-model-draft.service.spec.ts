@@ -1,8 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { SectionType } from '../../product-data-model/domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
-import { MongooseModule, getConnectionToken } from '@nestjs/mongoose';
+import {
+  getConnectionToken,
+  getModelToken,
+  MongooseModule,
+} from '@nestjs/mongoose';
+import * as mongoose from 'mongoose';
 import { Connection } from 'mongoose';
 import { ProductDataModelDraftService } from './product-data-model-draft.service';
 import {
@@ -13,13 +18,14 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { Organization } from '../../organizations/domain/organization';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { User } from '../../users/domain/user';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 
 describe('ProductDataModelDraftMongoService', () => {
   let service: ProductDataModelDraftService;
   let mongoConnection: Connection;
+  let productDataModelDraftDoc: mongoose.Model<ProductDataModelDraftDoc>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +44,9 @@ describe('ProductDataModelDraftMongoService', () => {
       ProductDataModelDraftService,
     );
     mongoConnection = module.get<Connection>(getConnectionToken());
+    productDataModelDraftDoc = module.get(
+      getModelToken(ProductDataModelDraftDoc.name),
+    );
   });
 
   const laptopModelPlain = {
@@ -45,6 +54,7 @@ describe('ProductDataModelDraftMongoService', () => {
     version: 'v2',
     sections: [
       {
+        id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
         dataFields: [
@@ -57,6 +67,35 @@ describe('ProductDataModelDraftMongoService', () => {
             type: 'TextField',
           },
         ],
+        parentId: undefined,
+        subSections: ['s1.1', 's1.2'],
+      },
+      {
+        parentId: 's1',
+        id: 's1.1',
+        name: 'CO2',
+        type: SectionType.GROUP,
+        subSections: ['s1.1.1'],
+        dataFields: [],
+      },
+      {
+        parentId: 's1.1',
+        id: 's1.1.1',
+        name: 'CO2 Scope 1',
+        type: SectionType.REPEATABLE,
+        dataFields: [
+          {
+            name: 'Emissions',
+            type: 'TextField',
+          },
+        ],
+      },
+      {
+        parentId: 's1',
+        id: 's1.2',
+        name: 'Electricity',
+        type: SectionType.GROUP,
+        dataFields: [],
       },
     ],
     publications: [
@@ -185,6 +224,38 @@ describe('ProductDataModelDraftMongoService', () => {
       { id: laptopDraft.id, name: laptopDraft.name },
       { id: phoneDraft.id, name: phoneDraft.name },
     ]);
+  });
+
+  it('loads old schemas', async () => {
+    const oldSchema = {
+      _id: randomUUID(),
+      __v: 0,
+      _schemaVersion: '1.0.0',
+      createdByUserId: randomUUID(),
+      name: 'laptop',
+      ownedByOrganizationId: randomUUID(),
+      publications: [],
+      sections: [
+        {
+          _id: randomUUID(),
+          name: 'Tecs',
+          type: 'Group',
+          dataFields: [],
+        },
+      ],
+      version: '1.0.0',
+    };
+    const oldDraft = new productDataModelDraftDoc(oldSchema);
+    await oldDraft.save();
+    const found = await service.findOneOrFail(oldSchema._id);
+    expect(found.sections[0].toPlain()).toEqual({
+      id: expect.any(String),
+      name: 'Tecs',
+      type: 'Group',
+      dataFields: [],
+      subSections: [],
+      parentId: undefined,
+    });
   });
 
   afterAll(async () => {

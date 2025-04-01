@@ -1,22 +1,13 @@
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Type,
-} from 'class-transformer';
-import { randomUUID } from 'crypto';
+import { Expose, plainToInstance, Type } from 'class-transformer';
 import { DataFieldDraft } from './data-field-draft';
-import { SectionType } from '../../product-data-model/domain/section';
+import {
+  DataSectionBase,
+  SectionType,
+} from '../../data-modelling/domain/section-base';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 
-export class DataSectionDraft {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose({ name: 'name' })
-  private _name: string;
-  @Expose()
-  readonly type: SectionType;
+export class DataSectionDraft extends DataSectionBase {
   @Expose()
   @Type(() => DataFieldDraft)
   readonly dataFields: DataFieldDraft[];
@@ -32,8 +23,8 @@ export class DataSectionDraft {
     );
   }
 
-  get name() {
-    return this._name;
+  assignParent(parent: DataSectionDraft) {
+    this._parentId = parent.id;
   }
 
   rename(newName: string) {
@@ -42,6 +33,11 @@ export class DataSectionDraft {
 
   addDataField(dataField: DataFieldDraft) {
     this.dataFields.push(dataField);
+  }
+
+  addSubSection(section: DataSectionDraft) {
+    this._subSections.push(section.id);
+    section.assignParent(this);
   }
 
   modifyDataField(
@@ -71,9 +67,5 @@ export class DataSectionDraft {
   publish() {
     const plain = omit(this.toPlain(), ['id', 'dataFields']);
     return { ...plain, dataFields: this.dataFields.map((d) => d.publish()) };
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
   }
 }

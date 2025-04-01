@@ -18,7 +18,7 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { SectionType } from '../../product-data-model/domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;

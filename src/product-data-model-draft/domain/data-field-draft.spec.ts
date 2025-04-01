@@ -1,5 +1,5 @@
 import { DataFieldDraft } from './data-field-draft';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 
 describe('DataField', () => {
   it('is created', () => {

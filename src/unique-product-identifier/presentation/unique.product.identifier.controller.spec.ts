@@ -24,7 +24,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { SectionType } from '../../product-data-model/domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import {

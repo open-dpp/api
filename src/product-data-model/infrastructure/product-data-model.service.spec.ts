@@ -6,7 +6,7 @@ import {
 } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { SectionType } from '../domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { Connection } from 'mongoose';

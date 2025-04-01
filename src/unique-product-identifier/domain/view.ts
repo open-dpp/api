@@ -2,11 +2,9 @@ import { Expose, plainToInstance } from 'class-transformer';
 import { groupBy } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { DataValue, Model } from '../../models/domain/model';
-import {
-  DataField,
-  DataFieldType,
-} from '../../product-data-model/domain/data.field';
-import { SectionType } from '../../product-data-model/domain/section';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataField } from '../../product-data-model/domain/data-field';
 
 type RowView = {
   fields: { type: DataFieldType; value: unknown; name: string }[];

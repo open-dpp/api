@@ -14,7 +14,7 @@ import {
   ProductDataModel,
   VisibilityLevel,
 } from '../domain/product.data.model';
-import { SectionType } from '../domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';

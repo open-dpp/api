@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { DataFieldType } from '../../../product-data-model/domain/data.field';
+import { DataFieldType } from '../../../data-modelling/domain/data-field-base';
 
 export class CreateDataFieldDraftDto {
   @IsString()

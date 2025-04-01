@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { SectionType } from '../../../product-data-model/domain/section';
+import { SectionType } from '../../../data-modelling/domain/section-base';
 
 export class CreateSectionDraftDto {
   @IsString()

@@ -6,10 +6,11 @@ import {
   plainToInstance,
   Type,
 } from 'class-transformer';
-import { DataFieldValidationResult } from './data.field';
-import { DataSection, sectionSubTypes, SectionType } from './section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
+import { DataFieldValidationResult } from './data-field';
+import { DataSection, sectionSubTypes } from './section';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];

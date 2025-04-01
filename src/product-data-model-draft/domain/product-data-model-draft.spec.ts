@@ -2,8 +2,8 @@ import { ProductDataModelDraft } from './product-data-model-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
 import { NotFoundError } from '../../exceptions/domain.errors';
-import { SectionType } from '../../product-data-model/domain/section';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
@@ -33,6 +33,7 @@ describe('ProductDataModelDraft', () => {
             options: { min: 2 },
           },
         ],
+        subSections: [],
       },
       {
         name: 'Material',
@@ -49,6 +50,7 @@ describe('ProductDataModelDraft', () => {
             options: {},
           },
         ],
+        subSections: [],
       },
     ],
   };
@@ -93,6 +95,8 @@ describe('ProductDataModelDraft', () => {
       visibility: VisibilityLevel.PUBLIC,
       sections: [
         {
+          parentId: undefined,
+          subSections: [],
           id: expect.any(String),
           type: SectionType.GROUP,
           name: 'Umwelt',
@@ -112,6 +116,8 @@ describe('ProductDataModelDraft', () => {
           ],
         },
         {
+          parentId: undefined,
+          subSections: [],
           name: 'Material',
           id: expect.any(String),
           type: SectionType.REPEATABLE,
