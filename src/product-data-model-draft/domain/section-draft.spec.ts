@@ -3,6 +3,7 @@ import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError } from '../../exceptions/domain.errors';
+import { DraftToPublishIdMapping } from './draft-to-publish-id-mapping';
 
 describe('DataSectionDraft', () => {
   it('is created', () => {
@@ -165,19 +166,35 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
     });
+    const subSection = DataSectionDraft.create({
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+    });
+    section.addSubSection(subSection);
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
     });
     section.addDataField(dataField1);
-    const publishedSection = section.publish();
+    const idMapper = new DraftToPublishIdMapping([section, subSection]);
+    const publishedSection = section.publish(idMapper);
     expect(publishedSection).toEqual({
-      id: undefined,
+      id: idMapper.getPublicationId(section.id),
       name: 'Technical specification',
       type: SectionType.GROUP,
       dataFields: [{ ...dataField1.publish() }],
+      subSections: [idMapper.getPublicationId(subSection.id)],
+    });
+
+    const publishedSubSection = subSection.publish(idMapper);
+    expect(publishedSubSection).toEqual({
+      id: idMapper.getPublicationId(subSection.id),
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      dataFields: [],
       subSections: [],
+      parentId: idMapper.getPublicationId(section.id),
     });
   });
 });

@@ -139,11 +139,16 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Technical Specs',
       type: SectionType.GROUP,
     });
+    const section11 = DataSectionDraft.create({
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+    });
     const section2 = DataSectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
     });
     productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, section11);
     productDataModelDraft.addSection(section2);
     const dataField = DataFieldDraft.create({
       name: 'Processor',

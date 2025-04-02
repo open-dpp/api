@@ -16,6 +16,7 @@ import {
 } from '../../product-data-model/domain/product.data.model';
 import { omit } from 'lodash';
 import * as semver from 'semver';
+import { DraftToPublishIdMapping } from './draft-to-publish-id-mapping';
 
 export type Publication = {
   id: string;
@@ -39,9 +40,13 @@ export class ProductDataModelDraft {
   @Expose({ name: 'createdByUserId' })
   private _createdByUserId: string | undefined;
 
-  @Expose()
   @Type(() => DataSectionDraft)
-  readonly sections: DataSectionDraft[] = [];
+  @Expose({ name: 'sections' })
+  private _sections: DataSectionDraft[] = [];
+
+  get sections() {
+    return this._sections;
+  }
 
   static create(plain: {
     name: string;
@@ -88,11 +93,11 @@ export class ProductDataModelDraft {
   }
 
   deleteSection(sectionId: string) {
-    const foundIndex = this.sections.findIndex((s) => s.id === sectionId);
-    if (foundIndex < 0) {
-      throw new NotFoundError(DataSectionDraft.name, sectionId);
+    const found = this.findSectionOrFail(sectionId);
+    for (const sectionId of found.subSections) {
+      this.deleteSection(sectionId);
     }
-    this.sections.splice(foundIndex, 1);
+    this._sections = this.sections.filter((s) => s.id !== found.id);
   }
 
   modifySection(sectionId: string, data: { name?: string }) {
@@ -125,6 +130,12 @@ export class ProductDataModelDraft {
     return foundSection;
   }
 
+  addSubSection(parentSectionId: string, section: DataSectionDraft) {
+    const parentSection = this.findSectionOrFail(parentSectionId);
+    parentSection.addSubSection(section);
+    this.sections.push(section);
+  }
+
   addSection(section: DataSectionDraft) {
     this.sections.push(section);
   }
@@ -143,12 +154,14 @@ export class ProductDataModelDraft {
       lastPublished.length > 0
         ? semver.inc(lastPublished[0].version, 'major')
         : '1.0.0';
+    const idMapper = new DraftToPublishIdMapping(this.sections);
+
     const published = ProductDataModel.fromPlain({
       ...plain,
       version: versionToPublish,
       createdByUserId: createdByUser.id,
       visibility,
-      sections: this.sections.map((s) => s.publish()),
+      sections: this.sections.map((s) => s.publish(idMapper)),
     });
     this.publications.push({ id: published.id, version: published.version });
     return published;

@@ -36,8 +36,28 @@ describe('ProductDataModelDraft', () => {
         subSections: [],
       },
       {
+        id: 'm1',
         name: 'Material',
         type: SectionType.REPEATABLE,
+        dataFields: [
+          {
+            type: 'TextField',
+            name: 'rep field 1',
+            options: {},
+          },
+          {
+            type: 'TextField',
+            name: 'rep field 2',
+            options: {},
+          },
+        ],
+        subSections: ['m1.1'],
+      },
+      {
+        id: 'm1.1',
+        parentId: 'm1',
+        name: 'Measurment',
+        type: SectionType.GROUP,
         dataFields: [
           {
             type: 'TextField',
@@ -86,6 +106,7 @@ describe('ProductDataModelDraft', () => {
       otherUser,
       VisibilityLevel.PUBLIC,
     );
+
     const expected = {
       name: productDataModelDraft.name,
       id: expect.any(String),
@@ -117,10 +138,31 @@ describe('ProductDataModelDraft', () => {
         },
         {
           parentId: undefined,
-          subSections: [],
+          subSections: [expect.any(String)],
           name: 'Material',
           id: expect.any(String),
           type: SectionType.REPEATABLE,
+          dataFields: [
+            {
+              id: expect.any(String),
+              type: 'TextField',
+              name: 'rep field 1',
+              options: {},
+            },
+            {
+              id: expect.any(String),
+              type: 'TextField',
+              name: 'rep field 2',
+              options: {},
+            },
+          ],
+        },
+        {
+          parentId: expect.any(String),
+          subSections: [],
+          name: 'Measurement',
+          id: expect.any(String),
+          type: SectionType.GROUP,
           dataFields: [
             {
               id: expect.any(String),
@@ -161,6 +203,14 @@ describe('ProductDataModelDraft', () => {
         version: '2.0.0',
       },
     ]);
+    const parentSection = publishedProductDataModel.sections.find(
+      (s) => s.name === 'Material',
+    );
+    const childSection = publishedProductDataModel.sections.find(
+      (s) => s.name === 'Measurement',
+    );
+    expect(parentSection.subSections).toEqual([childSection.id]);
+    expect(childSection.parentId).toEqual(parentSection.id);
   });
 
   it('should be created', () => {
@@ -199,6 +249,45 @@ describe('ProductDataModelDraft', () => {
     expect(productDataModelDraft.sections).toEqual([section1, section2]);
   });
 
+  it('should add subSection', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organization,
+      user,
+    });
+    const section1 = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+    });
+    const section2 = DataSectionDraft.create({
+      name: 'Material',
+      type: SectionType.REPEATABLE,
+    });
+    productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, section2);
+
+    expect(productDataModelDraft.toPlain().sections).toEqual([
+      { ...section1.toPlain(), subSections: [section2.id] },
+      { ...section2.toPlain(), parentId: section1.id },
+    ]);
+  });
+
+  it('should fail to add subSection if parent id not found', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organization,
+      user,
+    });
+    const section1 = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+    });
+
+    expect(() =>
+      productDataModelDraft.addSubSection('some id', section1),
+    ).toThrow(new NotFoundError(DataSectionDraft.name, 'some id'));
+  });
+
   it('should modify section', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
@@ -227,11 +316,27 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
     });
+    const section11 = DataSectionDraft.create({
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+    });
+    const section111 = DataSectionDraft.create({
+      name: 'Measurement',
+      type: SectionType.GROUP,
+    });
+    const section112 = DataSectionDraft.create({
+      name: 'Measurement 2',
+      type: SectionType.GROUP,
+    });
     const section2 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
     });
     productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, section11);
+    productDataModelDraft.addSubSection(section11.id, section111);
+    productDataModelDraft.addSubSection(section11.id, section112);
+
     productDataModelDraft.addSection(section2);
 
     productDataModelDraft.deleteSection(section1.id);

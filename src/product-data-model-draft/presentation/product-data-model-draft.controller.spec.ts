@@ -344,6 +344,49 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.body).toEqual(found.toPlain());
   });
 
+  it(`/CREATE sub section draft`, async () => {
+    const organization = await createOrganization();
+    const laptopDraft = ProductDataModelDraft.create({
+      name: 'laptop',
+      organization,
+      user: authContext.user,
+    });
+    const section = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+    });
+    laptopDraft.addSection(section);
+    await productDataModelDraftService.save(laptopDraft);
+    const body = {
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      parentSectionId: section.id,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organization.id}/product-data-model-drafts/${laptopDraft.id}/sections`,
+      )
+      .set('Authorization', 'Bearer token1')
+      .send(body);
+    expect(response.status).toEqual(201);
+    const expectedSectionsBody = [
+      { ...section.toPlain(), subSections: [expect.any(String)] },
+      {
+        name: 'Dimensions',
+        type: SectionType.GROUP,
+        id: expect.any(String),
+        dataFields: [],
+        subSections: [],
+        parentId: section.id,
+      },
+    ];
+    expect(response.body.sections).toEqual(expectedSectionsBody);
+    const found = await productDataModelDraftService.findOneOrFail(
+      response.body.id,
+    );
+    expect(response.body.sections).toEqual(found.toPlain().sections);
+  });
+
   it(`/CREATE section draft ${userNotMemberTxt}`, async () => {
     const { orgaId, draftId } = await setupToProveMembership();
     const body = { name: 'Technical Specs', type: SectionType.GROUP };

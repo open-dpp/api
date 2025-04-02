@@ -6,6 +6,7 @@ import {
 } from '../../data-modelling/domain/section-base';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
+import { DraftToPublishIdMapping } from './draft-to-publish-id-mapping';
 
 export class DataSectionDraft extends DataSectionBase {
   @Expose()
@@ -64,8 +65,21 @@ export class DataSectionDraft extends DataSectionBase {
     this.dataFields.splice(foundIndex, 1);
   }
 
-  publish() {
-    const plain = omit(this.toPlain(), ['id', 'dataFields']);
-    return { ...plain, dataFields: this.dataFields.map((d) => d.publish()) };
+  publish(draftToPublishIdMapping: DraftToPublishIdMapping) {
+    const plain = omit(this.toPlain(), [
+      'id',
+      'dataFields',
+      'subSections',
+      'parentId',
+    ]);
+    return {
+      ...plain,
+      id: draftToPublishIdMapping.getPublicationId(this.id),
+      parentId: draftToPublishIdMapping.getPublicationId(this.parentId),
+      subSections: this.subSections.map((sid) =>
+        draftToPublishIdMapping.getPublicationId(sid),
+      ),
+      dataFields: this.dataFields.map((d) => d.publish()),
+    };
   }
 }

@@ -24,6 +24,7 @@ import { PublishDto } from './dto/publish.dto';
 import { UpdateDataFieldDraftDto } from './dto/update-data-field-draft.dto';
 import { UpdateSectionDraftDto } from './dto/update-section-draft.dto';
 import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
+import { omit } from 'lodash';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
@@ -107,9 +108,17 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
 
-    foundProductDataModelDraft.addSection(
-      DataSectionDraft.create(createSectionDraftDto),
-    );
+    if (createSectionDraftDto.parentSectionId) {
+      foundProductDataModelDraft.addSubSection(
+        createSectionDraftDto.parentSectionId,
+        DataSectionDraft.create(omit(createSectionDraftDto, 'parentSectionId')),
+      );
+    } else {
+      foundProductDataModelDraft.addSection(
+        DataSectionDraft.create(omit(createSectionDraftDto, 'parentSectionId')),
+      );
+    }
+
     return (
       await this.productDataModelDraftService.save(foundProductDataModelDraft)
     ).toPlain();
