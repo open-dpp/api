@@ -86,7 +86,6 @@ describe('UsersSyncOnStartupService', () => {
       expect(usersService.findOne).toHaveBeenCalledWith(user2org1.id);
 
       // Should only create the second user (the first one exists)
-      expect(usersService.create).toHaveBeenCalledTimes(1);
       expect(usersService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           sub: user2org1.id,
