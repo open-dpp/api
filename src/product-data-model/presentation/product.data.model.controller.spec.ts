@@ -9,7 +9,6 @@ import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../infrastructure/product-data-model.service';
-import { ProductDataModelEntity } from '../infrastructure/product.data.model.entity';
 import { ProductDataModelModule } from '../product.data.model.module';
 import {
   ProductDataModel,
@@ -48,11 +47,7 @@ describe('ProductsDataModelController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ProductDataModelEntity,
-          UserEntity,
-          OrganizationEntity,
-        ]),
+        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

@@ -12,7 +12,6 @@ import {
 } from 'typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ModelEntity } from '../../models/infrastructure/model.entity';
-import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 
 @Entity('Organization')
 export class OrganizationEntity {
@@ -66,10 +65,4 @@ export class OrganizationEntity {
 
   @OneToMany(() => ModelEntity, (model) => model.ownedByOrganization)
   models: ModelEntity[];
-
-  @OneToMany(
-    () => ProductDataModelEntity,
-    (dataModel) => dataModel.ownedByOrganization,
-  )
-  productDataModels: ProductDataModelEntity[];
 }

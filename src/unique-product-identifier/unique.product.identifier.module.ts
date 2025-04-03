@@ -6,7 +6,6 @@ import { UniqueProductIdentifierController } from './presentation/unique.product
 import { ModelsService } from '../models/infrastructure/models.service';
 import { ModelEntity } from '../models/infrastructure/model.entity';
 import { ProductDataModelService } from '../product-data-model/infrastructure/product-data-model.service';
-import { ProductDataModelEntity } from '../product-data-model/infrastructure/product.data.model.entity';
 import { UsersModule } from '../users/users.module';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { ItemEntity } from '../items/infrastructure/item.entity';
@@ -22,7 +21,6 @@ import {
     TypeOrmModule.forFeature([
       UniqueProductIdentifierEntity,
       ModelEntity,
-      ProductDataModelEntity,
       ItemEntity,
     ]),
     MongooseModule.forFeature([

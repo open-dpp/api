@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { ModelEntity } from '../../models/infrastructure/model.entity';
-import { ProductDataModelEntity } from '../../product-data-model/infrastructure/product.data.model.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -49,12 +48,6 @@ export class UserEntity {
 
   @OneToMany(() => ModelEntity, (model) => model.createdByUser)
   createdModels: ModelEntity[];
-
-  @OneToMany(
-    () => ProductDataModelEntity,
-    (dataModel) => dataModel.createdByUser,
-  )
-  createdProductModels: ProductDataModelEntity[];
 
   @OneToMany(() => OrganizationEntity, (org) => org.createdByUserId)
   creatorOfOrganizations: OrganizationEntity[];
