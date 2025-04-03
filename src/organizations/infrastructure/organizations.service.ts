@@ -130,11 +130,11 @@ export class OrganizationsService {
     try {
       org.members.push({ id: userToInvite.id, email: userToInvite.email });
       await this.organizationRepository.save(org);
-      /* await this.keycloakResourcesService.inviteUserToGroup(
+      await this.keycloakResourcesService.inviteUserToGroup(
         authContext,
         'organization-' + organizationId,
         userToInvite.id,
-      ); */
+      );
     } catch (err) {
       console.log('Error:', err);
       await queryRunner.rollbackTransaction();

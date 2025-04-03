@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './infrastructure/user.entity';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { UsersSyncOnStartupService } from './infrastructure/users-sync-on-startup.service';
+import { KeycloakSyncOnStartupService } from '../keycloak-sync-on-startup/keycloak-sync-on-startup/keycloak-sync-on-startup.service';
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { UsersSyncOnStartupService } from './infrastructure/users-sync-on-startu
     forwardRef(() => OrganizationsModule),
     KeycloakResourcesModule,
   ],
-  providers: [UsersService, UsersSyncOnStartupService],
+  providers: [UsersService, KeycloakSyncOnStartupService],
   exports: [UsersService],
 })
 export class UsersModule {}
