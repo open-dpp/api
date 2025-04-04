@@ -34,6 +34,8 @@ export class ProductDataModelService {
           name: f.name,
           options: f.options,
         })),
+        subSections: s.subSections,
+        parentId: s.parentId,
       })),
     });
   }
@@ -55,6 +57,8 @@ export class ProductDataModelService {
             type: d.type,
             options: d.options,
           })),
+          subSections: s.subSections,
+          parentId: s.parentId,
         })),
         createdByUserId: productDataModel.createdByUserId,
         ownedByOrganizationId: productDataModel.ownedByOrganizationId,

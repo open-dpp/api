@@ -56,7 +56,7 @@ describe('ProductDataModelDraft', () => {
       {
         id: 'm1.1',
         parentId: 'm1',
-        name: 'Measurment',
+        name: 'Measurement',
         type: SectionType.GROUP,
         dataFields: [
           {

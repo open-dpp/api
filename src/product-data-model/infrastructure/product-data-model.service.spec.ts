@@ -48,6 +48,7 @@ describe('ProductDataModelService', () => {
     createdByUserId: user.id,
     sections: [
       {
+        id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
         dataFields: [
@@ -60,6 +61,20 @@ describe('ProductDataModelService', () => {
             type: 'TextField',
           },
         ],
+        subSections: ['s1.1'],
+      },
+      {
+        id: 's1.1',
+        parentId: 's1',
+        name: 'CO2',
+        type: SectionType.GROUP,
+        dataFields: [
+          {
+            name: 'Consumption',
+            type: 'TextField',
+          },
+        ],
+        subSections: [],
       },
     ],
   };
