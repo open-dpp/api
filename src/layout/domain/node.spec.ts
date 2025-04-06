@@ -9,6 +9,7 @@ import {
 } from './node';
 import { randomUUID } from 'crypto';
 import { ValueError } from '../../exceptions/domain.errors';
+import { ignoreIds } from '../../../test/utils';
 
 describe('GridContainer', () => {
   it('should be created', () => {
@@ -92,13 +93,9 @@ describe('GridContainer', () => {
     for (let i = 0; i < cols; i++) {
       expectedGridContainer.addGridItem(gridItem.copy());
     }
-    expect(gridContainer.toPlain()).toEqual({
-      ...expectedGridContainer.toPlain(),
-      children: expectedGridContainer
-        .toPlain()
-        .children.map((c) => ({ ...c, id: expect.any(String) })),
-      id: expect.any(String),
-    });
+    expect(gridContainer.toPlain()).toEqual(
+      ignoreIds(expectedGridContainer.toPlain()),
+    );
   });
 
   it.each([5, 7, 8, 9, 10, 11])(
@@ -130,15 +127,13 @@ describe('SectionGrid', () => {
     for (let i = 0; i < cols; i++) {
       expectedGridContainer.addGridItem(gridItem.copy());
     }
-    expect(sectionGrid.toPlain()).toEqual({
-      ...expectedGridContainer.toPlain(),
-      children: expectedGridContainer
-        .toPlain()
-        .children.map((c) => ({ ...c, id: expect.any(String) })),
-      id: expect.any(String),
-      type: NodeType.SECTION_GRID,
-      sectionId,
-    });
+    expect(sectionGrid.toPlain()).toEqual(
+      ignoreIds({
+        ...expectedGridContainer.toPlain(),
+        type: NodeType.SECTION_GRID,
+        sectionId,
+      }),
+    );
   });
 });
 
