@@ -3,12 +3,14 @@ import {
   DataFieldRef,
   GridContainer,
   GridItem,
+  Node,
   NodeType,
   SectionGrid,
   Size,
 } from './node';
 import { Layout } from './layout';
 import { ignoreIds } from '../../../test/utils';
+import { NotFoundError } from '../../exceptions/domain.errors';
 
 describe('Layout', () => {
   it('is created and grid containers are added', () => {
@@ -24,6 +26,7 @@ describe('Layout', () => {
 
   it('is created from plain', () => {
     const smSize = Breakpoints.sm().sizeInPx;
+    const smName = 'sm';
     const plain = {
       name: 'my layout',
       nodes: [
@@ -32,7 +35,9 @@ describe('Layout', () => {
           children: [
             {
               type: NodeType.GRID_ITEM,
-              sizes: [{ breakpoint: { sizeInPx: smSize }, colSpan: 4 }],
+              sizes: [
+                { breakpoint: { sizeInPx: smSize, name: smName }, colSpan: 4 },
+              ],
               content: {
                 type: NodeType.DATA_FIELD_REF,
                 fieldId: 'f1',
@@ -46,7 +51,9 @@ describe('Layout', () => {
           children: [
             {
               type: NodeType.GRID_ITEM,
-              sizes: [{ breakpoint: { sizeInPx: smSize }, colSpan: 12 }],
+              sizes: [
+                { breakpoint: { sizeInPx: smSize, name: smName }, colSpan: 12 },
+              ],
             },
           ],
         },
@@ -65,6 +72,19 @@ describe('Layout', () => {
         expectedGridContainer.toPlain(),
         SectionGrid.create({ sectionId: 'sectionId', cols: 1 }).toPlain(),
       ]),
+    );
+  });
+
+  it('finds node by id', () => {
+    const layout = Layout.create({ name: 'My layout' });
+    const gridContainer1 = GridContainer.create({ cols: 3 });
+    const gridContainer2 = GridContainer.create({ cols: 3 });
+    layout.addNode(gridContainer1);
+    layout.addNode(gridContainer2);
+    expect(layout.findNodeOrFail(gridContainer1.id)).toEqual(gridContainer1);
+    expect(layout.findNodeOrFail(gridContainer2.id)).toEqual(gridContainer2);
+    expect(() => layout.findNodeOrFail('not-existing-id')).toThrow(
+      new NotFoundError(Node.name, 'not-existing-id'),
     );
   });
 });

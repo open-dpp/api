@@ -37,6 +37,7 @@ describe('GridContainer', () => {
     gridContainer.addGridItem(gridItem3);
     expect(gridContainer.children).toEqual([gridItem1, gridItem2, gridItem3]);
     const mdSize = Breakpoints.md().sizeInPx;
+    const mdName = 'md';
     expect(gridContainer.toPlain()).toEqual({
       id: expect.any(String),
       type: NodeType.GRID_CONTAINER,
@@ -44,17 +45,23 @@ describe('GridContainer', () => {
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [{ breakpoint: { sizeInPx: mdSize }, colSpan: 4 }],
+          sizes: [
+            { breakpoint: { sizeInPx: mdSize, name: mdName }, colSpan: 4 },
+          ],
         },
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [{ breakpoint: { sizeInPx: mdSize }, colSpan: 4 }],
+          sizes: [
+            { breakpoint: { sizeInPx: mdSize, name: mdName }, colSpan: 4 },
+          ],
         },
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [{ breakpoint: { sizeInPx: mdSize }, colSpan: 4 }],
+          sizes: [
+            { breakpoint: { sizeInPx: mdSize, name: mdName }, colSpan: 4 },
+          ],
           content: {
             id: expect.any(String),
             type: NodeType.GRID_CONTAINER,
@@ -64,7 +71,10 @@ describe('GridContainer', () => {
                 type: NodeType.GRID_ITEM,
                 sizes: [
                   {
-                    breakpoint: { sizeInPx: Breakpoints.sm().sizeInPx },
+                    breakpoint: {
+                      sizeInPx: Breakpoints.sm().sizeInPx,
+                      name: 'sm',
+                    },
                     colSpan: 12,
                   },
                 ],

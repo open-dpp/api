@@ -6,6 +6,7 @@ import {
 } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { Node, nodeSubtypes } from './node';
+import { NotFoundError } from '../../exceptions/domain.errors';
 
 export class Layout {
   @Expose()
@@ -36,6 +37,14 @@ export class Layout {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
+  }
+
+  findNodeOrFail(nodeId: string) {
+    const node = this._nodes.find((n) => n.id === nodeId);
+    if (!node) {
+      throw new NotFoundError(Node.name, nodeId);
+    }
+    return node;
   }
 
   addNode(node: Node) {

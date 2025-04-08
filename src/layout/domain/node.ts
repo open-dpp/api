@@ -11,8 +11,10 @@ import { randomUUID } from 'crypto';
 
 export class Breakpoint {
   @Expose()
+  public name: string;
+  @Expose()
   public sizeInPx: number;
-  static create(plain: { sizeInPx: number }) {
+  static create(plain: { sizeInPx: number; name: string }) {
     return plainToInstance(Breakpoint, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
@@ -22,19 +24,19 @@ export class Breakpoint {
 
 export class Breakpoints {
   static xs() {
-    return Breakpoint.create({ sizeInPx: 0 });
+    return Breakpoint.create({ sizeInPx: 0, name: 'xs' });
   }
   static sm() {
-    return Breakpoint.create({ sizeInPx: 600 });
+    return Breakpoint.create({ sizeInPx: 600, name: 'sm' });
   }
   static md() {
-    return Breakpoint.create({ sizeInPx: 900 });
+    return Breakpoint.create({ sizeInPx: 900, name: 'md' });
   }
   static lg() {
-    return Breakpoint.create({ sizeInPx: 1200 });
+    return Breakpoint.create({ sizeInPx: 1200, name: 'lg' });
   }
   static xl() {
-    return Breakpoint.create({ sizeInPx: 1536 });
+    return Breakpoint.create({ sizeInPx: 1536, name: 'xl' });
   }
 }
 

@@ -66,6 +66,7 @@ export class ProductDataModelService {
       {
         new: true, // Return the updated document
         upsert: true, // Create a new document if none found
+        runValidators: true,
       },
     );
 
