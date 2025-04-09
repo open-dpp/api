@@ -7,18 +7,17 @@ import {
   Post,
   Request,
 } from '@nestjs/common';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { AuthRequest } from '../../auth/auth-request';
-import { Organization } from '../../organizations/domain/organization';
 import { ViewService } from '../infrastructure/view.service';
 import { View } from '../domain/view';
 import { ViewDto } from './dto/view.dto';
+import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('/organizations/:orgaId/views')
 export class ViewController {
   constructor(
-    private readonly organizationService: OrganizationsService,
     private readonly viewService: ViewService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   @Post()
@@ -27,14 +26,17 @@ export class ViewController {
     @Request() req: AuthRequest,
     @Body() viewDto: ViewDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     return (
       await this.viewService.save(
-        View.create({ ...viewDto, organization, user: req.authContext.user }),
+        View.create({
+          ...viewDto,
+          organizationId: organizationId,
+          userId: req.authContext.user.id,
+        }),
       )
     ).toPlain();
   }
@@ -44,29 +46,17 @@ export class ViewController {
     @Param('orgaId') organizationId: string,
     @Param('viewId') viewId: string,
     @Request() req: AuthRequest,
-    @Body() viewDto: ViewDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+
     const view = await this.viewService.findOneOrFail(viewId);
-    this.hasPermissionsOrFail(organization, view, req);
+    if (!view.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
 
     return view.toPlain();
-  }
-
-  private hasPermissionsOrFail(
-    organization: Organization,
-    view: View,
-    req: AuthRequest,
-  ) {
-    if (
-      organization === undefined ||
-      !organization.isMember(req.authContext.user)
-    ) {
-      throw new ForbiddenException();
-    }
-    if (!view.isOwnedBy(organization)) {
-      throw new ForbiddenException();
-    }
   }
 }

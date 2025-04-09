@@ -23,6 +23,7 @@ import { getViewSchema, ViewDoc } from '../infrastructure/view.schema';
 import { ViewModule } from '../view.module';
 import { View } from '../domain/view';
 import { DataSource } from 'typeorm';
+import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 describe('ViewController', () => {
   let app: INestApplication;
@@ -32,6 +33,7 @@ describe('ViewController', () => {
   let dataSource: DataSource;
   authContext.user = new User(randomUUID(), 'test@test.test');
   let mongoConnection: Connection;
+  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -51,9 +53,7 @@ describe('ViewController', () => {
       providers: [
         {
           provide: APP_GUARD,
-          useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.user]]),
-          ),
+          useValue: keycloakAuthTestingGuard,
         },
       ],
     })
@@ -92,8 +92,16 @@ describe('ViewController', () => {
     const body = { name: 'View Model' };
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/views`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(body);
+
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
     const found = await viewService.findOneOrFail(response.body.id);
@@ -103,10 +111,18 @@ describe('ViewController', () => {
   it(`/CREATE view ${userNotMemberTxt}`, async () => {
     const otherUser = new User(randomUUID(), 'test@example.com');
     const organization = await createOrganization(otherUser);
+    const otherOrganization = await createOrganization();
     const body = { name: 'My first draft' };
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/views`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [otherOrganization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(body);
     expect(response.status).toEqual(403);
   });
@@ -114,11 +130,22 @@ describe('ViewController', () => {
   it(`/GET view`, async () => {
     const organization = await createOrganization();
     const view = await viewService.save(
-      View.create({ name: 'my view', organization, user: authContext.user }),
+      View.create({
+        name: 'my view',
+        organizationId: organization.id,
+        userId: authContext.user.id,
+      }),
     );
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/views/${view.id}`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
 
     expect(response.status).toEqual(200);
     expect(response.body.id).toEqual(view.id);
@@ -128,7 +155,11 @@ describe('ViewController', () => {
     const organization = await createOrganization();
 
     const view = await viewService.save(
-      View.create({ name: 'my view', organization, user: authContext.user }),
+      View.create({
+        name: 'my view',
+        organizationId: organization.id,
+        userId: authContext.user.id,
+      }),
     );
     const otherOrganization = await createOrganization();
     const response = await request(app.getHttpServer())

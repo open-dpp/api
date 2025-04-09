@@ -7,8 +7,6 @@ import {
 import { randomUUID } from 'crypto';
 import { Node, nodeSubtypes } from './node';
 import { NotFoundError } from '../../exceptions/domain.errors';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 
 export class View {
   @Expose()
@@ -49,14 +47,14 @@ export class View {
 
   static create(plain: {
     name: string;
-    user: User;
-    organization: Organization;
+    userId: string;
+    organizationId: string;
   }) {
     return View.fromPlain({
       name: plain.name,
       version: '1.0.0',
-      createdByUserId: plain.user.id,
-      ownedByOrganizationId: plain.organization.id,
+      createdByUserId: plain.userId,
+      ownedByOrganizationId: plain.organizationId,
     });
   }
 
@@ -67,8 +65,8 @@ export class View {
     });
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this._ownedByOrganizationId === organization.id;
+  public isOwnedBy(organizationId: string) {
+    return this._ownedByOrganizationId === organizationId;
   }
 
   findNodeOrFail(nodeId: string) {

@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { getViewSchema, ViewDoc } from './infrastructure/view.schema';
 import { ViewController } from './presentation/view.controller';
 import { ViewService } from './infrastructure/view.service';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ViewService } from './infrastructure/view.service';
     ]),
     OrganizationsModule,
     UsersModule,
+    PermissionsModule,
   ],
   controllers: [ViewController],
   providers: [ViewService],

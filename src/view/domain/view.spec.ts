@@ -11,15 +11,13 @@ import {
 import { View } from './view';
 import { ignoreIds } from '../../../test/utils';
 import { NotFoundError } from '../../exceptions/domain.errors';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { Organization } from '../../organizations/domain/organization';
 
 describe('View', () => {
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'orga1', user: user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   it('is created and grid containers are added', () => {
-    const view = View.create({ name: 'My layout', user, organization });
+    const view = View.create({ name: 'My layout', userId, organizationId });
     expect(view.id).toEqual(expect.any(String));
     expect(view.name).toEqual('My layout');
     expect(view.version).toEqual('1.0.0');
@@ -85,7 +83,7 @@ describe('View', () => {
   });
 
   it('finds node by id', () => {
-    const view = View.create({ name: 'My layout', user, organization });
+    const view = View.create({ name: 'My layout', userId, organizationId });
     const gridContainer1 = GridContainer.create({ cols: 3 });
     const gridContainer2 = GridContainer.create({ cols: 3 });
     view.addNode(gridContainer1);
