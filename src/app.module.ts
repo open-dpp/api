@@ -19,6 +19,7 @@ import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { DppEventsModule } from './dpp-events/dpp-events.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -55,6 +56,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     AuthModule,
     HttpModule,
     KeycloakResourcesModule,
+    DppEventsModule,
   ],
   providers: [
     {
