@@ -26,6 +26,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
@@ -39,6 +40,7 @@ describe('ModelsController', () => {
   let modelsService: ModelsService;
   let organizationsService: OrganizationsService;
   let productDataModelService: ProductDataModelService;
+  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@example.com');
 
@@ -62,9 +64,7 @@ describe('ModelsController', () => {
       providers: [
         {
           provide: APP_GUARD,
-          useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.user]]),
-          ),
+          useValue: keycloakAuthTestingGuard,
         },
       ],
     })
@@ -172,7 +172,14 @@ describe('ModelsController', () => {
     const organization = await createOrganization();
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOne(response.body.id);
@@ -230,7 +237,14 @@ describe('ModelsController', () => {
 
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(200);
 
     expect(response.body).toEqual(models.map((m) => m.toPlain()));
@@ -249,7 +263,14 @@ describe('ModelsController', () => {
 
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -263,7 +284,14 @@ describe('ModelsController', () => {
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(model.toPlain());
   });
@@ -279,7 +307,10 @@ describe('ModelsController', () => {
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -294,7 +325,14 @@ describe('ModelsController', () => {
     const otherOrganization = await createOrganization();
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganization.id}/models/${model.id}`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(response.status).toEqual(403);
   });
 
@@ -316,12 +354,26 @@ describe('ModelsController', () => {
       .post(
         `/organizations/${organization.id}/models/${model.id}/product-data-models/${productDataModel.id}`,
       )
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(body);
     expect(response.status).toEqual(201);
     const responseGet = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}`)
-      .set('Authorization', 'Bearer token1');
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      );
     expect(responseGet.body.dataValues).toEqual([
       DataValue.fromPlain({
         id: expect.anything(),
@@ -361,7 +413,10 @@ describe('ModelsController', () => {
       .post(
         `/organizations/${organization.id}/models/${model.id}/product-data-models/${productDataModel.id}`,
       )
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      )
       .send(body);
     expect(response.status).toEqual(403);
   });
@@ -390,7 +445,14 @@ describe('ModelsController', () => {
       .post(
         `/organizations/${otherOrganization.id}/models/${model.id}/product-data-models/${productDataModel.id}`,
       )
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(body);
     expect(response.status).toEqual(403);
   });
@@ -417,7 +479,14 @@ describe('ModelsController', () => {
     ];
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(updatedValues);
     expect(response.status).toEqual(200);
     const expectedDataValues = [
@@ -458,7 +527,10 @@ describe('ModelsController', () => {
     const updatedValues = [{ id: dataValue1.id, value: 'value 1' }];
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      )
       .send(updatedValues);
     expect(response.status).toEqual(403);
   });
@@ -486,7 +558,14 @@ describe('ModelsController', () => {
       .patch(
         `/organizations/${otherOrganization.id}/models/${model.id}/data-values`,
       )
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(updatedValues);
     expect(response.status).toEqual(403);
   });
@@ -512,7 +591,14 @@ describe('ModelsController', () => {
     ];
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(updatedValues);
     expect(response.status).toEqual(400);
     expect(response.body).toEqual({
@@ -555,7 +641,14 @@ describe('ModelsController', () => {
     ];
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(addedValues);
     expect(response.status).toEqual(201);
     const expected = [
@@ -588,7 +681,10 @@ describe('ModelsController', () => {
     const addedValues = [];
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+      )
       .send(addedValues);
     expect(response.status).toEqual(403);
   });
@@ -610,7 +706,14 @@ describe('ModelsController', () => {
       .post(
         `/organizations/${otherOrganization.id}/models/${model.id}/data-values`,
       )
-      .set('Authorization', 'Bearer token1')
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user,
+          [organization],
+          keycloakAuthTestingGuard,
+        ),
+      )
       .send(addedValues);
     expect(response.status).toEqual(403);
   });
