@@ -1,20 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Breakpoints, NodeType } from '../domain/node';
-import { getLayoutSchema, LayoutDoc } from './layout.schema';
-import { LayoutService } from './layout.service';
-import { Layout } from '../domain/layout';
+import { getViewSchema, ViewDoc } from './view.schema';
+import { ViewService } from './view.service';
+import { View } from '../domain/view';
 
-describe('LayoutService', () => {
-  let service: LayoutService;
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
+describe('ViewService', () => {
+  let service: ViewService;
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -23,20 +19,23 @@ describe('LayoutService', () => {
         MongooseTestingModule,
         MongooseModule.forFeatureAsync([
           {
-            name: LayoutDoc.name,
-            useFactory: () => getLayoutSchema(),
+            name: ViewDoc.name,
+            useFactory: () => getViewSchema(),
           },
         ]),
       ],
-      providers: [LayoutService],
+      providers: [ViewService],
     }).compile();
-    service = module.get<LayoutService>(LayoutService);
+    service = module.get<ViewService>(ViewService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   const smSize = Breakpoints.sm().sizeInPx;
-  const layoutPlain = {
-    name: 'my layout',
+  const viewPlain = {
+    name: 'my view',
+    version: '1.0.0',
+    ownedByOrganizationId: randomUUID(),
+    createdByUserId: randomUUID(),
     nodes: [
       {
         type: NodeType.GRID_CONTAINER,
@@ -70,18 +69,18 @@ describe('LayoutService', () => {
 
   it('fails if requested layout could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
-      new NotFoundInDatabaseException(Layout.name),
+      new NotFoundInDatabaseException(View.name),
     );
   });
 
   it('should save layout', async () => {
-    const layout = Layout.fromPlain({
-      ...layoutPlain,
+    const view = View.fromPlain({
+      ...viewPlain,
     });
 
-    const { id } = await service.save(layout);
+    const { id } = await service.save(view);
     const found = await service.findOneOrFail(id);
-    expect(found).toEqual(layout);
+    expect(found).toEqual(view);
   });
 
   afterAll(async () => {

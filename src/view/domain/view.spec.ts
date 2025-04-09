@@ -8,20 +8,26 @@ import {
   SectionGrid,
   Size,
 } from './node';
-import { Layout } from './layout';
+import { View } from './view';
 import { ignoreIds } from '../../../test/utils';
 import { NotFoundError } from '../../exceptions/domain.errors';
+import { User } from '../../users/domain/user';
+import { randomUUID } from 'crypto';
+import { Organization } from '../../organizations/domain/organization';
 
-describe('Layout', () => {
+describe('View', () => {
+  const user = new User(randomUUID(), 'test@example.com');
+  const organization = Organization.create({ name: 'orga1', user: user });
   it('is created and grid containers are added', () => {
-    const layout = Layout.create({ name: 'My layout' });
-    expect(layout.id).toEqual(expect.any(String));
-    expect(layout.name).toEqual('My layout');
+    const view = View.create({ name: 'My layout', user, organization });
+    expect(view.id).toEqual(expect.any(String));
+    expect(view.name).toEqual('My layout');
+    expect(view.version).toEqual('1.0.0');
     const gridContainer1 = GridContainer.create({ cols: 3 });
     const gridContainer2 = GridContainer.create({ cols: 3 });
-    layout.addNode(gridContainer1);
-    layout.addNode(gridContainer2);
-    expect(layout.nodes).toEqual([gridContainer1, gridContainer2]);
+    view.addNode(gridContainer1);
+    view.addNode(gridContainer2);
+    expect(view.nodes).toEqual([gridContainer1, gridContainer2]);
   });
 
   it('is created from plain', () => {
@@ -29,6 +35,9 @@ describe('Layout', () => {
     const smName = 'sm';
     const plain = {
       name: 'my layout',
+      version: '1.0.1',
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
       nodes: [
         {
           type: NodeType.GRID_CONTAINER,
@@ -59,7 +68,7 @@ describe('Layout', () => {
         },
       ],
     };
-    const layout = Layout.fromPlain(plain);
+    const view = View.fromPlain(plain);
     const expectedGridContainer = GridContainer.create();
     const expectedGridItem = GridItem.create({
       sizes: [Size.create({ breakpoint: Breakpoints.sm(), colSpan: 4 })],
@@ -67,7 +76,7 @@ describe('Layout', () => {
     expectedGridItem.replaceContent(DataFieldRef.create({ fieldId: 'f1' }));
 
     expectedGridContainer.addGridItem(expectedGridItem);
-    expect(layout.toPlain().nodes).toEqual(
+    expect(view.toPlain().nodes).toEqual(
       ignoreIds([
         expectedGridContainer.toPlain(),
         SectionGrid.create({ sectionId: 'sectionId', cols: 1 }).toPlain(),
@@ -76,14 +85,14 @@ describe('Layout', () => {
   });
 
   it('finds node by id', () => {
-    const layout = Layout.create({ name: 'My layout' });
+    const view = View.create({ name: 'My layout', user, organization });
     const gridContainer1 = GridContainer.create({ cols: 3 });
     const gridContainer2 = GridContainer.create({ cols: 3 });
-    layout.addNode(gridContainer1);
-    layout.addNode(gridContainer2);
-    expect(layout.findNodeOrFail(gridContainer1.id)).toEqual(gridContainer1);
-    expect(layout.findNodeOrFail(gridContainer2.id)).toEqual(gridContainer2);
-    expect(() => layout.findNodeOrFail('not-existing-id')).toThrow(
+    view.addNode(gridContainer1);
+    view.addNode(gridContainer2);
+    expect(view.findNodeOrFail(gridContainer1.id)).toEqual(gridContainer1);
+    expect(view.findNodeOrFail(gridContainer2.id)).toEqual(gridContainer2);
+    expect(() => view.findNodeOrFail('not-existing-id')).toThrow(
       new NotFoundError(Node.name, 'not-existing-id'),
     );
   });

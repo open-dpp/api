@@ -27,8 +27,6 @@ const SizeSchema = SchemaFactory.createForClass(SizeDoc);
 export class NodeDoc {
   @Prop({ required: true })
   _id: string;
-  // @Prop({ required: true, enum: NodeType })
-  // type: NodeType;
 }
 const NodeSchema = SchemaFactory.createForClass(NodeDoc);
 
@@ -67,19 +65,25 @@ class DataFieldRefDoc extends NodeDoc {
 
 const DataFieldRefSchema = SchemaFactory.createForClass(DataFieldRefDoc);
 
-@Schema({ collection: 'layouts' })
-export class LayoutDoc extends Document {
+@Schema({ collection: 'views' })
+export class ViewDoc extends Document {
   @Prop({ required: true })
   _id: string;
   @Prop({ required: true })
   name: string;
+  @Prop({ required: true })
+  version: string;
+  @Prop({ required: true })
+  ownedByOrganizationId: string;
+  @Prop({ required: true })
+  createdByUserId: string;
   @Prop({ type: [NodeSchema], default: [] })
   nodes: NodeDoc[];
 }
-const LayoutSchema = SchemaFactory.createForClass(LayoutDoc);
+const ViewSchema = SchemaFactory.createForClass(ViewDoc);
 
-export function getLayoutSchema() {
-  const schema = LayoutSchema;
+export function getViewSchema() {
+  const schema = ViewSchema;
 
   // Register base Node schema
   const nodeSchema = NodeSchema;
@@ -93,7 +97,7 @@ export function getLayoutSchema() {
 
   GridItemSchema.path('content', nodeSchema); // recursive discriminator injection
 
-  // Replace schema path in Layout too
+  // Replace schema path in View too
   schema.path('nodes', [nodeSchema]);
 
   return schema;
