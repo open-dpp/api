@@ -6,7 +6,8 @@ import {
   NotFoundInDatabaseExceptionFilter,
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
-async function bootstrap() {
+
+export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
@@ -19,4 +20,6 @@ async function bootstrap() {
   await app.listen(3000, '0.0.0.0');
 }
 
-bootstrap();
+if (require.main === module) {
+  bootstrap();
+}
