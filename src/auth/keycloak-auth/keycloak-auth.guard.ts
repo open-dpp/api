@@ -55,12 +55,7 @@ export class KeycloakAuthGuard implements CanActivate {
     const authContext = new AuthContext();
     authContext.permissions = [];
 
-    const payload = await this.jwtService.verifyAsync(accessToken, {
-      algorithms: ['RS256'],
-      publicKey: this.formatPublicKey(
-        this.configService.get('KEYCLOAK_JWT_PUBLIC_KEY'),
-      ),
-    });
+    const payload = await this.jwtService.decode(accessToken);
     const user: KeycloakUserInToken = payload;
     authContext.keycloakUser = user;
     await this.usersService.create(user, true);
@@ -77,10 +72,5 @@ export class KeycloakAuthGuard implements CanActivate {
     });
     request.authContext = authContext;
     return true;
-  }
-
-  private formatPublicKey(publicKey: string): string {
-    // Format the public key with the proper PEM headers if needed
-    return `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----`;
   }
 }
