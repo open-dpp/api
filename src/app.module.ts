@@ -4,7 +4,6 @@ import { ModelsModule } from './models/models.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { KeycloakImportModule } from './keycloak-import/keycloak-import.module';
 import { UniqueProductIdentifierModule } from './unique-product-identifier/unique.product.identifier.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
@@ -13,13 +12,15 @@ import { HttpModule } from '@nestjs/axios';
 import { ItemsModule } from './items/items.module';
 import * as path from 'path';
 import { generateConfig, generateMongoConfig } from './database/config';
-import { PermissionsGuard } from './auth/permissions/permissions.guard';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DppEventsModule } from './dpp-events/dpp-events.module';
+import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -51,22 +52,20 @@ import { DppEventsModule } from './dpp-events/dpp-events.module';
     ModelsModule,
     OrganizationsModule,
     UsersModule,
-    KeycloakImportModule,
     UniqueProductIdentifierModule,
     AuthModule,
+    PermissionsModule,
     HttpModule,
     KeycloakResourcesModule,
     DppEventsModule,
+    KeycloakSyncOnStartupModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,
     },
-    {
-      provide: APP_GUARD,
-      useClass: PermissionsGuard,
-    },
+    // KeycloakPermissionsGuard is now provided by PermissionsModule
   ],
 })
 export class AppModule {}
