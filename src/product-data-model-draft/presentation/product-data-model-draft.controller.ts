@@ -10,10 +10,8 @@ import {
   Request,
 } from '@nestjs/common';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { AuthRequest } from '../../auth/auth-request';
 import { DataSectionDraft } from '../domain/section-draft';
-import { Organization } from '../../organizations/domain/organization';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { CreateProductDataModelDraftDto } from './dto/create-product-data-model-draft.dto';
@@ -25,11 +23,12 @@ import { UpdateDataFieldDraftDto } from './dto/update-data-field-draft.dto';
 import { UpdateSectionDraftDto } from './dto/update-section-draft.dto';
 import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
 import { omit } from 'lodash';
+import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
   constructor(
-    private readonly organizationService: OrganizationsService,
+    private readonly permissionsService: PermissionsService,
     private readonly productDataModelService: ProductDataModelService,
     private readonly productDataModelDraftService: ProductDataModelDraftService,
   ) {}
@@ -40,17 +39,16 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() createProductDataModelDraftDto: CreateProductDataModelDraftDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     return (
       await this.productDataModelDraftService.save(
         ProductDataModelDraft.create({
           ...createProductDataModelDraftDto,
-          organization,
-          user: req.authContext.user,
+          organizationId,
+          userId: req.authContext.user.id,
         }),
       )
     ).toPlain();
@@ -62,12 +60,14 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     return foundProductDataModelDraft.toPlain();
   }
@@ -79,12 +79,14 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() modifyProductDataModelDraftDto: UpdateProductDataModelDraftDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
 
@@ -100,13 +102,15 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() createSectionDraftDto: CreateSectionDraftDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
 
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     if (createSectionDraftDto.parentSectionId) {
       foundProductDataModelDraft.addSubSection(
@@ -131,16 +135,18 @@ export class ProductDataModelDraftController {
     @Request() req: AuthRequest,
     @Body() publishDto: PublishDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
 
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     const publishedProductDataModel = foundProductDataModelDraft.publish(
-      req.authContext.user,
+      req.authContext.user.id,
       publishDto.visibility,
     );
     await this.productDataModelService.save(publishedProductDataModel);
@@ -159,13 +165,15 @@ export class ProductDataModelDraftController {
     @Body()
     createDataFieldDraftDto: CreateDataFieldDraftDto,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
 
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.addDataFieldToSection(
       sectionId,
@@ -183,13 +191,14 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.deleteSection(sectionId);
     return (
@@ -206,13 +215,15 @@ export class ProductDataModelDraftController {
     modifySectionDraftDto: UpdateSectionDraftDto,
     @Request() req: AuthRequest,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
 
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.modifySection(sectionId, modifySectionDraftDto);
     return (
@@ -230,13 +241,15 @@ export class ProductDataModelDraftController {
     modifyDataFieldDraftDto: UpdateDataFieldDraftDto,
     @Request() req: AuthRequest,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
 
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.modifyDataField(
       sectionId,
@@ -256,13 +269,15 @@ export class ProductDataModelDraftController {
     @Param('fieldId') fieldId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
 
     const foundProductDataModelDraft =
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
-    this.hasPermissionsOrFail(organization, foundProductDataModelDraft, req);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
     return (
@@ -275,28 +290,21 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
   ) {
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+
     return await this.productDataModelDraftService.findAllByOrganization(
-      organization.id,
+      organizationId,
     );
   }
 
   private hasPermissionsOrFail(
-    organization: Organization,
+    organizationId: string,
     productDataModelDraft: ProductDataModelDraft,
-    req: AuthRequest,
   ) {
-    if (
-      organization === undefined ||
-      !organization.isMember(req.authContext.user)
-    ) {
-      throw new ForbiddenException();
-    }
-    if (!productDataModelDraft.isOwnedBy(organization)) {
+    if (!productDataModelDraft.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
   }

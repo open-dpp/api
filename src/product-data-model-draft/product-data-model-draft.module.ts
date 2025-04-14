@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ProductDataModelDraftController } from './presentation/product-data-model-draft.controller';
-import { OrganizationsModule } from '../organizations/organizations.module';
-import { UsersModule } from '../users/users.module';
 import { ProductDataModelService } from '../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelDraftService } from './infrastructure/product-data-model-draft.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -13,6 +11,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -26,8 +25,7 @@ import {
         schema: ProductDataModelSchema,
       },
     ]),
-    OrganizationsModule,
-    UsersModule,
+    PermissionsModule,
   ],
   controllers: [ProductDataModelDraftController],
   providers: [ProductDataModelService, ProductDataModelDraftService],

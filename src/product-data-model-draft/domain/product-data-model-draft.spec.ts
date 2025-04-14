@@ -4,19 +4,17 @@ import { DataSectionDraft } from './section-draft';
 import { NotFoundError } from '../../exceptions/domain.errors';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { Organization } from '../../organizations/domain/organization';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 
 describe('ProductDataModelDraft', () => {
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'orga1', user: user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   const laptopModel = {
     name: 'Laptop',
     version: '1.0.0',
-    ownedByOrganizationId: organization.id,
-    createdByUserId: user.id,
+    ownedByOrganizationId: organizationId,
+    createdByUserId: userId,
     sections: [
       {
         type: SectionType.GROUP,
@@ -92,8 +90,8 @@ describe('ProductDataModelDraft', () => {
   it('is renamed', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'My Draft',
-      user,
-      organization,
+      userId,
+      organizationId,
     });
     productDataModelDraft.rename('Final Draft');
     expect(productDataModelDraft.name).toEqual('Final Draft');
@@ -101,9 +99,9 @@ describe('ProductDataModelDraft', () => {
 
   it('is published', () => {
     const productDataModelDraft = ProductDataModelDraft.fromPlain(laptopModel);
-    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherUserId = randomUUID();
     const publishedProductDataModel = productDataModelDraft.publish(
-      otherUser,
+      otherUserId,
       VisibilityLevel.PUBLIC,
     );
 
@@ -111,8 +109,8 @@ describe('ProductDataModelDraft', () => {
       name: productDataModelDraft.name,
       id: expect.any(String),
       version: '1.0.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: otherUser.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: otherUserId,
       visibility: VisibilityLevel.PUBLIC,
       sections: [
         {
@@ -189,7 +187,7 @@ describe('ProductDataModelDraft', () => {
       },
     ]);
     const againPublished = productDataModelDraft.publish(
-      otherUser,
+      otherUserId,
       VisibilityLevel.PRIVATE,
     );
     expect(againPublished.version).toEqual('2.0.0');
@@ -214,26 +212,26 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should be created', () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'orga1', user: user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Handy',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     expect(productDataModelDraft.id).toBeDefined();
     expect(productDataModelDraft.version).toEqual('1.0.0');
     expect(productDataModelDraft.sections).toEqual([]);
-    expect(productDataModelDraft.isOwnedBy(organization)).toBeTruthy();
-    expect(productDataModelDraft.createdByUserId).toEqual(user.id);
+    expect(productDataModelDraft.isOwnedBy(organizationId)).toBeTruthy();
+    expect(productDataModelDraft.createdByUserId).toEqual(userId);
     expect(productDataModelDraft.publications).toEqual([]);
   });
 
   it('should add sections', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -252,8 +250,8 @@ describe('ProductDataModelDraft', () => {
   it('should add subSection', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -275,8 +273,8 @@ describe('ProductDataModelDraft', () => {
   it('should fail to add subSection if parent id not found', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -291,8 +289,8 @@ describe('ProductDataModelDraft', () => {
   it('should modify section', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section = DataSectionDraft.create({
       name: 'Technical specification',
@@ -309,8 +307,8 @@ describe('ProductDataModelDraft', () => {
   it('should delete a section', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -347,8 +345,8 @@ describe('ProductDataModelDraft', () => {
   it('should fail to delete a section if it could not be found', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section = DataSectionDraft.create({
       name: 'Technical specification',
@@ -366,8 +364,8 @@ describe('ProductDataModelDraft', () => {
       id: 'product-1',
       name: 'Laptop',
       version: '1.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           id: 'section-1',
@@ -409,8 +407,8 @@ describe('ProductDataModelDraft', () => {
       id: 'product-1',
       name: 'Laptop',
       version: '1.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           id: 'section-1',
@@ -460,8 +458,8 @@ describe('ProductDataModelDraft', () => {
       id: 'product-1',
       name: 'Laptop',
       version: '1.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           id: 'section-1',

@@ -15,11 +15,9 @@ import {
   ProductDataModelDraftSchema,
 } from './product-data-model-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { Organization } from '../../organizations/domain/organization';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { User } from '../../users/domain/user';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 
 describe('ProductDataModelDraftMongoService', () => {
@@ -128,12 +126,12 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should delete section on product data model draft', async () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical Specs',
@@ -164,13 +162,13 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should delete data fields of product data model draft', async () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
 
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'draft',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section = DataSectionDraft.create({
       name: 'Tech specs',
@@ -196,35 +194,32 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should return all product data model drafts by organization', async () => {
-    const user = new User(randomUUID(), 'test@example.com');
+    const userId = randomUUID();
 
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const organizationId = randomUUID();
 
     const laptopDraft = ProductDataModelDraft.create({
       name: 'laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const phoneDraft = ProductDataModelDraft.create({
       name: 'phone',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     await service.save(laptopDraft);
     await service.save(phoneDraft);
-    const otherOrganization = Organization.create({
-      name: 'My orga',
-      user: user,
-    });
+    const otherOrganizationId = randomUUID();
 
     await service.save(
       ProductDataModelDraft.create({
         name: 'other draft',
-        organization: otherOrganization,
-        user,
+        organizationId: otherOrganizationId,
+        userId,
       }),
     );
-    const foundAll = await service.findAllByOrganization(organization.id);
+    const foundAll = await service.findAllByOrganization(organizationId);
     expect(foundAll).toEqual([
       { id: laptopDraft.id, name: laptopDraft.name },
       { id: phoneDraft.id, name: phoneDraft.name },

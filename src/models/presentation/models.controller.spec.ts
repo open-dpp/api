@@ -175,8 +175,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -240,8 +240,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -266,8 +266,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -287,8 +287,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -309,7 +309,7 @@ describe('ModelsController', () => {
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
@@ -328,8 +328,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -357,8 +357,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -369,8 +369,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -415,7 +415,7 @@ describe('ModelsController', () => {
       )
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       )
       .send(body);
     expect(response.status).toEqual(403);
@@ -448,8 +448,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -482,8 +482,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -529,7 +529,7 @@ describe('ModelsController', () => {
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       )
       .send(updatedValues);
     expect(response.status).toEqual(403);
@@ -561,8 +561,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -594,8 +594,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -644,8 +644,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )
@@ -683,7 +683,7 @@ describe('ModelsController', () => {
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       )
       .send(addedValues);
     expect(response.status).toEqual(403);
@@ -709,8 +709,8 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       )

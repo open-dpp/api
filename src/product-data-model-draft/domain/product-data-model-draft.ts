@@ -8,8 +8,6 @@ import {
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
 import { NotFoundError } from '../../exceptions/domain.errors';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import {
   ProductDataModel,
   VisibilityLevel,
@@ -50,19 +48,19 @@ export class ProductDataModelDraft {
 
   static create(plain: {
     name: string;
-    user: User;
-    organization: Organization;
+    userId: string;
+    organizationId: string;
   }) {
     return ProductDataModelDraft.fromPlain({
       ...plain,
       version: '1.0.0',
-      ownedByOrganizationId: plain.organization.id,
-      createdByUserId: plain.user.id,
+      ownedByOrganizationId: plain.organizationId,
+      createdByUserId: plain.userId,
     });
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this._ownedByOrganizationId === organization.id;
+  public isOwnedBy(organizationId: string) {
+    return this._ownedByOrganizationId === organizationId;
   }
 
   get name() {
@@ -140,7 +138,10 @@ export class ProductDataModelDraft {
     this.sections.push(section);
   }
 
-  publish(createdByUser: User, visibility: VisibilityLevel): ProductDataModel {
+  publish(
+    createdByUserId: string,
+    visibility: VisibilityLevel,
+  ): ProductDataModel {
     const plain = omit(this.toPlain(), [
       'id',
       'version',
@@ -159,7 +160,7 @@ export class ProductDataModelDraft {
     const published = ProductDataModel.fromPlain({
       ...plain,
       version: versionToPublish,
-      createdByUserId: createdByUser.id,
+      createdByUserId: createdByUserId,
       visibility,
       sections: this.sections.map((s) => s.publish(idMapper)),
     });
