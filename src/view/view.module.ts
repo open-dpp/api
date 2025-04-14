@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { OrganizationsModule } from '../organizations/organizations.module';
-import { UsersModule } from '../users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { getViewSchema, ViewDoc } from './infrastructure/view.schema';
 import { ViewController } from './presentation/view.controller';
@@ -15,8 +13,6 @@ import { PermissionsModule } from '../permissions/permissions.module';
         useFactory: () => getViewSchema(),
       },
     ]),
-    OrganizationsModule,
-    UsersModule,
     PermissionsModule,
   ],
   controllers: [ViewController],
