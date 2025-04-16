@@ -5,8 +5,8 @@ import {
   Type,
 } from 'class-transformer';
 import { randomUUID } from 'crypto';
-import { Node, nodeSubtypes } from './node';
-import { NotFoundError } from '../../exceptions/domain.errors';
+import { isGridContainer, isGridItem, Node, nodeSubtypes } from './node';
+import { ValueError } from '../../exceptions/domain.errors';
 
 export class View {
   @Expose()
@@ -69,16 +69,73 @@ export class View {
     return this._ownedByOrganizationId === organizationId;
   }
 
-  findNodeOrFail(nodeId: string) {
-    const node = this._nodes.find((n) => n.id === nodeId);
-    if (!node) {
-      throw new NotFoundError(Node.name, nodeId);
+  findNodeWithParent(
+    tree: Node[],
+    predicate: (node: Node) => boolean,
+    parent: Node | undefined = undefined,
+  ): { node: Node; parent: Node | undefined } | undefined {
+    for (const node of tree) {
+      if (predicate(node)) {
+        return { node, parent };
+      }
+
+      if (node.getChildNodes().length > 0) {
+        const found = this.findNodeWithParent(
+          node.getChildNodes(),
+          predicate,
+          node,
+        );
+        if (found) {
+          return found;
+        }
+      }
     }
-    return node;
+
+    return undefined;
   }
 
-  addNode(node: Node) {
-    this._nodes.push(node);
+  findNodeWithParentById(id: string) {
+    return this.findNodeWithParent(this._nodes, (node) => node.id === id);
+  }
+
+  deleteNodeById(id: string) {
+    const result = this.findNodeWithParentById(id);
+
+    if (!result) return false;
+
+    const { parent } = result;
+
+    if (parent) {
+      return parent.deleteChildNode(id);
+    } else {
+      this._nodes = this._nodes.filter((node) => node.id !== id);
+      return true;
+    }
+  }
+
+  addNode(node: Node, parentId?: string) {
+    if (parentId) {
+      const found = this.findNodeWithParentById(parentId);
+      if (found?.node) {
+        if (isGridContainer(found.node) && isGridItem(node)) {
+          found.node.addGridItem(node);
+        } else if (isGridItem(found.node)) {
+          found.node.replaceContent(node);
+        } else {
+          throw new ValueError(
+            `${node.type} could not be added to ${found.node.type}`,
+          );
+        }
+      } else {
+        throw new ValueError(
+          `Parent ${parentId} to add node to could not be found`,
+        );
+      }
+    } else if (isGridContainer(node)) {
+      this._nodes.push(node);
+    } else {
+      throw new ValueError(`Cannot add ${node.type} at root level`);
+    }
   }
   toPlain() {
     return instanceToPlain(this);

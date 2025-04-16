@@ -16,6 +16,16 @@ import { getViewSchema, ViewDoc } from '../infrastructure/view.schema';
 import { ViewModule } from '../view.module';
 import { View } from '../domain/view';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
+import {
+  Breakpoints,
+  DataFieldRef,
+  GridContainer,
+  GridItem,
+  NodeType,
+  SectionGrid,
+  Size,
+} from '../domain/node';
+import { ignoreIds } from '../../../test/utils';
 
 describe('ViewController', () => {
   let app: INestApplication;
@@ -24,6 +34,8 @@ describe('ViewController', () => {
   authContext.user = new User(randomUUID(), 'test@test.test');
   const userId = authContext.user.id;
   const organizationId = randomUUID();
+  const otherOrganizationId = randomUUID();
+
   let mongoConnection: Connection;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
 
@@ -85,7 +97,6 @@ describe('ViewController', () => {
   });
 
   it(`/CREATE view ${userNotMemberTxt}`, async () => {
-    const otherOrganizationId = randomUUID();
     const body = { name: 'My first draft' };
     const response = await request(app.getHttpServer())
       .post(`/organizations/${otherOrganizationId}/views`)
@@ -99,6 +110,74 @@ describe('ViewController', () => {
       )
       .send(body);
     expect(response.status).toEqual(403);
+  });
+
+  async function addNodeRequest(viewId: string, body: Object) {
+    return await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/views/${viewId}/nodes`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+  }
+
+  it(`/CREATE nodes`, async () => {
+    const view = await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
+    let body: any = { node: { type: NodeType.GRID_CONTAINER, cols: 3 } };
+    let response = await addNodeRequest(view.id, body);
+    const gridContainer = GridContainer.create({ cols: 3 });
+    // add grid item
+    body = {
+      node: {
+        type: NodeType.GRID_ITEM,
+        sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
+      },
+      parentId: response.body.nodes[0].id,
+    };
+    response = await addNodeRequest(view.id, body);
+    const gridItem = GridItem.create({
+      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
+    });
+    // add data field
+    gridContainer.addGridItem(gridItem);
+    body = {
+      node: {
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f1',
+      },
+      parentId: response.body.nodes[0].children[3].id,
+    };
+    response = await addNodeRequest(view.id, body);
+    const dataFieldItem = DataFieldRef.create({ fieldId: 'f1' });
+    gridItem.replaceContent(dataFieldItem);
+    // add section grid
+    body = {
+      node: {
+        type: NodeType.SECTION_GRID,
+        cols: 2,
+        sectionId: 's1',
+      },
+      parentId: response.body.nodes[0].children[0].id,
+    };
+    response = await addNodeRequest(view.id, body);
+    const firstGridItem = gridContainer.children[0];
+    firstGridItem.replaceContent(
+      SectionGrid.create({ sectionId: 's1', cols: 2 }),
+    );
+
+    const found = await viewService.findOneOrFail(response.body.id);
+    expect(found.toPlain().nodes).toEqual(ignoreIds([gridContainer.toPlain()]));
   });
 
   it(`/GET view`, async () => {
@@ -124,8 +203,22 @@ describe('ViewController', () => {
     expect(response.body.id).toEqual(view.id);
   });
 
+  it(`/GET view ${userNotMemberTxt}`, async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/views/${randomUUID()}`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+
+    expect(response.status).toEqual(403);
+  });
+
   it(`/GET view ${viewDoesNotBelongToOrga}`, async () => {
-    const otherOrganizationId = randomUUID();
     const view = await viewService.save(
       View.create({
         name: 'my view',

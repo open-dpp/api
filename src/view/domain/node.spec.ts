@@ -15,29 +15,36 @@ describe('GridContainer', () => {
   it('should be created', () => {
     const gridContainer = GridContainer.create();
     const gridItem1 = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md(), colSpan: 4 })],
+      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
     });
     const gridItem2 = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md(), colSpan: 4 })],
+      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
     });
     const gridItem3 = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md(), colSpan: 4 })],
+      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
     });
 
     const subGridContainer = GridContainer.create();
-    subGridContainer.addGridItem(
-      GridItem.create({
-        sizes: [Size.create({ breakpoint: Breakpoints.sm(), colSpan: 12 })],
-      }),
-    );
+    const subGridItem = GridItem.create({
+      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan: 12 })],
+    });
+    subGridContainer.addGridItem(subGridItem);
     gridItem3.replaceContent(subGridContainer);
 
     gridContainer.addGridItem(gridItem1);
     gridContainer.addGridItem(gridItem2);
     gridContainer.addGridItem(gridItem3);
     expect(gridContainer.children).toEqual([gridItem1, gridItem2, gridItem3]);
-    const mdSize = Breakpoints.md().sizeInPx;
-    const mdName = 'md';
+
+    expect(gridContainer.getChildNodes()).toEqual([
+      gridItem1,
+      gridItem2,
+      gridItem3,
+    ]);
+    expect(gridItem1.getChildNodes()).toEqual([]);
+    expect(gridItem2.getChildNodes()).toEqual([]);
+    expect(gridItem3.getChildNodes()).toEqual([subGridContainer]);
+    expect(subGridContainer.getChildNodes()).toEqual([subGridItem]);
     expect(gridContainer.toPlain()).toEqual({
       id: expect.any(String),
       type: NodeType.GRID_CONTAINER,
@@ -45,23 +52,17 @@ describe('GridContainer', () => {
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [
-            { breakpoint: { sizeInPx: mdSize, name: mdName }, colSpan: 4 },
-          ],
+          sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
         },
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [
-            { breakpoint: { sizeInPx: mdSize, name: mdName }, colSpan: 4 },
-          ],
+          sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
         },
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [
-            { breakpoint: { sizeInPx: mdSize, name: mdName }, colSpan: 4 },
-          ],
+          sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
           content: {
             id: expect.any(String),
             type: NodeType.GRID_CONTAINER,
@@ -71,10 +72,7 @@ describe('GridContainer', () => {
                 type: NodeType.GRID_ITEM,
                 sizes: [
                   {
-                    breakpoint: {
-                      sizeInPx: Breakpoints.sm().sizeInPx,
-                      name: 'sm',
-                    },
+                    breakpoint: Breakpoints.sm,
                     colSpan: 12,
                   },
                 ],
@@ -84,6 +82,9 @@ describe('GridContainer', () => {
         },
       ],
     });
+    expect(GridContainer.fromPlain(gridContainer.toPlain()).toPlain()).toEqual(
+      gridContainer.toPlain(),
+    );
   });
 
   it.each([
@@ -98,7 +99,7 @@ describe('GridContainer', () => {
     const expectedGridContainer = GridContainer.create();
 
     const gridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm(), colSpan })],
+      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan })],
     });
     for (let i = 0; i < cols; i++) {
       expectedGridContainer.addGridItem(gridItem.copy());
@@ -132,7 +133,7 @@ describe('SectionGrid', () => {
     const expectedGridContainer = GridContainer.create();
 
     const gridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm(), colSpan })],
+      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan })],
     });
     for (let i = 0; i < cols; i++) {
       expectedGridContainer.addGridItem(gridItem.copy());
@@ -151,7 +152,7 @@ describe('GridItem', () => {
   it('is created with field reference as content', () => {
     const fieldId = randomUUID();
     const content = DataFieldRef.create({ fieldId });
-    const sizes = [Size.create({ breakpoint: Breakpoints.md(), colSpan: 4 })];
+    const sizes = [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })];
     const gridItem = GridItem.create({
       sizes,
       content,

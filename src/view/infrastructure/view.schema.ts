@@ -1,21 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { Node, NodeType } from '../domain/node';
-
-@Schema({ _id: false })
-export class BreakpointDoc {
-  @Prop({ required: true })
-  name: string;
-  @Prop({ required: true })
-  sizeInPx: number;
-}
-
-const BreakPointSchema = SchemaFactory.createForClass(BreakpointDoc);
+import { NodeType, Node, Breakpoints } from '../domain/node';
 
 @Schema({ _id: false })
 export class SizeDoc {
-  @Prop({ required: true, type: BreakPointSchema })
-  breakpoint: BreakpointDoc;
+  @Prop({ required: true, enum: Breakpoints })
+  breakpoint: Breakpoints;
 
   @Prop({ required: true })
   colSpan: number;

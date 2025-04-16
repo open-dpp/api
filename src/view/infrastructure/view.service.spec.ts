@@ -30,7 +30,6 @@ describe('ViewService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  const smSize = Breakpoints.sm().sizeInPx;
   const viewPlain = {
     name: 'my view',
     version: '1.0.0',
@@ -42,9 +41,7 @@ describe('ViewService', () => {
         children: [
           {
             type: NodeType.GRID_ITEM,
-            sizes: [
-              { breakpoint: { sizeInPx: smSize, name: 'sm' }, colSpan: 4 },
-            ],
+            sizes: [{ breakpoint: Breakpoints.sm, colSpan: 4 }],
             content: {
               type: NodeType.DATA_FIELD_REF,
               fieldId: 'f1',
@@ -58,9 +55,7 @@ describe('ViewService', () => {
         children: [
           {
             type: NodeType.GRID_ITEM,
-            sizes: [
-              { breakpoint: { sizeInPx: smSize, name: 'sm' }, colSpan: 12 },
-            ],
+            sizes: [{ breakpoint: Breakpoints.sm, colSpan: 12 }],
           },
         ],
       },

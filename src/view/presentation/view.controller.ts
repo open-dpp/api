@@ -12,6 +12,7 @@ import { ViewService } from '../infrastructure/view.service';
 import { View } from '../domain/view';
 import { ViewDto } from './dto/view.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
+import { AddNodeDto, nodeFromDto } from './dto/node.dto';
 
 @Controller('/organizations/:orgaId/views')
 export class ViewController {
@@ -39,6 +40,23 @@ export class ViewController {
         }),
       )
     ).toPlain();
+  }
+
+  @Post(':viewId/nodes')
+  async addNode(
+    @Param('orgaId') organizationId: string,
+    @Param('viewId') viewId: string,
+    @Request() req: AuthRequest,
+    @Body() addCreateDto: AddNodeDto,
+  ) {
+    // await this.permissionsService.canAccessOrganizationOrFail(
+    //   organizationId,
+    //   req.authContext,
+    // );
+    const view = await this.viewService.findOneOrFail(viewId);
+    view.addNode(nodeFromDto(addCreateDto.node), addCreateDto.parentId);
+
+    return (await this.viewService.save(view)).toPlain();
   }
 
   @Get(':viewId')

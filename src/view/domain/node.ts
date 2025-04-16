@@ -9,43 +9,20 @@ import { ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 import { randomUUID } from 'crypto';
 
-export class Breakpoint {
-  @Expose()
-  public name: string;
-  @Expose()
-  public sizeInPx: number;
-  static create(plain: { sizeInPx: number; name: string }) {
-    return plainToInstance(Breakpoint, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
-  }
-}
-
-export class Breakpoints {
-  static xs() {
-    return Breakpoint.create({ sizeInPx: 0, name: 'xs' });
-  }
-  static sm() {
-    return Breakpoint.create({ sizeInPx: 600, name: 'sm' });
-  }
-  static md() {
-    return Breakpoint.create({ sizeInPx: 900, name: 'md' });
-  }
-  static lg() {
-    return Breakpoint.create({ sizeInPx: 1200, name: 'lg' });
-  }
-  static xl() {
-    return Breakpoint.create({ sizeInPx: 1536, name: 'xl' });
-  }
+export enum Breakpoints {
+  xs = 'xs',
+  sm = 'sm',
+  md = 'md',
+  lg = 'lg',
+  xl = 'xl',
 }
 
 export class Size {
   @Expose()
-  public breakpoint: Breakpoint;
+  public breakpoint: Breakpoints;
   @Expose()
   public colSpan: number;
-  static create(plain: { breakpoint: Breakpoint; colSpan: number }) {
+  static create(plain: { breakpoint: Breakpoints; colSpan: number }) {
     if (!z.number().int().min(1).max(12).safeParse(plain.colSpan).success) {
       throw new ValueError('Col span has to be an integer between 1 or 12');
     }
@@ -67,7 +44,9 @@ export abstract class Node {
   @Expose()
   readonly id: string = randomUUID();
   @Expose()
-  protected type: NodeType;
+  public type: NodeType;
+  abstract getChildNodes(): Node[];
+  abstract deleteChildNode(id: string): boolean;
 }
 
 export class GridContainer extends Node {
@@ -82,20 +61,29 @@ export class GridContainer extends Node {
     return this._children;
   }
 
+  getChildNodes(): Node[] {
+    return this._children;
+  }
+
+  deleteChildNode(id: string): boolean {
+    this._children = this._children.filter((child) => child.id !== id);
+    return true;
+  }
+
   static create(plain?: { cols: number }) {
     const children =
       plain?.cols !== undefined
         ? GridContainer.createChildrenFromCols(plain.cols)
         : [];
 
-    return plainToInstance(
-      GridContainer,
-      { children },
-      {
-        excludeExtraneousValues: true,
-        exposeDefaultValues: true,
-      },
-    );
+    return GridContainer.fromPlain({ children });
+  }
+
+  static fromPlain(plain: unknown) {
+    return plainToInstance(GridContainer, plain, {
+      excludeExtraneousValues: true,
+      exposeDefaultValues: true,
+    });
   }
 
   private static createChildrenFromCols(cols: number) {
@@ -114,7 +102,7 @@ export class GridContainer extends Node {
     return new Array(cols).fill(undefined).map(() =>
       GridItem.create({
         sizes: [
-          Size.create({ breakpoint: Breakpoints.sm(), colSpan: sizeOfCols }),
+          Size.create({ breakpoint: Breakpoints.sm, colSpan: sizeOfCols }),
         ],
       }),
     );
@@ -152,6 +140,13 @@ export class DataFieldRef extends Node {
   @Expose()
   readonly fieldId: string;
 
+  getChildNodes(): Node[] {
+    return [];
+  }
+  deleteChildNode(id: string): boolean {
+    return false;
+  }
+
   static create(plain: { fieldId: string }) {
     return plainToInstance(DataFieldRef, plain, {
       excludeExtraneousValues: true,
@@ -185,6 +180,18 @@ export class GridItem extends Node {
     return this._content;
   }
 
+  getChildNodes(): Node[] {
+    return this._content ? [this._content] : [];
+  }
+
+  deleteChildNode(id: string): boolean {
+    if (this._content?.id === id) {
+      this._content = undefined;
+      return true;
+    }
+    return false;
+  }
+
   static create(plain: { sizes: Size[]; content?: Node }) {
     return GridItem.fromPlain(plain);
   }
@@ -213,3 +220,11 @@ export const nodeSubtypes = [
   ...nodeSubtypesWithoutGridItem,
   { value: GridItem, name: NodeType.GRID_ITEM },
 ];
+
+export function isGridContainer(node: Node): node is GridContainer {
+  return node.type === NodeType.GRID_CONTAINER;
+}
+
+export function isGridItem(node: Node): node is GridItem {
+  return node.type === NodeType.GRID_ITEM;
+}
