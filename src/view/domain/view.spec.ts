@@ -15,11 +15,18 @@ import { ValueError } from '../../exceptions/domain.errors';
 describe('View', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
+  const dataModelId = randomUUID();
   it('is created and nodes on different level are added', () => {
-    const view = View.create({ name: 'My layout', userId, organizationId });
+    const view = View.create({
+      name: 'My layout',
+      userId,
+      organizationId,
+      dataModelId,
+    });
     expect(view.id).toEqual(expect.any(String));
     expect(view.name).toEqual('My layout');
     expect(view.version).toEqual('1.0.0');
+    expect(view.dataModelId).toEqual(dataModelId);
     const gridContainer1 = GridContainer.create({ cols: 3 });
     const gridContainer2 = GridContainer.create();
     view.addNode(gridContainer1);
@@ -52,6 +59,7 @@ describe('View', () => {
       version: '1.0.1',
       ownedByOrganizationId: randomUUID(),
       createdByUserId: randomUUID(),
+      dataModelId: randomUUID(),
       nodes: [
         {
           type: NodeType.GRID_CONTAINER,
@@ -95,7 +103,12 @@ describe('View', () => {
   });
 
   it('finds node', () => {
-    const view = View.create({ name: 'My layout', userId, organizationId });
+    const view = View.create({
+      name: 'My layout',
+      userId,
+      organizationId,
+      dataModelId,
+    });
     const gridContainer = GridContainer.create();
     const size = Size.create({ breakpoint: Breakpoints.md, colSpan: 4 });
     const dataFieldItem = DataFieldRef.create({ fieldId: randomUUID() });
@@ -154,7 +167,12 @@ describe('View', () => {
   });
 
   it('deletes node', () => {
-    const view = View.create({ name: 'My layout', userId, organizationId });
+    const view = View.create({
+      name: 'My layout',
+      userId,
+      organizationId,
+      dataModelId,
+    });
     const gridContainer = GridContainer.create();
     const size = Size.create({ breakpoint: Breakpoints.md, colSpan: 4 });
     const dataFieldItem = DataFieldRef.create({ fieldId: 'f1' });
@@ -204,6 +222,7 @@ describe('View', () => {
       version: '1.0.0',
       ownedByOrganizationId: organizationId,
       createdByUserId: userId,
+      dataModelId: dataModelId,
       nodes: [
         {
           id: gridContainer.id,

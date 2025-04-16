@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Request,
 } from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
@@ -49,14 +50,36 @@ export class ViewController {
     @Request() req: AuthRequest,
     @Body() addCreateDto: AddNodeDto,
   ) {
-    // await this.permissionsService.canAccessOrganizationOrFail(
-    //   organizationId,
-    //   req.authContext,
-    // );
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
     const view = await this.viewService.findOneOrFail(viewId);
+    if (!view.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     view.addNode(nodeFromDto(addCreateDto.node), addCreateDto.parentId);
 
     return (await this.viewService.save(view)).toPlain();
+  }
+
+  @Get()
+  async filterView(
+    @Query('dataModelId') dataModelId: string,
+    @Param('orgaId') organizationId: string,
+    @Request() req: AuthRequest,
+  ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+
+    const view = await this.viewService.findOneByDataModelIdOrFail(dataModelId);
+    if (!view.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+
+    return view.toPlain();
   }
 
   @Get(':viewId')

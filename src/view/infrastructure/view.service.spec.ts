@@ -35,6 +35,7 @@ describe('ViewService', () => {
     version: '1.0.0',
     ownedByOrganizationId: randomUUID(),
     createdByUserId: randomUUID(),
+    dataModelId: randomUUID(),
     nodes: [
       {
         type: NodeType.GRID_CONTAINER,
@@ -62,10 +63,28 @@ describe('ViewService', () => {
     ],
   };
 
-  it('fails if requested layout could not be found', async () => {
+  it('fails if requested view could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(View.name),
     );
+  });
+
+  it('fails if requested view could not be found by data model id', async () => {
+    await expect(
+      service.findOneByDataModelIdOrFail(randomUUID()),
+    ).rejects.toThrow(new NotFoundInDatabaseException(View.name));
+  });
+
+  it('find by data Model Id if requested layout could not be found', async () => {
+    const dataModelId = randomUUID();
+    const view = View.fromPlain({
+      ...viewPlain,
+      dataModelId,
+    });
+
+    await service.save(view);
+    const found = await service.findOneByDataModelIdOrFail(dataModelId);
+    expect(found).toEqual(view);
   });
 
   it('should save layout', async () => {

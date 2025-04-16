@@ -6,7 +6,7 @@ describe('nodeFromDto', () => {
     const createDto = {
       type: 'Unknown Type',
     };
-    // @ts-ignore
+    // @ts-expect-error Error should occur if not supported type is provided
     expect(() => nodeFromDto(createDto)).toThrow(
       new ValueError(`Type Unknown Type not supported`),
     );

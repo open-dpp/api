@@ -67,6 +67,8 @@ export class ViewDoc extends Document {
   ownedByOrganizationId: string;
   @Prop({ required: true })
   createdByUserId: string;
+  @Prop({ unique: true, required: true })
+  dataModelId: string;
   @Prop({ type: [NodeSchema], default: [] })
   nodes: NodeDoc[];
 }

@@ -33,6 +33,7 @@ describe('ViewController', () => {
   let viewService: ViewService;
   authContext.user = new User(randomUUID(), 'test@test.test');
   const userId = authContext.user.id;
+  const otherUserId = randomUUID();
   const organizationId = randomUUID();
   const otherOrganizationId = randomUUID();
 
@@ -77,7 +78,8 @@ describe('ViewController', () => {
   const viewDoesNotBelongToOrga = `fails if view does not belong to organization`;
 
   it(`/CREATE view`, async () => {
-    const body = { name: 'View Model' };
+    const dataModelId = randomUUID();
+    const body = { name: 'View Model', dataModelId };
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organizationId}/views`)
       .set(
@@ -92,6 +94,7 @@ describe('ViewController', () => {
 
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
+    expect(response.body.dataModelId).toEqual(dataModelId);
     const found = await viewService.findOneOrFail(response.body.id);
     expect(response.body).toEqual(found.toPlain());
   });
@@ -112,7 +115,7 @@ describe('ViewController', () => {
     expect(response.status).toEqual(403);
   });
 
-  async function addNodeRequest(viewId: string, body: Object) {
+  async function addNodeRequest(viewId: string, body: object) {
     return await request(app.getHttpServer())
       .post(`/organizations/${organizationId}/views/${viewId}/nodes`)
       .set(
@@ -130,8 +133,9 @@ describe('ViewController', () => {
     const view = await viewService.save(
       View.create({
         name: 'my view',
-        organizationId: otherOrganizationId,
+        organizationId,
         userId,
+        dataModelId: randomUUID(),
       }),
     );
     let body: any = { node: { type: NodeType.GRID_CONTAINER, cols: 3 } };
@@ -180,14 +184,66 @@ describe('ViewController', () => {
     expect(found.toPlain().nodes).toEqual(ignoreIds([gridContainer.toPlain()]));
   });
 
+  it(`/CREATE nodes ${userNotMemberTxt}`, async () => {
+    const view = await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId: otherUserId,
+        dataModelId: randomUUID(),
+      }),
+    );
+    const body = { node: { type: NodeType.GRID_CONTAINER, cols: 3 } };
+
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/views/${view.id}/nodes`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/CREATE nodes ${viewDoesNotBelongToOrga}`, async () => {
+    const view = await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId,
+        dataModelId: randomUUID(),
+      }),
+    );
+    const body = { node: { type: NodeType.GRID_CONTAINER, cols: 3 } };
+
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${otherOrganizationId}/views/${view.id}/nodes`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
   it(`/GET view`, async () => {
     const view = await viewService.save(
       View.create({
         name: 'my view',
         organizationId,
         userId,
+        dataModelId: randomUUID(),
       }),
     );
+
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/views/${view.id}`)
       .set(
@@ -224,6 +280,7 @@ describe('ViewController', () => {
         name: 'my view',
         organizationId: otherOrganizationId,
         userId,
+        dataModelId: randomUUID(),
       }),
     );
     const response = await request(app.getHttpServer())
@@ -236,6 +293,85 @@ describe('ViewController', () => {
           keycloakAuthTestingGuard,
         ),
       );
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET view by data model id`, async () => {
+    const dataModelId = randomUUID();
+    const view = await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId,
+        dataModelId,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/views?dataModelId=${dataModelId}`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+
+    expect(response.status).toEqual(200);
+    expect(response.body.id).toEqual(view.id);
+    expect(response.body.dataModelId).toEqual(dataModelId);
+  });
+
+  it(`/GET view by data model id ${userNotMemberTxt}`, async () => {
+    const dataModelId = randomUUID();
+    await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId: otherUserId,
+        dataModelId,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/views?dataModelId=${dataModelId}`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET view by data model id ${viewDoesNotBelongToOrga}`, async () => {
+    const dataModelId = randomUUID();
+    await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId,
+        dataModelId,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get(
+        `/organizations/${otherOrganizationId}/views?dataModelId=${dataModelId}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+
     expect(response.status).toEqual(403);
   });
 

@@ -41,4 +41,14 @@ export class ViewService {
     }
     return this.convertToDomain(layoutDoc);
   }
+
+  async findOneByDataModelIdOrFail(dataModelId: string) {
+    const layoutDoc = await this.layoutDoc.findOne({
+      dataModelId: dataModelId,
+    });
+    if (!layoutDoc) {
+      throw new NotFoundInDatabaseException(View.name);
+    }
+    return this.convertToDomain(layoutDoc);
+  }
 }

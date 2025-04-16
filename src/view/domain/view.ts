@@ -33,6 +33,9 @@ export class View {
   @Expose({ name: 'createdByUserId' })
   private _createdByUserId: string | undefined;
 
+  @Expose()
+  readonly dataModelId: string;
+
   get nodes() {
     return this._nodes;
   }
@@ -49,10 +52,12 @@ export class View {
     name: string;
     userId: string;
     organizationId: string;
+    dataModelId: string;
   }) {
     return View.fromPlain({
       name: plain.name,
       version: '1.0.0',
+      dataModelId: plain.dataModelId,
       createdByUserId: plain.userId,
       ownedByOrganizationId: plain.organizationId,
     });

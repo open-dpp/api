@@ -143,6 +143,8 @@ export class DataFieldRef extends Node {
   getChildNodes(): Node[] {
     return [];
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   deleteChildNode(id: string): boolean {
     return false;
   }
