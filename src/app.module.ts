@@ -59,6 +59,7 @@ import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak
     KeycloakResourcesModule,
     DppEventsModule,
     KeycloakSyncOnStartupModule,
+    DppEventsModule,
   ],
   providers: [
     {

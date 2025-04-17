@@ -33,7 +33,7 @@ export class DigitalTraceabilityEventDoc extends Document {
   issuer: CredentialIssuerDoc;
 
   @Prop({
-    type: 'datetime',
+    type: 'date',
     nullable: true,
   })
   validFrom?: Date;
