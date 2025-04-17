@@ -48,6 +48,7 @@ describe('GridContainer', () => {
     expect(gridContainer.toPlain()).toEqual({
       id: expect.any(String),
       type: NodeType.GRID_CONTAINER,
+      cols: 1,
       children: [
         {
           id: expect.any(String),
@@ -66,6 +67,7 @@ describe('GridContainer', () => {
           content: {
             id: expect.any(String),
             type: NodeType.GRID_CONTAINER,
+            cols: 1,
             children: [
               {
                 id: expect.any(String),
@@ -105,7 +107,7 @@ describe('GridContainer', () => {
       expectedGridContainer.addGridItem(gridItem.copy());
     }
     expect(gridContainer.toPlain()).toEqual(
-      ignoreIds(expectedGridContainer.toPlain()),
+      ignoreIds({ ...expectedGridContainer.toPlain(), cols }),
     );
   });
 
@@ -142,6 +144,7 @@ describe('SectionGrid', () => {
       ignoreIds({
         ...expectedGridContainer.toPlain(),
         type: NodeType.SECTION_GRID,
+        cols,
         sectionId,
       }),
     );

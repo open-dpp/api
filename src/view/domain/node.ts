@@ -53,6 +53,9 @@ export class GridContainer extends Node {
   type = NodeType.GRID_CONTAINER;
   static readonly MAX_COLS = 12;
 
+  @Expose()
+  cols: number;
+
   @Expose({ name: 'children' })
   @Type(() => GridItem)
   private _children: GridItem[] = [];
@@ -71,12 +74,13 @@ export class GridContainer extends Node {
   }
 
   static create(plain?: { cols: number }) {
+    const cols = plain?.cols ?? 1;
     const children =
       plain?.cols !== undefined
         ? GridContainer.createChildrenFromCols(plain.cols)
         : [];
 
-    return GridContainer.fromPlain({ children });
+    return GridContainer.fromPlain({ cols, children });
   }
 
   static fromPlain(plain: unknown) {

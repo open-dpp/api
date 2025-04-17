@@ -35,6 +35,8 @@ const GridItemSchema = SchemaFactory.createForClass(GritItemDoc);
 class GridContainerDoc extends NodeDoc {
   @Prop({ type: [GridItemSchema], default: [] })
   readonly children: GritItemDoc[];
+  @Prop({ required: true })
+  cols: number;
 }
 
 const GridContainerSchema = SchemaFactory.createForClass(GridContainerDoc);

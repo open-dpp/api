@@ -63,6 +63,7 @@ describe('View', () => {
       nodes: [
         {
           type: NodeType.GRID_CONTAINER,
+          cols: 1,
           children: [
             {
               type: NodeType.GRID_ITEM,
@@ -77,6 +78,7 @@ describe('View', () => {
         {
           type: NodeType.SECTION_GRID,
           sectionId: 'sectionId',
+          cols: 1,
           children: [
             {
               type: NodeType.GRID_ITEM,
@@ -227,6 +229,7 @@ describe('View', () => {
         {
           id: gridContainer.id,
           type: NodeType.GRID_CONTAINER,
+          cols: 1,
           children: [
             {
               id: gridItem1.id,

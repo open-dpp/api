@@ -39,6 +39,7 @@ describe('ViewService', () => {
     nodes: [
       {
         type: NodeType.GRID_CONTAINER,
+        cols: 2,
         children: [
           {
             type: NodeType.GRID_ITEM,
@@ -53,6 +54,7 @@ describe('ViewService', () => {
       {
         type: NodeType.SECTION_GRID,
         sectionId: 'sectionId',
+        cols: 4,
         children: [
           {
             type: NodeType.GRID_ITEM,
