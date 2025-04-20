@@ -1,21 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DppEventsService } from './dpp-events.service';
+import { OpenDppEventsService } from './open-dpp-events.service';
 import {
   getConnectionToken,
   getModelToken,
   MongooseModule,
 } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { DppEventDocument, DppEventSchema } from './dpp-event.document';
-import { DppEvent } from '../domain/dpp-event';
-import { DppEventType } from '../domain/dpp-event-type.enum';
+import { MongooseTestingModule } from '../../../../../test/mongo.testing.module';
+import {
+  OpenDppEventDocument,
+  OpenDppEventSchema,
+} from './open-dpp-event.document';
 import { randomUUID } from 'crypto';
+import { OpenDppEventType } from '../domain/open-dpp-event-type.enum';
+import { OpenDppEvent } from '../domain/open-dpp-event';
 
-describe('DppEventsService', () => {
-  let service: DppEventsService;
+describe('OpenDppEventsService', () => {
+  let service: OpenDppEventsService;
   let mongoConnection: Connection;
-  let dppEventModel: Model<DppEventDocument>;
+  let openDppEventDocumentModel: Model<OpenDppEventDocument>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,24 +26,24 @@ describe('DppEventsService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: DppEventDocument.name,
-            schema: DppEventSchema,
+            name: OpenDppEventDocument.name,
+            schema: OpenDppEventSchema,
           },
         ]),
       ],
-      providers: [DppEventsService],
+      providers: [OpenDppEventsService],
     }).compile();
 
-    service = module.get<DppEventsService>(DppEventsService);
+    service = module.get<OpenDppEventsService>(OpenDppEventsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
-    dppEventModel = module.get<Model<DppEventDocument>>(
-      getModelToken(DppEventDocument.name),
+    openDppEventDocumentModel = module.get<Model<OpenDppEventDocument>>(
+      getModelToken(OpenDppEventDocument.name),
     );
   });
 
   afterEach(async () => {
     // Clean up the database after each test
-    await dppEventModel.deleteMany({});
+    await openDppEventDocumentModel.deleteMany({});
   });
 
   afterAll(async () => {
@@ -52,61 +55,69 @@ describe('DppEventsService', () => {
   });
 
   describe('convertToDomain', () => {
-    it('should convert a DppEventDocument to a DppEvent domain object', () => {
+    it('should convert a OpenDppEventDocument to a DppEvent domain object', () => {
       // Arrange
       const id = randomUUID();
-      const dppEventDoc = {
+      const openDppEventDocument = {
         _id: id,
-        type: DppEventType.OPENEPCIS_V3_0,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp123',
-      } as DppEventDocument;
+      } as OpenDppEventDocument;
 
       // Act
-      const result = service.convertToDomain(dppEventDoc);
+      const result = service.convertToDomain(openDppEventDocument);
 
       // Assert
-      expect(result).toBeInstanceOf(DppEvent);
+      expect(result).toBeInstanceOf(OpenDppEvent);
       expect(result.id).toBe(id);
-      expect(result.type).toBe(DppEventType.OPENEPCIS_V3_0);
+      expect(result.type).toBe(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
       expect(result.source).toBe('dpp123');
     });
   });
 
   describe('save', () => {
-    it('should save a DppEvent and return the saved domain object', async () => {
+    it('should save a OpenDppEvent and return the saved domain object', async () => {
       // Arrange
       const id = randomUUID();
-      const dppEvent = DppEvent.fromPlain({
+      const openDppEvent = OpenDppEvent.fromPlain({
         id,
-        type: DppEventType.OPENEPCIS_V3_0,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp123',
       });
 
       // Act
-      const result = await service.save(dppEvent);
+      const result = await service.save(openDppEvent);
 
       // Assert
-      expect(result).toBeInstanceOf(DppEvent);
+      expect(result).toBeInstanceOf(OpenDppEvent);
       expect(result.id).toBe(id);
-      expect(result.type).toBe(DppEventType.OPENEPCIS_V3_0);
+      expect(result.type).toBe(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
       expect(result.source).toBe('dpp123');
 
       // Verify it was saved to the database
-      const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
+      const savedDoc = await openDppEventDocumentModel
+        .findOne({ _id: id })
+        .exec();
       expect(savedDoc).toBeDefined();
       expect(savedDoc._id).toBe(id);
-      expect(savedDoc.type).toBe(DppEventType.OPENEPCIS_V3_0);
+      expect(savedDoc.type).toBe(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
       expect(savedDoc.source).toBe('dpp123');
     });
 
-    it('should update an existing DppEvent if it exists', async () => {
+    it('should update an existing OpenDppEvent if it exists', async () => {
       // Arrange
       const id = randomUUID();
 
       // Create initial document
-      await dppEventModel.create({
+      await openDppEventDocumentModel.create({
         _id: id,
-        type: DppEventType.OPENEPCIS_V3_0,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp123',
         eventJsonData: { data: 'test data' },
         createdAt: new Date(),
@@ -114,37 +125,43 @@ describe('DppEventsService', () => {
       });
 
       // Create an updated event
-      const updatedDppEvent = DppEvent.fromPlain({
+      const updatedOpenDppEvent = OpenDppEvent.fromPlain({
         id,
-        type: DppEventType.UNTP,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp456',
       });
 
       // Act
-      const result = await service.save(updatedDppEvent);
+      const result = await service.save(updatedOpenDppEvent);
 
       // Assert
-      expect(result).toBeInstanceOf(DppEvent);
+      expect(result).toBeInstanceOf(OpenDppEvent);
       expect(result.id).toBe(id);
-      expect(result.type).toBe(DppEventType.UNTP);
+      expect(result.type).toBe(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
       expect(result.source).toBe('dpp456');
 
       // Verify it was updated in the database
-      const updatedDoc = await dppEventModel.findOne({ _id: id }).exec();
+      const updatedDoc = await openDppEventDocumentModel
+        .findOne({ _id: id })
+        .exec();
       expect(updatedDoc).toBeDefined();
       expect(updatedDoc._id).toBe(id);
-      expect(updatedDoc.type).toBe(DppEventType.UNTP);
+      expect(updatedDoc.type).toBe(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
       expect(updatedDoc.source).toBe('dpp456');
     });
   });
 
   describe('findById', () => {
-    it('should find DppEvents by id', async () => {
+    it('should find OpenDppEvents by id', async () => {
       // Arrange
       const id = randomUUID();
-      await dppEventModel.create({
+      await openDppEventDocumentModel.create({
         _id: id,
-        type: DppEventType.OPENEPCIS_V3_0,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp123',
         eventJsonData: { data: 'test data' },
         createdAt: new Date(),
@@ -157,11 +174,13 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(id);
-      expect(result[0].type).toBe(DppEventType.OPENEPCIS_V3_0);
+      expect(result[0].type).toBe(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
       expect(result[0].source).toBe('dpp123');
     });
 
-    it('should return an empty array if no DppEvents are found by id', async () => {
+    it('should return an empty array if no OpenDppEvents are found by id', async () => {
       // Act
       const result = await service.findById('non-existent-id');
 
@@ -171,24 +190,24 @@ describe('DppEventsService', () => {
   });
 
   describe('findByDppId', () => {
-    it('should find DppEvents by dppId', async () => {
+    it('should find OpenDppEvents by dppId', async () => {
       // Arrange
       const id1 = randomUUID();
       const id2 = randomUUID();
       const dppId = 'dpp123';
 
-      await dppEventModel.create({
+      await openDppEventDocumentModel.create({
         _id: id1,
-        type: DppEventType.OPENEPCIS_V3_0,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: dppId,
         eventJsonData: { data: 'test data 1' },
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      await dppEventModel.create({
+      await openDppEventDocumentModel.create({
         _id: id2,
-        type: DppEventType.UNTP,
+        type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: dppId,
         eventJsonData: { data: 'test data 2' },
         createdAt: new Date(),
@@ -210,11 +229,15 @@ describe('DppEventsService', () => {
 
       // Verify types are correct
       const types = result.map((event) => event.type);
-      expect(types).toContain(DppEventType.OPENEPCIS_V3_0);
-      expect(types).toContain(DppEventType.UNTP);
+      expect(types).toContain(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
+      expect(types).toContain(
+        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      );
     });
 
-    it('should return an empty array if no DppEvents are found by dppId', async () => {
+    it('should return an empty array if no OpenDppEvents are found by dppId', async () => {
       // Act
       const result = await service.findByDppId('non-existent-dppId');
 
@@ -224,13 +247,13 @@ describe('DppEventsService', () => {
   });
 
   describe('findByType', () => {
-    it('should find DppEvents by type', async () => {
+    it('should find OpenDppEvents by type', async () => {
       // Arrange
       const id1 = randomUUID();
       const id2 = randomUUID();
-      const type = DppEventType.OPENEPCIS_V3_0;
+      const type = OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED;
 
-      await dppEventModel.create({
+      await openDppEventDocumentModel.create({
         _id: id1,
         type,
         source: 'dpp123',
@@ -239,7 +262,7 @@ describe('DppEventsService', () => {
         updatedAt: new Date(),
       });
 
-      await dppEventModel.create({
+      await openDppEventDocumentModel.create({
         _id: id2,
         type,
         source: 'dpp456',
@@ -267,7 +290,7 @@ describe('DppEventsService', () => {
       expect(dppIds).toContain('dpp456');
     });
 
-    it('should return an empty array if no DppEvents are found by type', async () => {
+    it('should return an empty array if no OpenDppEvents are found by type', async () => {
       // Act
       const result = await service.findByType('non-existent-type');
 

@@ -13,12 +13,17 @@ export class DppEventDocument extends Document {
   @Prop({ required: true, enum: DppEventType })
   type: DppEventType;
 
-  // @Prop({ type: mongoose.Schema.Types.ObjectId, ref: '' })
   @Prop({ required: true })
-  dppId: string; // foreign key?
+  source: string;
 
   @Prop({ type: Object, required: true })
-  eventJsonData: object; // foreign key?
+  eventJsonData: object;
+
+  @Prop({ required: true })
+  createdAt: Date;
+
+  @Prop({ required: true })
+  updatedAt: Date;
 }
 
 export const DppEventSchema = SchemaFactory.createForClass(DppEventDocument);

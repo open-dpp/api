@@ -1,23 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { DppEventDocument } from './dpp-event.document';
-import { DppEvent } from '../domain/dpp-event';
+import { OpenDppEventDocument } from './open-dpp-event.document';
+import { OpenDppEvent } from '../domain/open-dpp-event';
 
 @Injectable()
-export class DppEventsService {
+export class OpenDppEventsService {
   constructor(
-    @InjectModel(DppEventDocument.name)
-    private dppEventDocument: Model<DppEventDocument>,
+    @InjectModel(OpenDppEventDocument.name)
+    private openDppEventDocument: Model<OpenDppEventDocument>,
   ) {}
 
-  convertToDomain(dppEventDocument: DppEventDocument) {
-    return DppEvent.fromPlain(this.documentToDomainPlain(dppEventDocument));
+  convertToDomain(openDppEventDocument: OpenDppEventDocument) {
+    return OpenDppEvent.fromPlain(
+      this.documentToDomainPlain(openDppEventDocument),
+    );
   }
 
-  async save(dppEvent: DppEvent) {
-    const documentPlain = this.domainToDocumentPlain(dppEvent);
-    const dppEventDoc = await this.dppEventDocument.findOneAndUpdate(
+  async save(openDppEvent: OpenDppEvent) {
+    const documentPlain = this.domainToDocumentPlain(openDppEvent);
+    const openDppEventDoc = await this.openDppEventDocument.findOneAndUpdate(
       { _id: documentPlain._id },
       documentPlain,
       {
@@ -26,16 +28,17 @@ export class DppEventsService {
       },
     );
 
-    return this.convertToDomain(dppEventDoc);
+    return this.convertToDomain(openDppEventDoc);
   }
 
   async findById(id: string) {
-    const foundDocs = await this.dppEventDocument
+    const foundDocs = await this.openDppEventDocument
       .find(
         { _id: id },
         {
           _id: true,
           type: true,
+          _schemaVersion: true,
           source: true,
           eventJsonData: true,
           createdAt: true,
@@ -47,12 +50,13 @@ export class DppEventsService {
   }
 
   async findByDppId(dppId: string) {
-    const foundDocs = await this.dppEventDocument
+    const foundDocs = await this.openDppEventDocument
       .find(
         { source: dppId },
         {
           _id: true,
           type: true,
+          _schemaVersion: true,
           source: true,
           eventJsonData: true,
           createdAt: true,
@@ -64,12 +68,13 @@ export class DppEventsService {
   }
 
   async findByType(type: string) {
-    const foundData = await this.dppEventDocument
+    const foundData = await this.openDppEventDocument
       .find(
         { type },
         {
           _id: true,
           type: true,
+          _schemaVersion: true,
           source: true,
           eventJsonData: true,
           createdAt: true,
@@ -80,26 +85,28 @@ export class DppEventsService {
     return foundData.map((dm) => this.convertToDomain(dm));
   }
 
-  private documentToDomainPlain(dppEventDocument: DppEventDocument) {
+  private documentToDomainPlain(openDppEventDocument: OpenDppEventDocument) {
     return {
-      id: dppEventDocument._id,
-      type: dppEventDocument.type,
-      source: dppEventDocument.source,
+      id: openDppEventDocument._id,
+      type: openDppEventDocument.type,
+      schemaVersion: openDppEventDocument._schemaVersion,
+      source: openDppEventDocument.source,
       eventJsonData:
-        typeof dppEventDocument.eventJsonData === 'string'
-          ? dppEventDocument.eventJsonData
-          : JSON.stringify(dppEventDocument.eventJsonData),
-      createdAt: dppEventDocument.createdAt,
-      updatedAt: dppEventDocument.updatedAt,
+        typeof openDppEventDocument.eventJsonData === 'string'
+          ? openDppEventDocument.eventJsonData
+          : JSON.stringify(openDppEventDocument.eventJsonData),
+      createdAt: openDppEventDocument.createdAt,
+      updatedAt: openDppEventDocument.updatedAt,
     };
   }
 
-  private domainToDocumentPlain(dppEvent: DppEvent) {
+  private domainToDocumentPlain(openDppEvent: OpenDppEvent) {
     // Convert the domain object to a plain object suitable for the document
-    const plain = dppEvent.toPlain();
+    const plain = openDppEvent.toPlain();
     return {
       _id: plain.id,
       type: plain.type,
+      _schemaVersion: plain.schemaVersion,
       source: plain.source,
       eventJsonData: plain.eventJsonData,
       createdAt: plain.createdAt,

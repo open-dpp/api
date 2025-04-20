@@ -9,6 +9,9 @@ import { v4 as uuid4 } from 'uuid';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
+import { DppEvent } from '../../dpp-events/domain/dpp-event';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;
@@ -18,9 +21,20 @@ describe('UniqueProductIdentifierService', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
+        MongooseTestingModule,
         TypeOrmModule.forFeature([UniqueProductIdentifierEntity, ModelEntity]),
       ],
-      providers: [UniqueProductIdentifierService],
+      providers: [
+        UniqueProductIdentifierService,
+        {
+          provide: DppEventsService,
+          useValue: {
+            save: jest
+              .fn()
+              .mockImplementation((event: DppEvent) => Promise.resolve(event)),
+          },
+        },
+      ],
     }).compile();
     service = module.get<UniqueProductIdentifierService>(
       UniqueProductIdentifierService,

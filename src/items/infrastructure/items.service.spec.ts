@@ -8,7 +8,6 @@ import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { Model } from '../../models/domain/model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
@@ -22,13 +21,15 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import { DppEventsModule } from '../../dpp-events/dpp-events.module';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { userObj1 } from '../../../test/users-and-orgs';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
   let modelsService: ModelsService;
   let organizationsService: OrganizationsService;
   let dataSource: DataSource;
-  const user = new User(randomUUID(), 'test@test.test');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,7 +42,9 @@ describe('ProductsService', () => {
           ItemEntity,
           OrganizationEntity,
         ]),
+        MongooseTestingModule,
         PermissionsModule,
+        DppEventsModule,
       ],
       providers: [
         ItemsService,
@@ -70,11 +73,14 @@ describe('ProductsService', () => {
   });
 
   it('should create and find item for a model', async () => {
-    const organization = Organization.create({ name: 'My Orga', user });
+    const organization = Organization.create({
+      name: 'My Orga',
+      user: userObj1,
+    });
     await organizationsService.save(organization);
     const model = Model.create({
       name: 'name',
-      user,
+      user: userObj1,
       organization,
     });
 
@@ -88,16 +94,19 @@ describe('ProductsService', () => {
   });
 
   it('should create multiple items for a model and find them by model', async () => {
-    const organization = Organization.create({ name: 'My Orga', user });
+    const organization = Organization.create({
+      name: 'My Orga',
+      user: userObj1,
+    });
     await organizationsService.save(organization);
     const model = Model.create({
       name: 'name',
-      user,
+      user: userObj1,
       organization,
     });
     const model2 = Model.create({
       name: 'name',
-      user,
+      user: userObj1,
       organization,
     });
     const savedModel1 = await modelsService.save(model);
@@ -127,11 +136,14 @@ describe('ProductsService', () => {
 
   it('should save item with unique product identifiers', async () => {
     // Create organization and model
-    const organization = Organization.create({ name: 'Org with UPIs', user });
+    const organization = Organization.create({
+      name: 'Org with UPIs',
+      user: userObj1,
+    });
     await organizationsService.save(organization);
     const model = Model.create({
       name: 'Model with UPIs',
-      user,
+      user: userObj1,
       organization,
     });
     const savedModel = await modelsService.save(model);

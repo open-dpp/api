@@ -9,7 +9,6 @@ import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { DataValue, Model } from '../domain/model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
@@ -21,12 +20,14 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../../product-data-model/domain/section';
+import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
+import { DppEvent } from '../../dpp-events/domain/dpp-event';
+import { userObj1 } from '../../../test/users-and-orgs';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
   let organizationService: OrganizationsService;
   let dataSource: DataSource;
-  const user = new User(randomUUID(), 'test@test.test');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -47,6 +48,14 @@ describe('ModelsService', () => {
         UsersService,
         OrganizationsService,
         KeycloakResourcesService,
+        {
+          provide: DppEventsService,
+          useValue: {
+            save: jest
+              .fn()
+              .mockImplementation((event: DppEvent) => Promise.resolve(event)),
+          },
+        },
       ],
     })
       .overrideProvider(KeycloakResourcesService)
@@ -60,11 +69,14 @@ describe('ModelsService', () => {
   });
 
   it('should create a model', async () => {
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const organization = Organization.create({
+      name: 'My orga',
+      user: userObj1,
+    });
     await organizationService.save(organization);
     const model = Model.create({
       name: 'My product',
-      user,
+      user: userObj1,
       organization,
     });
     const productDataModel = ProductDataModel.fromPlain({
@@ -148,7 +160,7 @@ describe('ModelsService', () => {
         row: 0,
       }),
     ]);
-    expect(foundModel.createdByUserId).toEqual(user.id);
+    expect(foundModel.createdByUserId).toEqual(userObj1.id);
     expect(foundModel.isOwnedBy(organization)).toBeTruthy();
   });
 
@@ -159,21 +171,24 @@ describe('ModelsService', () => {
   });
 
   it('should find all models of organization', async () => {
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const organization = Organization.create({
+      name: 'My orga',
+      user: userObj1,
+    });
     await organizationService.save(organization);
     const model1 = Model.create({
       name: 'Product A',
-      user,
+      user: userObj1,
       organization,
     });
     const model2 = Model.create({
       name: 'Product B',
-      user,
+      user: userObj1,
       organization,
     });
     const model3 = Model.create({
       name: 'Product C',
-      user,
+      user: userObj1,
       organization,
     });
     await modelsService.save(model1);

@@ -1,19 +1,16 @@
 import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
-import { DppEventType } from './dpp-event-type.enum';
+import { OpenDppEventType } from './open-dpp-event-type.enum';
 
-export class DppEvent {
+export class OpenDppEvent {
   @Expose()
   readonly id: string = randomUUID();
 
   @Expose()
-  readonly type: DppEventType;
+  readonly type: OpenDppEventType;
 
   @Expose()
   readonly source: string;
-
-  @Expose()
-  readonly eventJsonData: string;
 
   @Expose()
   readonly createdAt: Date = new Date();
@@ -22,17 +19,17 @@ export class DppEvent {
   readonly updatedAt: Date = new Date();
 
   static create(plain: {
-    type: DppEventType;
+    type: OpenDppEventType;
     source: string;
     eventJsonData: string;
   }) {
-    return DppEvent.fromPlain({
+    return OpenDppEvent.fromPlain({
       ...plain,
     });
   }
 
-  static fromPlain(plain: unknown): DppEvent {
-    return plainToInstance(DppEvent, plain, {
+  static fromPlain(plain: unknown): OpenDppEvent {
+    return plainToInstance(OpenDppEvent, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
