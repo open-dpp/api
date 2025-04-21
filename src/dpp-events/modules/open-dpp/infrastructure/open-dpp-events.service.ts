@@ -1,15 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { OpenDppEventDocument } from './open-dpp-event.document';
-import { OpenDppEvent } from '../domain/open-dpp-event';
+import {
+  OpenDppEvent,
+  OpenDppEventSchemaVersion,
+} from '../domain/open-dpp-event';
+import { UniqueProductIdentifierCreatedEvent } from '../domain/open-dpp-events/unique-product-identifier-created.event';
 
 @Injectable()
-export class OpenDppEventsService {
+export class OpenDppEventsService implements OnApplicationBootstrap {
   constructor(
     @InjectModel(OpenDppEventDocument.name)
     private openDppEventDocument: Model<OpenDppEventDocument>,
   ) {}
+
+  async onApplicationBootstrap() {
+    await this.save(
+      UniqueProductIdentifierCreatedEvent.create({
+        uniqueProductIdentifierId: '123',
+        schemaVersion: OpenDppEventSchemaVersion.v1_0_0,
+      }),
+    );
+  }
 
   convertToDomain(openDppEventDocument: OpenDppEventDocument) {
     return OpenDppEvent.fromPlain(
@@ -88,13 +101,7 @@ export class OpenDppEventsService {
   private documentToDomainPlain(openDppEventDocument: OpenDppEventDocument) {
     return {
       id: openDppEventDocument._id,
-      type: openDppEventDocument.type,
       schemaVersion: openDppEventDocument._schemaVersion,
-      source: openDppEventDocument.source,
-      eventJsonData:
-        typeof openDppEventDocument.eventJsonData === 'string'
-          ? openDppEventDocument.eventJsonData
-          : JSON.stringify(openDppEventDocument.eventJsonData),
       createdAt: openDppEventDocument.createdAt,
       updatedAt: openDppEventDocument.updatedAt,
     };
@@ -106,6 +113,7 @@ export class OpenDppEventsService {
     return {
       _id: plain.id,
       type: plain.type,
+      subType: plain.subType,
       _schemaVersion: plain.schemaVersion,
       source: plain.source,
       eventJsonData: plain.eventJsonData,

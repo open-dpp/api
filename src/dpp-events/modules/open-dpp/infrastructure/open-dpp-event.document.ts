@@ -1,33 +1,28 @@
 import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { OpenDppEventType } from '../domain/open-dpp-event-type.enum';
-
-export enum OpenDppEventDocumentSchemaVersion {
-  v1_0_0 = '1.0.0',
-}
+import { UniqueProductIdentifierCreatedEventDocument } from './open-dpp-events/unique-product-identifier-created.event-document';
+import { OpenDppEventSchemaVersion } from '../domain/open-dpp-event';
 
 /**
  * OpenDppEvent schema
  */
-@Schema()
+@Schema({ discriminatorKey: 'kind' })
 export class OpenDppEventDocument extends Document {
+  @Prop({
+    type: String,
+    required: true,
+    enum: [UniqueProductIdentifierCreatedEventDocument.name],
+  })
+  kind: string;
+
   @Prop({ required: true })
   _id: string;
 
   @Prop({
-    default: OpenDppEventDocumentSchemaVersion.v1_0_0,
-    enum: OpenDppEventDocumentSchemaVersion,
+    default: OpenDppEventSchemaVersion.v1_0_0,
+    enum: OpenDppEventSchemaVersion,
   })
-  _schemaVersion: OpenDppEventDocumentSchemaVersion;
-
-  @Prop({ required: true, enum: OpenDppEventType })
-  type: OpenDppEventType;
-
-  @Prop({ required: true })
-  source: string;
-
-  @Prop({ type: Object, required: true })
-  eventJsonData: object;
+  _schemaVersion: OpenDppEventSchemaVersion;
 
   @Prop({ required: true })
   createdAt: Date;
