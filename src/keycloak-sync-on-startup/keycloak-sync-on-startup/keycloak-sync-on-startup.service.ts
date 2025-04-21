@@ -2,7 +2,6 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { AuthContext } from '../../auth/auth-request';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -43,7 +42,7 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
         );
       }
     }
-    this.logger.log('Syncing users from DB to Keycloak');
+    /* this.logger.log('Syncing users from DB to Keycloak');
     const users = await this.usersService.find();
     for (const user of users) {
       await this.keycloakResourcesServices.createUser(user);
@@ -84,7 +83,7 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
           }
         }
       }
-    }
+    } */
     this.logger.log('Finished syncing users from Keycloak to database');
   }
 }
