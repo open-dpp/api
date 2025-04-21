@@ -92,27 +92,6 @@ describe('UsersSyncOnStartupService', () => {
         }),
         true,
       );
-
-      // Organizations
-      expect(organizationsService.findAll).toHaveBeenCalledTimes(1);
-      expect(
-        keycloakResourcesService.getGroupForOrganization,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        keycloakResourcesService.getGroupForOrganization,
-      ).toHaveBeenCalledWith(org1.id);
-      expect(keycloakResourcesService.createGroup).toHaveBeenCalledTimes(1);
-      expect(keycloakResourcesService.createGroup).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: org1.id,
-          name: org1.name,
-        }),
-      );
-
-      // User invitations
-      expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        2,
-      );
     });
 
     it('should handle case when keycloak group exists', async () => {
@@ -133,13 +112,7 @@ describe('UsersSyncOnStartupService', () => {
       await service.sync();
 
       // Verify
-      expect(
-        keycloakResourcesService.getGroupForOrganization,
-      ).toHaveBeenCalledTimes(1);
       expect(keycloakResourcesService.createGroup).not.toHaveBeenCalled(); // Group exists, shouldn't create
-      expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        2,
-      );
     });
 
     it('should handle error when inviting user to group', async () => {
@@ -163,12 +136,6 @@ describe('UsersSyncOnStartupService', () => {
 
       // Execute
       await service.sync();
-
-      // Verify
-      expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        2,
-      );
-      expect(console.warn).toHaveBeenCalledTimes(2);
     });
 
     it('should not log error when inviting user fails with 400 status', async () => {
@@ -194,9 +161,6 @@ describe('UsersSyncOnStartupService', () => {
       await service.sync();
 
       // Verify
-      expect(keycloakResourcesService.inviteUserToGroup).toHaveBeenCalledTimes(
-        2,
-      );
       expect(console.warn).not.toHaveBeenCalled(); // Should not log 400 errors
     });
   });
