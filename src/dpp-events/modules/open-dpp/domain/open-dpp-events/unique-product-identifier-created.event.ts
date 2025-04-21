@@ -20,6 +20,8 @@ export class UniqueProductIdentifierCreatedEvent extends OpenDppEvent {
   }) {
     return UniqueProductIdentifierCreatedEvent.fromPlain({
       kind: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
+      source: plain.uniqueProductIdentifierId,
       schemaVersion: plain.schemaVersion,
       uniqueProductIdentifierId: plain.uniqueProductIdentifierId,
       subSchemaVersion: plain.subSchemaVersion,

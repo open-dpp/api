@@ -31,12 +31,8 @@ export class OpenDppEventsService implements OnApplicationBootstrap {
   }
 
   async create(openDppEvent: OpenDppEvent) {
-    const openDppEventDoc = await this.openDppEventDocument.create({
-      _id: openDppEvent.id,
-      _schemaVersion: openDppEvent.schemaVersion,
-      createdAt: openDppEvent.createdAt,
-      updatedAt: openDppEvent.updatedAt,
-    });
+    const documentPlain = this.domainToDocumentPlain(openDppEvent);
+    const openDppEventDoc = await this.openDppEventDocument.create(documentPlain);
 
     return this.convertToDomain(openDppEventDoc);
   }
@@ -112,6 +108,11 @@ export class OpenDppEventsService implements OnApplicationBootstrap {
   private documentToDomainPlain(openDppEventDocument: OpenDppEventDocument) {
     return {
       id: openDppEventDocument._id,
+      kind: openDppEventDocument.kind,
+      type: openDppEventDocument.type,
+      subType: openDppEventDocument.subType,
+      source: openDppEventDocument.source,
+      eventJsonData: openDppEventDocument.eventJsonData,
       schemaVersion: openDppEventDocument._schemaVersion,
       createdAt: openDppEventDocument.createdAt,
       updatedAt: openDppEventDocument.updatedAt,
@@ -123,6 +124,7 @@ export class OpenDppEventsService implements OnApplicationBootstrap {
     const plain = openDppEvent.toPlain();
     return {
       _id: plain.id,
+      kind: plain.kind,
       type: plain.type,
       subType: plain.subType,
       _schemaVersion: plain.schemaVersion,

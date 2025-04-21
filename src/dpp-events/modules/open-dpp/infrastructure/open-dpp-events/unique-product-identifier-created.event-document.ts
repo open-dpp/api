@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 export enum UniqueProductIdentifierCreatedEventSchemaVersion {
-  v1_0_0 = '1.0.1',
+  v1_0_0 = '1.0.0',
 }
 
 @Schema()

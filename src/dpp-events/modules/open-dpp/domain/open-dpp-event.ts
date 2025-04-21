@@ -14,6 +14,18 @@ export class OpenDppEvent {
   readonly kind: OpenDppEventType;
 
   @Expose()
+  readonly type: OpenDppEventType;
+
+  @Expose()
+  readonly subType?: string;
+
+  @Expose()
+  readonly source?: string;
+
+  @Expose()
+  readonly eventJsonData?: any;
+
+  @Expose()
   readonly schemaVersion?: OpenDppEventSchemaVersion;
 
   @Expose()
@@ -32,7 +44,13 @@ export class OpenDppEvent {
   }
 
   static fromPlain(plain: unknown): OpenDppEvent {
-    return plainToInstance(OpenDppEvent, plain, {
+    // If kind is not provided but type is, set kind to the same value as type
+    const plainObj = plain as any;
+    if (!plainObj.kind && plainObj.type) {
+      plainObj.kind = plainObj.type;
+    }
+
+    return plainToInstance(OpenDppEvent, plainObj, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });

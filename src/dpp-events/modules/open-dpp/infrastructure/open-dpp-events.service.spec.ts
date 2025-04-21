@@ -11,6 +11,7 @@ import {
   OpenDppEventDocument,
   OpenDppEventSchema,
 } from './open-dpp-event.document';
+import { UniqueProductIdentifierCreatedEventDocument } from './open-dpp-events/unique-product-identifier-created.event-document';
 import { randomUUID } from 'crypto';
 import { OpenDppEventType } from '../domain/open-dpp-event-type.enum';
 import { OpenDppEvent } from '../domain/open-dpp-event';
@@ -117,6 +118,7 @@ describe('OpenDppEventsService', () => {
       // Create initial document
       await openDppEventDocumentModel.create({
         _id: id,
+        kind: UniqueProductIdentifierCreatedEventDocument.name,
         type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp123',
         eventJsonData: { data: 'test data' },
@@ -161,6 +163,7 @@ describe('OpenDppEventsService', () => {
       const id = randomUUID();
       await openDppEventDocumentModel.create({
         _id: id,
+        kind: UniqueProductIdentifierCreatedEventDocument.name,
         type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: 'dpp123',
         eventJsonData: { data: 'test data' },
@@ -198,6 +201,7 @@ describe('OpenDppEventsService', () => {
 
       await openDppEventDocumentModel.create({
         _id: id1,
+        kind: UniqueProductIdentifierCreatedEventDocument.name,
         type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: dppId,
         eventJsonData: { data: 'test data 1' },
@@ -207,6 +211,7 @@ describe('OpenDppEventsService', () => {
 
       await openDppEventDocumentModel.create({
         _id: id2,
+        kind: UniqueProductIdentifierCreatedEventDocument.name,
         type: OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED,
         source: dppId,
         eventJsonData: { data: 'test data 2' },
@@ -255,6 +260,7 @@ describe('OpenDppEventsService', () => {
 
       await openDppEventDocumentModel.create({
         _id: id1,
+        kind: UniqueProductIdentifierCreatedEventDocument.name,
         type,
         source: 'dpp123',
         eventJsonData: { data: 'test data 1' },
@@ -264,6 +270,7 @@ describe('OpenDppEventsService', () => {
 
       await openDppEventDocumentModel.create({
         _id: id2,
+        kind: UniqueProductIdentifierCreatedEventDocument.name,
         type,
         source: 'dpp456',
         eventJsonData: { data: 'test data 2' },

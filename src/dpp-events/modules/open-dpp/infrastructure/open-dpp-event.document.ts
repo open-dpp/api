@@ -2,6 +2,7 @@ import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { UniqueProductIdentifierCreatedEventDocument } from './open-dpp-events/unique-product-identifier-created.event-document';
 import { OpenDppEventSchemaVersion } from '../domain/open-dpp-event';
+import { OpenDppEventType } from '../domain/open-dpp-event-type.enum';
 
 /**
  * OpenDppEvent schema
@@ -17,6 +18,21 @@ export class OpenDppEventDocument extends Document {
 
   @Prop({ required: true })
   _id: string;
+
+  @Prop({
+    type: String,
+    enum: OpenDppEventType,
+  })
+  type: OpenDppEventType;
+
+  @Prop()
+  subType: string;
+
+  @Prop()
+  source: string;
+
+  @Prop({ type: Object })
+  eventJsonData: any;
 
   @Prop({
     default: OpenDppEventSchemaVersion.v1_0_0,
