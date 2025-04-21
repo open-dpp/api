@@ -30,6 +30,17 @@ export class OpenDppEventsService implements OnApplicationBootstrap {
     );
   }
 
+  async create(openDppEvent: OpenDppEvent) {
+    const openDppEventDoc = await this.openDppEventDocument.create({
+      _id: openDppEvent.id,
+      _schemaVersion: openDppEvent.schemaVersion,
+      createdAt: openDppEvent.createdAt,
+      updatedAt: openDppEvent.updatedAt,
+    });
+
+    return this.convertToDomain(openDppEventDoc);
+  }
+
   async save(openDppEvent: OpenDppEvent) {
     const documentPlain = this.domainToDocumentPlain(openDppEvent);
     const openDppEventDoc = await this.openDppEventDocument.findOneAndUpdate(

@@ -1,5 +1,5 @@
-import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 export enum UniqueProductIdentifierCreatedEventSchemaVersion {
@@ -8,10 +8,10 @@ export enum UniqueProductIdentifierCreatedEventSchemaVersion {
 
 @Schema()
 export class UniqueProductIdentifierCreatedEventDocument extends Document {
-  @Expose()
+  @Prop({ required: true })
   readonly uniqueProductIdentifierId: string;
 
-  @Expose()
+  @Prop({ required: true })
   readonly schemaVersion?: UniqueProductIdentifierCreatedEventSchemaVersion;
 
   static create(plain: {
