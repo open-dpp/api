@@ -10,7 +10,6 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import {
   keycloakUsers,
   org1,
-  organizations,
   user1org1,
   user2org1,
 } from '../../../test/users-and-orgs';
@@ -67,9 +66,7 @@ describe('UsersSyncOnStartupService', () => {
         .spyOn(usersService, 'findOne')
         .mockResolvedValueOnce(user1org1) // First user exists
         .mockResolvedValueOnce(undefined); // Second user doesn't exist
-      jest
-        .spyOn(organizationsService, 'findAll')
-        .mockResolvedValue(organizations);
+      jest.spyOn(organizationsService, 'findAll').mockResolvedValue([org1]);
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
         .mockResolvedValue(null); // Group doesn't exist, will be created
@@ -99,9 +96,7 @@ describe('UsersSyncOnStartupService', () => {
       jest
         .spyOn(keycloakResourcesService, 'getUsers')
         .mockResolvedValue(keycloakUsers);
-      jest
-        .spyOn(organizationsService, 'findAll')
-        .mockResolvedValue(organizations);
+      jest.spyOn(organizationsService, 'findAll').mockResolvedValue([org1]);
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
         .mockResolvedValue({ id: 'group1', name: 'organization-org1' }); // Group exists
@@ -122,9 +117,7 @@ describe('UsersSyncOnStartupService', () => {
       jest
         .spyOn(keycloakResourcesService, 'getUsers')
         .mockResolvedValue(keycloakUsers);
-      jest
-        .spyOn(organizationsService, 'findAll')
-        .mockResolvedValue(organizations);
+      jest.spyOn(organizationsService, 'findAll').mockResolvedValue([org1]);
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
         .mockResolvedValue({ id: 'group1', name: `organization-${org1.id}` });
@@ -145,9 +138,7 @@ describe('UsersSyncOnStartupService', () => {
       jest
         .spyOn(keycloakResourcesService, 'getUsers')
         .mockResolvedValue(keycloakUsers);
-      jest
-        .spyOn(organizationsService, 'findAll')
-        .mockResolvedValue(organizations);
+      jest.spyOn(organizationsService, 'findAll').mockResolvedValue([org1]);
       jest
         .spyOn(keycloakResourcesService, 'getGroupForOrganization')
         .mockResolvedValue({ id: 'group1', name: 'organization-org1' });

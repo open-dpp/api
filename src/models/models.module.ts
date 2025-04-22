@@ -14,6 +14,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
+import { DppEventsModule } from '../dpp-events/dpp-events.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import {
     UniqueProductIdentifierModule,
     UsersModule,
     PermissionsModule,
+    DppEventsModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],

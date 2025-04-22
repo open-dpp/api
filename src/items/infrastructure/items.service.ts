@@ -8,6 +8,7 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Model } from '../../models/domain/model';
+import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
 
 @Injectable()
 export class ItemsService {
@@ -17,6 +18,7 @@ export class ItemsService {
     @InjectRepository(ModelEntity)
     private modelRepository: Repository<ModelEntity>,
     private uniqueModelIdentifierService: UniqueProductIdentifierService,
+    private readonly dppEventsService: DppEventsService,
   ) {}
 
   convertToDomain(

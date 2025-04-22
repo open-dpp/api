@@ -9,6 +9,8 @@ import { v4 as uuid4 } from 'uuid';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { DppEventsModule } from '../../dpp-events/dpp-events.module';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;
@@ -18,7 +20,9 @@ describe('UniqueProductIdentifierService', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
+        MongooseTestingModule,
         TypeOrmModule.forFeature([UniqueProductIdentifierEntity, ModelEntity]),
+        DppEventsModule,
       ],
       providers: [UniqueProductIdentifierService],
     }).compile();
