@@ -85,6 +85,29 @@ describe('DppEventsService', () => {
       expect(result.id).toBe(id);
       expect(result.kind).toBe(DppEventType.OPENEPCIS);
     });
+
+    it('should convert a DppEventDocument with createdAt and updatedAt to a DppEvent domain object', () => {
+      // Arrange
+      const id = randomUUID();
+      const createdAt = new Date('2023-01-01');
+      const updatedAt = new Date('2023-01-02');
+      const dppEventDoc = {
+        _id: id,
+        kind: DppEventType.OPENEPCIS,
+        createdAt,
+        updatedAt,
+      } as DppEventDocument;
+
+      // Act
+      const result = service.convertToDomain(dppEventDoc);
+
+      // Assert
+      expect(result).toBeInstanceOf(DppEvent);
+      expect(result.id).toBe(id);
+      expect(result.kind).toBe(DppEventType.OPENEPCIS);
+      expect(result.createdAt).toEqual(createdAt);
+      expect(result.updatedAt).toEqual(updatedAt);
+    });
   });
 
   describe('save', () => {
@@ -109,6 +132,39 @@ describe('DppEventsService', () => {
       expect(savedDoc).toBeDefined();
       expect(savedDoc._id).toBe(id);
       expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
+    });
+
+    it('should save a DppEvent with custom createdAt and updatedAt dates', async () => {
+      // Arrange
+      const id = randomUUID();
+      const createdAt = new Date('2023-01-01');
+      const updatedAt = new Date('2023-01-02');
+      const dppEvent = DppEvent.fromPlain({
+        id,
+        kind: DppEventType.OPENEPCIS,
+        createdAt,
+        updatedAt,
+      });
+
+      // Act
+      const result = await service.save(dppEvent);
+
+      // Assert
+      expect(result).toBeInstanceOf(DppEvent);
+      expect(result.id).toBe(id);
+      expect(result.kind).toBe(DppEventType.OPENEPCIS);
+      expect(result.createdAt).toEqual(createdAt);
+      // The updatedAt date should be updated to the current time
+      expect(result.updatedAt).not.toEqual(updatedAt);
+
+      // Verify it was saved to the database
+      const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
+      expect(savedDoc).toBeDefined();
+      expect(savedDoc._id).toBe(id);
+      expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
+      expect(savedDoc.createdAt).toEqual(createdAt);
+      // The updatedAt date should be updated to the current time
+      expect(savedDoc.updatedAt).not.toEqual(updatedAt);
     });
   });
 
@@ -182,6 +238,144 @@ describe('DppEventsService', () => {
 
       // Assert
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe('DppEvent Discriminators', () => {
+    describe('OpenDppEvent discriminator', () => {
+      it('should save and retrieve an OpenDppEvent with proper discriminator', async () => {
+        // Arrange
+        const id = randomUUID();
+        const openDppEvent = DppEvent.fromPlain({
+          id,
+          kind: DppEventType.OPEN_DPP,
+        });
+
+        // Act
+        await service.save(openDppEvent);
+
+        // Assert
+        const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
+        expect(savedDoc).toBeDefined();
+        expect(savedDoc._id).toBe(id);
+        expect(savedDoc.kind).toBe(DppEventType.OPEN_DPP);
+
+        // Verify the document uses the correct discriminator
+        const retrievedEvents = await service.findByKind(DppEventType.OPEN_DPP);
+        expect(retrievedEvents).toHaveLength(1);
+        expect(retrievedEvents[0].id).toBe(id);
+        expect(retrievedEvents[0].kind).toBe(DppEventType.OPEN_DPP);
+      });
+    });
+
+    describe('OpenepcisEvent discriminator', () => {
+      it('should save and retrieve an OpenepcisEvent with proper discriminator', async () => {
+        // Arrange
+        const id = randomUUID();
+        const openepcisEvent = DppEvent.fromPlain({
+          id,
+          kind: DppEventType.OPENEPCIS,
+        });
+
+        // Act
+        await service.save(openepcisEvent);
+
+        // Assert
+        const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
+        expect(savedDoc).toBeDefined();
+        expect(savedDoc._id).toBe(id);
+        expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
+
+        // Verify the document uses the correct discriminator
+        const retrievedEvents = await service.findByKind(
+          DppEventType.OPENEPCIS,
+        );
+        expect(retrievedEvents).toHaveLength(1);
+        expect(retrievedEvents[0].id).toBe(id);
+        expect(retrievedEvents[0].kind).toBe(DppEventType.OPENEPCIS);
+      });
+    });
+
+    describe('UntpEvent discriminator', () => {
+      it('should save and retrieve a UntpEvent with proper discriminator', async () => {
+        // Arrange
+        const id = randomUUID();
+        const untpEvent = DppEvent.fromPlain({
+          id,
+          kind: DppEventType.UNTP,
+        });
+
+        // Act
+        await service.save(untpEvent);
+
+        // Assert
+        const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
+        expect(savedDoc).toBeDefined();
+        expect(savedDoc._id).toBe(id);
+        expect(savedDoc.kind).toBe(DppEventType.UNTP);
+
+        // Verify the document uses the correct discriminator
+        const retrievedEvents = await service.findByKind(DppEventType.UNTP);
+        expect(retrievedEvents).toHaveLength(1);
+        expect(retrievedEvents[0].id).toBe(id);
+        expect(retrievedEvents[0].kind).toBe(DppEventType.UNTP);
+      });
+    });
+
+    describe('Mixed discriminators', () => {
+      it('should correctly retrieve events by their discriminator type', async () => {
+        // Arrange
+        const openDppId = randomUUID();
+        const openepcisId = randomUUID();
+        const untpId = randomUUID();
+
+        // Create one of each event type
+        await dppEventModel.create([
+          {
+            _id: openDppId,
+            kind: DppEventType.OPEN_DPP,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            _id: openepcisId,
+            kind: DppEventType.OPENEPCIS,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            _id: untpId,
+            kind: DppEventType.UNTP,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]);
+
+        // Act & Assert
+        // Check OpenDpp events
+        const openDppEvents = await service.findByKind(DppEventType.OPEN_DPP);
+        expect(openDppEvents).toHaveLength(1);
+        expect(openDppEvents[0].id).toBe(openDppId);
+        expect(openDppEvents[0].kind).toBe(DppEventType.OPEN_DPP);
+
+        // Check Openepcis events
+        const openepcisEvents = await service.findByKind(
+          DppEventType.OPENEPCIS,
+        );
+        expect(openepcisEvents).toHaveLength(1);
+        expect(openepcisEvents[0].id).toBe(openepcisId);
+        expect(openepcisEvents[0].kind).toBe(DppEventType.OPENEPCIS);
+
+        // Check Untp events
+        const untpEvents = await service.findByKind(DppEventType.UNTP);
+        expect(untpEvents).toHaveLength(1);
+        expect(untpEvents[0].id).toBe(untpId);
+        expect(untpEvents[0].kind).toBe(DppEventType.UNTP);
+
+        // Verify we can get all events
+        const allEvents = await dppEventModel.find().exec();
+        expect(allEvents).toHaveLength(3);
+      });
     });
   });
 });

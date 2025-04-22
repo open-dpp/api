@@ -8,7 +8,7 @@ export enum OpenepcisEventSchemaVersion {
 /**
  * OpenepcisEvent schema
  */
-@Schema()
+@Schema({ collection: 'openepcis-events' })
 export class OpenepcisEventDocument extends Document {
   @Prop({ required: true })
   _id: string;

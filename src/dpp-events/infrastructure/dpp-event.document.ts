@@ -9,7 +9,7 @@ export enum DppEventSchemaVersion {
 /**
  * DppEvent schema
  */
-@Schema({ discriminatorKey: 'kind' })
+@Schema({ discriminatorKey: 'kind', collection: 'dpp-events' })
 export class DppEventDocument extends Document {
   @Prop({
     type: String,

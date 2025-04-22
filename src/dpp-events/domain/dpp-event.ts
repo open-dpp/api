@@ -21,7 +21,10 @@ export class DppEvent {
   @Expose()
   readonly data: OpenDppEvent | UntpEvent | OpenEpcisEvent | null = null;
 
-  static create(plain: { kind: DppEventType }) {
+  static create(plain: {
+    kind: DppEventType;
+    data: OpenDppEvent | UntpEvent | OpenEpcisEvent | null;
+  }) {
     return DppEvent.fromPlain({
       ...plain,
     });

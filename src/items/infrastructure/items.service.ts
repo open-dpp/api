@@ -8,6 +8,11 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Model } from '../../models/domain/model';
+import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
+import { DppEvent } from '../../dpp-events/domain/dpp-event';
+import { DppEventType } from '../../dpp-events/domain/dpp-event-type.enum';
+import { ItemCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/item-created.event';
+import { OpenDppEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-event';
 
 @Injectable()
 export class ItemsService {
@@ -17,6 +22,7 @@ export class ItemsService {
     @InjectRepository(ModelEntity)
     private modelRepository: Repository<ModelEntity>,
     private uniqueModelIdentifierService: UniqueProductIdentifierService,
+    private readonly dppEventsService: DppEventsService,
   ) {}
 
   convertToDomain(
@@ -42,6 +48,13 @@ export class ItemsService {
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
+    const childEvent = ItemCreatedEvent.create({ itemId: itemEntity.id });
+    const childOdppEvent = OpenDppEvent.create();
+    const parentEvent = DppEvent.create({
+      kind: DppEventType.OPEN_DPP,
+      data: childEvent,
+    });
+    await this.dppEventsService.save(parentEvent);
     return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
   }
 

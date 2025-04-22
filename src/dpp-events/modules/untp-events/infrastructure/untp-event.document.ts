@@ -8,7 +8,7 @@ export enum UntpEventSchemaVersion {
 /**
  * UntpEvent schema
  */
-@Schema()
+@Schema({ collection: 'untp-events' })
 export class UntpEventDocument extends Document {
   @Prop({ required: true })
   _id: string;
