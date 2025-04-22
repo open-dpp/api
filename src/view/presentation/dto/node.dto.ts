@@ -7,6 +7,8 @@ import {
   Max,
   Min,
   ValidateNested,
+  validateSync,
+  ValidationError,
 } from 'class-validator';
 import {
   DataFieldRef,
@@ -17,7 +19,8 @@ import {
 } from '../../domain/node';
 import { omit } from 'lodash';
 import { ValueError } from '../../../exceptions/domain.errors';
-import { Type } from 'class-transformer';
+import { plainToInstance, Type } from 'class-transformer';
+import { BadRequestException } from '@nestjs/common';
 
 export class NodeCreateDto {
   @IsEnum(NodeType)
@@ -180,12 +183,14 @@ export class NodeUpdateDto {
 
 export class GridContainerUpdateDto extends NodeUpdateDto {
   @ValidateNested()
+  @IsNotEmptyObject()
   @Type(() => ResponsiveConfigDto)
   cols: ResponsiveConfigDto;
 }
 
 export class GridItemUpdateDto extends NodeUpdateDto {
   @ValidateNested()
+  @IsNotEmptyObject()
   @Type(() => ResponsiveConfigDto)
   colSpan: ResponsiveConfigDto;
 
@@ -205,22 +210,43 @@ export class GridItemUpdateDto extends NodeUpdateDto {
   rowSpan?: ResponsiveConfigDto;
 }
 
-const nodeUpdateSubtypes = [
+const nodeUpdateSubtypes: {
+  name: NodeType;
+  value: new (...args: any[]) => any;
+}[] = [
   { value: GridContainerUpdateDto, name: NodeType.GRID_CONTAINER },
   { value: GridItemUpdateDto, name: NodeType.GRID_ITEM },
 ];
 
-export class ModificationDto {
-  @ValidateNested()
-  @IsNotEmptyObject()
-  @Type(() => NodeUpdateDto, {
-    discriminator: {
-      property: 'type',
-      subTypes: nodeUpdateSubtypes,
-    },
-    keepDiscriminatorProperty: true,
-  })
-  modifications: NodeUpdateDto;
+export function plainToUpdateDto(nodeType: string, plain: any) {
+  const found = nodeUpdateSubtypes.find((n) => n.name === nodeType);
+  if (found) {
+    return plainToInstance(found.value, { ...plain, type: nodeType });
+  } else {
+    throw new BadRequestException(`Node type ${nodeType} not supported`);
+  }
+}
+
+function formatErrors(errors: ValidationError[]): any[] {
+  return errors.map((error) => {
+    const formatted: any = {
+      property: error.property,
+      constraints: error.constraints,
+    };
+
+    if (error.children && error.children.length > 0) {
+      formatted.children = formatErrors(error.children);
+    }
+
+    return formatted;
+  });
+}
+
+export function validateUpdateDtoOrFail(nodeUpdateDto: NodeUpdateDto) {
+  const errors = validateSync(nodeUpdateDto);
+  if (errors.length > 0) {
+    throw new BadRequestException({ errors: formatErrors(errors) });
+  }
 }
 
 export function isGridContainerUpdateDto(

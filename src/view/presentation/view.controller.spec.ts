@@ -432,11 +432,8 @@ describe('ViewController', () => {
       }),
     );
     let body: any = {
-      modifications: {
-        type: NodeType.GRID_ITEM,
-        colSpan: { sm: 8, md: 3 },
-        rowStart: { sm: 1 },
-      },
+      colSpan: { sm: 8, md: 3 },
+      rowStart: { sm: 1 },
     };
     let response = await updateNodeRequest(view.id, itemId, body);
     expect(response.status).toEqual(200);
@@ -449,10 +446,7 @@ describe('ViewController', () => {
     });
 
     body = {
-      modifications: {
-        type: NodeType.GRID_CONTAINER,
-        cols: { md: 8, lg: 4 },
-      },
+      cols: { md: 8, lg: 4 },
     };
     response = await updateNodeRequest(view.id, containerId, body);
     expect(response.status).toEqual(200);
@@ -464,15 +458,16 @@ describe('ViewController', () => {
     });
 
     body = {
-      modifications: {
-        type: NodeType.DATA_FIELD_REF,
-      },
+      colSpan: { md: 8 },
     };
     response = await updateNodeRequest(view.id, containerId, body);
     expect(response.status).toEqual(400);
-    expect(response.body.message).toEqual(
-      `Type DataFieldRef not supported for node ${containerId}`,
-    );
+    expect(response.body.errors).toEqual([
+      {
+        constraints: { isNotEmptyObject: 'cols must be a non-empty object' },
+        property: 'cols',
+      },
+    ]);
   });
 
   it(`/UPDATE nodes ${userNotMemberTxt}`, async () => {

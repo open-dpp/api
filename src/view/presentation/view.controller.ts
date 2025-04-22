@@ -21,8 +21,9 @@ import {
   AddNodeDto,
   isGridContainerUpdateDto,
   isGridItemUpdateDto,
-  ModificationDto,
   nodeFromDto,
+  plainToUpdateDto,
+  validateUpdateDtoOrFail,
 } from './dto/node.dto';
 import { isGridContainer, isGridItem } from '../domain/node';
 
@@ -102,7 +103,7 @@ export class ViewController {
     @Param('viewId') viewId: string,
     @Param('id') nodeId: string,
     @Request() req: AuthRequest,
-    @Body() nodeUpdateDto: ModificationDto,
+    @Body() nodeUpdateDto: any,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
@@ -116,7 +117,8 @@ export class ViewController {
     if (!found) {
       throw new NotFoundException(`Node with ${nodeId} not found`);
     }
-    const { modifications } = nodeUpdateDto;
+    const modifications = plainToUpdateDto(found.node.type, nodeUpdateDto);
+    validateUpdateDtoOrFail(modifications);
     if (isGridItem(found.node) && isGridItemUpdateDto(modifications)) {
       found.node.modifyConfigs(modifications);
     } else if (
