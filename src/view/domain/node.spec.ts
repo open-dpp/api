@@ -183,4 +183,28 @@ describe('GridItem', () => {
       GridItem.create({ colSpan: { sm: 4 }, colStart: { md: 13 } }),
     ).toThrow(new ValueError('Col start has to be an integer between 1 or 12'));
   });
+
+  it('is created with row start', () => {
+    const rowStart = { sm: 3 };
+    const gridItem = GridItem.create({
+      colSpan: { sm: 4 },
+      rowStart,
+    });
+    expect(gridItem.rowStart).toEqual(rowStart);
+    expect(() =>
+      GridItem.create({ colSpan: { sm: 4 }, rowStart: { md: 13 } }),
+    ).toThrow(new ValueError('Row start has to be an integer between 1 or 12'));
+  });
+
+  it('is created with row span', () => {
+    const rowSpan = { sm: 3 };
+    const gridItem = GridItem.create({
+      colSpan: { sm: 4 },
+      rowSpan,
+    });
+    expect(gridItem.rowSpan).toEqual(rowSpan);
+    expect(() =>
+      GridItem.create({ colSpan: { sm: 4 }, rowSpan: { md: 13 } }),
+    ).toThrow(new ValueError('Row span has to be an integer between 1 or 12'));
+  });
 });

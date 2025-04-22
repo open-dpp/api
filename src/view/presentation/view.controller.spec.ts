@@ -154,6 +154,8 @@ describe('ViewController', () => {
         type: NodeType.GRID_ITEM,
         colSpan: { md: 4 },
         colStart: { md: 2 },
+        rowStart: { md: 5 },
+        rowSpan: { md: 6 },
       },
       parentId: response.body.nodes[0].id,
     };
@@ -161,6 +163,8 @@ describe('ViewController', () => {
     const gridItem = GridItem.create({
       colSpan: { md: 4 },
       colStart: { md: 2 },
+      rowStart: { md: 5 },
+      rowSpan: { md: 6 },
     });
     // add data field
     gridContainer.addGridItem(gridItem);

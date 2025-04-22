@@ -162,6 +162,12 @@ export class GridItem extends Node {
   @Expose()
   public colStart?: ResponsiveConfig;
 
+  @Expose()
+  public rowStart?: ResponsiveConfig;
+
+  @Expose()
+  public rowSpan?: ResponsiveConfig;
+
   @Expose({ name: 'content' })
   @Type(() => Node, {
     discriminator: {
@@ -188,20 +194,28 @@ export class GridItem extends Node {
     return false;
   }
 
+  private static validConfigFail(
+    config: ResponsiveConfig,
+    errorPrefix: string,
+  ) {
+    if (!ResponsiveConfigSchema.safeParse(config).success) {
+      throw new ValueError(
+        `${errorPrefix} has to be an integer between 1 or 12`,
+      );
+    }
+  }
   static create(plain: {
     colSpan: ResponsiveConfig;
     colStart?: ResponsiveConfig;
+    rowStart?: ResponsiveConfig;
+    rowSpan?: ResponsiveConfig;
     content?: Node;
   }) {
-    if (!ResponsiveConfigSchema.safeParse(plain.colSpan).success) {
-      throw new ValueError('Col span has to be an integer between 1 or 12');
-    }
-    if (
-      plain.colStart &&
-      !ResponsiveConfigSchema.safeParse(plain.colStart).success
-    ) {
-      throw new ValueError('Col start has to be an integer between 1 or 12');
-    }
+    GridItem.validConfigFail(plain.colSpan, 'Col span');
+    GridItem.validConfigFail(plain.colStart ?? {}, 'Col start');
+    GridItem.validConfigFail(plain.rowStart ?? {}, 'Row start');
+    GridItem.validConfigFail(plain.rowSpan ?? {}, 'Row span');
+
     return GridItem.fromPlain(plain);
   }
 

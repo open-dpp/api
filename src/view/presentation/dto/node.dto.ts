@@ -84,6 +84,16 @@ class GridItemCreateDto extends NodeCreateDto {
   @IsOptional()
   colStart?: ResponsiveConfigDto;
 
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  @IsOptional()
+  rowStart?: ResponsiveConfigDto;
+
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  @IsOptional()
+  rowSpan?: ResponsiveConfigDto;
+
   @IsInt()
   @IsOptional()
   initNumberOfChildren?: number;

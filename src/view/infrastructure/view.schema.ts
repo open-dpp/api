@@ -34,6 +34,12 @@ class GritItemDoc extends NodeDoc {
   @Prop({ type: ResponsiveConfigSchema })
   colStart?: ResponsiveConfigDoc;
 
+  @Prop({ type: ResponsiveConfigSchema })
+  rowStart?: ResponsiveConfigDoc;
+
+  @Prop({ type: ResponsiveConfigSchema })
+  rowSpan?: ResponsiveConfigDoc;
+
   @Prop({ type: NodeSchema })
   content: Node;
 }
