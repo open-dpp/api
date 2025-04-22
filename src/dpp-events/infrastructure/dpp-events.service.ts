@@ -19,13 +19,13 @@ export class DppEventsService {
     return DppEvent.fromPlain(this.documentToDomainPlain(dppEventDocument));
   }
 
-  async save(dppEvent: DppEvent, authContext?: AuthContext) {
+  async create(dppEvent: DppEvent, authContext?: AuthContext) {
     const documentPlain = this.domainToDocumentPlain(dppEvent);
     const dppEventDoc = await this.dppEventDocument.create({
       _id: documentPlain._id,
       data: documentPlain.data,
       createdAt: documentPlain.createdAt,
-      updatedAt: documentPlain.updatedAt,
+      updatedAt: new Date(),
       isCreatedBySystem: authContext === undefined,
       createdByUserId: authContext ? authContext.user.id : undefined,
     });
@@ -40,7 +40,7 @@ export class DppEventsService {
     const parentEvent = DppEvent.create({
       data: openDppEvent,
     });
-    return await this.save(parentEvent, authContext);
+    return await this.create(parentEvent, authContext);
   }
 
   async findById(id: string) {
@@ -87,13 +87,12 @@ export class DppEventsService {
   }
 
   private domainToDocumentPlain(dppEvent: DppEvent) {
-    // Convert the domain object to a plain object suitable for the document
     const plain = dppEvent.toPlain();
     return {
       _id: plain.id,
       data: plain.data,
       createdAt: plain.createdAt,
-      updatedAt: new Date(), // Always update the updatedAt field
+      updatedAt: dppEvent.updatedAt,
     };
   }
 }

@@ -1,9 +1,8 @@
-import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { DppEventType } from '../../../domain/dpp-event-type.enum';
 import { DppEventData } from '../../../domain/dpp-event-data';
 
 export class UntpEvent extends DppEventData {
-  @Expose()
   readonly type: DppEventType = DppEventType.UNTP;
 
   static create() {

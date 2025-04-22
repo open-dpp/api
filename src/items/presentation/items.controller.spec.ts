@@ -199,7 +199,7 @@ describe('ItemsController', () => {
     const item = new Item();
     item.defineModel(model.id);
     const uniqueProductId = item.createUniqueProductIdentifier();
-    await itemsService.save(item, authContext);
+    await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
@@ -227,8 +227,6 @@ describe('ItemsController', () => {
   //
   it(`/GET item fails if user is not member of organization`, async () => {
     const otherUser = new User(randomUUID(), 'other@example.com');
-    const authContextOtherUser = new AuthContext();
-    authContextOtherUser.user = otherUser;
     const organization = Organization.create({
       name: 'My orga',
       user: otherUser,
@@ -243,7 +241,7 @@ describe('ItemsController', () => {
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
-    await itemsService.save(item, authContextOtherUser);
+    await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
@@ -270,7 +268,7 @@ describe('ItemsController', () => {
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
-    await itemsService.save(item, authContext);
+    await itemsService.save(item);
     const otherOrganization = Organization.create({
       name: 'My orga',
       user: authContext.user,
@@ -302,11 +300,11 @@ describe('ItemsController', () => {
     const item = new Item();
     item.defineModel(model.id);
     const uniqueProductId1 = item.createUniqueProductIdentifier();
-    await itemsService.save(item, authContext);
+    await itemsService.save(item);
     const item2 = new Item();
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
     item2.defineModel(model.id);
-    await itemsService.save(item2, authContext);
+    await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
@@ -344,8 +342,6 @@ describe('ItemsController', () => {
   //
   it(`/GET all item fails if user is not member of organization`, async () => {
     const otherUser = new User(randomUUID(), 'other@example.com');
-    const authContextOtherUser = new AuthContext();
-    authContextOtherUser.user = otherUser;
     const organization = Organization.create({
       name: 'My orga',
       user: otherUser,
@@ -359,10 +355,10 @@ describe('ItemsController', () => {
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
-    await itemsService.save(item, authContextOtherUser);
+    await itemsService.save(item);
     const item2 = new Item();
     item2.defineModel(model.id);
-    await itemsService.save(item2, authContextOtherUser);
+    await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
@@ -386,10 +382,10 @@ describe('ItemsController', () => {
     await modelsService.save(model);
     const item = new Item();
     item.defineModel(model.id);
-    await itemsService.save(item, authContext);
+    await itemsService.save(item);
     const item2 = new Item();
     item2.defineModel(model.id);
-    await itemsService.save(item2, authContext);
+    await itemsService.save(item2);
     const otherOrganization = Organization.create({
       name: 'My orga',
       user: authContext.user,

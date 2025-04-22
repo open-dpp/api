@@ -90,7 +90,7 @@ describe('ProductsService', () => {
     const savedModel = await modelsService.save(model);
     const item = new Item();
     item.defineModel(savedModel.id);
-    const savedItem = await itemService.save(item, authContext);
+    const savedItem = await itemService.save(item);
     expect(savedItem.model).toEqual(savedModel.id);
     const foundItem = await itemService.findById(item.id);
     expect(foundItem.model).toEqual(savedModel.id);
@@ -118,8 +118,8 @@ describe('ProductsService', () => {
     item1.defineModel(savedModel1.id);
     const item2 = new Item();
     item2.defineModel(savedModel1.id);
-    await itemService.save(item1, authContext);
-    await itemService.save(item2, authContext);
+    await itemService.save(item1);
+    await itemService.save(item2);
     const item3 = new Item();
     item3.defineModel(savedModel2.id);
 
@@ -132,7 +132,7 @@ describe('ProductsService', () => {
     const nonExistentModelId = randomUUID();
     item.defineModel(nonExistentModelId);
 
-    await expect(itemService.save(item, authContext)).rejects.toThrow(
+    await expect(itemService.save(item)).rejects.toThrow(
       new NotFoundInDatabaseException(Model.name),
     );
   });
@@ -160,7 +160,7 @@ describe('ProductsService', () => {
     const upi2 = item.createUniqueProductIdentifier();
 
     // Save the item
-    const savedItem = await itemService.save(item, authContext);
+    const savedItem = await itemService.save(item);
 
     // Verify the saved item has the unique product identifiers
     expect(savedItem.uniqueProductIdentifiers).toHaveLength(2);

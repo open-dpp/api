@@ -8,7 +8,7 @@ export class DppEventsController {
 
   @Post()
   async create(@Request() req: AuthRequest) {
-    const saved = await this.dppEventsService.save(req.body);
+    const saved = await this.dppEventsService.create(req.body);
     return saved.toPlain();
   }
 

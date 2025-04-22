@@ -9,8 +9,6 @@ import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Model } from '../../models/domain/model';
 import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
-import { ItemCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/item-created.event';
-import { AuthContext } from '../../auth/auth-request';
 
 @Injectable()
 export class ItemsService {
@@ -32,7 +30,7 @@ export class ItemsService {
     return item;
   }
 
-  async save(item: Item, authContext: AuthContext) {
+  async save(item: Item) {
     const modelEntity = await this.modelRepository.findOne({
       where: { id: Equal(item.model) },
     });
@@ -46,10 +44,6 @@ export class ItemsService {
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
-    await this.dppEventsService.saveOpenDppEventData(
-      ItemCreatedEvent.create({ itemId: itemEntity.id }),
-      authContext,
-    );
     return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
   }
 

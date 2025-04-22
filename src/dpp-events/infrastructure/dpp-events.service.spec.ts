@@ -109,7 +109,7 @@ describe('DppEventsService', () => {
       });
 
       // Act
-      const result = await service.save(dppEvent);
+      const result = await service.create(dppEvent);
 
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
@@ -138,7 +138,7 @@ describe('DppEventsService', () => {
       });
 
       // Act
-      const result = await service.save(dppEvent);
+      const result = await service.create(dppEvent);
 
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
@@ -251,7 +251,7 @@ describe('DppEventsService', () => {
         });
 
         // Act
-        await service.save(openDppEvent);
+        await service.create(openDppEvent);
 
         // Assert
         const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
@@ -281,7 +281,7 @@ describe('DppEventsService', () => {
         });
 
         // Act
-        await service.save(openepcisEvent);
+        await service.create(openepcisEvent);
 
         // Assert
         const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
@@ -311,7 +311,7 @@ describe('DppEventsService', () => {
         });
 
         // Act
-        await service.save(untpEvent);
+        await service.create(untpEvent);
 
         // Assert
         const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
