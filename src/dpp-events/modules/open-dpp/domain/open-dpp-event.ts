@@ -1,56 +1,23 @@
 import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { randomUUID } from 'crypto';
+import { DppEvent } from '../../../domain/dpp-event';
+import { DppEventType } from '../../../domain/dpp-event-type.enum';
 import { OpenDppEventType } from './open-dpp-event-type.enum';
 
-export enum OpenDppEventSchemaVersion {
-  v1_0_0 = '1.0.0',
-}
-
-export class OpenDppEvent {
+export class OpenDppEvent extends DppEvent {
   @Expose()
-  readonly id: string = randomUUID();
+  readonly kind: DppEventType = DppEventType.OPEN_DPP;
 
   @Expose()
-  readonly kind: OpenDppEventType;
+  readonly subKind: OpenDppEventType;
 
-  @Expose()
-  readonly type: OpenDppEventType;
-
-  @Expose()
-  readonly subType?: string;
-
-  @Expose()
-  readonly source?: string;
-
-  @Expose()
-  readonly eventJsonData?: any;
-
-  @Expose()
-  readonly schemaVersion?: OpenDppEventSchemaVersion;
-
-  @Expose()
-  readonly createdAt: Date = new Date();
-
-  @Expose()
-  readonly updatedAt: Date = new Date();
-
-  static create(plain: {
-    kind: OpenDppEventType;
-    schemaVersion?: OpenDppEventSchemaVersion;
-  }) {
+  static create() {
     return OpenDppEvent.fromPlain({
-      ...plain,
+      kind: DppEventType.OPEN_DPP,
     });
   }
 
   static fromPlain(plain: unknown): OpenDppEvent {
-    // If kind is not provided but type is, set kind to the same value as type
-    const plainObj = plain as any;
-    if (!plainObj.kind && plainObj.type) {
-      plainObj.kind = plainObj.type;
-    }
-
-    return plainToInstance(OpenDppEvent, plainObj, {
+    return plainToInstance(OpenDppEvent, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });

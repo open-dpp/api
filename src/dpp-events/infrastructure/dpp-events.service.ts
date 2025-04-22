@@ -17,15 +17,12 @@ export class DppEventsService {
 
   async save(dppEvent: DppEvent) {
     const documentPlain = this.domainToDocumentPlain(dppEvent);
-    const dppEventDoc = await this.dppEventDocument.findOneAndUpdate(
-      { _id: documentPlain._id },
-      documentPlain,
-      {
-        new: true, // Return the updated document
-        upsert: true, // Create a new document if none found
-      },
-    );
-
+    const dppEventDoc = await this.dppEventDocument.create({
+      _id: documentPlain._id,
+      kind: documentPlain.kind,
+      createdAt: documentPlain.createdAt,
+      updatedAt: documentPlain.updatedAt,
+    });
     return this.convertToDomain(dppEventDoc);
   }
 
@@ -35,9 +32,7 @@ export class DppEventsService {
         { _id: id },
         {
           _id: true,
-          type: true,
-          source: true,
-          eventJsonData: true,
+          kind: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -46,32 +41,13 @@ export class DppEventsService {
     return foundDocs.map((dm) => this.convertToDomain(dm));
   }
 
-  async findByDppId(dppId: string) {
-    const foundDocs = await this.dppEventDocument
-      .find(
-        { source: dppId },
-        {
-          _id: true,
-          type: true,
-          source: true,
-          eventJsonData: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      )
-      .exec();
-    return foundDocs.map((dm) => this.convertToDomain(dm));
-  }
-
-  async findByType(type: string) {
+  async findByKind(kind: string) {
     const foundData = await this.dppEventDocument
       .find(
-        { type },
+        { kind },
         {
           _id: true,
-          type: true,
-          source: true,
-          eventJsonData: true,
+          kind: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -83,12 +59,7 @@ export class DppEventsService {
   private documentToDomainPlain(dppEventDocument: DppEventDocument) {
     return {
       id: dppEventDocument._id,
-      type: dppEventDocument.type,
-      source: dppEventDocument.source,
-      eventJsonData:
-        typeof dppEventDocument.eventJsonData === 'string'
-          ? dppEventDocument.eventJsonData
-          : JSON.stringify(dppEventDocument.eventJsonData),
+      kind: dppEventDocument.kind,
       createdAt: dppEventDocument.createdAt,
       updatedAt: dppEventDocument.updatedAt,
     };
@@ -99,9 +70,7 @@ export class DppEventsService {
     const plain = dppEvent.toPlain();
     return {
       _id: plain.id,
-      type: plain.type,
-      source: plain.source,
-      eventJsonData: plain.eventJsonData,
+      kind: plain.kind,
       createdAt: plain.createdAt,
       updatedAt: new Date(), // Always update the updatedAt field
     };

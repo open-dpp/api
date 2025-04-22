@@ -5,8 +5,7 @@ import { UniqueProductIdentifierEntity } from './unique.product.identifier.entit
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
-import { DppEvent } from '../../dpp-events/domain/dpp-event';
-import { DppEventType } from '../../dpp-events/domain/dpp-event-type.enum';
+import { UniqueProductIdentifierCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
 
 @Injectable()
 export class UniqueProductIdentifierService {
@@ -35,10 +34,8 @@ export class UniqueProductIdentifierService {
         referencedId: uniqueProductIdentifier.referenceId,
       }),
     );
-    const event = DppEvent.create({
-      source: uniqueProductIdentifier.uuid,
-      type: DppEventType.OPEN_DPP,
-      eventJsonData: JSON.stringify(domainObject),
+    const event = UniqueProductIdentifierCreatedEvent.create({
+      uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
     });
     await this.dppEventsService.save(event);
     return domainObject;

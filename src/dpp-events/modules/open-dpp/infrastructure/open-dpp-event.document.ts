@@ -1,38 +1,18 @@
-import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { UniqueProductIdentifierCreatedEventDocument } from './open-dpp-events/unique-product-identifier-created.event-document';
-import { OpenDppEventSchemaVersion } from '../domain/open-dpp-event';
-import { OpenDppEventType } from '../domain/open-dpp-event-type.enum';
+import { HydratedDocument, Types } from 'mongoose';
+
+export enum OpenDppEventSchemaVersion {
+  v1_0_0 = '1.0.0',
+}
 
 /**
  * OpenDppEvent schema
  */
-@Schema({ discriminatorKey: 'kind' })
-export class OpenDppEventDocument extends Document {
-  @Prop({
-    type: String,
-    required: true,
-    enum: [UniqueProductIdentifierCreatedEventDocument.name],
-  })
-  kind: string;
-
+@Schema()
+export class OpenDppEventClass {
   @Prop({ required: true })
   _id: string;
-
-  @Prop({
-    type: String,
-    enum: OpenDppEventType,
-  })
-  type: OpenDppEventType;
-
-  @Prop()
-  subType: string;
-
-  @Prop()
-  source: string;
-
-  @Prop({ type: Object })
-  eventJsonData: any;
 
   @Prop({
     default: OpenDppEventSchemaVersion.v1_0_0,
@@ -45,7 +25,19 @@ export class OpenDppEventDocument extends Document {
 
   @Prop({ required: true })
   updatedAt: Date;
+
+  @Prop({ type: UniqueProductIdentifierCreatedEventDocument })
+  data: UniqueProductIdentifierCreatedEventDocument;
 }
 
 export const OpenDppEventSchema =
-  SchemaFactory.createForClass(OpenDppEventDocument);
+  SchemaFactory.createForClass(OpenDppEventClass);
+
+export type OpenDppEventOverride = {
+  name: Types.DocumentArray<UniqueProductIdentifierCreatedEventDocument>;
+};
+
+export type OpenDppEventDocument = HydratedDocument<
+  OpenDppEventClass,
+  OpenDppEventOverride
+>;

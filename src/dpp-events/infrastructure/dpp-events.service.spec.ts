@@ -11,6 +11,9 @@ import { DppEventDocument, DppEventSchema } from './dpp-event.document';
 import { DppEvent } from '../domain/dpp-event';
 import { DppEventType } from '../domain/dpp-event-type.enum';
 import { randomUUID } from 'crypto';
+import { OpenDppEventSchema } from '../modules/open-dpp/infrastructure/open-dpp-event.document';
+import { OpenepcisEventSchema } from '../modules/openepcis-events/infrastructure/openepcis-event.document';
+import { UntpEventSchema } from '../modules/untp-events/infrastructure/untp-event.document';
 
 describe('DppEventsService', () => {
   let service: DppEventsService;
@@ -25,6 +28,20 @@ describe('DppEventsService', () => {
           {
             name: DppEventDocument.name,
             schema: DppEventSchema,
+            discriminators: [
+              {
+                name: DppEventType.OPEN_DPP,
+                schema: OpenDppEventSchema,
+              },
+              {
+                name: DppEventType.OPENEPCIS,
+                schema: OpenepcisEventSchema,
+              },
+              {
+                name: DppEventType.UNTP,
+                schema: UntpEventSchema,
+              },
+            ],
           },
         ]),
       ],
@@ -57,8 +74,7 @@ describe('DppEventsService', () => {
       const id = randomUUID();
       const dppEventDoc = {
         _id: id,
-        type: DppEventType.OPENEPCIS_V3_0,
-        source: 'dpp123',
+        kind: DppEventType.OPENEPCIS,
       } as DppEventDocument;
 
       // Act
@@ -67,8 +83,7 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
-      expect(result.type).toBe(DppEventType.OPENEPCIS_V3_0);
-      expect(result.source).toBe('dpp123');
+      expect(result.kind).toBe(DppEventType.OPENEPCIS);
     });
   });
 
@@ -78,8 +93,7 @@ describe('DppEventsService', () => {
       const id = randomUUID();
       const dppEvent = DppEvent.fromPlain({
         id,
-        type: DppEventType.OPENEPCIS_V3_0,
-        source: 'dpp123',
+        kind: DppEventType.OPENEPCIS,
       });
 
       // Act
@@ -88,53 +102,13 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
-      expect(result.type).toBe(DppEventType.OPENEPCIS_V3_0);
-      expect(result.source).toBe('dpp123');
+      expect(result.kind).toBe(DppEventType.OPENEPCIS);
 
       // Verify it was saved to the database
       const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
       expect(savedDoc).toBeDefined();
       expect(savedDoc._id).toBe(id);
-      expect(savedDoc.type).toBe(DppEventType.OPENEPCIS_V3_0);
-      expect(savedDoc.source).toBe('dpp123');
-    });
-
-    it('should update an existing DppEvent if it exists', async () => {
-      // Arrange
-      const id = randomUUID();
-
-      // Create initial document
-      await dppEventModel.create({
-        _id: id,
-        type: DppEventType.OPENEPCIS_V3_0,
-        source: 'dpp123',
-        eventJsonData: { data: 'test data' },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      // Create an updated event
-      const updatedDppEvent = DppEvent.fromPlain({
-        id,
-        type: DppEventType.UNTP,
-        source: 'dpp456',
-      });
-
-      // Act
-      const result = await service.save(updatedDppEvent);
-
-      // Assert
-      expect(result).toBeInstanceOf(DppEvent);
-      expect(result.id).toBe(id);
-      expect(result.type).toBe(DppEventType.UNTP);
-      expect(result.source).toBe('dpp456');
-
-      // Verify it was updated in the database
-      const updatedDoc = await dppEventModel.findOne({ _id: id }).exec();
-      expect(updatedDoc).toBeDefined();
-      expect(updatedDoc._id).toBe(id);
-      expect(updatedDoc.type).toBe(DppEventType.UNTP);
-      expect(updatedDoc.source).toBe('dpp456');
+      expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
     });
   });
 
@@ -144,9 +118,7 @@ describe('DppEventsService', () => {
       const id = randomUUID();
       await dppEventModel.create({
         _id: id,
-        type: DppEventType.OPENEPCIS_V3_0,
-        source: 'dpp123',
-        eventJsonData: { data: 'test data' },
+        kind: DppEventType.OPENEPCIS,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -157,8 +129,7 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(id);
-      expect(result[0].type).toBe(DppEventType.OPENEPCIS_V3_0);
-      expect(result[0].source).toBe('dpp123');
+      expect(result[0].kind).toBe(DppEventType.OPENEPCIS);
     });
 
     it('should return an empty array if no DppEvents are found by id', async () => {
@@ -170,106 +141,44 @@ describe('DppEventsService', () => {
     });
   });
 
-  describe('findByDppId', () => {
-    it('should find DppEvents by dppId', async () => {
+  describe('findByKind', () => {
+    it('should find DppEvents by kind', async () => {
       // Arrange
       const id1 = randomUUID();
       const id2 = randomUUID();
-      const dppId = 'dpp123';
+      const kind = DppEventType.OPENEPCIS;
 
       await dppEventModel.create({
         _id: id1,
-        type: DppEventType.OPENEPCIS_V3_0,
-        source: dppId,
-        eventJsonData: { data: 'test data 1' },
+        kind,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
       await dppEventModel.create({
         _id: id2,
-        type: DppEventType.UNTP,
-        source: dppId,
-        eventJsonData: { data: 'test data 2' },
+        kind,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
       // Act
-      const result = await service.findByDppId(dppId);
+      const result = await service.findByKind(kind);
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(result[0].source).toBe(dppId);
-      expect(result[1].source).toBe(dppId);
+      expect(result[0].kind).toBe(kind);
+      expect(result[1].kind).toBe(kind);
 
       // Verify both events were found
       const ids = result.map((event) => event.id);
       expect(ids).toContain(id1);
       expect(ids).toContain(id2);
-
-      // Verify types are correct
-      const types = result.map((event) => event.type);
-      expect(types).toContain(DppEventType.OPENEPCIS_V3_0);
-      expect(types).toContain(DppEventType.UNTP);
     });
 
-    it('should return an empty array if no DppEvents are found by dppId', async () => {
+    it('should return an empty array if no DppEvents are found by kind', async () => {
       // Act
-      const result = await service.findByDppId('non-existent-dppId');
-
-      // Assert
-      expect(result).toHaveLength(0);
-    });
-  });
-
-  describe('findByType', () => {
-    it('should find DppEvents by type', async () => {
-      // Arrange
-      const id1 = randomUUID();
-      const id2 = randomUUID();
-      const type = DppEventType.OPENEPCIS_V3_0;
-
-      await dppEventModel.create({
-        _id: id1,
-        type,
-        source: 'dpp123',
-        eventJsonData: { data: 'test data 1' },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      await dppEventModel.create({
-        _id: id2,
-        type,
-        source: 'dpp456',
-        eventJsonData: { data: 'test data 2' },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      // Act
-      const result = await service.findByType(type);
-
-      // Assert
-      expect(result).toHaveLength(2);
-      expect(result[0].type).toBe(type);
-      expect(result[1].type).toBe(type);
-
-      // Verify both events were found
-      const ids = result.map((event) => event.id);
-      expect(ids).toContain(id1);
-      expect(ids).toContain(id2);
-
-      // Verify dppIds are correct
-      const dppIds = result.map((event) => event.source);
-      expect(dppIds).toContain('dpp123');
-      expect(dppIds).toContain('dpp456');
-    });
-
-    it('should return an empty array if no DppEvents are found by type', async () => {
-      // Act
-      const result = await service.findByType('non-existent-type');
+      const result = await service.findByKind('non-existent-type');
 
       // Assert
       expect(result).toHaveLength(0);
