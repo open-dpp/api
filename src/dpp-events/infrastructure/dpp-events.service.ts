@@ -36,9 +36,9 @@ export class DppEventsService {
     openDppEventData: OpenDppEventData,
     authContext?: AuthContext,
   ) {
-    const childOdppEvent = OpenDppEvent.create({ data: openDppEventData });
+    const openDppEvent = OpenDppEvent.create({ data: openDppEventData });
     const parentEvent = DppEvent.create({
-      data: childOdppEvent,
+      data: openDppEvent,
     });
     return await this.save(parentEvent, authContext);
   }
