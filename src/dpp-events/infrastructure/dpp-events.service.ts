@@ -5,59 +5,42 @@ import { DppEventDocument } from './dpp-event.document';
 import { DppEvent } from '../domain/dpp-event';
 import { DppEventType } from '../domain/dpp-event-type.enum';
 import { OpenDppEvent } from '../modules/open-dpp/domain/open-dpp-event';
-import { OpenDppEventDocument } from '../modules/open-dpp/infrastructure/open-dpp-event.document';
-import { ItemCreatedEventDocument } from '../modules/open-dpp/infrastructure/open-dpp-events/item-created.event-document';
-import { OpenDppEventType } from '../modules/open-dpp/domain/open-dpp-event-type.enum';
-import { ItemCreatedEvent } from '../modules/open-dpp/domain/open-dpp-events/item-created.event';
-import { UniqueProductIdentifierCreatedEvent } from '../modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
-import { UniqueProductIdentifierCreatedEventDocument } from '../modules/open-dpp/infrastructure/open-dpp-events/unique-product-identifier-created.event-document';
+import { OpenDppEventData } from '../modules/open-dpp/domain/open-dpp-event-data';
+import { AuthContext } from '../../auth/auth-request';
 
 @Injectable()
 export class DppEventsService {
   constructor(
     @InjectModel(DppEventDocument.name)
     private dppEventDocument: Model<DppEventDocument>,
-    @InjectModel(DppEventType.OPEN_DPP)
-    private openDppEventDocument: Model<OpenDppEventDocument>,
-    @InjectModel(ItemCreatedEventDocument.name)
-    private itemCreatedEventDocument: Model<ItemCreatedEventDocument>,
-    @InjectModel(UniqueProductIdentifierCreatedEventDocument.name)
-    private uniqueProductIdentifierCreatedEventDocument: Model<UniqueProductIdentifierCreatedEventDocument>,
   ) {}
 
   convertToDomain(dppEventDocument: DppEventDocument) {
     return DppEvent.fromPlain(this.documentToDomainPlain(dppEventDocument));
   }
 
-  async save(dppEvent: DppEvent) {
+  async save(dppEvent: DppEvent, authContext?: AuthContext) {
     const documentPlain = this.domainToDocumentPlain(dppEvent);
-    if (dppEvent.kind === DppEventType.OPEN_DPP) {
-      const childEvent = dppEvent.data as OpenDppEvent;
-      if (childEvent.subKind === OpenDppEventType.ITEM_CREATED) {
-        const childEventData = childEvent.data as ItemCreatedEvent;
-        await this.itemCreatedEventDocument.create({
-          _id: childEventData.id,
-          itemId: childEventData.itemId,
-        });
-      } else if (
-        childEvent.subKind ===
-        OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED
-      ) {
-        const childEventData =
-          childEvent.data as UniqueProductIdentifierCreatedEvent;
-        await this.uniqueProductIdentifierCreatedEventDocument.create({
-          _id: childEventData.id,
-          uniqueProductIdentifierId: childEventData.uniqueProductIdentifierId,
-        });
-      }
-    }
     const dppEventDoc = await this.dppEventDocument.create({
       _id: documentPlain._id,
-      kind: documentPlain.kind,
+      data: documentPlain.data,
       createdAt: documentPlain.createdAt,
       updatedAt: documentPlain.updatedAt,
+      isCreatedBySystem: authContext === undefined,
+      createdByUserId: authContext ? authContext.user.id : undefined,
     });
     return this.convertToDomain(dppEventDoc);
+  }
+
+  async saveOpenDppEventData(
+    openDppEventData: OpenDppEventData,
+    authContext?: AuthContext,
+  ) {
+    const childOdppEvent = OpenDppEvent.create({ data: openDppEventData });
+    const parentEvent = DppEvent.create({
+      data: childOdppEvent,
+    });
+    return await this.save(parentEvent, authContext);
   }
 
   async findById(id: string) {
@@ -66,7 +49,7 @@ export class DppEventsService {
         { _id: id },
         {
           _id: true,
-          kind: true,
+          data: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -75,13 +58,17 @@ export class DppEventsService {
     return foundDocs.map((dm) => this.convertToDomain(dm));
   }
 
-  async findByKind(kind: string) {
+  async findByDataType(type: DppEventType) {
     const foundData = await this.dppEventDocument
       .find(
-        { kind },
+        {
+          data: {
+            type: type,
+          },
+        },
         {
           _id: true,
-          kind: true,
+          data: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -93,7 +80,7 @@ export class DppEventsService {
   private documentToDomainPlain(dppEventDocument: DppEventDocument) {
     return {
       id: dppEventDocument._id,
-      kind: dppEventDocument.kind,
+      data: dppEventDocument.data,
       createdAt: dppEventDocument.createdAt,
       updatedAt: dppEventDocument.updatedAt,
     };
@@ -104,7 +91,7 @@ export class DppEventsService {
     const plain = dppEvent.toPlain();
     return {
       _id: plain.id,
-      kind: plain.kind,
+      data: plain.data,
       createdAt: plain.createdAt,
       updatedAt: new Date(), // Always update the updatedAt field
     };

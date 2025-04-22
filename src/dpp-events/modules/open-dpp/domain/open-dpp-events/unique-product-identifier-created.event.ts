@@ -1,10 +1,10 @@
 import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { OpenDppEvent } from '../open-dpp-event';
 import { OpenDppEventType } from '../open-dpp-event-type.enum';
+import { OpenDppEventData } from '../open-dpp-event-data';
 
-export class UniqueProductIdentifierCreatedEvent extends OpenDppEvent {
+export class UniqueProductIdentifierCreatedEvent extends OpenDppEventData {
   @Expose()
-  readonly subKind: OpenDppEventType =
+  readonly type: OpenDppEventType =
     OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED;
 
   @Expose()

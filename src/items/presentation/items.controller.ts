@@ -30,7 +30,7 @@ export class ItemsController {
     const item = new Item();
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
-    return this.itemToDto(await this.itemsService.save(item));
+    return this.itemToDto(await this.itemsService.save(item, req.authContext));
   }
 
   @Get()

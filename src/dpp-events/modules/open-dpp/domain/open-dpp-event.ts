@@ -1,24 +1,19 @@
 import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { DppEvent } from '../../../domain/dpp-event';
 import { DppEventType } from '../../../domain/dpp-event-type.enum';
-import { OpenDppEventType } from './open-dpp-event-type.enum';
-import { ItemCreatedEvent } from './open-dpp-events/item-created.event';
-import { UniqueProductIdentifierCreatedEvent } from './open-dpp-events/unique-product-identifier-created.event';
+import { DppEventData } from '../../../domain/dpp-event-data';
+import { OpenDppEventData } from './open-dpp-event-data';
 
-export class OpenDppEvent extends DppEvent {
+export class OpenDppEvent extends DppEventData {
   @Expose()
-  readonly kind: DppEventType = DppEventType.OPEN_DPP;
-
-  @Expose()
-  readonly subKind: OpenDppEventType;
+  readonly type: DppEventType = DppEventType.OPEN_DPP;
 
   @Expose()
-  readonly data: ItemCreatedEvent | UniqueProductIdentifierCreatedEvent | null =
-    null;
+  readonly data: OpenDppEventData;
 
-  static create() {
+  static create(plain: { data: OpenDppEventData }) {
     return OpenDppEvent.fromPlain({
       kind: DppEventType.OPEN_DPP,
+      ...plain,
     });
   }
 

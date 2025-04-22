@@ -11,9 +11,6 @@ import { DppEventDocument, DppEventSchema } from './dpp-event.document';
 import { DppEvent } from '../domain/dpp-event';
 import { DppEventType } from '../domain/dpp-event-type.enum';
 import { randomUUID } from 'crypto';
-import { OpenDppEventSchema } from '../modules/open-dpp/infrastructure/open-dpp-event.document';
-import { OpenepcisEventSchema } from '../modules/openepcis-events/infrastructure/openepcis-event.document';
-import { UntpEventSchema } from '../modules/untp-events/infrastructure/untp-event.document';
 
 describe('DppEventsService', () => {
   let service: DppEventsService;
@@ -28,20 +25,6 @@ describe('DppEventsService', () => {
           {
             name: DppEventDocument.name,
             schema: DppEventSchema,
-            discriminators: [
-              {
-                name: DppEventType.OPEN_DPP,
-                schema: OpenDppEventSchema,
-              },
-              {
-                name: DppEventType.OPENEPCIS,
-                schema: OpenepcisEventSchema,
-              },
-              {
-                name: DppEventType.UNTP,
-                schema: UntpEventSchema,
-              },
-            ],
           },
         ]),
       ],
@@ -74,7 +57,9 @@ describe('DppEventsService', () => {
       const id = randomUUID();
       const dppEventDoc = {
         _id: id,
-        kind: DppEventType.OPENEPCIS,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
       } as DppEventDocument;
 
       // Act
@@ -83,7 +68,7 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
-      expect(result.kind).toBe(DppEventType.OPENEPCIS);
+      expect(result.data.type).toBe(DppEventType.OPENEPCIS);
     });
 
     it('should convert a DppEventDocument with createdAt and updatedAt to a DppEvent domain object', () => {
@@ -93,9 +78,11 @@ describe('DppEventsService', () => {
       const updatedAt = new Date('2023-01-02');
       const dppEventDoc = {
         _id: id,
-        kind: DppEventType.OPENEPCIS,
         createdAt,
         updatedAt,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
       } as DppEventDocument;
 
       // Act
@@ -104,7 +91,7 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
-      expect(result.kind).toBe(DppEventType.OPENEPCIS);
+      expect(result.data.type).toBe(DppEventType.OPENEPCIS);
       expect(result.createdAt).toEqual(createdAt);
       expect(result.updatedAt).toEqual(updatedAt);
     });
@@ -116,7 +103,9 @@ describe('DppEventsService', () => {
       const id = randomUUID();
       const dppEvent = DppEvent.fromPlain({
         id,
-        kind: DppEventType.OPENEPCIS,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
       });
 
       // Act
@@ -125,13 +114,13 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
-      expect(result.kind).toBe(DppEventType.OPENEPCIS);
+      expect(result.data.type).toBe(DppEventType.OPENEPCIS);
 
       // Verify it was saved to the database
       const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
       expect(savedDoc).toBeDefined();
       expect(savedDoc._id).toBe(id);
-      expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
+      expect(savedDoc.data.type).toBe(DppEventType.OPENEPCIS);
     });
 
     it('should save a DppEvent with custom createdAt and updatedAt dates', async () => {
@@ -141,7 +130,9 @@ describe('DppEventsService', () => {
       const updatedAt = new Date('2023-01-02');
       const dppEvent = DppEvent.fromPlain({
         id,
-        kind: DppEventType.OPENEPCIS,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
         createdAt,
         updatedAt,
       });
@@ -152,7 +143,7 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
-      expect(result.kind).toBe(DppEventType.OPENEPCIS);
+      expect(result.data.type).toBe(DppEventType.OPENEPCIS);
       expect(result.createdAt).toEqual(createdAt);
       // The updatedAt date should be updated to the current time
       expect(result.updatedAt).not.toEqual(updatedAt);
@@ -161,7 +152,7 @@ describe('DppEventsService', () => {
       const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
       expect(savedDoc).toBeDefined();
       expect(savedDoc._id).toBe(id);
-      expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
+      expect(savedDoc.data.type).toBe(DppEventType.OPENEPCIS);
       expect(savedDoc.createdAt).toEqual(createdAt);
       // The updatedAt date should be updated to the current time
       expect(savedDoc.updatedAt).not.toEqual(updatedAt);
@@ -174,7 +165,9 @@ describe('DppEventsService', () => {
       const id = randomUUID();
       await dppEventModel.create({
         _id: id,
-        kind: DppEventType.OPENEPCIS,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -185,7 +178,7 @@ describe('DppEventsService', () => {
       // Assert
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(id);
-      expect(result[0].kind).toBe(DppEventType.OPENEPCIS);
+      expect(result[0].data.type).toBe(DppEventType.OPENEPCIS);
     });
 
     it('should return an empty array if no DppEvents are found by id', async () => {
@@ -206,25 +199,29 @@ describe('DppEventsService', () => {
 
       await dppEventModel.create({
         _id: id1,
-        kind,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
       await dppEventModel.create({
         _id: id2,
-        kind,
+        data: {
+          type: DppEventType.OPENEPCIS,
+        },
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
       // Act
-      const result = await service.findByKind(kind);
+      const result = await service.findByDataType(kind);
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(result[0].kind).toBe(kind);
-      expect(result[1].kind).toBe(kind);
+      expect(result[0].data.type).toBe(kind);
+      expect(result[1].data.type).toBe(kind);
 
       // Verify both events were found
       const ids = result.map((event) => event.id);
@@ -234,7 +231,7 @@ describe('DppEventsService', () => {
 
     it('should return an empty array if no DppEvents are found by kind', async () => {
       // Act
-      const result = await service.findByKind('non-existent-type');
+      const result = await service.findByDataType(undefined);
 
       // Assert
       expect(result).toHaveLength(0);
@@ -248,7 +245,9 @@ describe('DppEventsService', () => {
         const id = randomUUID();
         const openDppEvent = DppEvent.fromPlain({
           id,
-          kind: DppEventType.OPEN_DPP,
+          data: {
+            type: DppEventType.OPEN_DPP,
+          },
         });
 
         // Act
@@ -258,13 +257,15 @@ describe('DppEventsService', () => {
         const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
         expect(savedDoc).toBeDefined();
         expect(savedDoc._id).toBe(id);
-        expect(savedDoc.kind).toBe(DppEventType.OPEN_DPP);
+        expect(savedDoc.data.type).toBe(DppEventType.OPEN_DPP);
 
         // Verify the document uses the correct discriminator
-        const retrievedEvents = await service.findByKind(DppEventType.OPEN_DPP);
+        const retrievedEvents = await service.findByDataType(
+          DppEventType.OPEN_DPP,
+        );
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
-        expect(retrievedEvents[0].kind).toBe(DppEventType.OPEN_DPP);
+        expect(retrievedEvents[0].data.type).toBe(DppEventType.OPEN_DPP);
       });
     });
 
@@ -274,7 +275,9 @@ describe('DppEventsService', () => {
         const id = randomUUID();
         const openepcisEvent = DppEvent.fromPlain({
           id,
-          kind: DppEventType.OPENEPCIS,
+          data: {
+            type: DppEventType.OPENEPCIS,
+          },
         });
 
         // Act
@@ -284,15 +287,15 @@ describe('DppEventsService', () => {
         const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
         expect(savedDoc).toBeDefined();
         expect(savedDoc._id).toBe(id);
-        expect(savedDoc.kind).toBe(DppEventType.OPENEPCIS);
+        expect(savedDoc.data.type).toBe(DppEventType.OPENEPCIS);
 
         // Verify the document uses the correct discriminator
-        const retrievedEvents = await service.findByKind(
+        const retrievedEvents = await service.findByDataType(
           DppEventType.OPENEPCIS,
         );
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
-        expect(retrievedEvents[0].kind).toBe(DppEventType.OPENEPCIS);
+        expect(retrievedEvents[0].data.type).toBe(DppEventType.OPENEPCIS);
       });
     });
 
@@ -302,7 +305,9 @@ describe('DppEventsService', () => {
         const id = randomUUID();
         const untpEvent = DppEvent.fromPlain({
           id,
-          kind: DppEventType.UNTP,
+          data: {
+            type: DppEventType.UNTP,
+          },
         });
 
         // Act
@@ -312,13 +317,13 @@ describe('DppEventsService', () => {
         const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
         expect(savedDoc).toBeDefined();
         expect(savedDoc._id).toBe(id);
-        expect(savedDoc.kind).toBe(DppEventType.UNTP);
+        expect(savedDoc.data.type).toBe(DppEventType.UNTP);
 
         // Verify the document uses the correct discriminator
-        const retrievedEvents = await service.findByKind(DppEventType.UNTP);
+        const retrievedEvents = await service.findByDataType(DppEventType.UNTP);
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
-        expect(retrievedEvents[0].kind).toBe(DppEventType.UNTP);
+        expect(retrievedEvents[0].data.type).toBe(DppEventType.UNTP);
       });
     });
 
@@ -333,19 +338,25 @@ describe('DppEventsService', () => {
         await dppEventModel.create([
           {
             _id: openDppId,
-            kind: DppEventType.OPEN_DPP,
+            data: {
+              type: DppEventType.OPEN_DPP,
+            },
             createdAt: new Date(),
             updatedAt: new Date(),
           },
           {
             _id: openepcisId,
-            kind: DppEventType.OPENEPCIS,
+            data: {
+              type: DppEventType.OPENEPCIS,
+            },
             createdAt: new Date(),
             updatedAt: new Date(),
           },
           {
             _id: untpId,
-            kind: DppEventType.UNTP,
+            data: {
+              type: DppEventType.UNTP,
+            },
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -353,24 +364,26 @@ describe('DppEventsService', () => {
 
         // Act & Assert
         // Check OpenDpp events
-        const openDppEvents = await service.findByKind(DppEventType.OPEN_DPP);
+        const openDppEvents = await service.findByDataType(
+          DppEventType.OPEN_DPP,
+        );
         expect(openDppEvents).toHaveLength(1);
         expect(openDppEvents[0].id).toBe(openDppId);
-        expect(openDppEvents[0].kind).toBe(DppEventType.OPEN_DPP);
+        expect(openDppEvents[0].data.type).toBe(DppEventType.OPEN_DPP);
 
         // Check Openepcis events
-        const openepcisEvents = await service.findByKind(
+        const openepcisEvents = await service.findByDataType(
           DppEventType.OPENEPCIS,
         );
         expect(openepcisEvents).toHaveLength(1);
         expect(openepcisEvents[0].id).toBe(openepcisId);
-        expect(openepcisEvents[0].kind).toBe(DppEventType.OPENEPCIS);
+        expect(openepcisEvents[0].data.type).toBe(DppEventType.OPENEPCIS);
 
         // Check Untp events
-        const untpEvents = await service.findByKind(DppEventType.UNTP);
+        const untpEvents = await service.findByDataType(DppEventType.UNTP);
         expect(untpEvents).toHaveLength(1);
         expect(untpEvents[0].id).toBe(untpId);
-        expect(untpEvents[0].kind).toBe(DppEventType.UNTP);
+        expect(untpEvents[0].data.type).toBe(DppEventType.UNTP);
 
         // Verify we can get all events
         const allEvents = await dppEventModel.find().exec();

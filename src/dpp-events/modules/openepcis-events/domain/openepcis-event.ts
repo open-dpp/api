@@ -1,25 +1,13 @@
 import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { randomUUID } from 'crypto';
-import { OpenDppEventType } from '../../open-dpp/domain/open-dpp-event-type.enum';
 import { DppEventType } from '../../../domain/dpp-event-type.enum';
+import { DppEventData } from '../../../domain/dpp-event-data';
 
-export class OpenEpcisEvent {
+export class OpenEpcisEvent extends DppEventData {
   @Expose()
-  readonly id: string = randomUUID();
+  readonly type: DppEventType = DppEventType.OPENEPCIS;
 
-  @Expose()
-  readonly kind: DppEventType = DppEventType.OPENEPCIS;
-
-  @Expose()
-  readonly createdAt: Date = new Date();
-
-  @Expose()
-  readonly updatedAt: Date = new Date();
-
-  static create(plain: { kind: OpenDppEventType }) {
-    return OpenEpcisEvent.fromPlain({
-      ...plain,
-    });
+  static create() {
+    return OpenEpcisEvent.fromPlain({});
   }
 
   static fromPlain(plain: unknown): OpenEpcisEvent {

@@ -1,10 +1,10 @@
 import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { OpenDppEvent } from '../open-dpp-event';
 import { OpenDppEventType } from '../open-dpp-event-type.enum';
+import { OpenDppEventData } from '../open-dpp-event-data';
 
-export class ItemCreatedEvent extends OpenDppEvent {
+export class ItemCreatedEvent extends OpenDppEventData {
   @Expose()
-  readonly subKind: OpenDppEventType = OpenDppEventType.ITEM_CREATED;
+  readonly type: OpenDppEventType = OpenDppEventType.ITEM_CREATED;
 
   @Expose()
   readonly itemId: string;
@@ -12,7 +12,7 @@ export class ItemCreatedEvent extends OpenDppEvent {
   static create(plain?: { itemId?: string }) {
     return ItemCreatedEvent.fromPlain({
       itemId: plain?.itemId,
-      subKind: OpenDppEventType.ITEM_CREATED,
+      type: OpenDppEventType.ITEM_CREATED,
     });
   }
 

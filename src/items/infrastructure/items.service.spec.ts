@@ -24,12 +24,15 @@ import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/
 import { DppEventsModule } from '../../dpp-events/dpp-events.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { userObj1 } from '../../../test/users-and-orgs';
+import { AuthContext } from '../../auth/auth-request';
 
 describe('ProductsService', () => {
   let itemService: ItemsService;
   let modelsService: ModelsService;
   let organizationsService: OrganizationsService;
   let dataSource: DataSource;
+  const authContext = new AuthContext();
+  authContext.user = userObj1;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -87,7 +90,7 @@ describe('ProductsService', () => {
     const savedModel = await modelsService.save(model);
     const item = new Item();
     item.defineModel(savedModel.id);
-    const savedItem = await itemService.save(item);
+    const savedItem = await itemService.save(item, authContext);
     expect(savedItem.model).toEqual(savedModel.id);
     const foundItem = await itemService.findById(item.id);
     expect(foundItem.model).toEqual(savedModel.id);
@@ -115,8 +118,8 @@ describe('ProductsService', () => {
     item1.defineModel(savedModel1.id);
     const item2 = new Item();
     item2.defineModel(savedModel1.id);
-    await itemService.save(item1);
-    await itemService.save(item2);
+    await itemService.save(item1, authContext);
+    await itemService.save(item2, authContext);
     const item3 = new Item();
     item3.defineModel(savedModel2.id);
 
@@ -129,7 +132,7 @@ describe('ProductsService', () => {
     const nonExistentModelId = randomUUID();
     item.defineModel(nonExistentModelId);
 
-    await expect(itemService.save(item)).rejects.toThrow(
+    await expect(itemService.save(item, authContext)).rejects.toThrow(
       new NotFoundInDatabaseException(Model.name),
     );
   });
@@ -157,7 +160,7 @@ describe('ProductsService', () => {
     const upi2 = item.createUniqueProductIdentifier();
 
     // Save the item
-    const savedItem = await itemService.save(item);
+    const savedItem = await itemService.save(item, authContext);
 
     // Verify the saved item has the unique product identifiers
     expect(savedItem.uniqueProductIdentifiers).toHaveLength(2);

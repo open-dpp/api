@@ -34,10 +34,11 @@ export class UniqueProductIdentifierService {
         referencedId: uniqueProductIdentifier.referenceId,
       }),
     );
-    const event = UniqueProductIdentifierCreatedEvent.create({
-      uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
-    });
-    await this.dppEventsService.save(event);
+    await this.dppEventsService.saveOpenDppEventData(
+      UniqueProductIdentifierCreatedEvent.create({
+        uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
+      }),
+    );
     return domainObject;
   }
 
