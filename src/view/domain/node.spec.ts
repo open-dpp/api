@@ -1,11 +1,9 @@
 import {
-  Breakpoints,
   DataFieldRef,
   GridContainer,
   GridItem,
   NodeType,
   SectionGrid,
-  Size,
 } from './node';
 import { randomUUID } from 'crypto';
 import { ValueError } from '../../exceptions/domain.errors';
@@ -15,18 +13,18 @@ describe('GridContainer', () => {
   it('should be created', () => {
     const gridContainer = GridContainer.create();
     const gridItem1 = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
+      colSpan: { md: 4 },
     });
     const gridItem2 = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
+      colSpan: { md: 4 },
     });
     const gridItem3 = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
+      colSpan: { md: 4 },
     });
 
     const subGridContainer = GridContainer.create();
     const subGridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan: 12 })],
+      colSpan: { sm: 12 },
     });
     subGridContainer.addGridItem(subGridItem);
     gridItem3.replaceContent(subGridContainer);
@@ -48,36 +46,31 @@ describe('GridContainer', () => {
     expect(gridContainer.toPlain()).toEqual({
       id: expect.any(String),
       type: NodeType.GRID_CONTAINER,
-      cols: 1,
+      cols: { sm: 1 },
       children: [
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
+          colSpan: { md: 4 },
         },
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
+          colSpan: { md: 4 },
         },
         {
           id: expect.any(String),
           type: NodeType.GRID_ITEM,
-          sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
+          colSpan: { md: 4 },
           content: {
             id: expect.any(String),
             type: NodeType.GRID_CONTAINER,
-            cols: 1,
+            cols: { sm: 1 },
             children: [
               {
                 id: expect.any(String),
                 type: NodeType.GRID_ITEM,
-                sizes: [
-                  {
-                    breakpoint: Breakpoints.sm,
-                    colSpan: 12,
-                  },
-                ],
+                colSpan: { sm: 12 },
               },
             ],
           },
@@ -90,61 +83,68 @@ describe('GridContainer', () => {
   });
 
   it.each([
-    { cols: 1, colSpan: 12 },
-    { cols: 2, colSpan: 6 },
-    { cols: 3, colSpan: 4 },
-    { cols: 6, colSpan: 2 },
-    { cols: 12, colSpan: 1 },
-  ])('should be created with cols', ({ cols, colSpan }) => {
-    const gridContainer = GridContainer.create({ cols });
+    { cols: 1 },
+    { cols: 2 },
+    { cols: 3 },
+    { cols: 4 },
+    { cols: 5 },
+    { cols: 6 },
+    { cols: 7 },
+    { cols: 8 },
+    { cols: 9 },
+    { cols: 10 },
+    { cols: 11 },
+    { cols: 12 },
+  ])('should be created with cols and initial children', ({ cols }) => {
+    const gridContainer = GridContainer.create({
+      cols: { sm: cols },
+      initNumberOfChildren: cols,
+    });
 
-    const expectedGridContainer = GridContainer.create();
+    const expectedGridContainer = GridContainer.create({ cols: { sm: cols } });
 
     const gridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan })],
+      colSpan: { sm: 1 },
     });
     for (let i = 0; i < cols; i++) {
       expectedGridContainer.addGridItem(gridItem.copy());
     }
     expect(gridContainer.toPlain()).toEqual(
-      ignoreIds({ ...expectedGridContainer.toPlain(), cols }),
+      ignoreIds({ ...expectedGridContainer.toPlain() }),
     );
   });
 
-  it.each([5, 7, 8, 9, 10, 11])(
+  it.each([2.2, 13, -1])(
     'should throw error for not supported cols',
     (cols) => {
-      expect(() => GridContainer.create({ cols })).toThrow(
-        new ValueError(`${cols} Cols not supported`),
+      expect(() => GridContainer.create({ cols: { sm: cols } })).toThrow(
+        ValueError,
       );
     },
   );
 });
 
 describe('SectionGrid', () => {
-  it.each([
-    { cols: 1, colSpan: 12 },
-    { cols: 2, colSpan: 6 },
-    { cols: 3, colSpan: 4 },
-    { cols: 6, colSpan: 2 },
-    { cols: 12, colSpan: 1 },
-  ])('should be created with cols', ({ cols, colSpan }) => {
+  it('should be created with cols', () => {
     const sectionId = randomUUID();
-    const sectionGrid = SectionGrid.create({ sectionId, cols });
+    const sectionGrid = SectionGrid.create({
+      sectionId,
+      initNumberOfChildren: 3,
+    });
 
     const expectedGridContainer = GridContainer.create();
 
     const gridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan })],
+      colSpan: { sm: 1 },
     });
-    for (let i = 0; i < cols; i++) {
+    for (let i = 0; i < 3; i++) {
       expectedGridContainer.addGridItem(gridItem.copy());
     }
     expect(sectionGrid.toPlain()).toEqual(
       ignoreIds({
         ...expectedGridContainer.toPlain(),
         type: NodeType.SECTION_GRID,
-        cols,
+        cols: { sm: 1 },
         sectionId,
       }),
     );
@@ -155,15 +155,15 @@ describe('GridItem', () => {
   it('is created with field reference as content', () => {
     const fieldId = randomUUID();
     const content = DataFieldRef.create({ fieldId });
-    const sizes = [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })];
+    const colSpan = { md: 4 };
     const gridItem = GridItem.create({
-      sizes,
+      colSpan,
       content,
     });
     expect(gridItem.toPlain()).toEqual({
       id: expect.any(String),
       type: NodeType.GRID_ITEM,
-      sizes,
+      colSpan,
       content: {
         id: expect.any(String),
         type: NodeType.DATA_FIELD_REF,

@@ -1,17 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { NodeType, Node, Breakpoints } from '../domain/node';
+import { Node, NodeType } from '../domain/node';
 
 @Schema({ _id: false })
-export class SizeDoc {
-  @Prop({ required: true, enum: Breakpoints })
-  breakpoint: Breakpoints;
-
-  @Prop({ required: true })
-  colSpan: number;
+export class ResponsiveConfigDoc {
+  @Prop()
+  xs?: number;
+  @Prop()
+  sm?: number;
+  @Prop()
+  md?: number;
+  @Prop()
+  lg?: number;
+  @Prop()
+  xl?: number;
 }
 
-const SizeSchema = SchemaFactory.createForClass(SizeDoc);
+const ResponsiveConfigSchema =
+  SchemaFactory.createForClass(ResponsiveConfigDoc);
 
 @Schema({ discriminatorKey: 'type' })
 export class NodeDoc {
@@ -22,8 +28,8 @@ const NodeSchema = SchemaFactory.createForClass(NodeDoc);
 
 @Schema()
 class GritItemDoc extends NodeDoc {
-  @Prop({ type: [SizeSchema], default: [] })
-  sizes: SizeDoc;
+  @Prop({ required: true, type: ResponsiveConfigSchema })
+  colSpan: ResponsiveConfigDoc;
 
   @Prop({ type: NodeSchema })
   content: Node;
@@ -35,8 +41,8 @@ const GridItemSchema = SchemaFactory.createForClass(GritItemDoc);
 class GridContainerDoc extends NodeDoc {
   @Prop({ type: [GridItemSchema], default: [] })
   readonly children: GritItemDoc[];
-  @Prop({ required: true })
-  cols: number;
+  @Prop({ required: true, type: ResponsiveConfigSchema })
+  cols: ResponsiveConfigDoc;
 }
 
 const GridContainerSchema = SchemaFactory.createForClass(GridContainerDoc);

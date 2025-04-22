@@ -1,11 +1,9 @@
 import {
-  Breakpoints,
   DataFieldRef,
   GridContainer,
   GridItem,
   NodeType,
   SectionGrid,
-  Size,
 } from './node';
 import { View } from './view';
 import { ignoreIds } from '../../../test/utils';
@@ -27,13 +25,13 @@ describe('View', () => {
     expect(view.name).toEqual('My layout');
     expect(view.version).toEqual('1.0.0');
     expect(view.dataModelId).toEqual(dataModelId);
-    const gridContainer1 = GridContainer.create({ cols: 3 });
+    const gridContainer1 = GridContainer.create({ cols: { sm: 3 } });
     const gridContainer2 = GridContainer.create();
     view.addNode(gridContainer1);
     view.addNode(gridContainer2);
     expect(view.nodes).toEqual([gridContainer1, gridContainer2]);
     const gridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan: 4 })],
+      colSpan: { sm: 4 },
     });
     view.addNode(gridItem, gridContainer2.id);
     expect(gridContainer2.getChildNodes()).toEqual([gridItem]);
@@ -63,11 +61,11 @@ describe('View', () => {
       nodes: [
         {
           type: NodeType.GRID_CONTAINER,
-          cols: 1,
+          cols: { sm: 1 },
           children: [
             {
               type: NodeType.GRID_ITEM,
-              sizes: [{ breakpoint: Breakpoints.sm, colSpan: 4 }],
+              colSpan: { sm: 4 },
               content: {
                 type: NodeType.DATA_FIELD_REF,
                 fieldId: 'f1',
@@ -78,11 +76,11 @@ describe('View', () => {
         {
           type: NodeType.SECTION_GRID,
           sectionId: 'sectionId',
-          cols: 1,
+          cols: { sm: 1 },
           children: [
             {
               type: NodeType.GRID_ITEM,
-              sizes: [{ breakpoint: Breakpoints.sm, colSpan: 12 }],
+              colSpan: { sm: 12 },
             },
           ],
         },
@@ -91,15 +89,20 @@ describe('View', () => {
     const view = View.fromPlain(plain);
     const expectedGridContainer = GridContainer.create();
     const expectedGridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan: 4 })],
+      colSpan: { sm: 4 },
     });
     expectedGridItem.replaceContent(DataFieldRef.create({ fieldId: 'f1' }));
 
     expectedGridContainer.addGridItem(expectedGridItem);
+    const expectedSectionGrid = SectionGrid.create({
+      sectionId: 'sectionId',
+      cols: { sm: 1 },
+    });
+    expectedSectionGrid.addGridItem(GridItem.create({ colSpan: { sm: 12 } }));
     expect(view.toPlain().nodes).toEqual(
       ignoreIds([
         expectedGridContainer.toPlain(),
-        SectionGrid.create({ sectionId: 'sectionId', cols: 1 }).toPlain(),
+        expectedSectionGrid.toPlain(),
       ]),
     );
   });
@@ -112,10 +115,10 @@ describe('View', () => {
       dataModelId,
     });
     const gridContainer = GridContainer.create();
-    const size = Size.create({ breakpoint: Breakpoints.md, colSpan: 4 });
+    const colSpan = { md: 4 };
     const dataFieldItem = DataFieldRef.create({ fieldId: randomUUID() });
     const gridItem1 = GridItem.create({
-      sizes: [size],
+      colSpan,
       content: dataFieldItem,
     });
     gridContainer.addGridItem(gridItem1);
@@ -123,13 +126,13 @@ describe('View', () => {
     const subGridContainer = GridContainer.create();
     const subDataFieldItem = DataFieldRef.create({ fieldId: randomUUID() });
     const subGridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan: 12 })],
+      colSpan: { sm: 12 },
       content: subDataFieldItem,
     });
     subGridContainer.addGridItem(subGridItem);
 
     const gridItem2 = GridItem.create({
-      sizes: [size],
+      colSpan,
       content: subGridContainer,
     });
     gridContainer.addGridItem(gridItem2);
@@ -176,10 +179,10 @@ describe('View', () => {
       dataModelId,
     });
     const gridContainer = GridContainer.create();
-    const size = Size.create({ breakpoint: Breakpoints.md, colSpan: 4 });
+    const colSpan = { md: 4 };
     const dataFieldItem = DataFieldRef.create({ fieldId: 'f1' });
     const gridItem1 = GridItem.create({
-      sizes: [size],
+      colSpan,
       content: dataFieldItem,
     });
     gridContainer.addGridItem(gridItem1);
@@ -187,13 +190,13 @@ describe('View', () => {
     const subGridContainer = GridContainer.create();
     const subDataFieldItem = DataFieldRef.create({ fieldId: 'subf1' });
     const subGridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.sm, colSpan: 12 })],
+      colSpan: { sm: 12 },
       content: subDataFieldItem,
     });
     subGridContainer.addGridItem(subGridItem);
 
     const gridItem2 = GridItem.create({
-      sizes: [size],
+      colSpan,
       content: subGridContainer,
     });
     gridContainer.addGridItem(gridItem2);
@@ -203,7 +206,7 @@ describe('View', () => {
     const dataFieldItem2 = DataFieldRef.create({ fieldId: 'f2' });
     gridContainer2.addGridItem(
       GridItem.create({
-        sizes: [size],
+        colSpan,
         content: dataFieldItem2,
       }),
     );
@@ -229,12 +232,12 @@ describe('View', () => {
         {
           id: gridContainer.id,
           type: NodeType.GRID_CONTAINER,
-          cols: 1,
+          cols: { sm: 1 },
           children: [
             {
               id: gridItem1.id,
               type: NodeType.GRID_ITEM,
-              sizes: [size],
+              colSpan,
               content: undefined,
             },
           ],

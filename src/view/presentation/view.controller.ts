@@ -63,6 +63,26 @@ export class ViewController {
     return (await this.viewService.save(view)).toPlain();
   }
 
+  // @PATCH(':viewId/nodes/')
+  // async addNode(
+  //   @Param('orgaId') organizationId: string,
+  //   @Param('viewId') viewId: string,
+  //   @Request() req: AuthRequest,
+  //   @Body() addCreateDto: AddNodeDto,
+  // ) {
+  //   await this.permissionsService.canAccessOrganizationOrFail(
+  //     organizationId,
+  //     req.authContext,
+  //   );
+  //   const view = await this.viewService.findOneOrFail(viewId);
+  //   if (!view.isOwnedBy(organizationId)) {
+  //     throw new ForbiddenException();
+  //   }
+  //   view.addNode(nodeFromDto(addCreateDto.node), addCreateDto.parentId);
+  //
+  //   return (await this.viewService.save(view)).toPlain();
+  // }
+
   @Get()
   async filterView(
     @Query('dataModelId') dataModelId: string,

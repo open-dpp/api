@@ -9,29 +9,15 @@ import { ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 import { randomUUID } from 'crypto';
 
-export enum Breakpoints {
-  xs = 'xs',
-  sm = 'sm',
-  md = 'md',
-  lg = 'lg',
-  xl = 'xl',
-}
+const ResponsiveConfigSchema = z.object({
+  xs: z.number().int().min(1).max(12).optional(),
+  sm: z.number().int().min(1).max(12).optional(),
+  md: z.number().int().min(1).max(12).optional(),
+  lg: z.number().int().min(1).max(12).optional(),
+  xl: z.number().int().min(1).max(12).optional(),
+});
 
-export class Size {
-  @Expose()
-  public breakpoint: Breakpoints;
-  @Expose()
-  public colSpan: number;
-  static create(plain: { breakpoint: Breakpoints; colSpan: number }) {
-    if (!z.number().int().min(1).max(12).safeParse(plain.colSpan).success) {
-      throw new ValueError('Col span has to be an integer between 1 or 12');
-    }
-    return plainToInstance(Size, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
-  }
-}
+export type ResponsiveConfig = z.infer<typeof ResponsiveConfigSchema>;
 
 export enum NodeType {
   GRID_CONTAINER = 'GridContainer',
@@ -51,10 +37,9 @@ export abstract class Node {
 
 export class GridContainer extends Node {
   type = NodeType.GRID_CONTAINER;
-  static readonly MAX_COLS = 12;
 
   @Expose()
-  cols: number;
+  cols: ResponsiveConfig;
 
   @Expose({ name: 'children' })
   @Type(() => GridItem)
@@ -73,13 +58,18 @@ export class GridContainer extends Node {
     return true;
   }
 
-  static create(plain?: { cols: number }) {
-    const cols = plain?.cols ?? 1;
-    const children =
-      plain?.cols !== undefined
-        ? GridContainer.createChildrenFromCols(plain.cols)
-        : [];
-
+  static create(plain?: {
+    cols?: ResponsiveConfig;
+    initNumberOfChildren?: number;
+  }) {
+    const cols = plain?.cols ?? { sm: 1 };
+    const validation = ResponsiveConfigSchema.safeParse(cols);
+    if (!validation.success) {
+      throw new ValueError(`Cols not supported ${validation.error.message}`);
+    }
+    const children = plain?.initNumberOfChildren
+      ? this.createChildren(plain.initNumberOfChildren)
+      : [];
     return GridContainer.fromPlain({ cols, children });
   }
 
@@ -90,24 +80,10 @@ export class GridContainer extends Node {
     });
   }
 
-  private static createChildrenFromCols(cols: number) {
-    const validCols = z.union([
-      z.literal(1),
-      z.literal(2),
-      z.literal(3),
-      z.literal(4),
-      z.literal(6),
-      z.literal(12),
-    ]);
-    if (!validCols.safeParse(cols).success) {
-      throw new ValueError(`${cols} Cols not supported`);
-    }
-    const sizeOfCols = this.MAX_COLS / cols;
-    return new Array(cols).fill(undefined).map(() =>
+  private static createChildren(numberOfChildren: number) {
+    return new Array(numberOfChildren).fill(undefined).map(() =>
       GridItem.create({
-        sizes: [
-          Size.create({ breakpoint: Breakpoints.sm, colSpan: sizeOfCols }),
-        ],
+        colSpan: { sm: 1 },
       }),
     );
   }
@@ -126,11 +102,22 @@ export class SectionGrid extends GridContainer {
   @Expose()
   readonly sectionId: string;
 
-  static create(plain: { sectionId: string; cols: number }) {
-    const gridContainer = GridContainer.create({ cols: plain.cols }).toPlain();
+  static create(plain: {
+    sectionId: string;
+    cols?: ResponsiveConfig;
+    initNumberOfChildren?: number;
+  }) {
+    const gridContainer = GridContainer.create({
+      cols: plain.cols,
+      initNumberOfChildren: plain.initNumberOfChildren,
+    }).toPlain();
     return plainToInstance(
       SectionGrid,
-      { ...omit(gridContainer, 'type'), ...omit(plain, 'cols') },
+      {
+        ...omit(gridContainer, 'type'),
+        ...omit(plain, 'cols'),
+        ...omit(plain, 'initNumberOfChildren'),
+      },
       {
         excludeExtraneousValues: true,
         exposeDefaultValues: true,
@@ -170,7 +157,7 @@ export const nodeSubtypesWithoutGridItem = [
 export class GridItem extends Node {
   type = NodeType.GRID_ITEM;
   @Expose()
-  public sizes: Size[] = [];
+  public colSpan: ResponsiveConfig;
 
   @Expose({ name: 'content' })
   @Type(() => Node, {
@@ -198,7 +185,10 @@ export class GridItem extends Node {
     return false;
   }
 
-  static create(plain: { sizes: Size[]; content?: Node }) {
+  static create(plain: { colSpan: ResponsiveConfig; content?: Node }) {
+    if (!ResponsiveConfigSchema.safeParse(plain.colSpan).success) {
+      throw new ValueError('Col span has to be an integer between 1 or 12');
+    }
     return GridItem.fromPlain(plain);
   }
 

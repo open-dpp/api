@@ -17,13 +17,11 @@ import { ViewModule } from '../view.module';
 import { View } from '../domain/view';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import {
-  Breakpoints,
   DataFieldRef,
   GridContainer,
   GridItem,
   NodeType,
   SectionGrid,
-  Size,
 } from '../domain/node';
 import { ignoreIds } from '../../../test/utils';
 
@@ -138,20 +136,29 @@ describe('ViewController', () => {
         dataModelId: randomUUID(),
       }),
     );
-    let body: any = { node: { type: NodeType.GRID_CONTAINER, cols: 3 } };
+    let body: any = {
+      node: {
+        type: NodeType.GRID_CONTAINER,
+        cols: { sm: 3 },
+        initNumberOfChildren: 3,
+      },
+    };
     let response = await addNodeRequest(view.id, body);
-    const gridContainer = GridContainer.create({ cols: 3 });
+    const gridContainer = GridContainer.create({
+      cols: { sm: 3 },
+      initNumberOfChildren: 3,
+    });
     // add grid item
     body = {
       node: {
         type: NodeType.GRID_ITEM,
-        sizes: [{ breakpoint: Breakpoints.md, colSpan: 4 }],
+        colSpan: { md: 4 },
       },
       parentId: response.body.nodes[0].id,
     };
     response = await addNodeRequest(view.id, body);
     const gridItem = GridItem.create({
-      sizes: [Size.create({ breakpoint: Breakpoints.md, colSpan: 4 })],
+      colSpan: { md: 4 },
     });
     // add data field
     gridContainer.addGridItem(gridItem);
@@ -169,7 +176,7 @@ describe('ViewController', () => {
     body = {
       node: {
         type: NodeType.SECTION_GRID,
-        cols: 2,
+        cols: { sm: 2 },
         sectionId: 's1',
       },
       parentId: response.body.nodes[0].children[0].id,
@@ -177,7 +184,7 @@ describe('ViewController', () => {
     response = await addNodeRequest(view.id, body);
     const firstGridItem = gridContainer.children[0];
     firstGridItem.replaceContent(
-      SectionGrid.create({ sectionId: 's1', cols: 2 }),
+      SectionGrid.create({ sectionId: 's1', cols: { sm: 2 } }),
     );
 
     const found = await viewService.findOneOrFail(response.body.id);

@@ -1,6 +1,4 @@
 import {
-  ArrayNotEmpty,
-  IsArray,
   IsEnum,
   IsInt,
   IsNotEmptyObject,
@@ -11,7 +9,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
-  Breakpoints,
   DataFieldRef,
   GridContainer,
   GridItem,
@@ -27,25 +24,43 @@ export class NodeCreateDto {
   type: NodeType;
 }
 
-class GridContainerCreateDto extends NodeCreateDto {
+export class ResponsiveConfigDto {
   @IsInt()
   @Min(0)
   @Max(12)
-  cols: number;
+  @IsOptional()
+  xs?: number;
+  @IsInt()
+  @Min(0)
+  @Max(12)
+  @IsOptional()
+  sm?: number;
+  @IsInt()
+  @Min(0)
+  @Max(12)
+  @IsOptional()
+  md?: number;
+  @IsInt()
+  @Min(0)
+  @Max(12)
+  @IsOptional()
+  lg?: number;
+  @IsInt()
+  @Min(0)
+  @Max(12)
+  @IsOptional()
+  xl?: number;
+}
+
+class GridContainerCreateDto extends NodeCreateDto {
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  cols: ResponsiveConfigDto;
 }
 
 class SectionGridContainerCreateDto extends GridContainerCreateDto {
   @IsUUID()
   sectionId: string;
-}
-
-class SizeCreateDto {
-  @IsInt()
-  @Min(0)
-  @Max(12)
-  colSpan: number;
-  @IsEnum(Breakpoints)
-  breakpoint: Breakpoints;
 }
 
 class DataFieldRefCreateDto extends NodeCreateDto {
@@ -61,10 +76,13 @@ const nodeCreateSubtypesWithoutGridItem = [
 
 class GridItemCreateDto extends NodeCreateDto {
   @ValidateNested()
-  @IsArray()
-  @ArrayNotEmpty()
-  @Type(() => SizeCreateDto)
-  sizes: SizeCreateDto[];
+  @Type(() => ResponsiveConfigDto)
+  colSpan: ResponsiveConfigDto;
+
+  @IsInt()
+  @IsOptional()
+  initNumberOfChildren?: number;
+
   @ValidateNested()
   @IsNotEmptyObject()
   @Type(() => NodeCreateDto, {

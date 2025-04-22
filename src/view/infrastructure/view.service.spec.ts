@@ -4,7 +4,7 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { Breakpoints, NodeType } from '../domain/node';
+import { NodeType } from '../domain/node';
 import { getViewSchema, ViewDoc } from './view.schema';
 import { ViewService } from './view.service';
 import { View } from '../domain/view';
@@ -39,11 +39,11 @@ describe('ViewService', () => {
     nodes: [
       {
         type: NodeType.GRID_CONTAINER,
-        cols: 2,
+        cols: { sm: 2 },
         children: [
           {
             type: NodeType.GRID_ITEM,
-            sizes: [{ breakpoint: Breakpoints.sm, colSpan: 4 }],
+            colSpan: { sm: 4 },
             content: {
               type: NodeType.DATA_FIELD_REF,
               fieldId: 'f1',
@@ -54,11 +54,11 @@ describe('ViewService', () => {
       {
         type: NodeType.SECTION_GRID,
         sectionId: 'sectionId',
-        cols: 4,
+        cols: { sm: 4 },
         children: [
           {
             type: NodeType.GRID_ITEM,
-            sizes: [{ breakpoint: Breakpoints.sm, colSpan: 12 }],
+            colSpan: { sm: 12 },
           },
         ],
       },
