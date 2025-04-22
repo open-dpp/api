@@ -159,6 +159,9 @@ export class GridItem extends Node {
   @Expose()
   public colSpan: ResponsiveConfig;
 
+  @Expose()
+  public colStart?: ResponsiveConfig;
+
   @Expose({ name: 'content' })
   @Type(() => Node, {
     discriminator: {
@@ -185,9 +188,19 @@ export class GridItem extends Node {
     return false;
   }
 
-  static create(plain: { colSpan: ResponsiveConfig; content?: Node }) {
+  static create(plain: {
+    colSpan: ResponsiveConfig;
+    colStart?: ResponsiveConfig;
+    content?: Node;
+  }) {
     if (!ResponsiveConfigSchema.safeParse(plain.colSpan).success) {
       throw new ValueError('Col span has to be an integer between 1 or 12');
+    }
+    if (
+      plain.colStart &&
+      !ResponsiveConfigSchema.safeParse(plain.colStart).success
+    ) {
+      throw new ValueError('Col start has to be an integer between 1 or 12');
     }
     return GridItem.fromPlain(plain);
   }

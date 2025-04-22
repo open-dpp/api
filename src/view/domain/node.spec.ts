@@ -171,4 +171,16 @@ describe('GridItem', () => {
       },
     });
   });
+
+  it('is created with col start', () => {
+    const colStart = { sm: 3 };
+    const gridItem = GridItem.create({
+      colSpan: { sm: 4 },
+      colStart,
+    });
+    expect(gridItem.colStart).toEqual(colStart);
+    expect(() =>
+      GridItem.create({ colSpan: { sm: 4 }, colStart: { md: 13 } }),
+    ).toThrow(new ValueError('Col start has to be an integer between 1 or 12'));
+  });
 });

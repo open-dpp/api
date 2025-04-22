@@ -44,6 +44,7 @@ describe('ViewService', () => {
           {
             type: NodeType.GRID_ITEM,
             colSpan: { sm: 4 },
+            colStart: { sm: 2 },
             content: {
               type: NodeType.DATA_FIELD_REF,
               fieldId: 'f1',

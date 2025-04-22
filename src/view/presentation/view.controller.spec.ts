@@ -153,12 +153,14 @@ describe('ViewController', () => {
       node: {
         type: NodeType.GRID_ITEM,
         colSpan: { md: 4 },
+        colStart: { md: 2 },
       },
       parentId: response.body.nodes[0].id,
     };
     response = await addNodeRequest(view.id, body);
     const gridItem = GridItem.create({
       colSpan: { md: 4 },
+      colStart: { md: 2 },
     });
     // add data field
     gridContainer.addGridItem(gridItem);
