@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -59,6 +61,28 @@ export class ViewController {
       throw new ForbiddenException();
     }
     view.addNode(nodeFromDto(addCreateDto.node), addCreateDto.parentId);
+
+    return (await this.viewService.save(view)).toPlain();
+  }
+
+  @Delete(':viewId/nodes/:id')
+  async deleteNode(
+    @Param('orgaId') organizationId: string,
+    @Param('viewId') viewId: string,
+    @Param('id') nodeId: string,
+    @Request() req: AuthRequest,
+  ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const view = await this.viewService.findOneOrFail(viewId);
+    if (!view.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    if (!view.deleteNodeById(nodeId)) {
+      throw new NotFoundException(`Node with ${nodeId} not found.`);
+    }
 
     return (await this.viewService.save(view)).toPlain();
   }

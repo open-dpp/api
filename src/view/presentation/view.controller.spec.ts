@@ -388,6 +388,112 @@ describe('ViewController', () => {
     expect(response.status).toEqual(403);
   });
 
+  it(`/DELETE nodes`, async () => {
+    const containerId = randomUUID();
+    const itemId = randomUUID();
+    const view = await viewService.save(
+      View.fromPlain({
+        name: 'my view',
+        ownedByOrganizationId: organizationId,
+        createdByUserId: userId,
+        dataModelId: randomUUID(),
+        nodes: [
+          {
+            id: containerId,
+            type: NodeType.GRID_CONTAINER,
+            cols: { sm: 3 },
+            children: [
+              {
+                id: itemId,
+                type: NodeType.GRID_ITEM,
+                colSpan: { sm: 4 },
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    const response = await request(app.getHttpServer())
+      .delete(
+        `/organizations/${organizationId}/views/${view.id}/nodes/${itemId}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(200);
+    const found = await viewService.findOneOrFail(view.id);
+    expect(found.toPlain().nodes).toEqual([
+      {
+        id: containerId,
+        type: NodeType.GRID_CONTAINER,
+        cols: { sm: 3 },
+        children: [],
+      },
+    ]);
+
+    const responseFail = await request(app.getHttpServer())
+      .delete(
+        `/organizations/${organizationId}/views/${view.id}/nodes/unknownId`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(responseFail.status).toEqual(404);
+  });
+
+  it(`/DELETE view by data model id ${userNotMemberTxt}`, async () => {
+    const response = await request(app.getHttpServer())
+      .delete(
+        `/organizations/${organizationId}/views/${randomUUID()}/nodes/${randomUUID()}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/DELETE view by data model id ${viewDoesNotBelongToOrga}`, async () => {
+    const dataModelId = randomUUID();
+    const view = await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId,
+        dataModelId,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .delete(
+        `/organizations/${otherOrganizationId}/views/${view.id}/nodes/${randomUUID()}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+
+    expect(response.status).toEqual(403);
+  });
+
   afterAll(async () => {
     await app.close();
     await mongoConnection.close();
