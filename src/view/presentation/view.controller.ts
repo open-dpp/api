@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,6 +7,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Query,
   Request,
@@ -15,7 +17,14 @@ import { ViewService } from '../infrastructure/view.service';
 import { View } from '../domain/view';
 import { ViewDto } from './dto/view.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { AddNodeDto, nodeFromDto } from './dto/node.dto';
+import {
+  AddNodeDto,
+  isGridContainerUpdateDto,
+  isGridItemUpdateDto,
+  ModificationDto,
+  nodeFromDto,
+} from './dto/node.dto';
+import { isGridContainer, isGridItem } from '../domain/node';
 
 @Controller('/organizations/:orgaId/views')
 export class ViewController {
@@ -87,25 +96,41 @@ export class ViewController {
     return (await this.viewService.save(view)).toPlain();
   }
 
-  // @PATCH(':viewId/nodes/')
-  // async addNode(
-  //   @Param('orgaId') organizationId: string,
-  //   @Param('viewId') viewId: string,
-  //   @Request() req: AuthRequest,
-  //   @Body() addCreateDto: AddNodeDto,
-  // ) {
-  //   await this.permissionsService.canAccessOrganizationOrFail(
-  //     organizationId,
-  //     req.authContext,
-  //   );
-  //   const view = await this.viewService.findOneOrFail(viewId);
-  //   if (!view.isOwnedBy(organizationId)) {
-  //     throw new ForbiddenException();
-  //   }
-  //   view.addNode(nodeFromDto(addCreateDto.node), addCreateDto.parentId);
-  //
-  //   return (await this.viewService.save(view)).toPlain();
-  // }
+  @Patch(':viewId/nodes/:id')
+  async modifyNode(
+    @Param('orgaId') organizationId: string,
+    @Param('viewId') viewId: string,
+    @Param('id') nodeId: string,
+    @Request() req: AuthRequest,
+    @Body() nodeUpdateDto: ModificationDto,
+  ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const view = await this.viewService.findOneOrFail(viewId);
+    if (!view.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    const found = view.findNodeWithParentById(nodeId);
+    if (!found) {
+      throw new NotFoundException(`Node with ${nodeId} not found`);
+    }
+    const { modifications } = nodeUpdateDto;
+    if (isGridItem(found.node) && isGridItemUpdateDto(modifications)) {
+      found.node.modifyConfigs(modifications);
+    } else if (
+      isGridContainer(found.node) &&
+      isGridContainerUpdateDto(modifications)
+    ) {
+      found.node.modifyConfigs(modifications);
+    } else {
+      throw new BadRequestException(
+        `Type ${modifications.type} not supported for node ${nodeId}`,
+      );
+    }
+    return (await this.viewService.save(view)).toPlain();
+  }
 
   @Get()
   async filterView(

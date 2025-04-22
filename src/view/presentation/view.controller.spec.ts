@@ -388,6 +388,138 @@ describe('ViewController', () => {
     expect(response.status).toEqual(403);
   });
 
+  async function updateNodeRequest(
+    viewId: string,
+    nodeId: string,
+    body: object,
+  ) {
+    return await request(app.getHttpServer())
+      .patch(`/organizations/${organizationId}/views/${viewId}/nodes/${nodeId}`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+  }
+
+  it(`/UPDATE nodes`, async () => {
+    const containerId = randomUUID();
+    const itemId = randomUUID();
+    const view = await viewService.save(
+      View.fromPlain({
+        name: 'my view',
+        ownedByOrganizationId: organizationId,
+        createdByUserId: userId,
+        dataModelId: randomUUID(),
+        nodes: [
+          {
+            id: containerId,
+            type: NodeType.GRID_CONTAINER,
+            cols: { sm: 3 },
+            children: [
+              {
+                id: itemId,
+                type: NodeType.GRID_ITEM,
+                colSpan: { sm: 4 },
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    let body: any = {
+      modifications: {
+        type: NodeType.GRID_ITEM,
+        colSpan: { sm: 8, md: 3 },
+        rowStart: { sm: 1 },
+      },
+    };
+    let response = await updateNodeRequest(view.id, itemId, body);
+    expect(response.status).toEqual(200);
+    let found = await viewService.findOneOrFail(view.id);
+    let foundNode = found.findNodeWithParentById(itemId).node;
+    expect(foundNode).toEqual({
+      ...foundNode,
+      colSpan: { sm: 8, md: 3 },
+      rowStart: { sm: 1 },
+    });
+
+    body = {
+      modifications: {
+        type: NodeType.GRID_CONTAINER,
+        cols: { md: 8, lg: 4 },
+      },
+    };
+    response = await updateNodeRequest(view.id, containerId, body);
+    expect(response.status).toEqual(200);
+    found = await viewService.findOneOrFail(view.id);
+    foundNode = found.findNodeWithParentById(containerId).node;
+    expect(foundNode).toEqual({
+      ...foundNode,
+      cols: { md: 8, lg: 4 },
+    });
+
+    body = {
+      modifications: {
+        type: NodeType.DATA_FIELD_REF,
+      },
+    };
+    response = await updateNodeRequest(view.id, containerId, body);
+    expect(response.status).toEqual(400);
+    expect(response.body.message).toEqual(
+      `Type DataFieldRef not supported for node ${containerId}`,
+    );
+  });
+
+  it(`/UPDATE nodes ${userNotMemberTxt}`, async () => {
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${organizationId}/views/${randomUUID()}/nodes/${randomUUID()}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send({});
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/UPDATE nodes ${viewDoesNotBelongToOrga}`, async () => {
+    const dataModelId = randomUUID();
+    const view = await viewService.save(
+      View.create({
+        name: 'my view',
+        organizationId,
+        userId,
+        dataModelId,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${otherOrganizationId}/views/${view.id}/nodes/${randomUUID()}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send({});
+
+    expect(response.status).toEqual(403);
+  });
+
   it(`/DELETE nodes`, async () => {
     const containerId = randomUUID();
     const itemId = randomUUID();

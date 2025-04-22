@@ -171,3 +171,66 @@ export function nodeFromDto(createDto: NodeCreateDto) {
   }
   throw new ValueError(`Type ${createDto.type} not supported`);
 }
+
+// ----------------------
+
+export class NodeUpdateDto {
+  type: NodeType;
+}
+
+export class GridContainerUpdateDto extends NodeUpdateDto {
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  cols: ResponsiveConfigDto;
+}
+
+export class GridItemUpdateDto extends NodeUpdateDto {
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  colSpan: ResponsiveConfigDto;
+
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  @IsOptional()
+  colStart?: ResponsiveConfigDto;
+
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  @IsOptional()
+  rowStart?: ResponsiveConfigDto;
+
+  @ValidateNested()
+  @Type(() => ResponsiveConfigDto)
+  @IsOptional()
+  rowSpan?: ResponsiveConfigDto;
+}
+
+const nodeUpdateSubtypes = [
+  { value: GridContainerUpdateDto, name: NodeType.GRID_CONTAINER },
+  { value: GridItemUpdateDto, name: NodeType.GRID_ITEM },
+];
+
+export class ModificationDto {
+  @ValidateNested()
+  @IsNotEmptyObject()
+  @Type(() => NodeUpdateDto, {
+    discriminator: {
+      property: 'type',
+      subTypes: nodeUpdateSubtypes,
+    },
+    keepDiscriminatorProperty: true,
+  })
+  modifications: NodeUpdateDto;
+}
+
+export function isGridContainerUpdateDto(
+  node: NodeUpdateDto,
+): node is GridContainerUpdateDto {
+  return node.type === NodeType.GRID_CONTAINER;
+}
+
+export function isGridItemUpdateDto(
+  node: NodeUpdateDto,
+): node is GridItemUpdateDto {
+  return node.type === NodeType.GRID_ITEM;
+}

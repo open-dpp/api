@@ -122,6 +122,19 @@ describe('GridContainer', () => {
       );
     },
   );
+
+  it('should modify cols', () => {
+    const gridContainer = GridContainer.create({ cols: { sm: 3 } });
+    const modifications = { cols: { sm: 6, md: 10 } };
+    gridContainer.modifyConfigs(modifications);
+    expect(gridContainer.toPlain()).toEqual({
+      ...gridContainer.toPlain(),
+      ...modifications,
+    });
+    expect(() => gridContainer.modifyConfigs({ cols: { sm: 13 } })).toThrow(
+      new ValueError('Cols has to be an integer between 1 or 12'),
+    );
+  });
 });
 
 describe('SectionGrid', () => {
@@ -205,6 +218,29 @@ describe('GridItem', () => {
     expect(gridItem.rowSpan).toEqual(rowSpan);
     expect(() =>
       GridItem.create({ colSpan: { sm: 4 }, rowSpan: { md: 13 } }),
+    ).toThrow(new ValueError('Row span has to be an integer between 1 or 12'));
+  });
+
+  it('configs are modified', () => {
+    const gridItem = GridItem.create({
+      colSpan: { sm: 4 },
+      colStart: { sm: 2 },
+      rowStart: { sm: 3 },
+      rowSpan: { sm: 7 },
+    });
+    const modification = {
+      colSpan: { sm: 7, md: 8 },
+      colStart: { sm: 4, md: 10 },
+      rowStart: { sm: 9, md: 1 },
+      rowSpan: { sm: 1, md: 6 },
+    };
+    gridItem.modifyConfigs(modification);
+    expect(gridItem.toPlain()).toEqual({
+      ...gridItem.toPlain(),
+      ...modification,
+    });
+    expect(() =>
+      gridItem.modifyConfigs({ colSpan: { sm: 4 }, rowSpan: { md: 13 } }),
     ).toThrow(new ValueError('Row span has to be an integer between 1 or 12'));
   });
 });

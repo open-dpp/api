@@ -17,6 +17,12 @@ const ResponsiveConfigSchema = z.object({
   xl: z.number().int().min(1).max(12).optional(),
 });
 
+function validateConfigFail(config: ResponsiveConfig, errorPrefix: string) {
+  if (!ResponsiveConfigSchema.safeParse(config).success) {
+    throw new ValueError(`${errorPrefix} has to be an integer between 1 or 12`);
+  }
+}
+
 export type ResponsiveConfig = z.infer<typeof ResponsiveConfigSchema>;
 
 export enum NodeType {
@@ -63,14 +69,16 @@ export class GridContainer extends Node {
     initNumberOfChildren?: number;
   }) {
     const cols = plain?.cols ?? { sm: 1 };
-    const validation = ResponsiveConfigSchema.safeParse(cols);
-    if (!validation.success) {
-      throw new ValueError(`Cols not supported ${validation.error.message}`);
-    }
+    validateConfigFail(cols, 'Cols');
     const children = plain?.initNumberOfChildren
       ? this.createChildren(plain.initNumberOfChildren)
       : [];
     return GridContainer.fromPlain({ cols, children });
+  }
+
+  modifyConfigs(plain: { cols: ResponsiveConfig }) {
+    validateConfigFail(plain.cols, 'Cols');
+    this.cols = plain.cols;
   }
 
   static fromPlain(plain: unknown) {
@@ -194,15 +202,16 @@ export class GridItem extends Node {
     return false;
   }
 
-  private static validConfigFail(
-    config: ResponsiveConfig,
-    errorPrefix: string,
+  private static validateConfigsOrFail(
+    colSpan: ResponsiveConfig,
+    colStart?: ResponsiveConfig,
+    rowStart?: ResponsiveConfig,
+    rowSpan?: ResponsiveConfig,
   ) {
-    if (!ResponsiveConfigSchema.safeParse(config).success) {
-      throw new ValueError(
-        `${errorPrefix} has to be an integer between 1 or 12`,
-      );
-    }
+    validateConfigFail(colSpan, 'Col span');
+    validateConfigFail(colStart ?? {}, 'Col start');
+    validateConfigFail(rowStart ?? {}, 'Row start');
+    validateConfigFail(rowSpan ?? {}, 'Row span');
   }
   static create(plain: {
     colSpan: ResponsiveConfig;
@@ -211,12 +220,31 @@ export class GridItem extends Node {
     rowSpan?: ResponsiveConfig;
     content?: Node;
   }) {
-    GridItem.validConfigFail(plain.colSpan, 'Col span');
-    GridItem.validConfigFail(plain.colStart ?? {}, 'Col start');
-    GridItem.validConfigFail(plain.rowStart ?? {}, 'Row start');
-    GridItem.validConfigFail(plain.rowSpan ?? {}, 'Row span');
-
+    GridItem.validateConfigsOrFail(
+      plain.colSpan,
+      plain.colStart,
+      plain.rowStart,
+      plain.rowSpan,
+    );
     return GridItem.fromPlain(plain);
+  }
+
+  modifyConfigs(plain: {
+    colSpan: ResponsiveConfig;
+    colStart?: ResponsiveConfig;
+    rowStart?: ResponsiveConfig;
+    rowSpan?: ResponsiveConfig;
+  }) {
+    GridItem.validateConfigsOrFail(
+      plain.colSpan,
+      plain.colStart,
+      plain.rowStart,
+      plain.rowSpan,
+    );
+    this.colStart = plain.colStart;
+    this.colSpan = plain.colSpan;
+    this.rowStart = plain.rowStart;
+    this.rowSpan = plain.rowSpan;
   }
 
   static fromPlain(plain: unknown) {
