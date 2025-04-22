@@ -12,6 +12,10 @@ import { OpenEpcisEvent } from '../modules/openepcis-events/domain/openepcis-eve
 import { UntpEvent } from '../modules/untp-events/domain/untp-event';
 import { DppEventType } from './dpp-event-type.enum';
 import { DppEventIdentifier } from './dpp-event-identifier';
+import { DppEventIdentifierTypes } from './dpp-event-identifier-types.enum';
+import { DppEventIdentifierUser } from './dpp-event-identifier-user';
+import { DppEventIdentifierSystem } from './dpp-event-identifier-system';
+import { DppEventIdentifierAnonymous } from './dpp-event-identifier-anonymous';
 
 export const dppEventDataTypes: Array<{
   value: ClassConstructor<DppEventData>;
@@ -28,6 +32,24 @@ export const dppEventDataTypes: Array<{
   {
     value: UntpEvent,
     name: DppEventType.UNTP,
+  },
+];
+
+export const dppEventIdentifierTypes: Array<{
+  value: ClassConstructor<DppEventIdentifier>;
+  name: string;
+}> = [
+  {
+    value: DppEventIdentifierUser,
+    name: DppEventIdentifierTypes.USER,
+  },
+  {
+    value: DppEventIdentifierSystem,
+    name: DppEventIdentifierTypes.SYSTEM,
+  },
+  {
+    value: DppEventIdentifierAnonymous,
+    name: DppEventIdentifierTypes.USER,
   },
 ];
 
@@ -52,6 +74,13 @@ export class DppEvent {
   readonly data: DppEventData;
 
   @Expose()
+  @Type(() => DppEventIdentifier, {
+    discriminator: {
+      property: 'type',
+      subTypes: dppEventIdentifierTypes,
+    },
+    keepDiscriminatorProperty: true,
+  })
   readonly identifier: DppEventIdentifier;
 
   static create(plain: Partial<DppEvent>) {

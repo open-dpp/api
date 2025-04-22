@@ -9,6 +9,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { PermissionsService } from '../../permissions/permissions.service';
 import { ItemCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/item-created.event';
 import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
+import { UniqueProductIdentifierCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -38,6 +39,14 @@ export class ItemsController {
       ItemCreatedEvent.create({ itemId: itemDto.id }),
       req.authContext,
     );
+    for (const uniqueProductIdentifier of itemDto.uniqueProductIdentifiers) {
+      await this.dppEventsService.saveOpenDppEventData(
+        UniqueProductIdentifierCreatedEvent.create({
+          uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
+        }),
+        req.authContext,
+      );
+    }
     return itemDto;
   }
 

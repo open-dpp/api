@@ -4,15 +4,12 @@ import { Equal, Repository } from 'typeorm';
 import { UniqueProductIdentifierEntity } from './unique.product.identifier.entity';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
-import { UniqueProductIdentifierCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
 
 @Injectable()
 export class UniqueProductIdentifierService {
   constructor(
     @InjectRepository(UniqueProductIdentifierEntity)
     private uniqueProductIdentifierRepository: Repository<UniqueProductIdentifierEntity>,
-    private readonly dppEventsService: DppEventsService,
   ) {}
 
   convertToDomain(
@@ -27,19 +24,13 @@ export class UniqueProductIdentifierService {
   }
 
   async save(uniqueProductIdentifier: UniqueProductIdentifier) {
-    const domainObject = this.convertToDomain(
+    return this.convertToDomain(
       await this.uniqueProductIdentifierRepository.save({
         uuid: uniqueProductIdentifier.uuid,
         view: uniqueProductIdentifier.view,
         referencedId: uniqueProductIdentifier.referenceId,
       }),
     );
-    await this.dppEventsService.saveOpenDppEventData(
-      UniqueProductIdentifierCreatedEvent.create({
-        uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
-      }),
-    );
-    return domainObject;
   }
 
   async findOne(uuid: string) {

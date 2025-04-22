@@ -1,6 +1,7 @@
 import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { DppEventData } from '../domain/dpp-event-data';
+import { DppEventIdentifier } from '../domain/dpp-event-identifier';
 
 export enum DppEventSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -32,11 +33,8 @@ export class DppEventDocument extends Document {
   @Prop({ required: true })
   updatedAt: Date;
 
-  @Prop({ required: false })
-  createdByUserId?: string;
-
-  @Prop({ required: false })
-  isCreatedBySystem?: boolean;
+  @Prop({ type: DppEventIdentifier, required: true })
+  identifier: DppEventIdentifier;
 }
 
 export const DppEventSchema = SchemaFactory.createForClass(DppEventDocument);

@@ -11,6 +11,7 @@ import { DppEventDocument, DppEventSchema } from './dpp-event.document';
 import { DppEvent } from '../domain/dpp-event';
 import { DppEventType } from '../domain/dpp-event-type.enum';
 import { randomUUID } from 'crypto';
+import { DppEventIdentifierTypes } from '../domain/dpp-event-identifier-types.enum';
 
 describe('DppEventsService', () => {
   let service: DppEventsService;
@@ -60,6 +61,9 @@ describe('DppEventsService', () => {
         data: {
           type: DppEventType.OPENEPCIS,
         },
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       } as DppEventDocument;
 
       // Act
@@ -69,6 +73,7 @@ describe('DppEventsService', () => {
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
       expect(result.data.type).toBe(DppEventType.OPENEPCIS);
+      expect(result.identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
     });
 
     it('should convert a DppEventDocument with createdAt and updatedAt to a DppEvent domain object', () => {
@@ -83,6 +88,9 @@ describe('DppEventsService', () => {
         data: {
           type: DppEventType.OPENEPCIS,
         },
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       } as DppEventDocument;
 
       // Act
@@ -94,6 +102,7 @@ describe('DppEventsService', () => {
       expect(result.data.type).toBe(DppEventType.OPENEPCIS);
       expect(result.createdAt).toEqual(createdAt);
       expect(result.updatedAt).toEqual(updatedAt);
+      expect(result.identifier.type).toEqual(DppEventIdentifierTypes.SYSTEM);
     });
   });
 
@@ -106,6 +115,9 @@ describe('DppEventsService', () => {
         data: {
           type: DppEventType.OPENEPCIS,
         },
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       });
 
       // Act
@@ -115,12 +127,14 @@ describe('DppEventsService', () => {
       expect(result).toBeInstanceOf(DppEvent);
       expect(result.id).toBe(id);
       expect(result.data.type).toBe(DppEventType.OPENEPCIS);
+      expect(result.identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
 
       // Verify it was saved to the database
       const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
       expect(savedDoc).toBeDefined();
       expect(savedDoc._id).toBe(id);
       expect(savedDoc.data.type).toBe(DppEventType.OPENEPCIS);
+      expect(savedDoc.identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
     });
 
     it('should save a DppEvent with custom createdAt and updatedAt dates', async () => {
@@ -135,6 +149,9 @@ describe('DppEventsService', () => {
         },
         createdAt,
         updatedAt,
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       });
 
       // Act
@@ -147,6 +164,7 @@ describe('DppEventsService', () => {
       expect(result.createdAt).toEqual(createdAt);
       // The updatedAt date should be updated to the current time
       expect(result.updatedAt).not.toEqual(updatedAt);
+      expect(result.identifier.type).toEqual(DppEventIdentifierTypes.SYSTEM);
 
       // Verify it was saved to the database
       const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
@@ -156,6 +174,7 @@ describe('DppEventsService', () => {
       expect(savedDoc.createdAt).toEqual(createdAt);
       // The updatedAt date should be updated to the current time
       expect(savedDoc.updatedAt).not.toEqual(updatedAt);
+      expect(savedDoc.identifier.type).toEqual(DppEventIdentifierTypes.SYSTEM);
     });
   });
 
@@ -170,6 +189,9 @@ describe('DppEventsService', () => {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       });
 
       // Act
@@ -179,6 +201,7 @@ describe('DppEventsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(id);
       expect(result[0].data.type).toBe(DppEventType.OPENEPCIS);
+      expect(result[0].identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
     });
 
     it('should return an empty array if no DppEvents are found by id', async () => {
@@ -204,6 +227,9 @@ describe('DppEventsService', () => {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       });
 
       await dppEventModel.create({
@@ -213,6 +239,9 @@ describe('DppEventsService', () => {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
+        identifier: {
+          type: DppEventIdentifierTypes.SYSTEM,
+        },
       });
 
       // Act
@@ -222,6 +251,8 @@ describe('DppEventsService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].data.type).toBe(kind);
       expect(result[1].data.type).toBe(kind);
+      expect(result[0].identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
+      expect(result[1].identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
 
       // Verify both events were found
       const ids = result.map((event) => event.id);
@@ -248,6 +279,9 @@ describe('DppEventsService', () => {
           data: {
             type: DppEventType.OPEN_DPP,
           },
+          identifier: {
+            type: DppEventIdentifierTypes.SYSTEM,
+          },
         });
 
         // Act
@@ -258,6 +292,7 @@ describe('DppEventsService', () => {
         expect(savedDoc).toBeDefined();
         expect(savedDoc._id).toBe(id);
         expect(savedDoc.data.type).toBe(DppEventType.OPEN_DPP);
+        expect(savedDoc.identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
 
         // Verify the document uses the correct discriminator
         const retrievedEvents = await service.findByDataType(
@@ -266,6 +301,9 @@ describe('DppEventsService', () => {
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
         expect(retrievedEvents[0].data.type).toBe(DppEventType.OPEN_DPP);
+        expect(retrievedEvents[0].identifier.type).toBe(
+          DppEventIdentifierTypes.SYSTEM,
+        );
       });
     });
 
@@ -278,6 +316,9 @@ describe('DppEventsService', () => {
           data: {
             type: DppEventType.OPENEPCIS,
           },
+          identifier: {
+            type: DppEventIdentifierTypes.SYSTEM,
+          },
         });
 
         // Act
@@ -288,6 +329,7 @@ describe('DppEventsService', () => {
         expect(savedDoc).toBeDefined();
         expect(savedDoc._id).toBe(id);
         expect(savedDoc.data.type).toBe(DppEventType.OPENEPCIS);
+        expect(savedDoc.identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
 
         // Verify the document uses the correct discriminator
         const retrievedEvents = await service.findByDataType(
@@ -296,6 +338,9 @@ describe('DppEventsService', () => {
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
         expect(retrievedEvents[0].data.type).toBe(DppEventType.OPENEPCIS);
+        expect(retrievedEvents[0].identifier.type).toBe(
+          DppEventIdentifierTypes.SYSTEM,
+        );
       });
     });
 
@@ -308,6 +353,9 @@ describe('DppEventsService', () => {
           data: {
             type: DppEventType.UNTP,
           },
+          identifier: {
+            type: DppEventIdentifierTypes.SYSTEM,
+          },
         });
 
         // Act
@@ -318,12 +366,16 @@ describe('DppEventsService', () => {
         expect(savedDoc).toBeDefined();
         expect(savedDoc._id).toBe(id);
         expect(savedDoc.data.type).toBe(DppEventType.UNTP);
+        expect(savedDoc.identifier.type).toBe(DppEventIdentifierTypes.SYSTEM);
 
         // Verify the document uses the correct discriminator
         const retrievedEvents = await service.findByDataType(DppEventType.UNTP);
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
         expect(retrievedEvents[0].data.type).toBe(DppEventType.UNTP);
+        expect(retrievedEvents[0].identifier.type).toBe(
+          DppEventIdentifierTypes.SYSTEM,
+        );
       });
     });
 
@@ -343,6 +395,9 @@ describe('DppEventsService', () => {
             },
             createdAt: new Date(),
             updatedAt: new Date(),
+            identifier: {
+              type: DppEventIdentifierTypes.SYSTEM,
+            },
           },
           {
             _id: openepcisId,
@@ -351,6 +406,9 @@ describe('DppEventsService', () => {
             },
             createdAt: new Date(),
             updatedAt: new Date(),
+            identifier: {
+              type: DppEventIdentifierTypes.SYSTEM,
+            },
           },
           {
             _id: untpId,
@@ -359,6 +417,9 @@ describe('DppEventsService', () => {
             },
             createdAt: new Date(),
             updatedAt: new Date(),
+            identifier: {
+              type: DppEventIdentifierTypes.SYSTEM,
+            },
           },
         ]);
 
@@ -370,6 +431,9 @@ describe('DppEventsService', () => {
         expect(openDppEvents).toHaveLength(1);
         expect(openDppEvents[0].id).toBe(openDppId);
         expect(openDppEvents[0].data.type).toBe(DppEventType.OPEN_DPP);
+        expect(openDppEvents[0].identifier.type).toBe(
+          DppEventIdentifierTypes.SYSTEM,
+        );
 
         // Check Openepcis events
         const openepcisEvents = await service.findByDataType(
@@ -378,12 +442,18 @@ describe('DppEventsService', () => {
         expect(openepcisEvents).toHaveLength(1);
         expect(openepcisEvents[0].id).toBe(openepcisId);
         expect(openepcisEvents[0].data.type).toBe(DppEventType.OPENEPCIS);
+        expect(openDppEvents[0].identifier.type).toBe(
+          DppEventIdentifierTypes.SYSTEM,
+        );
 
         // Check Untp events
         const untpEvents = await service.findByDataType(DppEventType.UNTP);
         expect(untpEvents).toHaveLength(1);
         expect(untpEvents[0].id).toBe(untpId);
         expect(untpEvents[0].data.type).toBe(DppEventType.UNTP);
+        expect(openDppEvents[0].identifier.type).toBe(
+          DppEventIdentifierTypes.SYSTEM,
+        );
 
         // Verify we can get all events
         const allEvents = await dppEventModel.find().exec();
