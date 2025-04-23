@@ -272,8 +272,10 @@ export const nodeSubtypes = [
   { value: GridItem, name: NodeType.GRID_ITEM },
 ];
 
-export function isGridContainer(node: Node): node is GridContainer {
-  return node.type === NodeType.GRID_CONTAINER;
+export function isGridContainerOrSubclass(node: Node): node is GridContainer {
+  return (
+    node.type === NodeType.GRID_CONTAINER || node.type === NodeType.SECTION_GRID
+  );
 }
 
 export function isGridItem(node: Node): node is GridItem {

@@ -59,6 +59,9 @@ class GridContainerCreateDto extends NodeCreateDto {
   @ValidateNested()
   @Type(() => ResponsiveConfigDto)
   cols: ResponsiveConfigDto;
+  @IsInt()
+  @IsOptional()
+  initNumberOfChildren?: number;
 }
 
 class SectionGridContainerCreateDto extends GridContainerCreateDto {
@@ -96,10 +99,6 @@ class GridItemCreateDto extends NodeCreateDto {
   @Type(() => ResponsiveConfigDto)
   @IsOptional()
   rowSpan?: ResponsiveConfigDto;
-
-  @IsInt()
-  @IsOptional()
-  initNumberOfChildren?: number;
 
   @ValidateNested()
   @IsNotEmptyObject()

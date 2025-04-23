@@ -5,7 +5,12 @@ import {
   Type,
 } from 'class-transformer';
 import { randomUUID } from 'crypto';
-import { isGridContainer, isGridItem, Node, nodeSubtypes } from './node';
+import {
+  isGridContainerOrSubclass,
+  isGridItem,
+  Node,
+  nodeSubtypes,
+} from './node';
 import { ValueError } from '../../exceptions/domain.errors';
 
 export class View {
@@ -122,7 +127,7 @@ export class View {
     if (parentId) {
       const found = this.findNodeWithParentById(parentId);
       if (found?.node) {
-        if (isGridContainer(found.node) && isGridItem(node)) {
+        if (isGridContainerOrSubclass(found.node) && isGridItem(node)) {
           found.node.addGridItem(node);
         } else if (isGridItem(found.node)) {
           found.node.replaceContent(node);
@@ -136,7 +141,7 @@ export class View {
           `Parent ${parentId} to add node to could not be found`,
         );
       }
-    } else if (isGridContainer(node)) {
+    } else if (isGridContainerOrSubclass(node)) {
       this._nodes.push(node);
     } else {
       throw new ValueError(`Cannot add ${node.type} at root level`);

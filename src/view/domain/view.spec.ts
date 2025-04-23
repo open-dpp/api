@@ -171,6 +171,26 @@ describe('View', () => {
     expect(view.findNodeWithParentById('unknown id')).toBeUndefined();
   });
 
+  it('add node', () => {
+    const view = View.create({
+      name: 'My layout',
+      userId,
+      organizationId,
+      dataModelId,
+    });
+    const sectionGrid = SectionGrid.create({ sectionId: randomUUID() });
+    view.addNode(sectionGrid);
+    expect(view.nodes).toEqual([sectionGrid]);
+    const gridItem = GridItem.create({ colSpan: { md: 2 } });
+    view.addNode(gridItem, sectionGrid.id);
+
+    const sectionGridChild = SectionGrid.create({ sectionId: randomUUID() });
+    view.addNode(sectionGridChild, gridItem.id);
+    const found = view.findNodeWithParentById(sectionGridChild.id);
+    expect(found.node.id).toEqual(sectionGridChild.id);
+    expect(found.parent.id).toEqual(gridItem.id);
+  });
+
   it('deletes node', () => {
     const view = View.create({
       name: 'My layout',

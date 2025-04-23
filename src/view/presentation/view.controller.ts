@@ -25,7 +25,7 @@ import {
   plainToUpdateDto,
   validateUpdateDtoOrFail,
 } from './dto/node.dto';
-import { isGridContainer, isGridItem } from '../domain/node';
+import { isGridContainerOrSubclass, isGridItem } from '../domain/node';
 
 @Controller('/organizations/:orgaId/views')
 export class ViewController {
@@ -122,7 +122,7 @@ export class ViewController {
     if (isGridItem(found.node) && isGridItemUpdateDto(modifications)) {
       found.node.modifyConfigs(modifications);
     } else if (
-      isGridContainer(found.node) &&
+      isGridContainerOrSubclass(found.node) &&
       isGridContainerUpdateDto(modifications)
     ) {
       found.node.modifyConfigs(modifications);
