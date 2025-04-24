@@ -116,18 +116,18 @@ describe('ProductDataModelDraft', () => {
         {
           parentId: undefined,
           subSections: [],
-          id: expect.any(String),
+          id: productDataModelDraft.sections[0].id,
           type: SectionType.GROUP,
           name: 'Umwelt',
           dataFields: [
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[0].dataFields[0].id,
               type: 'TextField',
               name: 'Title',
               options: { max: 2 },
             },
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[0].dataFields[1].id,
               type: 'TextField',
               name: 'Title 2',
               options: { min: 2 },
@@ -136,19 +136,19 @@ describe('ProductDataModelDraft', () => {
         },
         {
           parentId: undefined,
-          subSections: [expect.any(String)],
+          subSections: [productDataModelDraft.sections[2].id],
           name: 'Material',
-          id: expect.any(String),
+          id: productDataModelDraft.sections[1].id,
           type: SectionType.REPEATABLE,
           dataFields: [
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[1].dataFields[0].id,
               type: 'TextField',
               name: 'rep field 1',
               options: {},
             },
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[1].dataFields[1].id,
               type: 'TextField',
               name: 'rep field 2',
               options: {},
@@ -156,20 +156,20 @@ describe('ProductDataModelDraft', () => {
           ],
         },
         {
-          parentId: expect.any(String),
+          parentId: productDataModelDraft.sections[1].id,
           subSections: [],
           name: 'Measurement',
-          id: expect.any(String),
+          id: productDataModelDraft.sections[2].id,
           type: SectionType.GROUP,
           dataFields: [
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[2].dataFields[0].id,
               type: 'TextField',
               name: 'rep field 1',
               options: {},
             },
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[2].dataFields[1].id,
               type: 'TextField',
               name: 'rep field 2',
               options: {},

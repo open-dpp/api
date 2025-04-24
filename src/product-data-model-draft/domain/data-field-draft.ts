@@ -3,7 +3,7 @@ import {
   DataFieldBase,
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
-import { merge, omit } from 'lodash';
+import { merge } from 'lodash';
 
 export class DataFieldDraft extends DataFieldBase {
   static create(plain: {
@@ -25,6 +25,6 @@ export class DataFieldDraft extends DataFieldBase {
   }
 
   publish() {
-    return omit(this.toPlain(), 'id');
+    return this.toPlain();
   }
 }

@@ -3,7 +3,6 @@ import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError } from '../../exceptions/domain.errors';
-import { DraftToPublishIdMapping } from './draft-to-publish-id-mapping';
 
 describe('DataSectionDraft', () => {
   it('is created', () => {
@@ -177,24 +176,23 @@ describe('DataSectionDraft', () => {
       options: { max: 2 },
     });
     section.addDataField(dataField1);
-    const idMapper = new DraftToPublishIdMapping([section, subSection]);
-    const publishedSection = section.publish(idMapper);
+    const publishedSection = section.publish();
     expect(publishedSection).toEqual({
-      id: idMapper.getPublicationId(section.id),
+      id: section.id,
       name: 'Technical specification',
       type: SectionType.GROUP,
       dataFields: [{ ...dataField1.publish() }],
-      subSections: [idMapper.getPublicationId(subSection.id)],
+      subSections: [subSection.id],
     });
 
-    const publishedSubSection = subSection.publish(idMapper);
+    const publishedSubSection = subSection.publish();
     expect(publishedSubSection).toEqual({
-      id: idMapper.getPublicationId(subSection.id),
+      id: subSection.id,
       name: 'Dimensions',
       type: SectionType.GROUP,
       dataFields: [],
       subSections: [],
-      parentId: idMapper.getPublicationId(section.id),
+      parentId: section.id,
     });
   });
 });

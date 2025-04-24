@@ -42,7 +42,6 @@ describe('DataField', () => {
     const publishedField = field.publish();
     expect(publishedField).toEqual({
       ...field.toPlain(),
-      id: undefined,
     });
   });
 });

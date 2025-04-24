@@ -14,7 +14,6 @@ import {
 } from '../../product-data-model/domain/product.data.model';
 import { omit } from 'lodash';
 import * as semver from 'semver';
-import { DraftToPublishIdMapping } from './draft-to-publish-id-mapping';
 
 export type Publication = {
   id: string;
@@ -155,14 +154,13 @@ export class ProductDataModelDraft {
       lastPublished.length > 0
         ? semver.inc(lastPublished[0].version, 'major')
         : '1.0.0';
-    const idMapper = new DraftToPublishIdMapping(this.sections);
 
     const published = ProductDataModel.fromPlain({
       ...plain,
       version: versionToPublish,
       createdByUserId: createdByUserId,
       visibility,
-      sections: this.sections.map((s) => s.publish(idMapper)),
+      sections: this.sections.map((s) => s.publish()),
     });
     this.publications.push({ id: published.id, version: published.version });
     return published;
