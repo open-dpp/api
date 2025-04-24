@@ -16,14 +16,13 @@ import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductDataModelDraftDoc,
   ProductDataModelDraftSchema,
 } from '../infrastructure/product-data-model-draft.schema';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
-import { Connection } from 'mongoose';
 import {
   ProductDataModelDoc,
   ProductDataModelSchema,
@@ -39,7 +38,6 @@ describe('ProductsDataModelDraftController', () => {
   const userId = authContext.user.id;
   const organizationId = randomUUID();
   const otherOrganizationId = randomUUID();
-  let mongoConnection: Connection;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
 
   beforeAll(async () => {
@@ -81,7 +79,6 @@ describe('ProductsDataModelDraftController', () => {
     productDataModelDraftService = moduleRef.get<ProductDataModelDraftService>(
       ProductDataModelDraftService,
     );
-    mongoConnection = moduleRef.get<Connection>(getConnectionToken());
 
     await app.init();
   });
@@ -914,6 +911,5 @@ describe('ProductsDataModelDraftController', () => {
 
   afterAll(async () => {
     await app.close();
-    await mongoConnection.close();
   });
 });
