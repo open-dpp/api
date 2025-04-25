@@ -29,10 +29,15 @@ import {
   ProductDataModelSchema,
 } from '../infrastructure/product-data-model.schema';
 import { Connection } from 'mongoose';
+import { NodeType } from '../../view/domain/node';
+import { TargetGroup, View } from '../../view/domain/view';
+import { getViewSchema, ViewDoc } from '../../view/infrastructure/view.schema';
+import { ViewService } from '../../view/infrastructure/view.service';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
   let service: ProductDataModelService;
+  let viewService: ViewService;
   let organizationsService: OrganizationsService;
   let mongoConnection: Connection;
 
@@ -53,6 +58,12 @@ describe('ProductsDataModelController', () => {
           {
             name: ProductDataModelDoc.name,
             schema: ProductDataModelSchema,
+          },
+        ]),
+        MongooseModule.forFeatureAsync([
+          {
+            name: ViewDoc.name,
+            useFactory: () => getViewSchema(),
           },
         ]),
         ProductDataModelModule,
@@ -76,6 +87,7 @@ describe('ProductsDataModelController', () => {
       .compile();
 
     service = moduleRef.get<ProductDataModelService>(ProductDataModelService);
+    viewService = moduleRef.get<ViewService>(ViewService);
     organizationsService =
       moduleRef.get<OrganizationsService>(OrganizationsService);
     mongoConnection = moduleRef.get<Connection>(getConnectionToken());
@@ -93,20 +105,56 @@ describe('ProductsDataModelController', () => {
     createdByUserId: authContext.user.id,
     sections: [
       {
+        id: 's1',
         name: 'Section 1',
         type: SectionType.GROUP,
         dataFields: [
           {
+            id: 'f11',
             type: 'TextField',
             name: 'Title',
             options: { min: 2 },
           },
           {
+            id: 'f12',
             type: 'TextField',
             name: 'Title 2',
             options: { min: 2 },
           },
         ],
+      },
+    ],
+  };
+
+  const colSpanAndStart = { colStart: { xs: 1 }, colSpan: { xl: 2 } };
+
+  const viewPlain = {
+    version: '1.0',
+    targetGroup: TargetGroup.ALL,
+    nodes: [
+      {
+        id: 'sg1',
+        type: NodeType.SECTION_GRID,
+        sectionId: 's1',
+        cols: { md: 2 },
+        ...colSpanAndStart,
+        children: ['df11'],
+      },
+      {
+        id: 'df11',
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f11',
+        ...colSpanAndStart,
+        parentId: 'sg1',
+        children: [],
+      },
+      {
+        id: 'df12',
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f12',
+        ...colSpanAndStart,
+        parentId: 'sg1',
+        children: [],
       },
     ],
   };
@@ -122,13 +170,22 @@ describe('ProductsDataModelController', () => {
 
   it(`/GET product data model`, async () => {
     const productDataModel = ProductDataModel.fromPlain({ ...laptopPlain });
+
+    const view = await viewService.save(
+      View.fromPlain({
+        ...viewPlain,
+        dataModelId: productDataModel.id,
+      }),
+    );
+
     await service.save(productDataModel);
     const response = await request(app.getHttpServer())
       .get(`/product-data-models/${productDataModel.id}`)
       .set('Authorization', 'Bearer token1')
       .send();
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual(productDataModel.toPlain());
+    expect(response.body.data).toEqual(productDataModel.toPlain());
+    expect(response.body.view).toEqual(view.toPlain());
   });
 
   it(`/GET product data model ${userHasNotThePermissionsTxt}`, async () => {
@@ -156,6 +213,13 @@ describe('ProductsDataModelController', () => {
       user: otherUser,
       visibility: VisibilityLevel.PUBLIC,
     });
+
+    const view = View.create({
+      dataModelId: productDataModel.id,
+      targetGroup: TargetGroup.ALL,
+    });
+
+    await viewService.save(view);
     await service.save(productDataModel);
     const response = await request(app.getHttpServer())
       .get(`/product-data-models/${productDataModel.id}`)

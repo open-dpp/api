@@ -10,19 +10,29 @@ import { ProductDataModelService } from '../infrastructure/product-data-model.se
 import { ProductDataModel } from '../domain/product.data.model';
 import { AuthRequest } from '../../auth/auth-request';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { ViewService } from '../../view/infrastructure/view.service';
+import { TargetGroup } from '../../view/domain/view';
 
 @Controller('product-data-models')
 export class ProductDataModelController {
   constructor(
     private readonly productDataModelService: ProductDataModelService,
     private readonly organizationsService: OrganizationsService,
+    private readonly viewService: ViewService,
   ) {}
 
   @Get(':id')
   async get(@Param('id') id: string, @Request() req: AuthRequest) {
     const found = await this.productDataModelService.findOneOrFail(id);
     await this.hasPermissionsOrFail(found, req);
-    return found.toPlain();
+
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        id,
+        TargetGroup.ALL,
+      );
+
+    return { data: found.toPlain(), view: foundView.toPlain() };
   }
 
   @Get()
