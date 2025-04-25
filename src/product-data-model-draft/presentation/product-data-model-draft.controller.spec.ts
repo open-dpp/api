@@ -227,16 +227,39 @@ describe('ProductsDataModelDraftController', () => {
       organizationId,
       userId,
     });
+
+    const view = View.create({
+      targetGroup: TargetGroup.ALL,
+      dataModelId: laptopDraft.id,
+    });
+
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
     });
     laptopDraft.addSection(section);
+
+    const sectionGrid = SectionGrid.create({
+      sectionId: section.id,
+      cols: { xs: 1 },
+      ...colStartAndSpan,
+    });
+    view.addNode(sectionGrid);
+
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
+
+    const dataFieldRef = DataFieldRef.create({
+      fieldId: dataField.id,
+      ...colStartAndSpan,
+    });
+
+    view.addNode(dataFieldRef, sectionGrid.id);
+
+    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
     const body = { visibility: VisibilityLevel.PUBLIC };
     const response = await request(app.getHttpServer())
@@ -254,7 +277,7 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(201);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
+      response.body.data.id,
     );
     expect(foundDraft.publications).toEqual([
       { id: expect.any(String), version: '1.0.0' },
@@ -263,6 +286,15 @@ describe('ProductsDataModelDraftController', () => {
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
+
+    const foundView = await viewService.findOneByDataModelAndTargetGroupOrFail(
+      foundModel.id,
+      TargetGroup.ALL,
+    );
+    expect(foundView.dataModelId).toEqual(foundModel.id);
+    expect(foundView.id).not.toEqual(response.body.view.id);
+
+    expect(response.body.view).toEqual(view);
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {

@@ -176,19 +176,20 @@ describe('View', () => {
       id: expect.any(String),
     });
   });
-  //
-  // it('is published', () => {
-  //   const view = View.fromPlain(plain);
-  //   const publishedDataModelId = 'publishedDataModelId';
-  //   const publishedView = view.publish(publishedDataModelId);
-  //   expect(publishedView.toPlain()).toEqual({
-  //     ...view.toPlain(),
-  //     dataModelId: publishedDataModelId,
-  //     id: expect.any(String),
-  //   });
-  //   expect(publishedView.id).not.toEqual(view.id);
-  // });
-  //
+
+  it('is published', () => {
+    const view = View.fromPlain(plain);
+    const publishedModelId = 'publishedModelId';
+    const publishedView = view.publish(publishedModelId);
+    expect(publishedView.toPlain()).toEqual({
+      ...view.toPlain(),
+      dataModelId: publishedModelId,
+      id: expect.any(String),
+    });
+    expect(publishedView.id).not.toEqual(view.id);
+    expect(publishedView.dataModelId).not.toEqual(view.dataModelId);
+  });
+
   it('finds node', () => {
     const view = View.fromPlain(plain);
 

@@ -125,11 +125,11 @@ export class View {
     return instance;
   }
 
-  publish(publishedDataModelId: string) {
+  publish(publishedModelId: string) {
     return View.fromPlain({
       ...this.toPlain(),
       id: randomUUID(),
-      dataModelId: publishedDataModelId,
+      dataModelId: publishedModelId,
     });
   }
 }

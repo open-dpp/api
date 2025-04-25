@@ -206,11 +206,21 @@ export class ProductDataModelDraftController {
       req.authContext.user.id,
       publishDto.visibility,
     );
-    await this.productDataModelService.save(publishedProductDataModel);
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+    const publishedView = foundView.publish(publishedProductDataModel.id);
+
+    await this.productDataModelService.save(publishedProductDataModel);
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+    await this.viewService.save(publishedView);
+
+    return { data: draft.toPlain(), view: foundView };
   }
 
   @Post(':draftId/sections/:sectionId/data-fields')
