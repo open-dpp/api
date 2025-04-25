@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -24,6 +25,15 @@ import { UpdateSectionDraftDto } from './dto/update-section-draft.dto';
 import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
 import { omit } from 'lodash';
 import { PermissionsService } from '../../permissions/permissions.service';
+import { ViewService } from '../../view/infrastructure/view.service';
+import { TargetGroup, View } from '../../view/domain/view';
+import {
+  DataFieldRef,
+  isDataFieldRef,
+  isSectionGrid,
+  SectionGrid,
+} from '../../view/domain/node';
+import { instanceToPlain } from 'class-transformer';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
@@ -31,6 +41,7 @@ export class ProductDataModelDraftController {
     private readonly permissionsService: PermissionsService,
     private readonly productDataModelService: ProductDataModelService,
     private readonly productDataModelDraftService: ProductDataModelDraftService,
+    private readonly viewService: ViewService,
   ) {}
 
   @Post()
@@ -43,15 +54,22 @@ export class ProductDataModelDraftController {
       organizationId,
       req.authContext,
     );
-    return (
-      await this.productDataModelDraftService.save(
-        ProductDataModelDraft.create({
-          ...createProductDataModelDraftDto,
-          organizationId,
-          userId: req.authContext.user.id,
-        }),
-      )
-    ).toPlain();
+
+    const draft = await this.productDataModelDraftService.save(
+      ProductDataModelDraft.create({
+        ...createProductDataModelDraftDto,
+        organizationId,
+        userId: req.authContext.user.id,
+      }),
+    );
+    const view = await this.viewService.save(
+      View.create({
+        targetGroup: TargetGroup.ALL,
+        dataModelId: draft.id,
+      }),
+    );
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Get(':draftId')
@@ -68,8 +86,16 @@ export class ProductDataModelDraftController {
       await this.productDataModelDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
 
-    return foundProductDataModelDraft.toPlain();
+    return {
+      data: foundProductDataModelDraft.toPlain(),
+      view: foundView.toPlain(),
+    };
   }
 
   @Patch(':draftId')
@@ -89,10 +115,17 @@ export class ProductDataModelDraftController {
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
+    await this.productDataModelDraftService.save(foundProductDataModelDraft);
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return {
+      data: foundProductDataModelDraft.toPlain(),
+      view: foundView.toPlain(),
+    };
   }
 
   @Post(':draftId/sections')
@@ -112,20 +145,44 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+    const section = DataSectionDraft.create(
+      omit(createSectionDraftDto, ['parentSectionId', 'view']),
+    );
+    const viewDto = createSectionDraftDto.view;
+    const sectionGrid = SectionGrid.create({
+      cols: viewDto.cols,
+      colStart: viewDto.colStart,
+      colSpan: viewDto.colSpan,
+      rowStart: viewDto.rowStart,
+      rowSpan: viewDto.rowSpan,
+      sectionId: section.id,
+    });
+
     if (createSectionDraftDto.parentSectionId) {
       foundProductDataModelDraft.addSubSection(
         createSectionDraftDto.parentSectionId,
-        DataSectionDraft.create(omit(createSectionDraftDto, 'parentSectionId')),
+        section,
       );
+      const { node: parentNode } = foundView.findNodeWithParentBySectionId(
+        createSectionDraftDto.parentSectionId,
+      );
+      foundView.addNode(sectionGrid, parentNode.id);
     } else {
-      foundProductDataModelDraft.addSection(
-        DataSectionDraft.create(omit(createSectionDraftDto, 'parentSectionId')),
-      );
+      foundProductDataModelDraft.addSection(section);
+      foundView.addNode(sectionGrid);
     }
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+    const view = await this.viewService.save(foundView);
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Post(':draftId/publish')
@@ -175,13 +232,36 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    foundProductDataModelDraft.addDataFieldToSection(
-      sectionId,
-      DataFieldDraft.create(createDataFieldDraftDto),
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+
+    const dataField = DataFieldDraft.create(
+      omit(createDataFieldDraftDto, 'view'),
     );
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+
+    foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
+    const viewDto = createDataFieldDraftDto.view;
+    const { node } = foundView.findNodeWithParentBySectionId(sectionId);
+    foundView.addNode(
+      DataFieldRef.create({
+        fieldId: dataField.id,
+        colStart: viewDto.colStart,
+        colSpan: viewDto.colSpan,
+        rowStart: viewDto.rowStart,
+        rowSpan: viewDto.rowSpan,
+      }),
+      node.id,
+    );
+
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+    const view = await this.viewService.save(foundView);
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Delete(':draftId/sections/:sectionId')
@@ -200,10 +280,22 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+
     foundProductDataModelDraft.deleteSection(sectionId);
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    const { node } = foundView.findNodeWithParentBySectionId(sectionId);
+    foundView.deleteNodeById(node.id);
+
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+    const view = await this.viewService.save(foundView);
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Patch(':draftId/sections/:sectionId')
@@ -225,10 +317,31 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    foundProductDataModelDraft.modifySection(sectionId, modifySectionDraftDto);
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+
+    foundProductDataModelDraft.modifySection(
+      sectionId,
+      omit(modifySectionDraftDto, 'view'),
+    );
+
+    const viewDto = modifySectionDraftDto.view;
+    const { node } = foundView.findNodeWithParentBySectionId(sectionId);
+    if (!isSectionGrid(node)) {
+      throw new BadRequestException('Node is not a section grid');
+    }
+    node.modifyConfigs(omit(instanceToPlain(viewDto), 'cols'));
+    node.modifyCols(viewDto.cols);
+
+    const view = await this.viewService.save(foundView);
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Patch(':draftId/sections/:sectionId/data-fields/:fieldId')
@@ -254,11 +367,26 @@ export class ProductDataModelDraftController {
     foundProductDataModelDraft.modifyDataField(
       sectionId,
       fieldId,
-      modifyDataFieldDraftDto,
+      omit(modifyDataFieldDraftDto, 'view'),
     );
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+    const { node } = foundView.findNodeWithParentByFieldId(fieldId);
+    if (!isDataFieldRef(node)) {
+      throw new BadRequestException('Node is not a data field ref');
+    }
+    node.modifyConfigs(instanceToPlain(modifyDataFieldDraftDto.view));
+
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+    const view = await this.viewService.save(foundView);
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Delete(':draftId/sections/:sectionId/data-fields/:fieldId')
@@ -279,10 +407,22 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
+    const foundView =
+      await this.viewService.findOneByDataModelAndTargetGroupOrFail(
+        draftId,
+        TargetGroup.ALL,
+      );
+
     foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    const { node } = foundView.findNodeWithParentByFieldId(fieldId);
+    foundView.deleteNodeById(node.id);
+
+    const view = await this.viewService.save(foundView);
+    const draft = await this.productDataModelDraftService.save(
+      foundProductDataModelDraft,
+    );
+
+    return { data: draft.toPlain(), view: view.toPlain() };
   }
 
   @Get()

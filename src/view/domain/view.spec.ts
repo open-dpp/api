@@ -1,268 +1,264 @@
-import {
-  DataFieldRef,
-  GridContainer,
-  GridItem,
-  NodeType,
-  SectionGrid,
-} from './node';
-import { View } from './view';
-import { ignoreIds } from '../../../test/utils';
+import { DataFieldRef, NodeType, SectionGrid } from './node';
+import { TargetGroup, View } from './view';
 import { randomUUID } from 'crypto';
 import { ValueError } from '../../exceptions/domain.errors';
 
 describe('View', () => {
-  const userId = randomUUID();
-  const organizationId = randomUUID();
   const dataModelId = randomUUID();
+  const colStartAndSpan = { colStart: { md: 2 }, colSpan: { md: 3 } };
   it('is created and nodes on different level are added', () => {
     const view = View.create({
-      name: 'My layout',
-      userId,
-      organizationId,
+      targetGroup: TargetGroup.ALL,
       dataModelId,
     });
     expect(view.id).toEqual(expect.any(String));
-    expect(view.name).toEqual('My layout');
+    expect(view.targetGroup).toEqual(TargetGroup.ALL);
     expect(view.version).toEqual('1.0.0');
     expect(view.dataModelId).toEqual(dataModelId);
-    const gridContainer1 = GridContainer.create({ cols: { sm: 3 } });
-    const gridContainer2 = GridContainer.create();
-    view.addNode(gridContainer1);
-    view.addNode(gridContainer2);
-    expect(view.nodes).toEqual([gridContainer1, gridContainer2]);
-    const gridItem = GridItem.create({
-      colSpan: { sm: 4 },
+    const sectionGrid1 = SectionGrid.create({
+      cols: { sm: 3 },
+      sectionId: randomUUID(),
+      ...colStartAndSpan,
     });
-    view.addNode(gridItem, gridContainer2.id);
-    expect(gridContainer2.getChildNodes()).toEqual([gridItem]);
-    const dataFieldRef = DataFieldRef.create({ fieldId: 'f1' });
-    view.addNode(dataFieldRef, gridItem.id);
-    expect(gridItem.getChildNodes()).toEqual([dataFieldRef]);
-    expect(() => view.addNode(gridItem, dataFieldRef.id)).toThrow(
-      new ValueError('GridItem could not be added to DataFieldRef'),
+    const sectionGrid2 = SectionGrid.create({
+      cols: { sm: 3 },
+      sectionId: randomUUID(),
+      ...colStartAndSpan,
+    });
+    view.addNode(sectionGrid1);
+    view.addNode(sectionGrid2);
+    expect(view.nodes).toEqual([sectionGrid1, sectionGrid2]);
+    const dataFieldRef1 = DataFieldRef.create({
+      fieldId: 'f1',
+      ...colStartAndSpan,
+    });
+    view.addNode(dataFieldRef1, sectionGrid1.id);
+    expect(sectionGrid1.children).toEqual([dataFieldRef1.id]);
+
+    // Check validations
+    expect(() =>
+      view.addNode(
+        DataFieldRef.create({
+          fieldId: randomUUID(),
+          ...colStartAndSpan,
+        }),
+        dataFieldRef1.id,
+      ),
+    ).toThrow(
+      new ValueError('DataFieldRef could not be added to DataFieldRef'),
     );
-    expect(() => view.addNode(gridItem, 'unknown parent id')).toThrow(
+    expect(() => view.addNode(dataFieldRef1, 'unknown-parent-id')).toThrow(
       new ValueError(
-        `Parent unknown parent id to add node to could not be found`,
+        `Parent unknown-parent-id to add node to could not be found`,
       ),
     );
-    expect(() => view.addNode(dataFieldRef)).toThrow(
+    expect(() => view.addNode(dataFieldRef1)).toThrow(
       new ValueError(`Cannot add ${NodeType.DATA_FIELD_REF} at root level`),
     );
   });
 
+  const plain = {
+    id: randomUUID(),
+    version: '1.0.0',
+    dataModelId: 'dataModelId',
+    targetGroup: TargetGroup.ALL,
+    nodes: [
+      {
+        id: 's1',
+        type: NodeType.SECTION_GRID,
+        sectionId: 'sectionId1',
+        cols: { sm: 1 },
+        ...colStartAndSpan,
+        children: ['df11'],
+      },
+      {
+        id: 'df11',
+        type: NodeType.DATA_FIELD_REF,
+        ...colStartAndSpan,
+        fieldId: 'f11',
+        parentId: 's1',
+        children: [],
+      },
+      {
+        id: 's2',
+        type: NodeType.SECTION_GRID,
+        sectionId: 'sectionId2',
+        ...colStartAndSpan,
+        cols: { lg: 2 },
+        children: ['s21', 'df22'],
+      },
+      {
+        id: 's21',
+        type: NodeType.SECTION_GRID,
+        sectionId: 'sectionId21',
+        ...colStartAndSpan,
+        cols: { xs: 2 },
+        parentId: 's2',
+        children: ['df211'],
+      },
+      {
+        id: 'df211',
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f211',
+        ...colStartAndSpan,
+        parentId: 's21',
+        children: [],
+      },
+      {
+        id: 'df22',
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f22',
+        ...colStartAndSpan,
+        parentId: 's2',
+        children: [],
+      },
+    ],
+  };
+  //
   it('is created from plain', () => {
-    const plain = {
-      name: 'my layout',
-      version: '1.0.1',
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
-      dataModelId: randomUUID(),
-      nodes: [
-        {
-          type: NodeType.GRID_CONTAINER,
-          cols: { sm: 1 },
-          children: [
-            {
-              type: NodeType.GRID_ITEM,
-              colSpan: { sm: 4 },
-              content: {
-                type: NodeType.DATA_FIELD_REF,
-                fieldId: 'f1',
-              },
-            },
-          ],
-        },
-        {
-          type: NodeType.SECTION_GRID,
-          sectionId: 'sectionId',
-          cols: { sm: 1 },
-          children: [
-            {
-              type: NodeType.GRID_ITEM,
-              colSpan: { sm: 12 },
-            },
-          ],
-        },
-      ],
-    };
-    const view = View.fromPlain(plain);
-    const expectedGridContainer = GridContainer.create();
-    const expectedGridItem = GridItem.create({
-      colSpan: { sm: 4 },
+    const view = View.create({
+      dataModelId: 'dataModelId',
+      targetGroup: TargetGroup.ALL,
     });
-    expectedGridItem.replaceContent(DataFieldRef.create({ fieldId: 'f1' }));
 
-    expectedGridContainer.addGridItem(expectedGridItem);
-    const expectedSectionGrid = SectionGrid.create({
-      sectionId: 'sectionId',
+    // first level
+    const sectionGrid1 = SectionGrid.fromPlain({
+      id: 's1',
+      sectionId: 'sectionId1',
       cols: { sm: 1 },
+      ...colStartAndSpan,
     });
-    expectedSectionGrid.addGridItem(GridItem.create({ colSpan: { sm: 12 } }));
-    expect(view.toPlain().nodes).toEqual(
-      ignoreIds([
-        expectedGridContainer.toPlain(),
-        expectedSectionGrid.toPlain(),
-      ]),
-    );
-  });
+    view.addNode(sectionGrid1);
 
+    const sectionGrid2 = SectionGrid.fromPlain({
+      id: 's2',
+      sectionId: 'sectionId2',
+      cols: { lg: 2 },
+      ...colStartAndSpan,
+    });
+    view.addNode(sectionGrid2);
+
+    // second level
+
+    const dataFieldRef11 = DataFieldRef.fromPlain({
+      id: 'df11',
+      ...colStartAndSpan,
+      fieldId: 'f11',
+    });
+    view.addNode(dataFieldRef11, sectionGrid1.id);
+
+    const sectionGrid21 = SectionGrid.fromPlain({
+      id: 's21',
+      sectionId: 'sectionId21',
+      cols: { xs: 2 },
+      ...colStartAndSpan,
+    });
+    view.addNode(sectionGrid21, sectionGrid2.id);
+
+    const dataFieldRef22 = DataFieldRef.fromPlain({
+      id: 'df22',
+      ...colStartAndSpan,
+      fieldId: 'f22',
+    });
+    view.addNode(dataFieldRef22, sectionGrid2.id);
+
+    // third level
+
+    const dataFieldRef211 = DataFieldRef.fromPlain({
+      id: 'df211',
+      ...colStartAndSpan,
+      fieldId: 'f211',
+    });
+    view.addNode(dataFieldRef211, sectionGrid21.id);
+
+    expect(View.fromPlain(plain).toPlain({ sortNodesById: true })).toEqual({
+      ...view.toPlain({ sortNodesById: true }),
+      id: expect.any(String),
+    });
+  });
+  //
+  // it('is published', () => {
+  //   const view = View.fromPlain(plain);
+  //   const publishedDataModelId = 'publishedDataModelId';
+  //   const publishedView = view.publish(publishedDataModelId);
+  //   expect(publishedView.toPlain()).toEqual({
+  //     ...view.toPlain(),
+  //     dataModelId: publishedDataModelId,
+  //     id: expect.any(String),
+  //   });
+  //   expect(publishedView.id).not.toEqual(view.id);
+  // });
+  //
   it('finds node', () => {
-    const view = View.create({
-      name: 'My layout',
-      userId,
-      organizationId,
-      dataModelId,
-    });
-    const gridContainer = GridContainer.create();
-    const colSpan = { md: 4 };
-    const dataFieldItem = DataFieldRef.create({ fieldId: randomUUID() });
-    const gridItem1 = GridItem.create({
-      colSpan,
-      content: dataFieldItem,
-    });
-    gridContainer.addGridItem(gridItem1);
+    const view = View.fromPlain(plain);
 
-    const subGridContainer = GridContainer.create();
-    const subDataFieldItem = DataFieldRef.create({ fieldId: randomUUID() });
-    const subGridItem = GridItem.create({
-      colSpan: { sm: 12 },
-      content: subDataFieldItem,
-    });
-    subGridContainer.addGridItem(subGridItem);
+    // find by section id
+    let found = view.findNodeWithParentBySectionId('sectionId1');
+    expect(found.node.id).toEqual('s1');
+    expect(found.parent).toBeUndefined();
 
-    const gridItem2 = GridItem.create({
-      colSpan,
-      content: subGridContainer,
-    });
-    gridContainer.addGridItem(gridItem2);
+    found = view.findNodeWithParentBySectionId('sectionId21');
+    expect(found.node.id).toEqual('s21');
+    expect(found.parent.id).toEqual('s2');
 
-    view.addNode(gridContainer);
+    // find by field id
+    found = view.findNodeWithParentByFieldId('f11');
+    expect(found.node.id).toEqual('df11');
+    expect(found.parent.id).toEqual('s1');
 
-    expect(view.findNodeWithParentById(gridContainer.id)).toEqual({
-      node: gridContainer,
-      parent: undefined,
-    });
+    found = view.findNodeWithParentByFieldId('f211');
+    expect(found.node.id).toEqual('df211');
+    expect(found.parent.id).toEqual('s21');
 
-    expect(view.findNodeWithParentById(gridItem1.id)).toEqual({
-      node: gridItem1,
-      parent: gridContainer,
-    });
-    expect(view.findNodeWithParentById(gridItem2.id)).toEqual({
-      node: gridItem2,
-      parent: gridContainer,
-    });
-    expect(view.findNodeWithParentById(dataFieldItem.id)).toEqual({
-      node: dataFieldItem,
-      parent: gridItem1,
-    });
-    expect(view.findNodeWithParentById(subGridContainer.id)).toEqual({
-      node: subGridContainer,
-      parent: gridItem2,
-    });
-    expect(view.findNodeWithParentById(subGridItem.id)).toEqual({
-      node: subGridItem,
-      parent: subGridContainer,
-    });
-    expect(view.findNodeWithParentById(subDataFieldItem.id)).toEqual({
-      node: subDataFieldItem,
-      parent: subGridItem,
-    });
-    expect(view.findNodeWithParentById('unknown id')).toBeUndefined();
+    // find by id
+    found = view.findNodeWithParentById('s1');
+    expect(found.node.id).toEqual('s1');
+    expect(found.parent).toBeUndefined();
+
+    found = view.findNodeWithParentById('df211');
+    expect(found.node.id).toEqual('df211');
+    expect(found.parent.id).toEqual('s21');
+
+    // nothing could be found
+    found = view.findNodeWithParentById('unknown id');
+    expect(found.node).toBeUndefined();
+    expect(found.parent).toBeUndefined();
   });
-
-  it('add node', () => {
-    const view = View.create({
-      name: 'My layout',
-      userId,
-      organizationId,
-      dataModelId,
-    });
-    const sectionGrid = SectionGrid.create({ sectionId: randomUUID() });
-    view.addNode(sectionGrid);
-    expect(view.nodes).toEqual([sectionGrid]);
-    const gridItem = GridItem.create({ colSpan: { md: 2 } });
-    view.addNode(gridItem, sectionGrid.id);
-
-    const sectionGridChild = SectionGrid.create({ sectionId: randomUUID() });
-    view.addNode(sectionGridChild, gridItem.id);
-    const found = view.findNodeWithParentById(sectionGridChild.id);
-    expect(found.node.id).toEqual(sectionGridChild.id);
-    expect(found.parent.id).toEqual(gridItem.id);
-  });
-
+  //
   it('deletes node', () => {
-    const view = View.create({
-      name: 'My layout',
-      userId,
-      organizationId,
-      dataModelId,
-    });
-    const gridContainer = GridContainer.create();
-    const colSpan = { md: 4 };
-    const dataFieldItem = DataFieldRef.create({ fieldId: 'f1' });
-    const gridItem1 = GridItem.create({
-      colSpan,
-      content: dataFieldItem,
-    });
-    gridContainer.addGridItem(gridItem1);
+    const view = View.fromPlain(plain);
 
-    const subGridContainer = GridContainer.create();
-    const subDataFieldItem = DataFieldRef.create({ fieldId: 'subf1' });
-    const subGridItem = GridItem.create({
-      colSpan: { sm: 12 },
-      content: subDataFieldItem,
-    });
-    subGridContainer.addGridItem(subGridItem);
+    const foundBeforeDelete = view.findNodeWithParentById('df22');
+    view.deleteNodeById('df22');
+    let foundAfterDelete = view.findNodeWithParentById('df22');
+    expect(foundAfterDelete.node).toBeUndefined();
+    expect(foundBeforeDelete.parent.children).not.toContain('df22');
 
-    const gridItem2 = GridItem.create({
-      colSpan,
-      content: subGridContainer,
-    });
-    gridContainer.addGridItem(gridItem2);
-    view.addNode(gridContainer);
+    view.deleteNodeById('s2');
+    foundAfterDelete = view.findNodeWithParentById('s2');
+    expect(foundAfterDelete.node).toBeUndefined();
+    // check that all nested childs have been deleted
+    expect(view.findNodeWithParentById('s21').node).toBeUndefined();
+    expect(view.findNodeWithParentById('df22').node).toBeUndefined();
+    expect(view.findNodeWithParentById('df221').node).toBeUndefined();
 
-    const gridContainer2 = GridContainer.create();
-    const dataFieldItem2 = DataFieldRef.create({ fieldId: 'f2' });
-    gridContainer2.addGridItem(
-      GridItem.create({
-        colSpan,
-        content: dataFieldItem2,
-      }),
-    );
-    view.addNode(gridContainer2);
-
-    expect(view.deleteNodeById(subGridContainer.id)).toBeTruthy();
-    expect(view.findNodeWithParentById(subGridContainer.id)).toBeUndefined();
-    expect(view.findNodeWithParentById(subDataFieldItem.id)).toBeUndefined();
-    expect(gridItem2.getChildNodes()).toEqual([]);
-    expect(view.deleteNodeById(dataFieldItem.id)).toBeTruthy();
-    expect(gridItem1.content).toBeUndefined();
-    expect(view.deleteNodeById('unknown id')).toBeFalsy();
-    expect(view.deleteNodeById(gridItem2.id)).toBeTruthy();
-    expect(view.deleteNodeById(gridContainer2.id)).toBeTruthy();
-    expect(view.toPlain()).toEqual({
-      id: view.id,
-      name: view.name,
-      version: '1.0.0',
-      ownedByOrganizationId: organizationId,
-      createdByUserId: userId,
-      dataModelId: dataModelId,
-      nodes: [
-        {
-          id: gridContainer.id,
-          type: NodeType.GRID_CONTAINER,
-          cols: { sm: 1 },
-          children: [
-            {
-              id: gridItem1.id,
-              type: NodeType.GRID_ITEM,
-              colSpan,
-              content: undefined,
-            },
-          ],
-        },
-      ],
-    });
+    expect(view.toPlain().nodes).toEqual([
+      {
+        id: 's1',
+        type: NodeType.SECTION_GRID,
+        sectionId: 'sectionId1',
+        cols: { sm: 1 },
+        ...colStartAndSpan,
+        children: ['df11'],
+      },
+      {
+        id: 'df11',
+        type: NodeType.DATA_FIELD_REF,
+        ...colStartAndSpan,
+        fieldId: 'f11',
+        parentId: 's1',
+        children: [],
+      },
+    ]);
   });
 });

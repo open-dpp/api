@@ -2,7 +2,7 @@ import { DataSectionDraft } from './section-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { NotFoundError } from '../../exceptions/domain.errors';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 
 describe('DataSectionDraft', () => {
   it('is created', () => {
@@ -158,6 +158,33 @@ describe('DataSectionDraft', () => {
     expect(section.subSections).toEqual([childSection1.id, childSection2.id]);
     expect(childSection1.parentId).toEqual(section.id);
     expect(childSection2.parentId).toEqual(section.id);
+  });
+
+  it('should delete sub section', () => {
+    const section = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+    });
+    const childSection1 = DataSectionDraft.create({
+      name: 'Sub specification 1',
+      type: SectionType.GROUP,
+    });
+    const childSection2 = DataSectionDraft.create({
+      name: 'Sub specification 2',
+      type: SectionType.REPEATABLE,
+    });
+    section.addSubSection(childSection1);
+    section.addSubSection(childSection2);
+    const result = section.deleteSubSection(childSection1);
+    expect(section.subSections).toEqual([childSection2.id]);
+    expect(result.parentId).toBeUndefined();
+
+    // errors
+    expect(() => section.deleteSubSection(childSection1)).toThrow(
+      new ValueError(
+        `Could not found and delete sub section ${childSection1.id} from ${section.id}`,
+      ),
+    );
   });
 
   it('should publish section draft', () => {

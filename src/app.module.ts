@@ -19,7 +19,6 @@ import { ProductDataModelModule } from './product-data-model/product.data.model.
 import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
-import { ViewModule } from './view/view.module';
 
 @Module({
   imports: [
@@ -50,7 +49,6 @@ import { ViewModule } from './view/view.module';
     ProductDataModelModule,
     ItemsModule,
     ModelsModule,
-    ViewModule,
     OrganizationsModule,
     UsersModule,
     UniqueProductIdentifierModule,

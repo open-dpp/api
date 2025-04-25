@@ -17,7 +17,7 @@ export abstract class DataSectionBase {
   @Expose({ name: 'subSections' })
   protected _subSections: string[] = [];
   @Expose({ name: 'parentId' })
-  protected _parentId = undefined;
+  protected _parentId?: string;
 
   get name() {
     return this._name;

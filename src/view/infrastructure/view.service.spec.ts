@@ -7,7 +7,7 @@ import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { NodeType } from '../domain/node';
 import { getViewSchema, ViewDoc } from './view.schema';
 import { ViewService } from './view.service';
-import { View } from '../domain/view';
+import { TargetGroup, View } from '../domain/view';
 
 describe('ViewService', () => {
   let service: ViewService;
@@ -30,40 +30,63 @@ describe('ViewService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
+  const dataModelId = randomUUID();
+  const colStartAndSpan = { colStart: { md: 2 }, colSpan: { md: 3 } };
+
   const viewPlain = {
-    name: 'my view',
+    id: randomUUID(),
     version: '1.0.0',
-    ownedByOrganizationId: randomUUID(),
-    createdByUserId: randomUUID(),
-    dataModelId: randomUUID(),
+    dataModelId: dataModelId,
+    targetGroup: TargetGroup.ALL,
     nodes: [
       {
-        type: NodeType.GRID_CONTAINER,
-        cols: { sm: 2 },
-        children: [
-          {
-            type: NodeType.GRID_ITEM,
-            colSpan: { sm: 4 },
-            colStart: { sm: 2 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 2 },
-            content: {
-              type: NodeType.DATA_FIELD_REF,
-              fieldId: 'f1',
-            },
-          },
-        ],
+        id: 's1',
+        type: NodeType.SECTION_GRID,
+        sectionId: 'sectionId1',
+        cols: { sm: 1 },
+        ...colStartAndSpan,
+        children: ['df11'],
       },
       {
+        id: 'df11',
+        type: NodeType.DATA_FIELD_REF,
+        ...colStartAndSpan,
+        fieldId: 'f11',
+        parentId: 's1',
+        children: [],
+      },
+      {
+        id: 's2',
         type: NodeType.SECTION_GRID,
-        sectionId: 'sectionId',
-        cols: { sm: 4 },
-        children: [
-          {
-            type: NodeType.GRID_ITEM,
-            colSpan: { sm: 12 },
-          },
-        ],
+        sectionId: 'sectionId2',
+        ...colStartAndSpan,
+        cols: { lg: 2 },
+        children: ['s21', 'df22'],
+      },
+      {
+        id: 's21',
+        type: NodeType.SECTION_GRID,
+        sectionId: 'sectionId21',
+        ...colStartAndSpan,
+        cols: { xs: 2 },
+        parentId: 's2',
+        children: ['df211'],
+      },
+      {
+        id: 'df211',
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f211',
+        ...colStartAndSpan,
+        parentId: 's21',
+        children: [],
+      },
+      {
+        id: 'df22',
+        type: NodeType.DATA_FIELD_REF,
+        fieldId: 'f22',
+        ...colStartAndSpan,
+        parentId: 's2',
+        children: [],
       },
     ],
   };
@@ -76,11 +99,14 @@ describe('ViewService', () => {
 
   it('fails if requested view could not be found by data model id', async () => {
     await expect(
-      service.findOneByDataModelIdOrFail(randomUUID()),
+      service.findOneByDataModelAndTargetGroupOrFail(
+        randomUUID(),
+        TargetGroup.ALL,
+      ),
     ).rejects.toThrow(new NotFoundInDatabaseException(View.name));
   });
 
-  it('find by data Model Id if requested layout could not be found', async () => {
+  it('find by view by data model and target group', async () => {
     const dataModelId = randomUUID();
     const view = View.fromPlain({
       ...viewPlain,
@@ -88,11 +114,14 @@ describe('ViewService', () => {
     });
 
     await service.save(view);
-    const found = await service.findOneByDataModelIdOrFail(dataModelId);
+    const found = await service.findOneByDataModelAndTargetGroupOrFail(
+      dataModelId,
+      TargetGroup.ALL,
+    );
     expect(found).toEqual(view);
   });
 
-  it('should save layout', async () => {
+  it('should save view', async () => {
     const view = View.fromPlain({
       ...viewPlain,
     });
@@ -100,6 +129,16 @@ describe('ViewService', () => {
     const { id } = await service.save(view);
     const found = await service.findOneOrFail(id);
     expect(found).toEqual(view);
+  });
+
+  it('should check unique key (targetGroup,dataModelId)', async () => {
+    const plain = { targetGroup: TargetGroup.ALL, dataModelId: randomUUID() };
+    const view1 = View.create(plain);
+    const view2 = View.create({ ...plain, dataModelId: randomUUID() });
+    const view3 = View.create(plain);
+    await service.save(view1);
+    await service.save(view2);
+    await expect(service.save(view3)).rejects.toThrow(Error);
   });
 
   afterAll(async () => {

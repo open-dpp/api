@@ -4,7 +4,7 @@ import {
   DataSectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
-import { NotFoundError } from '../../exceptions/domain.errors';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 
 export class DataSectionDraft extends DataSectionBase {
@@ -27,6 +27,10 @@ export class DataSectionDraft extends DataSectionBase {
     this._parentId = parent.id;
   }
 
+  removeParent() {
+    this._parentId = undefined;
+  }
+
   rename(newName: string) {
     this._name = newName;
   }
@@ -38,6 +42,17 @@ export class DataSectionDraft extends DataSectionBase {
   addSubSection(section: DataSectionDraft) {
     this._subSections.push(section.id);
     section.assignParent(this);
+  }
+
+  deleteSubSection(subSection: DataSectionDraft) {
+    if (!this.subSections.find((id) => id === subSection.id)) {
+      throw new ValueError(
+        `Could not found and delete sub section ${subSection.id} from ${this.id}`,
+      );
+    }
+    this._subSections = this.subSections.filter((n) => n !== subSection.id);
+    subSection.removeParent();
+    return subSection;
   }
 
   modifyDataField(

@@ -7,7 +7,7 @@ import {
 } from 'class-transformer';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
-import { NotFoundError } from '../../exceptions/domain.errors';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import {
   ProductDataModel,
   VisibilityLevel,
@@ -90,11 +90,19 @@ export class ProductDataModelDraft {
   }
 
   deleteSection(sectionId: string) {
-    const found = this.findSectionOrFail(sectionId);
-    for (const sectionId of found.subSections) {
-      this.deleteSection(sectionId);
+    const { section, parent } = this.findSectionWithParent(sectionId);
+    if (!section) {
+      throw new ValueError(
+        `Could not found and delete section with id ${sectionId}`,
+      );
     }
-    this._sections = this.sections.filter((s) => s.id !== found.id);
+    if (parent) {
+      parent.deleteSubSection(section);
+    }
+    for (const childSectionId of section.subSections) {
+      this.deleteSection(childSectionId);
+    }
+    this._sections = this.sections.filter((s) => s.id !== section.id);
   }
 
   modifySection(sectionId: string, data: { name?: string }) {
@@ -120,11 +128,19 @@ export class ProductDataModelDraft {
   }
 
   findSectionOrFail(sectionId: string) {
-    const foundSection = this.sections.find((s) => s.id === sectionId);
-    if (!foundSection) {
+    const { section } = this.findSectionWithParent(sectionId);
+    if (!section) {
       throw new NotFoundError(DataSectionDraft.name, sectionId);
     }
-    return foundSection;
+    return section;
+  }
+
+  findSectionWithParent(sectionId: string) {
+    const section = this.sections.find((s) => s.id === sectionId);
+    const parent = section?.parentId
+      ? this.sections.find((s) => s.id === section.parentId)
+      : undefined;
+    return { section, parent };
   }
 
   addSubSection(parentSectionId: string, section: DataSectionDraft) {

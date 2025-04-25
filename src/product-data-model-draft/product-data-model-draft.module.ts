@@ -12,6 +12,8 @@ import {
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { getViewSchema, ViewDoc } from '../view/infrastructure/view.schema';
+import { ViewService } from '../view/infrastructure/view.service';
 
 @Module({
   imports: [
@@ -25,10 +27,20 @@ import { PermissionsModule } from '../permissions/permissions.module';
         schema: ProductDataModelSchema,
       },
     ]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: ViewDoc.name,
+        useFactory: () => getViewSchema(),
+      },
+    ]),
     PermissionsModule,
   ],
   controllers: [ProductDataModelDraftController],
-  providers: [ProductDataModelService, ProductDataModelDraftService],
+  providers: [
+    ProductDataModelService,
+    ProductDataModelDraftService,
+    ViewService,
+  ],
   exports: [ProductDataModelDraftService],
 })
 export class ProductDataModelDraftModule {}

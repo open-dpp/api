@@ -5,19 +5,18 @@ import {
   Type,
 } from 'class-transformer';
 import { randomUUID } from 'crypto';
-import {
-  isGridContainerOrSubclass,
-  isGridItem,
-  Node,
-  nodeSubtypes,
-} from './node';
+import { isDataFieldRef, isSectionGrid, Node, nodeSubtypes } from './node';
 import { ValueError } from '../../exceptions/domain.errors';
+
+export enum TargetGroup {
+  ALL = 'All',
+}
 
 export class View {
   @Expose()
   readonly id: string = randomUUID();
   @Expose()
-  readonly name: string;
+  readonly targetGroup: TargetGroup;
 
   @Expose()
   readonly version: string;
@@ -32,12 +31,6 @@ export class View {
   })
   private _nodes: Node[] = [];
 
-  @Expose({ name: 'ownedByOrganizationId' })
-  private _ownedByOrganizationId: string | undefined;
-
-  @Expose({ name: 'createdByUserId' })
-  private _createdByUserId: string | undefined;
-
   @Expose()
   readonly dataModelId: string;
 
@@ -45,26 +38,11 @@ export class View {
     return this._nodes;
   }
 
-  get ownedByOrganizationId() {
-    return this._ownedByOrganizationId;
-  }
-
-  get createdByUserId() {
-    return this._createdByUserId;
-  }
-
-  static create(plain: {
-    name: string;
-    userId: string;
-    organizationId: string;
-    dataModelId: string;
-  }) {
+  static create(plain: { targetGroup: TargetGroup; dataModelId: string }) {
     return View.fromPlain({
-      name: plain.name,
+      targetGroup: plain.targetGroup,
       version: '1.0.0',
       dataModelId: plain.dataModelId,
-      createdByUserId: plain.userId,
-      ownedByOrganizationId: plain.organizationId,
     });
   }
 
@@ -75,65 +53,57 @@ export class View {
     });
   }
 
-  public isOwnedBy(organizationId: string) {
-    return this._ownedByOrganizationId === organizationId;
-  }
-
-  findNodeWithParent(
-    tree: Node[],
-    predicate: (node: Node) => boolean,
-    parent: Node | undefined = undefined,
-  ): { node: Node; parent: Node | undefined } | undefined {
-    for (const node of tree) {
-      if (predicate(node)) {
-        return { node, parent };
-      }
-
-      if (node.getChildNodes().length > 0) {
-        const found = this.findNodeWithParent(
-          node.getChildNodes(),
-          predicate,
-          node,
-        );
-        if (found) {
-          return found;
-        }
-      }
-    }
-
-    return undefined;
+  findNodeWithParent(predicate: (node: Node) => boolean): {
+    node: Node | undefined;
+    parent: Node | undefined;
+  } {
+    const node = this.nodes.find((n) => predicate(n));
+    const parent = node?.parentId
+      ? this.nodes.find((n) => n.id === node.parentId)
+      : undefined;
+    return { node, parent };
   }
 
   findNodeWithParentById(id: string) {
-    return this.findNodeWithParent(this._nodes, (node) => node.id === id);
+    return this.findNodeWithParent((node) => node.id === id);
+  }
+
+  findNodeWithParentBySectionId(sectionId: string) {
+    return this.findNodeWithParent(
+      (node) => isSectionGrid(node) && node.sectionId === sectionId,
+    );
+  }
+
+  findNodeWithParentByFieldId(fieldId: string) {
+    return this.findNodeWithParent(
+      (node) => isDataFieldRef(node) && node.fieldId === fieldId,
+    );
   }
 
   deleteNodeById(id: string) {
-    const result = this.findNodeWithParentById(id);
-
-    if (!result) return false;
-
-    const { parent } = result;
-
-    if (parent) {
-      return parent.deleteChildNode(id);
-    } else {
-      this._nodes = this._nodes.filter((node) => node.id !== id);
-      return true;
+    const { node, parent } = this.findNodeWithParentById(id);
+    if (!node) {
+      throw new ValueError(`Could not found and delete node with id ${id}`);
     }
+    if (parent && isSectionGrid(parent)) {
+      parent.deleteNode(node);
+    }
+    for (const childNodeId of node.children) {
+      this.deleteNodeById(childNodeId);
+    }
+    this._nodes = this.nodes.filter((s) => s.id !== node.id);
   }
 
   addNode(node: Node, parentId?: string) {
     if (parentId) {
-      const found = this.findNodeWithParentById(parentId);
-      if (found?.node) {
-        if (isGridContainerOrSubclass(found.node) && isGridItem(node)) {
-          found.node.addGridItem(node);
-        } else if (isGridItem(found.node)) {
-          found.node.replaceContent(node);
+      const { node: parentNode } = this.findNodeWithParentById(parentId);
+      if (parentNode) {
+        if (isSectionGrid(parentNode)) {
+          parentNode.addNode(node);
+          this._nodes.push(node);
         } else {
           throw new ValueError(
-            `${node.type} could not be added to ${found.node.type}`,
+            `${node.type} could not be added to ${parentNode.type}`,
           );
         }
       } else {
@@ -141,13 +111,25 @@ export class View {
           `Parent ${parentId} to add node to could not be found`,
         );
       }
-    } else if (isGridContainerOrSubclass(node)) {
+    } else if (isSectionGrid(node)) {
       this._nodes.push(node);
     } else {
       throw new ValueError(`Cannot add ${node.type} at root level`);
     }
   }
-  toPlain() {
-    return instanceToPlain(this);
+  toPlain(options?: { sortNodesById?: boolean }) {
+    const instance = instanceToPlain(this);
+    if (options?.sortNodesById) {
+      instance.nodes.sort((a, b) => a.id.localeCompare(b.id));
+    }
+    return instance;
+  }
+
+  publish(publishedDataModelId: string) {
+    return View.fromPlain({
+      ...this.toPlain(),
+      id: randomUUID(),
+      dataModelId: publishedDataModelId,
+    });
   }
 }

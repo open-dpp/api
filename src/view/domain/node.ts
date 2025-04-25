@@ -1,13 +1,13 @@
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Type,
-} from 'class-transformer';
-import { z } from 'zod';
+import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
 import { ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 import { randomUUID } from 'crypto';
+import { z } from 'zod';
+
+export enum NodeType {
+  SECTION_GRID = 'SectionGrid',
+  DATA_FIELD_REF = 'DataFieldRef',
+}
 
 const ResponsiveConfigSchema = z.object({
   xs: z.number().int().min(1).max(12).optional(),
@@ -23,114 +23,125 @@ function validateConfigFail(config: ResponsiveConfig, errorPrefix: string) {
   }
 }
 
-export type ResponsiveConfig = z.infer<typeof ResponsiveConfigSchema>;
-
-export enum NodeType {
-  GRID_CONTAINER = 'GridContainer',
-  GRID_ITEM = 'GridItem',
-  SECTION_GRID = 'SectionGrid',
-  DATA_FIELD_REF = 'DataFieldRef',
+function validateColAndRowConfig(config: {
+  colStart?: ResponsiveConfig;
+  colSpan?: ResponsiveConfig;
+  rowSpan?: ResponsiveConfig;
+  rowStart?: ResponsiveConfig;
+}) {
+  if (config.colStart) {
+    validateConfigFail(config.colStart, 'colStart');
+  }
+  if (config.colSpan) {
+    validateConfigFail(config.colSpan, 'colSpan');
+  }
+  if (config.rowStart) {
+    validateConfigFail(config.rowStart, 'rowStart');
+  }
+  if (config.rowSpan) {
+    validateConfigFail(config.rowSpan, 'rowSpan');
+  }
 }
+
+export type ResponsiveConfig = z.infer<typeof ResponsiveConfigSchema>;
 
 export abstract class Node {
   @Expose()
   readonly id: string = randomUUID();
   @Expose()
   public type: NodeType;
-  abstract getChildNodes(): Node[];
-  abstract deleteChildNode(id: string): boolean;
-}
-
-export class GridContainer extends Node {
-  type = NodeType.GRID_CONTAINER;
-
   @Expose()
-  cols: ResponsiveConfig;
-
+  public colStart: ResponsiveConfig;
+  @Expose()
+  public colSpan: ResponsiveConfig;
+  @Expose()
+  public rowStart?: ResponsiveConfig;
+  @Expose()
+  public rowSpan?: ResponsiveConfig;
+  @Expose({ name: 'parentId' })
+  protected _parentId?: string;
   @Expose({ name: 'children' })
-  @Type(() => GridItem)
-  private _children: GridItem[] = [];
+  protected _children: string[] = [];
 
   get children() {
     return this._children;
   }
 
-  getChildNodes(): Node[] {
-    return this._children;
+  get parentId() {
+    return this._parentId;
   }
 
-  deleteChildNode(id: string): boolean {
-    this._children = this._children.filter((child) => child.id !== id);
-    return true;
+  assignParent(parentId: string) {
+    this._parentId = parentId;
   }
 
-  static create(plain?: {
-    cols?: ResponsiveConfig;
-    initNumberOfChildren?: number;
-  }) {
-    const cols = plain?.cols ?? { sm: 1 };
-    validateConfigFail(cols, 'Cols');
-    const children = plain?.initNumberOfChildren
-      ? this.createChildren(plain.initNumberOfChildren)
-      : [];
-    return GridContainer.fromPlain({ cols, children });
+  removeParent() {
+    this._parentId = undefined;
   }
 
-  modifyConfigs(plain: { cols: ResponsiveConfig }) {
-    validateConfigFail(plain.cols, 'Cols');
-    this.cols = plain.cols;
+  modifyConfigs(plain: Partial<NodeProps>) {
+    validateColAndRowConfig(plain);
+    this.colSpan = plain.colSpan ?? this.colSpan;
+    this.colStart = plain.colStart ?? this.colStart;
+    this.rowStart = plain.rowStart ?? this.rowStart;
+    this.rowSpan = plain.rowSpan ?? this.rowSpan;
+  }
+}
+
+type NodeProps = {
+  colStart: ResponsiveConfig;
+  colSpan: ResponsiveConfig;
+  rowSpan?: ResponsiveConfig;
+  rowStart?: ResponsiveConfig;
+};
+
+export class SectionGrid extends Node {
+  type = NodeType.SECTION_GRID;
+  @Expose()
+  cols: ResponsiveConfig;
+  @Expose()
+  readonly sectionId: string;
+
+  static create(
+    plain: NodeProps & { cols: ResponsiveConfig; sectionId: string },
+  ) {
+    validateColAndRowConfig(omit(plain, 'sectionId'));
+    return SectionGrid.fromPlain(plain);
+  }
+
+  modifyCols(cols: ResponsiveConfig) {
+    validateConfigFail(cols, 'grid-cols');
+    this.cols = cols;
   }
 
   static fromPlain(plain: unknown) {
-    return plainToInstance(GridContainer, plain, {
+    return plainToInstance(SectionGrid, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
   }
 
-  private static createChildren(numberOfChildren: number) {
-    return new Array(numberOfChildren).fill(undefined).map(() =>
-      GridItem.create({
-        colSpan: { sm: 1 },
-      }),
-    );
+  addNode(node: Node) {
+    if (this.children.find((id) => id === node.id)) {
+      throw new ValueError(`Node with ${node.id} is already child.`);
+    }
+    this._children.push(node.id);
+    node.assignParent(this.id);
   }
 
-  addGridItem(gridItem: GridItem) {
-    this._children.push(gridItem);
+  deleteNode(node: Node) {
+    if (!this.children.find((id) => id === node.id)) {
+      throw new ValueError(
+        `Could not found and delete node ${node.id} from ${this.id}`,
+      );
+    }
+    this._children = this.children.filter((n) => n !== node.id);
+    node.removeParent();
+    return node;
   }
 
   toPlain() {
     return instanceToPlain(this);
-  }
-}
-
-export class SectionGrid extends GridContainer {
-  type = NodeType.SECTION_GRID;
-  @Expose()
-  readonly sectionId: string;
-
-  static create(plain: {
-    sectionId: string;
-    cols?: ResponsiveConfig;
-    initNumberOfChildren?: number;
-  }) {
-    const gridContainer = GridContainer.create({
-      cols: plain.cols,
-      initNumberOfChildren: plain.initNumberOfChildren,
-    }).toPlain();
-    return plainToInstance(
-      SectionGrid,
-      {
-        ...omit(gridContainer, 'type'),
-        ...omit(plain, 'cols'),
-        ...omit(plain, 'initNumberOfChildren'),
-      },
-      {
-        excludeExtraneousValues: true,
-        exposeDefaultValues: true,
-      },
-    );
   }
 }
 
@@ -139,127 +150,16 @@ export class DataFieldRef extends Node {
   @Expose()
   readonly fieldId: string;
 
-  getChildNodes(): Node[] {
-    return [];
+  static create(plain: NodeProps & { fieldId: string }) {
+    validateColAndRowConfig(omit(plain, 'fieldId'));
+    return DataFieldRef.fromPlain(plain);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  deleteChildNode(id: string): boolean {
-    return false;
-  }
-
-  static create(plain: { fieldId: string }) {
+  static fromPlain(plain: unknown) {
     return plainToInstance(DataFieldRef, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
-  }
-}
-
-export const nodeSubtypesWithoutGridItem = [
-  { value: GridContainer, name: NodeType.GRID_CONTAINER },
-  { value: SectionGrid, name: NodeType.SECTION_GRID },
-  { value: DataFieldRef, name: NodeType.DATA_FIELD_REF },
-];
-
-export class GridItem extends Node {
-  type = NodeType.GRID_ITEM;
-  @Expose()
-  public colSpan: ResponsiveConfig;
-
-  @Expose()
-  public colStart?: ResponsiveConfig;
-
-  @Expose()
-  public rowStart?: ResponsiveConfig;
-
-  @Expose()
-  public rowSpan?: ResponsiveConfig;
-
-  @Expose({ name: 'content' })
-  @Type(() => Node, {
-    discriminator: {
-      property: 'type',
-      subTypes: nodeSubtypesWithoutGridItem,
-    },
-    keepDiscriminatorProperty: true,
-  })
-  private _content?: Node;
-
-  get content() {
-    return this._content;
-  }
-
-  getChildNodes(): Node[] {
-    return this._content ? [this._content] : [];
-  }
-
-  deleteChildNode(id: string): boolean {
-    if (this._content?.id === id) {
-      this._content = undefined;
-      return true;
-    }
-    return false;
-  }
-
-  private static validateConfigsOrFail(
-    colSpan: ResponsiveConfig,
-    colStart?: ResponsiveConfig,
-    rowStart?: ResponsiveConfig,
-    rowSpan?: ResponsiveConfig,
-  ) {
-    validateConfigFail(colSpan, 'Col span');
-    validateConfigFail(colStart ?? {}, 'Col start');
-    validateConfigFail(rowStart ?? {}, 'Row start');
-    validateConfigFail(rowSpan ?? {}, 'Row span');
-  }
-  static create(plain: {
-    colSpan: ResponsiveConfig;
-    colStart?: ResponsiveConfig;
-    rowStart?: ResponsiveConfig;
-    rowSpan?: ResponsiveConfig;
-    content?: Node;
-  }) {
-    GridItem.validateConfigsOrFail(
-      plain.colSpan,
-      plain.colStart,
-      plain.rowStart,
-      plain.rowSpan,
-    );
-    return GridItem.fromPlain(plain);
-  }
-
-  modifyConfigs(plain: {
-    colSpan: ResponsiveConfig;
-    colStart?: ResponsiveConfig;
-    rowStart?: ResponsiveConfig;
-    rowSpan?: ResponsiveConfig;
-  }) {
-    GridItem.validateConfigsOrFail(
-      plain.colSpan,
-      plain.colStart,
-      plain.rowStart,
-      plain.rowSpan,
-    );
-    this.colStart = plain.colStart;
-    this.colSpan = plain.colSpan;
-    this.rowStart = plain.rowStart;
-    this.rowSpan = plain.rowSpan;
-  }
-
-  static fromPlain(plain: unknown) {
-    return plainToInstance(GridItem, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
-  }
-
-  replaceContent(content: Node) {
-    this._content = content;
-  }
-
-  copy() {
-    return GridItem.fromPlain(this.toPlain());
   }
 
   toPlain() {
@@ -268,16 +168,14 @@ export class GridItem extends Node {
 }
 
 export const nodeSubtypes = [
-  ...nodeSubtypesWithoutGridItem,
-  { value: GridItem, name: NodeType.GRID_ITEM },
+  { value: SectionGrid, name: NodeType.SECTION_GRID },
+  { value: DataFieldRef, name: NodeType.DATA_FIELD_REF },
 ];
 
-export function isGridContainerOrSubclass(node: Node): node is GridContainer {
-  return (
-    node.type === NodeType.GRID_CONTAINER || node.type === NodeType.SECTION_GRID
-  );
+export function isSectionGrid(node: Node): node is SectionGrid {
+  return node.type === NodeType.SECTION_GRID;
 }
 
-export function isGridItem(node: Node): node is GridItem {
-  return node.type === NodeType.GRID_ITEM;
+export function isDataFieldRef(node: Node): node is DataFieldRef {
+  return node.type === NodeType.DATA_FIELD_REF;
 }

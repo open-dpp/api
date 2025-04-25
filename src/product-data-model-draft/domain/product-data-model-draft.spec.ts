@@ -1,7 +1,7 @@
 import { ProductDataModelDraft } from './product-data-model-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
-import { NotFoundError } from '../../exceptions/domain.errors';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { randomUUID } from 'crypto';
@@ -318,6 +318,10 @@ describe('ProductDataModelDraft', () => {
       name: 'Dimensions',
       type: SectionType.GROUP,
     });
+    const section12 = DataSectionDraft.create({
+      name: 'section12',
+      type: SectionType.GROUP,
+    });
     const section111 = DataSectionDraft.create({
       name: 'Measurement',
       type: SectionType.GROUP,
@@ -327,19 +331,30 @@ describe('ProductDataModelDraft', () => {
       type: SectionType.GROUP,
     });
     const section2 = DataSectionDraft.create({
-      name: 'Technical specification',
+      name: 'section2',
       type: SectionType.GROUP,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section11);
+    productDataModelDraft.addSubSection(section1.id, section12);
     productDataModelDraft.addSubSection(section11.id, section111);
     productDataModelDraft.addSubSection(section11.id, section112);
 
     productDataModelDraft.addSection(section2);
 
+    productDataModelDraft.deleteSection(section11.id);
+    expect(section1.subSections).toEqual([section12.id]);
     productDataModelDraft.deleteSection(section1.id);
 
-    expect(productDataModelDraft.sections).toEqual([section2]);
+    expect(productDataModelDraft.toPlain().sections).toEqual([
+      {
+        dataFields: [],
+        id: section2.id,
+        name: 'section2',
+        subSections: [],
+        type: 'Group',
+      },
+    ]);
   });
 
   it('should fail to delete a section if it could not be found', () => {
@@ -355,7 +370,7 @@ describe('ProductDataModelDraft', () => {
     productDataModelDraft.addSection(section);
 
     expect(() => productDataModelDraft.deleteSection('unknown-id')).toThrow(
-      new NotFoundError(DataSectionDraft.name, 'unknown-id'),
+      new ValueError('Could not found and delete section with id unknown-id'),
     );
   });
 
