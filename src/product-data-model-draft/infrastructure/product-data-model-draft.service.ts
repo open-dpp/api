@@ -91,4 +91,11 @@ export class ProductDataModelDraftService {
       return { id: plain._id, name: plain.name };
     });
   }
+
+  // TODO: Delete after running import service
+  async findAll() {
+    const drafts = await this.productDataModelDraftDoc.find();
+
+    return drafts.map((p) => this.convertToDomain(p));
+  }
 }
