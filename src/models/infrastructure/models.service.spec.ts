@@ -74,38 +74,83 @@ describe('ModelsService', () => {
         {
           name: 'Section 1',
           type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
           dataFields: [
             {
               type: 'TextField',
               name: 'Title',
               options: { min: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
             },
             {
               type: 'TextField',
               name: 'Title 2',
               options: { min: 7 },
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
             },
           ],
         },
         {
           name: 'Section 2',
           type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
           dataFields: [
             {
               type: 'TextField',
               name: 'Title 3',
               options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
             },
           ],
         },
         {
           name: 'Section 3',
           type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
           dataFields: [
             {
               type: 'TextField',
               name: 'Title 4',
               options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
             },
           ],
         },
