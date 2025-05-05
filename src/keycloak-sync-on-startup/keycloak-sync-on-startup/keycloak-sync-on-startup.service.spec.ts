@@ -14,12 +14,15 @@ import {
   user1org1,
   user2org1,
 } from '../../../test/users-and-orgs';
+import { DataSource } from 'typeorm';
 
 describe('UsersSyncOnStartupService', () => {
   let service: KeycloakSyncOnStartupService;
   let usersService: UsersService;
   let keycloakResourcesService: KeycloakResourcesService;
   let organizationsService: OrganizationsService;
+  let dataSource: DataSource;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule, TypeOrmTestingModule, UsersModule],
@@ -45,12 +48,16 @@ describe('UsersSyncOnStartupService', () => {
     organizationsService =
       module.get<OrganizationsService>(OrganizationsService);
 
+    dataSource = module.get<DataSource>(DataSource);
+
     // Mock Logger to prevent console output during tests
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+
+    await dataSource.destroy();
   });
 
   it('should be defined', () => {

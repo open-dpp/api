@@ -7,15 +7,15 @@ import {
 } from 'class-transformer';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
-import { NotFoundError } from '../../exceptions/domain.errors';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import {
   ProductDataModel,
   VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { omit } from 'lodash';
 import * as semver from 'semver';
+import { LayoutProps } from '../../data-modelling/domain/layout';
+import { SectionType } from '../../data-modelling/domain/section-base';
 
 export type Publication = {
   id: string;
@@ -39,25 +39,29 @@ export class ProductDataModelDraft {
   @Expose({ name: 'createdByUserId' })
   private _createdByUserId: string | undefined;
 
-  @Expose()
   @Type(() => DataSectionDraft)
-  readonly sections: DataSectionDraft[] = [];
+  @Expose({ name: 'sections' })
+  private _sections: DataSectionDraft[] = [];
+
+  get sections() {
+    return this._sections;
+  }
 
   static create(plain: {
     name: string;
-    user: User;
-    organization: Organization;
+    userId: string;
+    organizationId: string;
   }) {
     return ProductDataModelDraft.fromPlain({
       ...plain,
       version: '1.0.0',
-      ownedByOrganizationId: plain.organization.id,
-      createdByUserId: plain.user.id,
+      ownedByOrganizationId: plain.organizationId,
+      createdByUserId: plain.userId,
     });
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this._ownedByOrganizationId === organization.id;
+  public isOwnedBy(organizationId: string) {
+    return this._ownedByOrganizationId === organizationId;
   }
 
   get name() {
@@ -88,23 +92,40 @@ export class ProductDataModelDraft {
   }
 
   deleteSection(sectionId: string) {
-    const foundIndex = this.sections.findIndex((s) => s.id === sectionId);
-    if (foundIndex < 0) {
-      throw new NotFoundError(DataSectionDraft.name, sectionId);
+    const { section, parent } = this.findSectionWithParent(sectionId);
+    if (!section) {
+      throw new ValueError(
+        `Could not found and delete section with id ${sectionId}`,
+      );
     }
-    this.sections.splice(foundIndex, 1);
+    if (parent) {
+      parent.deleteSubSection(section);
+    }
+    for (const childSectionId of section.subSections) {
+      this.deleteSection(childSectionId);
+    }
+    this._sections = this.sections.filter((s) => s.id !== section.id);
   }
 
-  modifySection(sectionId: string, data: { name?: string }) {
+  modifySection(
+    sectionId: string,
+    data: { name?: string; layout: Partial<LayoutProps> },
+  ) {
+    const section = this.findSectionOrFail(sectionId);
     if (data.name) {
-      this.findSectionOrFail(sectionId).rename(data.name);
+      section.rename(data.name);
     }
+    section.layout.modify(data.layout);
   }
 
   modifyDataField(
     sectionId: string,
     dataFieldId: string,
-    data: { name?: string; options?: Record<string, unknown> },
+    data: {
+      name?: string;
+      options?: Record<string, unknown>;
+      layout: Partial<LayoutProps>;
+    },
   ) {
     this.findSectionOrFail(sectionId).modifyDataField(dataFieldId, data);
   }
@@ -118,18 +139,40 @@ export class ProductDataModelDraft {
   }
 
   findSectionOrFail(sectionId: string) {
-    const foundSection = this.sections.find((s) => s.id === sectionId);
-    if (!foundSection) {
+    const { section } = this.findSectionWithParent(sectionId);
+    if (!section) {
       throw new NotFoundError(DataSectionDraft.name, sectionId);
     }
-    return foundSection;
+    return section;
   }
 
-  addSection(section: DataSectionDraft) {
+  findSectionWithParent(sectionId: string) {
+    const section = this.sections.find((s) => s.id === sectionId);
+    const parent = section?.parentId
+      ? this.sections.find((s) => s.id === section.parentId)
+      : undefined;
+    return { section, parent };
+  }
+
+  addSubSection(parentSectionId: string, section: DataSectionDraft) {
+    const parentSection = this.findSectionOrFail(parentSectionId);
+    parentSection.addSubSection(section);
     this.sections.push(section);
   }
 
-  publish(createdByUser: User, visibility: VisibilityLevel): ProductDataModel {
+  addSection(section: DataSectionDraft) {
+    if (section.parentId && section.type === SectionType.REPEATABLE) {
+      throw new ValueError(
+        `Repeater section can only be added as root section`,
+      );
+    }
+    this.sections.push(section);
+  }
+
+  publish(
+    createdByUserId: string,
+    visibility: VisibilityLevel,
+  ): ProductDataModel {
     const plain = omit(this.toPlain(), [
       'id',
       'version',
@@ -143,10 +186,11 @@ export class ProductDataModelDraft {
       lastPublished.length > 0
         ? semver.inc(lastPublished[0].version, 'major')
         : '1.0.0';
+
     const published = ProductDataModel.fromPlain({
       ...plain,
       version: versionToPublish,
-      createdByUserId: createdByUser.id,
+      createdByUserId: createdByUserId,
       visibility,
       sections: this.sections.map((s) => s.publish()),
     });

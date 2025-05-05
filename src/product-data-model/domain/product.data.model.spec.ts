@@ -1,10 +1,10 @@
 import { ProductDataModel, VisibilityLevel } from './product.data.model';
 import { DataValue } from '../../models/domain/model';
-import { DataFieldValidationResult } from './data.field';
-import { SectionType } from './section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
+import { DataFieldValidationResult } from './data-field';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {
@@ -30,6 +30,8 @@ describe('ProductDataModel', () => {
               options: { min: 2 },
             },
           ],
+          subSections: [],
+          parentId: undefined,
         },
         {
           name: 'Material',
@@ -46,6 +48,8 @@ describe('ProductDataModel', () => {
               options: {},
             },
           ],
+          subSections: [],
+          parentId: undefined,
         },
       ],
     };

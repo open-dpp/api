@@ -22,6 +22,7 @@ export class ProductDataModelController {
   async get(@Param('id') id: string, @Request() req: AuthRequest) {
     const found = await this.productDataModelService.findOneOrFail(id);
     await this.hasPermissionsOrFail(found, req);
+
     return found.toPlain();
   }
 

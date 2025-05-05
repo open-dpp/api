@@ -1,27 +1,19 @@
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Type,
-} from 'class-transformer';
-import { randomUUID } from 'crypto';
+import { Expose, plainToInstance, Type } from 'class-transformer';
 import { DataFieldDraft } from './data-field-draft';
-import { SectionType } from '../../product-data-model/domain/section';
-import { NotFoundError } from '../../exceptions/domain.errors';
+import {
+  DataSectionBase,
+  SectionType,
+} from '../../data-modelling/domain/section-base';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
+import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 
-export class DataSectionDraft {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose({ name: 'name' })
-  private _name: string;
-  @Expose()
-  readonly type: SectionType;
+export class DataSectionDraft extends DataSectionBase {
   @Expose()
   @Type(() => DataFieldDraft)
   readonly dataFields: DataFieldDraft[];
 
-  static create(plain: { name: string; type: SectionType }) {
+  static create(plain: { name: string; type: SectionType; layout: Layout }) {
     return plainToInstance(
       DataSectionDraft,
       { ...plain, dataFields: [] },
@@ -32,8 +24,12 @@ export class DataSectionDraft {
     );
   }
 
-  get name() {
-    return this._name;
+  assignParent(parent: DataSectionDraft) {
+    this._parentId = parent.id;
+  }
+
+  removeParent() {
+    this._parentId = undefined;
   }
 
   rename(newName: string) {
@@ -44,9 +40,29 @@ export class DataSectionDraft {
     this.dataFields.push(dataField);
   }
 
+  addSubSection(section: DataSectionDraft) {
+    this._subSections.push(section.id);
+    section.assignParent(this);
+  }
+
+  deleteSubSection(subSection: DataSectionDraft) {
+    if (!this.subSections.find((id) => id === subSection.id)) {
+      throw new ValueError(
+        `Could not found and delete sub section ${subSection.id} from ${this.id}`,
+      );
+    }
+    this._subSections = this.subSections.filter((n) => n !== subSection.id);
+    subSection.removeParent();
+    return subSection;
+  }
+
   modifyDataField(
     dataFieldId: string,
-    data: { name?: string; options?: Record<string, unknown> },
+    data: {
+      name?: string;
+      options?: Record<string, unknown>;
+      layout: Partial<LayoutProps>;
+    },
   ) {
     const found = this.dataFields.find((d) => d.id === dataFieldId);
     if (!found) {
@@ -57,6 +73,9 @@ export class DataSectionDraft {
     }
     if (data.options) {
       found.mergeOptions(data.options);
+    }
+    if (data.layout) {
+      found.layout.modify(data.layout);
     }
   }
 
@@ -69,11 +88,10 @@ export class DataSectionDraft {
   }
 
   publish() {
-    const plain = omit(this.toPlain(), ['id', 'dataFields']);
-    return { ...plain, dataFields: this.dataFields.map((d) => d.publish()) };
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
+    const plain = omit(this.toPlain(), ['dataFields']);
+    return {
+      ...plain,
+      dataFields: this.dataFields.map((d) => d.publish()),
+    };
   }
 }

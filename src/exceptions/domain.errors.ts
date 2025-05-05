@@ -3,3 +3,5 @@ export class NotFoundError extends Error {
     super(`${model} with id ${id} could not be found.`);
   }
 }
+
+export class ValueError extends Error {}

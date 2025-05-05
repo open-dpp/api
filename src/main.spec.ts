@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import {
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
 } from './exceptions/exception.handler';
 
 // Mock NestFactory before importing bootstrap function
@@ -29,6 +30,11 @@ describe('Bootstrap', () => {
       enableCors: jest.fn().mockReturnThis(),
       useGlobalPipes: jest.fn(),
       listen: jest.fn().mockResolvedValue(undefined),
+      get: jest.fn().mockReturnValue({
+        // TODO: Delete after running migration service
+        migrateDrafts: jest.fn(),
+        migrateDataModels: jest.fn(),
+      }),
     };
 
     // Configure NestFactory.create to return our mock app
@@ -47,6 +53,7 @@ describe('Bootstrap', () => {
     expect(mockApp.useGlobalFilters).toHaveBeenCalledWith(
       expect.any(NotFoundInDatabaseExceptionFilter),
       expect.any(NotFoundExceptionFilter),
+      expect.any(ValueErrorFilter),
     );
 
     expect(mockApp.enableCors).toHaveBeenCalledWith({

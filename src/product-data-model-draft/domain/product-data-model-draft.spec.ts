@@ -1,54 +1,132 @@
 import { ProductDataModelDraft } from './product-data-model-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
-import { NotFoundError } from '../../exceptions/domain.errors';
-import { SectionType } from '../../product-data-model/domain/section';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
-import { User } from '../../users/domain/user';
+import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { randomUUID } from 'crypto';
-import { Organization } from '../../organizations/domain/organization';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
+import { Layout } from '../../data-modelling/domain/layout';
 
 describe('ProductDataModelDraft', () => {
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'orga1', user: user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   const laptopModel = {
     name: 'Laptop',
     version: '1.0.0',
-    ownedByOrganizationId: organization.id,
-    createdByUserId: user.id,
+    ownedByOrganizationId: organizationId,
+    createdByUserId: userId,
     sections: [
       {
         type: SectionType.GROUP,
         name: 'Umwelt',
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
         dataFields: [
           {
             type: 'TextField',
             name: 'Title',
             options: { max: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
           {
             type: 'TextField',
             name: 'Title 2',
             options: { min: 2 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
         ],
+        subSections: [],
       },
       {
+        id: 'm1',
         name: 'Material',
         type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
         dataFields: [
           {
             type: 'TextField',
             name: 'rep field 1',
             options: {},
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
           {
             type: 'TextField',
             name: 'rep field 2',
             options: {},
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
         ],
+        subSections: ['m1.1'],
+      },
+      {
+        id: 'm1.1',
+        parentId: 'm1',
+        name: 'Measurement',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 4 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
+        dataFields: [
+          {
+            type: 'TextField',
+            name: 'rep field 1',
+            options: {},
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
+          },
+          {
+            type: 'TextField',
+            name: 'rep field 2',
+            options: {},
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
+          },
+        ],
+        subSections: [],
       },
     ],
   };
@@ -70,8 +148,8 @@ describe('ProductDataModelDraft', () => {
   it('is renamed', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'My Draft',
-      user,
-      organization,
+      userId,
+      organizationId,
     });
     productDataModelDraft.rename('Final Draft');
     expect(productDataModelDraft.name).toEqual('Final Draft');
@@ -79,54 +157,137 @@ describe('ProductDataModelDraft', () => {
 
   it('is published', () => {
     const productDataModelDraft = ProductDataModelDraft.fromPlain(laptopModel);
-    const otherUser = new User(randomUUID(), 'test@example.com');
+    const otherUserId = randomUUID();
     const publishedProductDataModel = productDataModelDraft.publish(
-      otherUser,
+      otherUserId,
       VisibilityLevel.PUBLIC,
     );
+
     const expected = {
       name: productDataModelDraft.name,
       id: expect.any(String),
       version: '1.0.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: otherUser.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: otherUserId,
       visibility: VisibilityLevel.PUBLIC,
       sections: [
         {
-          id: expect.any(String),
+          parentId: undefined,
+          subSections: [],
+          id: productDataModelDraft.sections[0].id,
           type: SectionType.GROUP,
           name: 'Umwelt',
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
           dataFields: [
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[0].dataFields[0].id,
               type: 'TextField',
               name: 'Title',
               options: { max: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[0].dataFields[1].id,
               type: 'TextField',
               name: 'Title 2',
               options: { min: 2 },
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
           ],
         },
         {
+          parentId: undefined,
+          subSections: [productDataModelDraft.sections[2].id],
           name: 'Material',
-          id: expect.any(String),
+          id: productDataModelDraft.sections[1].id,
           type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 2 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
           dataFields: [
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[1].dataFields[0].id,
               type: 'TextField',
               name: 'rep field 1',
               options: {},
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
             {
-              id: expect.any(String),
+              id: productDataModelDraft.sections[1].dataFields[1].id,
               type: 'TextField',
               name: 'rep field 2',
               options: {},
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
+            },
+          ],
+        },
+        {
+          parentId: productDataModelDraft.sections[1].id,
+          subSections: [],
+          name: 'Measurement',
+          id: productDataModelDraft.sections[2].id,
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 4 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
+          dataFields: [
+            {
+              id: productDataModelDraft.sections[2].dataFields[0].id,
+              type: 'TextField',
+              name: 'rep field 1',
+              options: {},
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
+            },
+            {
+              id: productDataModelDraft.sections[2].dataFields[1].id,
+              type: 'TextField',
+              name: 'rep field 2',
+              options: {},
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
           ],
         },
@@ -141,7 +302,7 @@ describe('ProductDataModelDraft', () => {
       },
     ]);
     const againPublished = productDataModelDraft.publish(
-      otherUser,
+      otherUserId,
       VisibilityLevel.PRIVATE,
     );
     expect(againPublished.version).toEqual('2.0.0');
@@ -155,37 +316,55 @@ describe('ProductDataModelDraft', () => {
         version: '2.0.0',
       },
     ]);
+    const parentSection = publishedProductDataModel.sections.find(
+      (s) => s.name === 'Material',
+    );
+    const childSection = publishedProductDataModel.sections.find(
+      (s) => s.name === 'Measurement',
+    );
+    expect(parentSection.subSections).toEqual([childSection.id]);
+    expect(childSection.parentId).toEqual(parentSection.id);
   });
 
   it('should be created', () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'orga1', user: user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Handy',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     expect(productDataModelDraft.id).toBeDefined();
     expect(productDataModelDraft.version).toEqual('1.0.0');
     expect(productDataModelDraft.sections).toEqual([]);
-    expect(productDataModelDraft.isOwnedBy(organization)).toBeTruthy();
-    expect(productDataModelDraft.createdByUserId).toEqual(user.id);
+    expect(productDataModelDraft.isOwnedBy(organizationId)).toBeTruthy();
+    expect(productDataModelDraft.createdByUserId).toEqual(userId);
     expect(productDataModelDraft.publications).toEqual([]);
+  });
+
+  const layout = Layout.create({
+    cols: { sm: 2 },
+    colStart: { sm: 1 },
+    colSpan: { sm: 1 },
+    rowSpan: { sm: 1 },
+    rowStart: { sm: 1 },
   });
 
   it('should add sections', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
+      layout,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSection(section2);
@@ -193,60 +372,181 @@ describe('ProductDataModelDraft', () => {
     expect(productDataModelDraft.sections).toEqual([section1, section2]);
   });
 
+  it('should fail to add repeater section with parent', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organizationId,
+      userId,
+    });
+    const section1 = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+    });
+    const section2 = DataSectionDraft.create({
+      name: 'Material',
+      type: SectionType.REPEATABLE,
+      layout,
+    });
+    section2.assignParent(section1);
+    productDataModelDraft.addSection(section1);
+    expect(() => productDataModelDraft.addSection(section2)).toThrow(
+      new ValueError('Repeater section can only be added as root section'),
+    );
+  });
+
+  it('should add subSection', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organizationId,
+      userId,
+    });
+    const section1 = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+    });
+    const section2 = DataSectionDraft.create({
+      name: 'Material',
+      type: SectionType.REPEATABLE,
+      layout,
+    });
+    productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, section2);
+
+    expect(productDataModelDraft.toPlain().sections).toEqual([
+      { ...section1.toPlain(), subSections: [section2.id] },
+      { ...section2.toPlain(), parentId: section1.id },
+    ]);
+  });
+
+  it('should fail to add subSection if parent id not found', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organizationId,
+      userId,
+    });
+    const section1 = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+    });
+
+    expect(() =>
+      productDataModelDraft.addSubSection('some id', section1),
+    ).toThrow(new NotFoundError(DataSectionDraft.name, 'some id'));
+  });
+
   it('should modify section', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section);
-    productDataModelDraft.modifySection(section.id, { name: 'Tracebility' });
+    const newLayout = {
+      cols: { sm: 2 },
+      colStart: { sm: 1 },
+      colSpan: { sm: 1 },
+      rowSpan: { sm: 1 },
+      rowStart: { sm: 1 },
+    };
+    productDataModelDraft.modifySection(section.id, {
+      name: 'Tracebility',
+      layout: newLayout,
+    });
 
     expect(productDataModelDraft.toPlain().sections).toEqual([
-      { ...section.toPlain(), name: 'Tracebility' },
+      { ...section.toPlain(), name: 'Tracebility', layout: newLayout },
     ]);
   });
 
   it('should delete a section', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
+    });
+    const section11 = DataSectionDraft.create({
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      layout,
+    });
+    const section12 = DataSectionDraft.create({
+      name: 'section12',
+      type: SectionType.GROUP,
+      layout,
+    });
+    const section111 = DataSectionDraft.create({
+      name: 'Measurement',
+      type: SectionType.GROUP,
+      layout,
+    });
+    const section112 = DataSectionDraft.create({
+      name: 'Measurement 2',
+      type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
-      name: 'Technical specification',
+      name: 'section2',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, section11);
+    productDataModelDraft.addSubSection(section1.id, section12);
+    productDataModelDraft.addSubSection(section11.id, section111);
+    productDataModelDraft.addSubSection(section11.id, section112);
+
     productDataModelDraft.addSection(section2);
 
+    productDataModelDraft.deleteSection(section11.id);
+    expect(section1.subSections).toEqual([section12.id]);
     productDataModelDraft.deleteSection(section1.id);
 
-    expect(productDataModelDraft.sections).toEqual([section2]);
+    expect(productDataModelDraft.toPlain().sections).toEqual([
+      {
+        dataFields: [],
+        id: section2.id,
+        name: 'section2',
+        subSections: [],
+        type: 'Group',
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
+      },
+    ]);
   });
 
   it('should fail to delete a section if it could not be found', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section);
 
     expect(() => productDataModelDraft.deleteSection('unknown-id')).toThrow(
-      new NotFoundError(DataSectionDraft.name, 'unknown-id'),
+      new ValueError('Could not found and delete section with id unknown-id'),
     );
   });
 
@@ -255,8 +555,8 @@ describe('ProductDataModelDraft', () => {
       id: 'product-1',
       name: 'Laptop',
       version: '1.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           id: 'section-1',
@@ -275,10 +575,12 @@ describe('ProductDataModelDraft', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
 
     productDataModelDraft.addDataFieldToSection('section-1', dataField1);
@@ -298,8 +600,8 @@ describe('ProductDataModelDraft', () => {
       id: 'product-1',
       name: 'Laptop',
       version: '1.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           id: 'section-1',
@@ -318,10 +620,12 @@ describe('ProductDataModelDraft', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
 
     productDataModelDraft.addDataFieldToSection('section-1', dataField1);
@@ -340,17 +644,19 @@ describe('ProductDataModelDraft', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const productDataModelDraft = ProductDataModelDraft.fromPlain({
       id: 'product-1',
       name: 'Laptop',
       version: '1.0',
-      ownedByOrganizationId: organization.id,
-      createdByUserId: user.id,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           id: 'section-1',

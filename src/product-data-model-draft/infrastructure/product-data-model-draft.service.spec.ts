@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { SectionType } from '../../product-data-model/domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
-import { MongooseModule, getConnectionToken } from '@nestjs/mongoose';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ProductDataModelDraftService } from './product-data-model-draft.service';
 import {
@@ -10,12 +10,11 @@ import {
   ProductDataModelDraftSchema,
 } from './product-data-model-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { Organization } from '../../organizations/domain/organization';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
-import { User } from '../../users/domain/user';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { Layout } from '../../data-modelling/domain/layout';
 
 describe('ProductDataModelDraftMongoService', () => {
   let service: ProductDataModelDraftService;
@@ -45,18 +44,94 @@ describe('ProductDataModelDraftMongoService', () => {
     version: 'v2',
     sections: [
       {
+        id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 7 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             name: 'Serial number',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
             name: 'Processor',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
+        parentId: undefined,
+        subSections: ['s1.1', 's1.2'],
+      },
+      {
+        parentId: 's1',
+        id: 's1.1',
+        name: 'CO2',
+        type: SectionType.GROUP,
+        subSections: ['s1.1.1'],
+        dataFields: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+      },
+      {
+        parentId: 's1.1',
+        id: 's1.1.1',
+        name: 'CO2 Scope 1',
+        type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            name: 'Emissions',
+            type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+          },
+        ],
+      },
+      {
+        parentId: 's1',
+        id: 's1.2',
+        name: 'Electricity',
+        type: SectionType.GROUP,
+        dataFields: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
       },
     ],
     publications: [
@@ -87,28 +162,43 @@ describe('ProductDataModelDraftMongoService', () => {
       new NotFoundInDatabaseException(ProductDataModelDraft.name),
     );
   });
-
+  const layout = Layout.create({
+    cols: { sm: 3 },
+    colStart: { sm: 1 },
+    colSpan: { sm: 7 },
+    rowStart: { sm: 1 },
+    rowSpan: { sm: 1 },
+  });
   it('should delete section on product data model draft', async () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section1 = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
+      layout,
+    });
+    const section11 = DataSectionDraft.create({
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, section11);
     productDataModelDraft.addSection(section2);
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     productDataModelDraft.addDataFieldToSection(section1.id, dataField);
 
@@ -120,26 +210,29 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should delete data fields of product data model draft', async () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
 
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'draft',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const section = DataSectionDraft.create({
       name: 'Tech specs',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
 
     productDataModelDraft.addDataFieldToSection(section.id, dataField1);
@@ -152,35 +245,32 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should return all product data model drafts by organization', async () => {
-    const user = new User(randomUUID(), 'test@example.com');
+    const userId = randomUUID();
 
-    const organization = Organization.create({ name: 'My orga', user: user });
+    const organizationId = randomUUID();
 
     const laptopDraft = ProductDataModelDraft.create({
       name: 'laptop',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     const phoneDraft = ProductDataModelDraft.create({
       name: 'phone',
-      organization,
-      user,
+      organizationId,
+      userId,
     });
     await service.save(laptopDraft);
     await service.save(phoneDraft);
-    const otherOrganization = Organization.create({
-      name: 'My orga',
-      user: user,
-    });
+    const otherOrganizationId = randomUUID();
 
     await service.save(
       ProductDataModelDraft.create({
         name: 'other draft',
-        organization: otherOrganization,
-        user,
+        organizationId: otherOrganizationId,
+        userId,
       }),
     );
-    const foundAll = await service.findAllByOrganization(organization.id);
+    const foundAll = await service.findAllByOrganization(organizationId);
     expect(foundAll).toEqual([
       { id: laptopDraft.id, name: laptopDraft.name },
       { id: phoneDraft.id, name: phoneDraft.name },
