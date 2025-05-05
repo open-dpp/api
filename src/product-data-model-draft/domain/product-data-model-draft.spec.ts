@@ -372,6 +372,29 @@ describe('ProductDataModelDraft', () => {
     expect(productDataModelDraft.sections).toEqual([section1, section2]);
   });
 
+  it('should fail to add repeater section with parent', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organizationId,
+      userId,
+    });
+    const section1 = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+    });
+    const section2 = DataSectionDraft.create({
+      name: 'Material',
+      type: SectionType.REPEATABLE,
+      layout,
+    });
+    section2.assignParent(section1);
+    productDataModelDraft.addSection(section1);
+    expect(() => productDataModelDraft.addSection(section2)).toThrow(
+      new ValueError('Repeater section can only be added as root section'),
+    );
+  });
+
   it('should add subSection', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',

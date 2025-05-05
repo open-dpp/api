@@ -15,6 +15,7 @@ import {
 import { omit } from 'lodash';
 import * as semver from 'semver';
 import { LayoutProps } from '../../data-modelling/domain/layout';
+import { SectionType } from '../../data-modelling/domain/section-base';
 
 export type Publication = {
   id: string;
@@ -160,6 +161,11 @@ export class ProductDataModelDraft {
   }
 
   addSection(section: DataSectionDraft) {
+    if (section.parentId && section.type === SectionType.REPEATABLE) {
+      throw new ValueError(
+        `Repeater section can only be added as root section`,
+      );
+    }
     this.sections.push(section);
   }
 
