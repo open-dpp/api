@@ -6,7 +6,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UpdateDataFieldRefDto } from './node.dto';
+import { LayoutDto } from './layout.dto';
 
 export class UpdateDataFieldDraftDto {
   @IsString()
@@ -15,7 +15,7 @@ export class UpdateDataFieldDraftDto {
   @IsObject()
   @IsOptional()
   options?: Record<string, unknown>;
-  @Type(() => UpdateDataFieldRefDto)
+  @Type(() => LayoutDto)
   @ValidateNested()
-  readonly view: UpdateDataFieldRefDto;
+  readonly layout: LayoutDto;
 }

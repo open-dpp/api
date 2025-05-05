@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { SectionType } from '../../../data-modelling/domain/section-base';
 import { Type } from 'class-transformer';
-import { CreateSectionGridDto } from './node.dto';
+import { SectionLayout } from './layout.dto';
 
 export class CreateSectionDraftDto {
   @IsString()
@@ -18,7 +18,7 @@ export class CreateSectionDraftDto {
   @IsString()
   @IsOptional()
   readonly parentSectionId?: string;
-  @Type(() => CreateSectionGridDto)
+  @Type(() => SectionLayout)
   @ValidateNested()
-  readonly view: CreateSectionGridDto;
+  readonly layout: SectionLayout;
 }

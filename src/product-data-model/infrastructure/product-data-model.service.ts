@@ -7,7 +7,10 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { Organization } from '../../organizations/domain/organization';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ProductDataModelDoc } from './product-data-model.schema';
+import {
+  ProductDataModelDoc,
+  ProductDataModelDocSchemaVersion,
+} from './product-data-model.schema';
 
 @Injectable()
 export class ProductDataModelService {
@@ -17,14 +20,15 @@ export class ProductDataModelService {
   ) {}
 
   convertToDomain(productDataModelDoc: ProductDataModelDoc) {
+    const plain = productDataModelDoc.toObject();
     return ProductDataModel.fromPlain({
-      id: productDataModelDoc._id,
-      name: productDataModelDoc.name,
-      version: productDataModelDoc.version,
-      createdByUserId: productDataModelDoc.createdByUserId,
-      ownedByOrganizationId: productDataModelDoc.ownedByOrganizationId,
-      visibility: productDataModelDoc.visibility,
-      sections: productDataModelDoc.sections.map((s) => ({
+      id: plain._id,
+      name: plain.name,
+      version: plain.version,
+      createdByUserId: plain.createdByUserId,
+      ownedByOrganizationId: plain.ownedByOrganizationId,
+      visibility: plain.visibility,
+      sections: plain.sections.map((s) => ({
         id: s._id,
         name: s.name,
         type: s.type,
@@ -33,7 +37,9 @@ export class ProductDataModelService {
           type: f.type,
           name: f.name,
           options: f.options,
+          layout: f.layout,
         })),
+        layout: s.layout,
         subSections: s.subSections,
         parentId: s.parentId,
       })),
@@ -47,6 +53,7 @@ export class ProductDataModelService {
         name: productDataModel.name,
         version: productDataModel.version,
         visibility: productDataModel.visibility,
+        _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
         sections: productDataModel.sections.map((s) => ({
           _id: s.id,
           name: s.name,
@@ -56,7 +63,9 @@ export class ProductDataModelService {
             name: d.name,
             type: d.type,
             options: d.options,
+            layout: d.layout,
           })),
+          layout: s.layout,
           subSections: s.subSections,
           parentId: s.parentId,
         })),

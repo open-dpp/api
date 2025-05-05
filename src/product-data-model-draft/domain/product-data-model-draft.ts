@@ -14,6 +14,7 @@ import {
 } from '../../product-data-model/domain/product.data.model';
 import { omit } from 'lodash';
 import * as semver from 'semver';
+import { LayoutProps } from '../../data-modelling/domain/layout';
 
 export type Publication = {
   id: string;
@@ -105,16 +106,25 @@ export class ProductDataModelDraft {
     this._sections = this.sections.filter((s) => s.id !== section.id);
   }
 
-  modifySection(sectionId: string, data: { name?: string }) {
+  modifySection(
+    sectionId: string,
+    data: { name?: string; layout: Partial<LayoutProps> },
+  ) {
+    const section = this.findSectionOrFail(sectionId);
     if (data.name) {
-      this.findSectionOrFail(sectionId).rename(data.name);
+      section.rename(data.name);
     }
+    section.layout.modify(data.layout);
   }
 
   modifyDataField(
     sectionId: string,
     dataFieldId: string,
-    data: { name?: string; options?: Record<string, unknown> },
+    data: {
+      name?: string;
+      options?: Record<string, unknown>;
+      layout: Partial<LayoutProps>;
+    },
   ) {
     this.findSectionOrFail(sectionId).modifyDataField(dataFieldId, data);
   }

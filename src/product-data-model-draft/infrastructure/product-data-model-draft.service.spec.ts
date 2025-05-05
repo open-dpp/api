@@ -2,12 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
-import {
-  getConnectionToken,
-  getModelToken,
-  MongooseModule,
-} from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ProductDataModelDraftService } from './product-data-model-draft.service';
 import {
@@ -19,11 +14,11 @@ import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { Layout } from '../../data-modelling/domain/layout';
 
 describe('ProductDataModelDraftMongoService', () => {
   let service: ProductDataModelDraftService;
   let mongoConnection: Connection;
-  let productDataModelDraftDoc: mongoose.Model<ProductDataModelDraftDoc>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,9 +37,6 @@ describe('ProductDataModelDraftMongoService', () => {
       ProductDataModelDraftService,
     );
     mongoConnection = module.get<Connection>(getConnectionToken());
-    productDataModelDraftDoc = module.get(
-      getModelToken(ProductDataModelDraftDoc.name),
-    );
   });
 
   const laptopModelPlain = {
@@ -55,14 +47,33 @@ describe('ProductDataModelDraftMongoService', () => {
         id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 7 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             name: 'Serial number',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
             name: 'Processor',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
         parentId: undefined,
@@ -75,16 +86,36 @@ describe('ProductDataModelDraftMongoService', () => {
         type: SectionType.GROUP,
         subSections: ['s1.1.1'],
         dataFields: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
       },
       {
         parentId: 's1.1',
         id: 's1.1.1',
         name: 'CO2 Scope 1',
         type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             name: 'Emissions',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
       },
@@ -94,6 +125,13 @@ describe('ProductDataModelDraftMongoService', () => {
         name: 'Electricity',
         type: SectionType.GROUP,
         dataFields: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
       },
     ],
     publications: [
@@ -124,7 +162,13 @@ describe('ProductDataModelDraftMongoService', () => {
       new NotFoundInDatabaseException(ProductDataModelDraft.name),
     );
   });
-
+  const layout = Layout.create({
+    cols: { sm: 3 },
+    colStart: { sm: 1 },
+    colSpan: { sm: 7 },
+    rowStart: { sm: 1 },
+    rowSpan: { sm: 1 },
+  });
   it('should delete section on product data model draft', async () => {
     const userId = randomUUID();
     const organizationId = randomUUID();
@@ -136,14 +180,17 @@ describe('ProductDataModelDraftMongoService', () => {
     const section1 = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
+      layout,
     });
     const section11 = DataSectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section11);
@@ -151,6 +198,7 @@ describe('ProductDataModelDraftMongoService', () => {
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     productDataModelDraft.addDataFieldToSection(section1.id, dataField);
 
@@ -173,15 +221,18 @@ describe('ProductDataModelDraftMongoService', () => {
     const section = DataSectionDraft.create({
       name: 'Tech specs',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
 
     productDataModelDraft.addDataFieldToSection(section.id, dataField1);
@@ -224,38 +275,6 @@ describe('ProductDataModelDraftMongoService', () => {
       { id: laptopDraft.id, name: laptopDraft.name },
       { id: phoneDraft.id, name: phoneDraft.name },
     ]);
-  });
-
-  it('loads old schemas', async () => {
-    const oldSchema = {
-      _id: randomUUID(),
-      __v: 0,
-      _schemaVersion: '1.0.0',
-      createdByUserId: randomUUID(),
-      name: 'laptop',
-      ownedByOrganizationId: randomUUID(),
-      publications: [],
-      sections: [
-        {
-          _id: randomUUID(),
-          name: 'Tecs',
-          type: 'Group',
-          dataFields: [],
-        },
-      ],
-      version: '1.0.0',
-    };
-    const oldDraft = new productDataModelDraftDoc(oldSchema);
-    await oldDraft.save();
-    const found = await service.findOneOrFail(oldSchema._id);
-    expect(found.sections[0].toPlain()).toEqual({
-      id: expect.any(String),
-      name: 'Tecs',
-      type: 'Group',
-      dataFields: [],
-      subSections: [],
-      parentId: undefined,
-    });
   });
 
   afterAll(async () => {

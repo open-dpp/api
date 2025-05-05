@@ -1,5 +1,6 @@
-import { Expose, instanceToPlain } from 'class-transformer';
+import { Expose, instanceToPlain, Type } from 'class-transformer';
 import { randomUUID } from 'crypto';
+import { Layout } from './layout';
 
 export enum DataFieldType {
   TEXT_FIELD = 'TextField',
@@ -14,6 +15,9 @@ export abstract class DataFieldBase {
   readonly type: DataFieldType;
   @Expose()
   readonly options: Record<string, unknown> = {};
+  @Expose()
+  @Type(() => Layout)
+  readonly layout: Layout;
 
   get name() {
     return this._name;

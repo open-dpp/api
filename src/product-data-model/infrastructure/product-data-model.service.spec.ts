@@ -51,14 +51,33 @@ describe('ProductDataModelService', () => {
         id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 7 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             name: 'Serial number',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
             name: 'Processor',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
         subSections: ['s1.1'],
@@ -68,10 +87,23 @@ describe('ProductDataModelService', () => {
         parentId: 's1',
         name: 'CO2',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             name: 'Consumption',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
         subSections: [],

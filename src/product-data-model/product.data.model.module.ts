@@ -9,8 +9,6 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from './infrastructure/product-data-model.schema';
-import { getViewSchema, ViewDoc } from '../view/infrastructure/view.schema';
-import { ViewService } from '../view/infrastructure/view.service';
 
 @Module({
   imports: [
@@ -20,21 +18,11 @@ import { ViewService } from '../view/infrastructure/view.service';
         schema: ProductDataModelSchema,
       },
     ]),
-    MongooseModule.forFeatureAsync([
-      {
-        name: ViewDoc.name,
-        useFactory: () => getViewSchema(),
-      },
-    ]),
     OrganizationsModule,
     UsersModule,
   ],
   controllers: [ProductDataModelController],
-  providers: [
-    ProductDataModelService,
-    ProductDataModelImportService,
-    ViewService,
-  ],
+  providers: [ProductDataModelService, ProductDataModelImportService],
   exports: [ProductDataModelService],
 })
 export class ProductDataModelModule {}

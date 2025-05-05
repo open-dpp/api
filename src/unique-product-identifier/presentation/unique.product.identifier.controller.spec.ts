@@ -116,11 +116,13 @@ describe('ModelsController', () => {
 
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
+  const sectionId3 = randomUUID();
 
   const dataFieldId1 = randomUUID();
   const dataFieldId2 = randomUUID();
   const dataFieldId3 = randomUUID();
   const dataFieldId4 = randomUUID();
+  const dataFieldId5 = randomUUID();
 
   const laptopModel = {
     name: 'Laptop',
@@ -128,39 +130,107 @@ describe('ModelsController', () => {
     sections: [
       {
         id: sectionId1,
-        name: 'Group Section',
-        type: SectionType.GROUP,
+        name: 'Repeating Section',
+        type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        subSections: [sectionId2],
         dataFields: [
           {
             id: dataFieldId1,
             type: 'TextField',
             name: 'Title 1',
             options: { min: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
             id: dataFieldId2,
             type: 'TextField',
             name: 'Title 2',
             options: { min: 7 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
       },
       {
+        parentId: sectionId1,
         id: sectionId2,
-        name: 'Repeating Section',
-        type: SectionType.REPEATABLE,
+        name: 'Group Section',
+        type: SectionType.GROUP,
+        subSections: [],
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             id: dataFieldId3,
             type: 'TextField',
             name: 'Title 3',
             options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
             id: dataFieldId4,
             type: 'TextField',
             name: 'Title 4',
             options: { min: 8 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+          },
+        ],
+      },
+      {
+        id: sectionId3,
+        name: 'Group Section 2',
+        type: SectionType.GROUP,
+        subSections: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId5,
+            type: 'TextField',
+            name: 'Title sg21',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
       },
@@ -186,13 +256,15 @@ describe('ModelsController', () => {
           id: randomUUID(),
           dataFieldId: dataFieldId1,
           dataSectionId: sectionId1,
-          value: 'val1',
+          value: 'val1,0',
+          row: 0,
         }),
         DataValue.fromPlain({
           id: randomUUID(),
           dataFieldId: dataFieldId2,
           dataSectionId: sectionId1,
-          value: 'val2',
+          value: 'val2,0',
+          row: 0,
         }),
         DataValue.fromPlain({
           id: randomUUID(),
@@ -210,6 +282,20 @@ describe('ModelsController', () => {
         }),
         DataValue.fromPlain({
           id: randomUUID(),
+          dataFieldId: dataFieldId1,
+          dataSectionId: sectionId1,
+          value: 'val1,1',
+          row: 1,
+        }),
+        DataValue.fromPlain({
+          id: randomUUID(),
+          dataFieldId: dataFieldId2,
+          dataSectionId: sectionId1,
+          value: 'val2,1',
+          row: 1,
+        }),
+        DataValue.fromPlain({
+          id: randomUUID(),
           dataFieldId: dataFieldId3,
           dataSectionId: sectionId2,
           value: 'val3,1',
@@ -222,6 +308,13 @@ describe('ModelsController', () => {
           value: 'val4,1',
           row: 1,
         }),
+        DataValue.fromPlain({
+          id: randomUUID(),
+          dataFieldId: dataFieldId5,
+          dataSectionId: sectionId3,
+          value: 'val5,0',
+          row: 0,
+        }),
       ],
     });
     const { uuid } = model.createUniqueProductIdentifier();
@@ -233,32 +326,167 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       name: model.name,
-      sections: [
+      description: model.description,
+      nodes: [
         {
-          name: 'Group Section',
+          name: 'Repeating Section',
           rows: [
             {
-              fields: [
-                { type: 'TextField', value: 'val1', name: 'Title 1' },
-                { type: 'TextField', value: 'val2', name: 'Title 2' },
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val1,0',
+                  name: 'Title 1',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val2,0',
+                  name: 'Title 2',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  name: 'Group Section',
+                  layout: {
+                    cols: { sm: 3 },
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                  children: [
+                    {
+                      type: 'TextField',
+                      value: 'val3,0',
+                      name: 'Title 3',
+                      layout: {
+                        colStart: { sm: 1 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                    {
+                      type: 'TextField',
+                      value: 'val4,0',
+                      name: 'Title 4',
+                      layout: {
+                        colStart: { sm: 2 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val1,1',
+                  name: 'Title 1',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val2,1',
+                  name: 'Title 2',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  name: 'Group Section',
+                  layout: {
+                    cols: { sm: 3 },
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                  children: [
+                    {
+                      type: 'TextField',
+                      value: 'val3,1',
+                      name: 'Title 3',
+                      layout: {
+                        colStart: { sm: 1 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                    {
+                      type: 'TextField',
+                      value: 'val4,1',
+                      name: 'Title 4',
+                      layout: {
+                        colStart: { sm: 2 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                  ],
+                },
               ],
             },
           ],
         },
         {
-          name: 'Repeating Section',
-          rows: [
+          name: 'Group Section 2',
+          layout: {
+            cols: { sm: 2 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          children: [
             {
-              fields: [
-                { type: 'TextField', value: 'val3,0', name: 'Title 3' },
-                { type: 'TextField', value: 'val4,0', name: 'Title 4' },
-              ],
-            },
-            {
-              fields: [
-                { type: 'TextField', value: 'val3,1', name: 'Title 3' },
-                { type: 'TextField', value: 'val4,1', name: 'Title 4' },
-              ],
+              type: 'TextField',
+              value: 'val5,0',
+              name: 'Title sg21',
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
             },
           ],
         },

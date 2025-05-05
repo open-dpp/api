@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { DataFieldType } from '../domain/data-field-base';
 import { SectionType } from '../domain/section-base';
+import { LayoutDoc, LayoutSchema } from './layout.schema';
 
 @Schema()
 class DataFieldDoc {
@@ -13,6 +14,8 @@ class DataFieldDoc {
   type: DataFieldType;
   @Prop({ required: true, type: MongooseSchema.Types.Mixed }) // Accepts any JSON object
   options: Record<string, unknown>;
+  @Prop({ required: true, type: LayoutSchema })
+  layout: LayoutDoc;
 }
 const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
 
@@ -34,6 +37,8 @@ class SectionDoc {
 
   @Prop({ default: [] })
   subSections: string[];
+  @Prop({ required: true, type: LayoutSchema })
+  layout: LayoutDoc[];
 }
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 

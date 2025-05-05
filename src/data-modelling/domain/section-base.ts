@@ -1,5 +1,6 @@
-import { Expose, instanceToPlain } from 'class-transformer';
+import { Expose, instanceToPlain, Type } from 'class-transformer';
 import { randomUUID } from 'crypto';
+import { Layout } from './layout';
 
 export enum SectionType {
   GROUP = 'Group',
@@ -13,6 +14,10 @@ export abstract class DataSectionBase {
   protected _name: string;
   @Expose()
   readonly type: SectionType;
+
+  @Expose()
+  @Type(() => Layout)
+  readonly layout: Layout;
 
   @Expose({ name: 'subSections' })
   protected _subSections: string[] = [];

@@ -10,8 +10,7 @@ export class ResponsiveConfigDto {
   @IsInt()
   @Min(0)
   @Max(12)
-  @IsOptional()
-  sm?: number;
+  sm: number;
   @IsInt()
   @Min(0)
   @Max(12)
@@ -29,7 +28,7 @@ export class ResponsiveConfigDto {
   xl?: number;
 }
 
-export class NodeDto {
+export class LayoutDto {
   @ValidateNested()
   @Type(() => ResponsiveConfigDto)
   colStart: ResponsiveConfigDto;
@@ -38,26 +37,14 @@ export class NodeDto {
   colSpan: ResponsiveConfigDto;
   @ValidateNested()
   @Type(() => ResponsiveConfigDto)
-  @IsOptional()
-  rowStart?: ResponsiveConfigDto;
+  rowStart: ResponsiveConfigDto;
   @ValidateNested()
   @Type(() => ResponsiveConfigDto)
-  @IsOptional()
-  rowSpan?: ResponsiveConfigDto;
+  rowSpan: ResponsiveConfigDto;
 }
 
-export class CreateSectionGridDto extends NodeDto {
-  @ValidateNested()
-  @Type(() => ResponsiveConfigDto)
-  cols: ResponsiveConfigDto;
-}
-
-export class CreateDataFieldRefDto extends NodeDto {}
-
-export class UpdateSectionGridDto extends NodeDto {
+export class SectionLayout extends LayoutDto {
   @ValidateNested()
   @Type(() => ResponsiveConfigDto)
   cols: ResponsiveConfigDto;
 }
-
-export class UpdateDataFieldRefDto extends NodeDto {}

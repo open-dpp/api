@@ -6,13 +6,14 @@ import {
 } from '../../data-modelling/domain/section-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
+import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 
 export class DataSectionDraft extends DataSectionBase {
   @Expose()
   @Type(() => DataFieldDraft)
   readonly dataFields: DataFieldDraft[];
 
-  static create(plain: { name: string; type: SectionType }) {
+  static create(plain: { name: string; type: SectionType; layout: Layout }) {
     return plainToInstance(
       DataSectionDraft,
       { ...plain, dataFields: [] },
@@ -57,7 +58,11 @@ export class DataSectionDraft extends DataSectionBase {
 
   modifyDataField(
     dataFieldId: string,
-    data: { name?: string; options?: Record<string, unknown> },
+    data: {
+      name?: string;
+      options?: Record<string, unknown>;
+      layout: Partial<LayoutProps>;
+    },
   ) {
     const found = this.dataFields.find((d) => d.id === dataFieldId);
     if (!found) {
@@ -68,6 +73,9 @@ export class DataSectionDraft extends DataSectionBase {
     }
     if (data.options) {
       found.mergeOptions(data.options);
+    }
+    if (data.layout) {
+      found.layout.modify(data.layout);
     }
   }
 

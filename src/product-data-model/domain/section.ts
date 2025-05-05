@@ -84,3 +84,13 @@ export const sectionSubTypes = [
   { value: RepeaterSection, name: SectionType.REPEATABLE },
   { value: GroupSection, name: SectionType.GROUP },
 ];
+
+export function isGroupSection(section: DataSection): section is GroupSection {
+  return section.type === SectionType.GROUP;
+}
+
+export function isRepeaterSection(
+  section: DataSection,
+): section is RepeaterSection {
+  return section.type === SectionType.REPEATABLE;
+}

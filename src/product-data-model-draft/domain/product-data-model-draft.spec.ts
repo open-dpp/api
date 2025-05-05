@@ -6,6 +6,7 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { randomUUID } from 'crypto';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
+import { Layout } from '../../data-modelling/domain/layout';
 
 describe('ProductDataModelDraft', () => {
   const userId = randomUUID();
@@ -19,16 +20,35 @@ describe('ProductDataModelDraft', () => {
       {
         type: SectionType.GROUP,
         name: 'Umwelt',
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
         dataFields: [
           {
             type: 'TextField',
             name: 'Title',
             options: { max: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
           {
             type: 'TextField',
             name: 'Title 2',
             options: { min: 2 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
         ],
         subSections: [],
@@ -37,16 +57,35 @@ describe('ProductDataModelDraft', () => {
         id: 'm1',
         name: 'Material',
         type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
         dataFields: [
           {
             type: 'TextField',
             name: 'rep field 1',
             options: {},
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
           {
             type: 'TextField',
             name: 'rep field 2',
             options: {},
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
         ],
         subSections: ['m1.1'],
@@ -56,16 +95,35 @@ describe('ProductDataModelDraft', () => {
         parentId: 'm1',
         name: 'Measurement',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 4 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
         dataFields: [
           {
             type: 'TextField',
             name: 'rep field 1',
             options: {},
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
           {
             type: 'TextField',
             name: 'rep field 2',
             options: {},
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+            },
           },
         ],
         subSections: [],
@@ -119,18 +177,37 @@ describe('ProductDataModelDraft', () => {
           id: productDataModelDraft.sections[0].id,
           type: SectionType.GROUP,
           name: 'Umwelt',
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
           dataFields: [
             {
               id: productDataModelDraft.sections[0].dataFields[0].id,
               type: 'TextField',
               name: 'Title',
               options: { max: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
             {
               id: productDataModelDraft.sections[0].dataFields[1].id,
               type: 'TextField',
               name: 'Title 2',
               options: { min: 2 },
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
           ],
         },
@@ -140,18 +217,37 @@ describe('ProductDataModelDraft', () => {
           name: 'Material',
           id: productDataModelDraft.sections[1].id,
           type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 2 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
           dataFields: [
             {
               id: productDataModelDraft.sections[1].dataFields[0].id,
               type: 'TextField',
               name: 'rep field 1',
               options: {},
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
             {
               id: productDataModelDraft.sections[1].dataFields[1].id,
               type: 'TextField',
               name: 'rep field 2',
               options: {},
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
           ],
         },
@@ -161,18 +257,37 @@ describe('ProductDataModelDraft', () => {
           name: 'Measurement',
           id: productDataModelDraft.sections[2].id,
           type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 4 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
           dataFields: [
             {
               id: productDataModelDraft.sections[2].dataFields[0].id,
               type: 'TextField',
               name: 'rep field 1',
               options: {},
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
             {
               id: productDataModelDraft.sections[2].dataFields[1].id,
               type: 'TextField',
               name: 'rep field 2',
               options: {},
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
             },
           ],
         },
@@ -227,6 +342,14 @@ describe('ProductDataModelDraft', () => {
     expect(productDataModelDraft.publications).toEqual([]);
   });
 
+  const layout = Layout.create({
+    cols: { sm: 2 },
+    colStart: { sm: 1 },
+    colSpan: { sm: 1 },
+    rowSpan: { sm: 1 },
+    rowStart: { sm: 1 },
+  });
+
   it('should add sections', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
@@ -236,10 +359,12 @@ describe('ProductDataModelDraft', () => {
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
+      layout,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSection(section2);
@@ -256,10 +381,12 @@ describe('ProductDataModelDraft', () => {
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
+      layout,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section2);
@@ -279,6 +406,7 @@ describe('ProductDataModelDraft', () => {
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
 
     expect(() =>
@@ -295,12 +423,23 @@ describe('ProductDataModelDraft', () => {
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section);
-    productDataModelDraft.modifySection(section.id, { name: 'Tracebility' });
+    const newLayout = {
+      cols: { sm: 2 },
+      colStart: { sm: 1 },
+      colSpan: { sm: 1 },
+      rowSpan: { sm: 1 },
+      rowStart: { sm: 1 },
+    };
+    productDataModelDraft.modifySection(section.id, {
+      name: 'Tracebility',
+      layout: newLayout,
+    });
 
     expect(productDataModelDraft.toPlain().sections).toEqual([
-      { ...section.toPlain(), name: 'Tracebility' },
+      { ...section.toPlain(), name: 'Tracebility', layout: newLayout },
     ]);
   });
 
@@ -313,26 +452,32 @@ describe('ProductDataModelDraft', () => {
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     const section11 = DataSectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
+      layout,
     });
     const section12 = DataSectionDraft.create({
       name: 'section12',
       type: SectionType.GROUP,
+      layout,
     });
     const section111 = DataSectionDraft.create({
       name: 'Measurement',
       type: SectionType.GROUP,
+      layout,
     });
     const section112 = DataSectionDraft.create({
       name: 'Measurement 2',
       type: SectionType.GROUP,
+      layout,
     });
     const section2 = DataSectionDraft.create({
       name: 'section2',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section11);
@@ -353,6 +498,13 @@ describe('ProductDataModelDraft', () => {
         name: 'section2',
         subSections: [],
         type: 'Group',
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+        },
       },
     ]);
   });
@@ -366,6 +518,7 @@ describe('ProductDataModelDraft', () => {
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout,
     });
     productDataModelDraft.addSection(section);
 
@@ -399,10 +552,12 @@ describe('ProductDataModelDraft', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
 
     productDataModelDraft.addDataFieldToSection('section-1', dataField1);
@@ -442,10 +597,12 @@ describe('ProductDataModelDraft', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
 
     productDataModelDraft.addDataFieldToSection('section-1', dataField1);
@@ -464,10 +621,12 @@ describe('ProductDataModelDraft', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
+      layout,
     });
     const productDataModelDraft = ProductDataModelDraft.fromPlain({
       id: 'product-1',

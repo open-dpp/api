@@ -4,12 +4,14 @@ import {
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
 import { merge } from 'lodash';
+import { Layout } from '../../data-modelling/domain/layout';
 
 export class DataFieldDraft extends DataFieldBase {
   static create(plain: {
     name: string;
     type: DataFieldType;
     options?: Record<string, unknown>;
+    layout: Layout;
   }): DataFieldDraft {
     return plainToInstance(DataFieldDraft, plain, {
       excludeExtraneousValues: true,

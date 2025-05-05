@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { DataFieldType } from '../../../data-modelling/domain/data-field-base';
 import { Type } from 'class-transformer';
-import { CreateDataFieldRefDto } from './node.dto';
+import { LayoutDto } from './layout.dto';
 
 export class CreateDataFieldDraftDto {
   @IsString()
@@ -19,7 +19,7 @@ export class CreateDataFieldDraftDto {
   @IsObject()
   @IsOptional()
   readonly options?: Record<string, unknown>;
-  @Type(() => CreateDataFieldRefDto)
+  @Type(() => LayoutDto)
   @ValidateNested()
-  readonly view: CreateDataFieldRefDto;
+  readonly layout: LayoutDto;
 }

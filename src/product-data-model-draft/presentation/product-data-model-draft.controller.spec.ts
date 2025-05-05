@@ -28,23 +28,14 @@ import {
   ProductDataModelSchema,
 } from '../../product-data-model/infrastructure/product-data-model.schema';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { getViewSchema, ViewDoc } from '../../view/infrastructure/view.schema';
-import { ViewService } from '../../view/infrastructure/view.service';
-import {
-  DataFieldRef,
-  isDataFieldRef,
-  isSectionGrid,
-  SectionGrid,
-} from '../../view/domain/node';
-import { TargetGroup, View } from '../../view/domain/view';
-import { ignoreIds } from '../../../test/utils';
+
+import { Layout } from '../../data-modelling/domain/layout';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
   const authContext = new AuthContext();
   let productDataModelDraftService: ProductDataModelDraftService;
   let productDataModelService: ProductDataModelService;
-  let viewService: ViewService;
   authContext.user = new User(randomUUID(), 'test@test.test');
   const userId = authContext.user.id;
   const organizationId = randomUUID();
@@ -63,12 +54,6 @@ describe('ProductsDataModelDraftController', () => {
           {
             name: ProductDataModelDoc.name,
             schema: ProductDataModelSchema,
-          },
-        ]),
-        MongooseModule.forFeatureAsync([
-          {
-            name: ViewDoc.name,
-            useFactory: () => getViewSchema(),
           },
         ]),
         ProductDataModelDraftModule,
@@ -96,7 +81,6 @@ describe('ProductsDataModelDraftController', () => {
     productDataModelDraftService = moduleRef.get<ProductDataModelDraftService>(
       ProductDataModelDraftService,
     );
-    viewService = moduleRef.get<ViewService>(ViewService);
 
     await app.init();
   });
@@ -118,14 +102,11 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.data.id).toBeDefined();
+    expect(response.body.id).toBeDefined();
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
-    expect(response.body.data).toEqual(found.toPlain());
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    expect(foundView.dataModelId).toEqual(response.body.data.id);
-    expect(response.body.view).toEqual(foundView.toPlain());
+    expect(response.body).toEqual(found.toPlain());
   });
 
   it(`/CREATE product data model draft ${userNotMemberTxt}`, async () => {
@@ -151,11 +132,7 @@ describe('ProductsDataModelDraftController', () => {
       organizationId,
       userId,
     });
-    const view = View.create({
-      targetGroup: TargetGroup.ALL,
-      dataModelId: laptopDraft.id,
-    });
-    await viewService.save(view);
+
     await productDataModelDraftService.save(laptopDraft);
     const body = { name: 'My final laptop draft' };
     const response = await request(app.getHttpServer())
@@ -172,8 +149,7 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    expect(response.body.data).toEqual({ ...laptopDraft.toPlain(), ...body });
-    expect(response.body.view).toEqual(view.toPlain());
+    expect(response.body).toEqual({ ...laptopDraft.toPlain(), ...body });
   });
 
   it(`/PATCH product data model draft ${userNotMemberTxt}`, async () => {
@@ -228,38 +204,19 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
 
-    const view = View.create({
-      targetGroup: TargetGroup.ALL,
-      dataModelId: laptopDraft.id,
-    });
-
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
-
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { xs: 1 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
 
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout: Layout.create({ ...layoutWithoutCols }),
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-
-    const dataFieldRef = DataFieldRef.create({
-      fieldId: dataField.id,
-      ...colStartAndSpan,
-    });
-
-    view.addNode(dataFieldRef, sectionGrid.id);
-
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
     const body = { visibility: VisibilityLevel.PUBLIC };
     const response = await request(app.getHttpServer())
@@ -277,7 +234,7 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(201);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
     expect(foundDraft.publications).toEqual([
       { id: expect.any(String), version: '1.0.0' },
@@ -286,15 +243,6 @@ describe('ProductsDataModelDraftController', () => {
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
-
-    const foundView = await viewService.findOneByDataModelAndTargetGroupOrFail(
-      foundModel.id,
-      TargetGroup.ALL,
-    );
-    expect(foundView.dataModelId).toEqual(foundModel.id);
-    expect(foundView.id).not.toEqual(response.body.view.id);
-
-    expect(response.body.view).toEqual(view);
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {
@@ -390,21 +338,15 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-
-    await viewService.save(
-      View.create({
-        targetGroup: TargetGroup.ALL,
-        dataModelId: laptopDraft.id,
-      }),
-    );
-
     const body = {
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      view: {
-        colStart: { md: 2 },
-        colSpan: { md: 1 },
-        cols: { md: 3 },
+      layout: {
+        colStart: { sm: 2 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 3 },
+        rowSpan: { sm: 3 },
+        cols: { sm: 3 },
       },
     };
     const response = await request(app.getHttpServer())
@@ -421,35 +363,35 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.sections).toEqual([
+    expect(response.body.id).toBeDefined();
+    expect(response.body.sections).toEqual([
       {
         name: 'Technical Specs',
         type: SectionType.GROUP,
         id: expect.any(String),
         dataFields: [],
         subSections: [],
+        layout: {
+          colStart: { sm: 2 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 3 },
+          rowSpan: { sm: 3 },
+          cols: { sm: 3 },
+        },
       },
     ]);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
-    expect(response.body.data).toEqual(foundDraft.toPlain());
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    expect(foundView.nodes).toEqual(
-      ignoreIds([
-        SectionGrid.create({
-          colStart: { md: 2 },
-          colSpan: { md: 1 },
-          cols: { md: 3 },
-          sectionId: foundDraft.sections[0].id,
-        }),
-      ]),
-    );
-    expect(response.body.view).toEqual(foundView.toPlain());
+    expect(response.body).toEqual(foundDraft.toPlain());
   });
 
-  const colStartAndSpan = { colStart: { xs: 2 }, colSpan: { lg: 1, sm: 1 } };
+  const layoutWithoutCols = {
+    colStart: { sm: 2 },
+    colSpan: { lg: 1, sm: 1 },
+    rowStart: { sm: 3 },
+    rowSpan: { sm: 3 },
+  };
 
   it(`/CREATE sub section draft`, async () => {
     const laptopDraft = ProductDataModelDraft.create({
@@ -457,33 +399,23 @@ describe('ProductsDataModelDraftController', () => {
       organizationId,
       userId,
     });
-    const view = View.create({
-      targetGroup: TargetGroup.ALL,
-      dataModelId: laptopDraft.id,
-    });
 
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { md: 2 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
 
     await productDataModelDraftService.save(laptopDraft);
-    await viewService.save(view);
 
     const body = {
       name: 'Dimensions',
       type: SectionType.GROUP,
       parentSectionId: section.id,
-      view: {
-        cols: { xs: 3 },
-        colStart: { xs: 2 },
+      layout: {
+        cols: { sm: 3 },
+        colStart: { sm: 2 },
         colSpan: { lg: 1, sm: 1 },
         rowStart: { lg: 1, sm: 1 },
         rowSpan: { lg: 1, sm: 1 },
@@ -513,30 +445,20 @@ describe('ProductsDataModelDraftController', () => {
         dataFields: [],
         subSections: [],
         parentId: section.id,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 2 },
+          colSpan: { lg: 1, sm: 1 },
+          rowStart: { lg: 1, sm: 1 },
+          rowSpan: { lg: 1, sm: 1 },
+        },
       },
     ];
-    expect(response.body.data.sections).toEqual(expectedSectionsBody);
+    expect(response.body.sections).toEqual(expectedSectionsBody);
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
-    expect(response.body.data.sections).toEqual(found.toPlain().sections);
-    const createdSectionId = response.body.data.sections[1].id;
-
-    // expect view
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    const foundNodes =
-      foundView.findNodeWithParentBySectionId(createdSectionId);
-    const expected = SectionGrid.create({
-      sectionId: createdSectionId,
-      cols: { xs: 3 },
-      colStart: { xs: 2 },
-      colSpan: { lg: 1, sm: 1 },
-      rowStart: { lg: 1, sm: 1 },
-      rowSpan: { lg: 1, sm: 1 },
-    });
-    expected.assignParent(sectionGrid.id);
-    expect(foundNodes.node).toEqual(ignoreIds(expected));
-    expect(foundNodes.parent.id).toEqual(sectionGrid.id);
+    expect(response.body.sections).toEqual(found.toPlain().sections);
   });
 
   it(`/CREATE section draft ${userNotMemberTxt}`, async () => {
@@ -588,25 +510,13 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
 
-    const view = View.create({
-      dataModelId: laptopDraft.id,
-      targetGroup: TargetGroup.ALL,
-    });
-
     const section = DataSectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
 
-    const sectionGrid = SectionGrid.create({
-      ...colStartAndSpan,
-      sectionId: section.id,
-      cols: { xs: 1 },
-    });
-    view.addNode(sectionGrid);
-
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .get(
@@ -622,10 +532,9 @@ describe('ProductsDataModelDraftController', () => {
       );
     expect(response.status).toEqual(200);
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
-    expect(response.body.data).toEqual(found.toPlain());
-    expect(response.body.view).toEqual(view.toPlain());
+    expect(response.body).toEqual(found.toPlain());
   });
 
   it(`/GET draft ${userNotMemberTxt}`, async () => {
@@ -674,30 +583,18 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
 
-    const view = View.create({
-      targetGroup: TargetGroup.ALL,
-      dataModelId: laptopDraft.id,
-    });
-
     const section = DataSectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
 
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { md: 2 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
-
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
     const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
     const body = {
       name: 'Technical Specs',
-      view: {
+      layout: {
         cols: newConfig,
         rowSpan: newConfig,
         rowStart: newConfig,
@@ -720,19 +617,13 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(200);
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
     expect(found.findSectionOrFail(section.id).toPlain()).toEqual({
       ...section.toPlain(),
       name: body.name,
+      layout: body.layout,
     });
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    const { node } = foundView.findNodeWithParentBySectionId(section.id);
-    expect(node.rowStart).toEqual(newConfig);
-    expect(node.rowSpan).toEqual(newConfig);
-    expect(node.colStart).toEqual(newConfig);
-    expect(node.colSpan).toEqual(newConfig);
-    expect(isSectionGrid(node) && node.cols).toEqual(newConfig);
   });
 
   it(`/PATCH section draft ${userNotMemberTxt}`, async () => {
@@ -780,22 +671,13 @@ describe('ProductsDataModelDraftController', () => {
       organizationId,
       userId,
     });
-    const view = View.create({
-      dataModelId: laptopDraft.id,
-      targetGroup: TargetGroup.ALL,
-    });
+
     const section = DataSectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { md: 3 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .delete(
@@ -811,13 +693,9 @@ describe('ProductsDataModelDraftController', () => {
       );
     expect(response.status).toEqual(200);
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
     expect(found.sections).toEqual([]);
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    expect(
-      foundView.findNodeWithParentBySectionId(section.id).node,
-    ).toBeUndefined();
   });
 
   it(`/DELETE section draft ${userNotMemberTxt}`, async () => {
@@ -868,29 +746,18 @@ describe('ProductsDataModelDraftController', () => {
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
 
-    const view = View.create({
-      targetGroup: TargetGroup.ALL,
-      dataModelId: laptopDraft.id,
-    });
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { md: 2 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
-
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
 
     const body = {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
-      view: {
-        ...colStartAndSpan,
+      layout: {
+        ...layoutWithoutCols,
       },
     };
     const response = await request(app.getHttpServer())
@@ -907,29 +774,20 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.sections[0].dataFields).toEqual([
+    expect(response.body.id).toBeDefined();
+    expect(response.body.sections[0].dataFields).toEqual([
       {
         name: 'Processor',
         type: DataFieldType.TEXT_FIELD,
         id: expect.any(String),
         options: { min: 2 },
+        layout: layoutWithoutCols,
       },
     ]);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
-    expect(response.body.data).toEqual(foundDraft.toPlain());
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    const { node } = foundView.findNodeWithParentById(sectionGrid.id);
-    expect(node.children).toHaveLength(1);
-    const { node: dataFieldRef } = foundView.findNodeWithParentById(
-      node.children[0],
-    );
-    expect(isDataFieldRef(dataFieldRef) && dataFieldRef).toMatchObject({
-      fieldId: foundDraft.findSectionOrFail(section.id).dataFields[0].id,
-      ...colStartAndSpan,
-    });
+    expect(response.body).toEqual(foundDraft.toPlain());
   });
 
   it(`/CREATE data field draft ${userNotMemberTxt}`, async () => {
@@ -983,32 +841,16 @@ describe('ProductsDataModelDraftController', () => {
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout: Layout.create({ ...layoutWithoutCols }),
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
-    const view = View.create({
-      targetGroup: TargetGroup.ALL,
-      dataModelId: laptopDraft.id,
-    });
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { md: 2 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
-
-    const dataFieldRef = DataFieldRef.create({
-      fieldId: dataField.id,
-      ...colStartAndSpan,
-    });
-    view.addNode(dataFieldRef, sectionGrid.id);
-
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
 
     const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
@@ -1016,7 +858,7 @@ describe('ProductsDataModelDraftController', () => {
     const body = {
       name: 'Memory',
       options: { max: 8 },
-      view: {
+      layout: {
         rowSpan: newConfig,
         rowStart: newConfig,
         colStart: newConfig,
@@ -1038,18 +880,16 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(200);
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
     expect(found.sections[0].dataFields).toEqual([
-      { ...dataField, _name: body.name, options: body.options },
+      {
+        ...dataField,
+        _name: body.name,
+        options: body.options,
+        layout: body.layout,
+      },
     ]);
-
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    const { node } = foundView.findNodeWithParentByFieldId(dataField.id);
-    expect(node.rowStart).toEqual(newConfig);
-    expect(node.rowSpan).toEqual(newConfig);
-    expect(node.colStart).toEqual(newConfig);
-    expect(node.colSpan).toEqual(newConfig);
   });
 
   it(`/PATCH data field draft ${userNotMemberTxt}`, async () => {
@@ -1101,35 +941,20 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
 
-    const view = View.create({
-      dataModelId: laptopDraft.id,
-      targetGroup: TargetGroup.ALL,
-    });
-
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
+      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
     });
     laptopDraft.addSection(section);
 
-    const sectionGrid = SectionGrid.create({
-      sectionId: section.id,
-      cols: { xs: 2 },
-      ...colStartAndSpan,
-    });
-    view.addNode(sectionGrid);
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
+      layout: Layout.create({ ...layoutWithoutCols }),
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-    const dataFieldRef = DataFieldRef.create({
-      fieldId: dataField.id,
-      ...colStartAndSpan,
-    });
-    view.addNode(dataFieldRef, sectionGrid.id);
 
-    await viewService.save(view);
     await productDataModelDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .delete(
@@ -1144,17 +969,12 @@ describe('ProductsDataModelDraftController', () => {
         ),
       );
     expect(response.status).toEqual(200);
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.sections[0].dataFields).toEqual([]);
+    expect(response.body.id).toBeDefined();
+    expect(response.body.sections[0].dataFields).toEqual([]);
     const found = await productDataModelDraftService.findOneOrFail(
-      response.body.data.id,
+      response.body.id,
     );
-    expect(response.body.data).toEqual(found.toPlain());
-
-    const foundView = await viewService.findOneOrFail(response.body.view.id);
-    expect(
-      foundView.findNodeWithParentByFieldId(dataField.id).node,
-    ).toBeUndefined();
+    expect(response.body).toEqual(found.toPlain());
   });
 
   it(`/DELETE data field ${userNotMemberTxt}`, async () => {

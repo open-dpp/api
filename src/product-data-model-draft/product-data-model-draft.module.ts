@@ -12,8 +12,7 @@ import {
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
 import { PermissionsModule } from '../permissions/permissions.module';
-import { getViewSchema, ViewDoc } from '../view/infrastructure/view.schema';
-import { ViewService } from '../view/infrastructure/view.service';
+import { MigrationV100ToV101Service } from './migration-v-1-0-0-to-v-1-0-1.service';
 
 @Module({
   imports: [
@@ -27,19 +26,13 @@ import { ViewService } from '../view/infrastructure/view.service';
         schema: ProductDataModelSchema,
       },
     ]),
-    MongooseModule.forFeatureAsync([
-      {
-        name: ViewDoc.name,
-        useFactory: () => getViewSchema(),
-      },
-    ]),
     PermissionsModule,
   ],
   controllers: [ProductDataModelDraftController],
   providers: [
     ProductDataModelService,
     ProductDataModelDraftService,
-    ViewService,
+    MigrationV100ToV101Service, // TODO: Delete after running migration service
   ],
   exports: [ProductDataModelDraftService],
 })

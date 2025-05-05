@@ -120,6 +120,14 @@ export class ProductDataModel {
     return instanceToPlain(this);
   }
 
+  findSectionByIdOrFail(id: string): DataSection {
+    const section = this.sections.find((s) => s.id === id);
+    if (!section) {
+      throw new Error(`Section with id ${id} not found`);
+    }
+    return section;
+  }
+
   validate(
     values: DataValue[],
     includeSectionIds: string[] = [],
