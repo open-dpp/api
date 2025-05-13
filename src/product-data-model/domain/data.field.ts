@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 
 export enum DataFieldType {
   TEXT_FIELD = 'TextField',
+  NUMERIC_FIELD = 'NumericField',
 }
 
 export class DataFieldValidationResult {
@@ -64,6 +65,21 @@ export class TextField extends DataField {
   }
 }
 
+export class NumericField extends DataField {
+  validate(version: string, value: unknown): DataFieldValidationResult {
+    const result = z.number().optional().safeParse(value);
+    return DataFieldValidationResult.fromPlain({
+      dataFieldId: this.id,
+      dataFieldName: this.name,
+      isValid: result.success,
+      errorMessage: !result.success
+        ? result.error.issues[0].message
+        : undefined,
+    });
+  }
+}
+
 export const dataFieldSubtypes = [
   { value: TextField, name: DataFieldType.TEXT_FIELD },
+  { value: NumericField, name: DataFieldType.NUMERIC_FIELD },
 ];
