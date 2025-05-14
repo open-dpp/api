@@ -1,25 +1,17 @@
-import { Expose, Type } from 'class-transformer';
-import { randomUUID } from 'crypto';
+import { DataValue } from '../../models/domain/model';
 import {
   DataField,
   dataFieldSubtypes,
   DataFieldValidationResult,
-} from './data.field';
-import { DataValue } from '../../models/domain/model';
+} from './data-field';
 import { groupBy } from 'lodash';
+import { Expose, Type } from 'class-transformer';
+import {
+  DataSectionBase,
+  SectionType,
+} from '../../data-modelling/domain/section-base';
 
-export enum SectionType {
-  GROUP = 'Group',
-  REPEATABLE = 'Repeatable',
-}
-
-export abstract class DataSection {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly name: string;
-  @Expose()
-  readonly type: SectionType;
+export abstract class DataSection extends DataSectionBase {
   @Expose()
   @Type(() => DataField, {
     discriminator: {
@@ -92,3 +84,13 @@ export const sectionSubTypes = [
   { value: RepeaterSection, name: SectionType.REPEATABLE },
   { value: GroupSection, name: SectionType.GROUP },
 ];
+
+export function isGroupSection(section: DataSection): section is GroupSection {
+  return section.type === SectionType.GROUP;
+}
+
+export function isRepeaterSection(
+  section: DataSection,
+): section is RepeaterSection {
+  return section.type === SectionType.REPEATABLE;
+}

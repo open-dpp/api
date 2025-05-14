@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ProductDataModelDraftDoc } from './product-data-model-draft.schema';
+import {
+  ProductDataModelDraftDoc,
+  ProductDataModelDraftDocSchemaVersion,
+} from './product-data-model-draft.schema';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 
@@ -20,6 +23,7 @@ export class ProductDataModelDraftService {
       {
         name: productDataModel.name,
         version: productDataModel.version,
+        _schemaVersion: ProductDataModelDraftDocSchemaVersion.v1_0_1,
         publications: productDataModel.publications,
         sections: productDataModel.sections.map((s) => ({
           _id: s.id,
@@ -30,14 +34,19 @@ export class ProductDataModelDraftService {
             name: d.name,
             type: d.type,
             options: d.options,
+            layout: d.layout,
           })),
+          parentId: s.parentId,
+          layout: s.layout,
+          subSections: s.subSections,
         })),
         createdByUserId: productDataModel.createdByUserId,
         ownedByOrganizationId: productDataModel.ownedByOrganizationId,
       },
       {
         new: true, // Return the updated document
-        upsert: true, // Create a new document if none found
+        upsert: true,
+        runValidators: true,
       },
     );
 
@@ -46,6 +55,7 @@ export class ProductDataModelDraftService {
 
   convertToDomain(productDataModelDraftDoc: ProductDataModelDraftDoc) {
     const plainDoc = productDataModelDraftDoc.toObject();
+
     return ProductDataModelDraft.fromPlain({
       id: plainDoc._id,
       name: plainDoc.name,
@@ -59,7 +69,11 @@ export class ProductDataModelDraftService {
           type: f.type,
           name: f.name,
           options: f.options,
+          layout: f.layout,
         })),
+        layout: s.layout,
+        subSections: s.subSections,
+        parentId: s.parentId,
       })),
       publications: plainDoc.publications,
       createdByUserId: plainDoc.createdByUserId,

@@ -19,30 +19,68 @@ export class ProductDataModelImportService implements OnApplicationBootstrap {
         visibility: VisibilityLevel.PUBLIC,
         sections: [
           {
+            layout: {
+              cols: { sm: 2 },
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
             name: 'Technische Spezifikation',
             type: 'Group',
             dataFields: [
               {
                 name: 'Prozessor',
                 type: 'TextField',
+                layout: {
+                  colStart: { sm: 1 },
+                  colSpan: { sm: 1 },
+                  rowStart: { sm: 1 },
+                  rowSpan: { sm: 1 },
+                },
               },
               {
                 name: 'Arbeitsspeicher',
                 type: 'TextField',
+                layout: {
+                  colStart: { sm: 2 },
+                  colSpan: { sm: 1 },
+                  rowStart: { sm: 1 },
+                  rowSpan: { sm: 1 },
+                },
               },
             ],
           },
           {
             name: 'Material',
             type: 'Repeatable',
+            layout: {
+              cols: { sm: 2 },
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 2 },
+              rowSpan: { sm: 1 },
+            },
             dataFields: [
               {
                 name: 'Materialnummer',
                 type: 'TextField',
+                layout: {
+                  colStart: { sm: 1 },
+                  colSpan: { sm: 1 },
+                  rowStart: { sm: 1 },
+                  rowSpan: { sm: 1 },
+                },
               },
               {
                 name: 'Materialanteil',
                 type: 'TextField',
+                layout: {
+                  colStart: { sm: 2 },
+                  colSpan: { sm: 1 },
+                  rowStart: { sm: 1 },
+                  rowSpan: { sm: 1 },
+                },
               },
             ],
           },
