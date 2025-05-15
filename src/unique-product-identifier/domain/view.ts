@@ -87,7 +87,7 @@ export class View {
       result.push({
         type: dataField.type,
         name: dataField.name,
-        value: dataValue.value,
+        value: dataValue?.value,
         layout: dataField.layout,
       });
     }
