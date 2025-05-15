@@ -84,9 +84,6 @@ export class View {
       const dataValue = dataValuesOfSection.find(
         (v) => v.dataFieldId === dataField.id,
       );
-      if (!dataValue) {
-        throw new Error(`Data value for field ${dataField.name} is missing`);
-      }
       result.push({
         type: dataField.type,
         name: dataField.name,
