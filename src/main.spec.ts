@@ -30,11 +30,6 @@ describe('Bootstrap', () => {
       enableCors: jest.fn().mockReturnThis(),
       useGlobalPipes: jest.fn(),
       listen: jest.fn().mockResolvedValue(undefined),
-      get: jest.fn().mockReturnValue({
-        // TODO: Delete after running migration service
-        migrateDrafts: jest.fn(),
-        migrateDataModels: jest.fn(),
-      }),
     };
 
     // Configure NestFactory.create to return our mock app

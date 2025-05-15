@@ -12,7 +12,6 @@ import {
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
 import { PermissionsModule } from '../permissions/permissions.module';
-import { MigrationV100ToV101Service } from './migration-v-1-0-0-to-v-1-0-1.service';
 
 @Module({
   imports: [
@@ -29,11 +28,7 @@ import { MigrationV100ToV101Service } from './migration-v-1-0-0-to-v-1-0-1.servi
     PermissionsModule,
   ],
   controllers: [ProductDataModelDraftController],
-  providers: [
-    ProductDataModelService,
-    ProductDataModelDraftService,
-    MigrationV100ToV101Service, // TODO: Delete after running migration service
-  ],
+  providers: [ProductDataModelService, ProductDataModelDraftService],
   exports: [ProductDataModelDraftService],
 })
 export class ProductDataModelDraftModule {}

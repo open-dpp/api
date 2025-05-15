@@ -121,11 +121,4 @@ export class ProductDataModelService {
     }
     return this.convertToDomain(productEntity);
   }
-
-  // TODO: Delete after running import service
-  async findAll() {
-    const productEntities = await this.productDataModelDoc.find();
-
-    return productEntities.map((p) => this.convertToDomain(p));
-  }
 }
