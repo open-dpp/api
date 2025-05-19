@@ -98,6 +98,13 @@ export class Model {
     return this._ownedByOrganizationId === organization.id;
   }
 
+  public getDataValuesBySectionId(sectionId: string, row?: number) {
+    const allRows = this.dataValues.filter(
+      (d) => d.dataSectionId === sectionId,
+    );
+    return row !== undefined ? allRows.filter((d) => d.row === row) : allRows;
+  }
+
   public addDataValues(dataValues: DataValue[]) {
     for (const dataValue of dataValues) {
       if (

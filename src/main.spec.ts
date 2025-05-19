@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import {
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
 } from './exceptions/exception.handler';
 
 // Mock NestFactory before importing bootstrap function
@@ -47,6 +48,7 @@ describe('Bootstrap', () => {
     expect(mockApp.useGlobalFilters).toHaveBeenCalledWith(
       expect.any(NotFoundInDatabaseExceptionFilter),
       expect.any(NotFoundExceptionFilter),
+      expect.any(ValueErrorFilter),
     );
 
     expect(mockApp.enableCors).toHaveBeenCalledWith({

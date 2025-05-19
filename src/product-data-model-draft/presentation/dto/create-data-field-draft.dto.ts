@@ -4,8 +4,11 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
-import { DataFieldType } from '../../../product-data-model/domain/data.field';
+import { DataFieldType } from '../../../data-modelling/domain/data-field-base';
+import { Type } from 'class-transformer';
+import { LayoutDto } from './layout.dto';
 
 export class CreateDataFieldDraftDto {
   @IsString()
@@ -16,4 +19,7 @@ export class CreateDataFieldDraftDto {
   @IsObject()
   @IsOptional()
   readonly options?: Record<string, unknown>;
+  @Type(() => LayoutDto)
+  @ValidateNested()
+  readonly layout: LayoutDto;
 }

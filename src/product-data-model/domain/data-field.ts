@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { Expose, plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
+import {
+  DataFieldBase,
+  DataFieldType,
+} from '../../data-modelling/domain/data-field-base';
 
 export enum DataFieldType {
   TEXT_FIELD = 'TextField',
@@ -38,16 +42,7 @@ export class DataFieldValidationResult {
   }
 }
 
-export abstract class DataField {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly name: string;
-  @Expose()
-  readonly type: DataFieldType;
-  @Expose()
-  readonly options: Record<string, unknown> = {};
-
+export abstract class DataField extends DataFieldBase {
   abstract validate(version: string, value: unknown): DataFieldValidationResult;
 }
 

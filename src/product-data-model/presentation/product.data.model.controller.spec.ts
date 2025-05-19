@@ -14,7 +14,7 @@ import {
   ProductDataModel,
   VisibilityLevel,
 } from '../domain/product.data.model';
-import { SectionType } from '../domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
@@ -93,18 +93,40 @@ describe('ProductsDataModelController', () => {
     createdByUserId: authContext.user.id,
     sections: [
       {
+        id: 's1',
         name: 'Section 1',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 3 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 3 },
+        },
         dataFields: [
           {
+            id: 'f11',
             type: 'TextField',
             name: 'Title',
             options: { min: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
+            id: 'f12',
             type: 'TextField',
             name: 'Title 2',
             options: { min: 2 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
       },
@@ -122,6 +144,7 @@ describe('ProductsDataModelController', () => {
 
   it(`/GET product data model`, async () => {
     const productDataModel = ProductDataModel.fromPlain({ ...laptopPlain });
+
     await service.save(productDataModel);
     const response = await request(app.getHttpServer())
       .get(`/product-data-models/${productDataModel.id}`)
