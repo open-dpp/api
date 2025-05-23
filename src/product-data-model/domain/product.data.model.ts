@@ -6,10 +6,11 @@ import {
   plainToInstance,
   Type,
 } from 'class-transformer';
-import { DataFieldValidationResult } from './data.field';
-import { DataSection, sectionSubTypes, SectionType } from './section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
+import { DataFieldValidationResult } from './data-field';
+import { DataSection, sectionSubTypes } from './section';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -117,6 +118,14 @@ export class ProductDataModel {
 
   toPlain() {
     return instanceToPlain(this);
+  }
+
+  findSectionByIdOrFail(id: string): DataSection {
+    const section = this.sections.find((s) => s.id === id);
+    if (!section) {
+      throw new Error(`Section with id ${id} not found`);
+    }
+    return section;
   }
 
   validate(

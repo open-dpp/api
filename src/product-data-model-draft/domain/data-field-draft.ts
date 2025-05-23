@@ -1,33 +1,23 @@
-import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
-import { randomUUID } from 'crypto';
-import { DataFieldType } from '../../product-data-model/domain/data.field';
-import { merge, omit } from 'lodash';
+import { plainToInstance } from 'class-transformer';
+import {
+  DataFieldBase,
+  DataFieldType,
+} from '../../data-modelling/domain/data-field-base';
+import { merge } from 'lodash';
+import { Layout } from '../../data-modelling/domain/layout';
 
-export class DataFieldDraft {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose({ name: 'name' })
-  private _name: string;
-  @Expose()
-  readonly type: DataFieldType;
-  @Expose()
-  readonly options: Record<string, unknown> = {};
-
+export class DataFieldDraft extends DataFieldBase {
   static create(plain: {
     name: string;
     type: DataFieldType;
     options?: Record<string, unknown>;
+    layout: Layout;
   }): DataFieldDraft {
     return plainToInstance(DataFieldDraft, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
   }
-
-  get name() {
-    return this._name;
-  }
-
   mergeOptions(newOptions: Record<string, unknown>) {
     merge(this.options, newOptions);
   }
@@ -37,10 +27,6 @@ export class DataFieldDraft {
   }
 
   publish() {
-    return omit(this.toPlain(), 'id');
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
+    return this.toPlain();
   }
 }

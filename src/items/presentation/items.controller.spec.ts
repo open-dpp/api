@@ -111,8 +111,8 @@ describe('ItemsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -151,7 +151,7 @@ describe('ItemsController', () => {
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
@@ -178,7 +178,7 @@ describe('ItemsController', () => {
       .post(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
@@ -207,8 +207,8 @@ describe('ItemsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -248,7 +248,7 @@ describe('ItemsController', () => {
       )
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
@@ -280,7 +280,7 @@ describe('ItemsController', () => {
       )
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
@@ -310,8 +310,8 @@ describe('ItemsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user,
-          [organization],
+          authContext.user.id,
+          [organization.id],
           keycloakAuthTestingGuard,
         ),
       );
@@ -363,7 +363,7 @@ describe('ItemsController', () => {
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
@@ -395,7 +395,7 @@ describe('ItemsController', () => {
       .get(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });

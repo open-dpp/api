@@ -1,21 +1,13 @@
 import { Expose, plainToInstance } from 'class-transformer';
-import { groupBy } from 'lodash';
+import { maxBy, minBy } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { DataValue, Model } from '../../models/domain/model';
 import {
-  DataField,
-  DataFieldType,
-} from '../../product-data-model/domain/data.field';
-import { SectionType } from '../../product-data-model/domain/section';
-
-type RowView = {
-  fields: { type: DataFieldType; value: unknown; name: string }[];
-};
-
-type SectionView = {
-  name: string;
-  rows: RowView[];
-};
+  DataSection,
+  isGroupSection,
+  isRepeaterSection,
+  RepeaterSection,
+} from '../../product-data-model/domain/section';
 
 export class View {
   @Expose()
@@ -31,49 +23,74 @@ export class View {
     });
   }
 
-  buildFields(dataValues: DataValue[], dataFields: DataField[]) {
-    return dataFields.map((f) => {
-      const foundDataValue = dataValues.find((d) => d.dataFieldId === f.id);
-      return {
-        type: f.type,
-        name: f.name,
-        value: foundDataValue.value,
-      };
-    });
-  }
-
-  build(): { name: string; sections: SectionView[] } {
-    const sectionsOutput: SectionView[] = [];
-    for (const section of this.productDataModel.sections) {
-      const dataValuesOfSection = this.model.dataValues.filter(
-        (d) => d.dataSectionId === section.id,
-      );
-      if (section.type === SectionType.GROUP) {
-        sectionsOutput.push({
-          name: section.name,
-          rows: [
-            {
-              fields: this.buildFields(dataValuesOfSection, section.dataFields),
-            },
-          ],
-        });
-      } else {
-        const rows: RowView[] = [];
-        const dataValuesByRow = groupBy(dataValuesOfSection, 'row');
-        for (const [, dataValues] of Object.entries(dataValuesByRow)) {
-          rows.push({
-            fields: this.buildFields(dataValues, section.dataFields),
-          });
-        }
-        sectionsOutput.push({
-          name: section.name,
-          rows,
-        });
+  build() {
+    const nodes = [];
+    for (const section of this.productDataModel.sections.filter(
+      (s) => s.parentId === undefined,
+    )) {
+      if (isRepeaterSection(section)) {
+        nodes.push(this.processRepeaterSection(section));
+      } else if (isGroupSection(section)) {
+        nodes.push(this.processSection(section));
       }
     }
     return {
       name: this.model.name,
-      sections: sectionsOutput,
+      description: this.model.description,
+      nodes: nodes,
     };
+  }
+
+  processRepeaterSection(section: RepeaterSection) {
+    const dataValuesOfSectionAllRows = this.model.getDataValuesBySectionId(
+      section.id,
+    );
+    const minRow = minBy(dataValuesOfSectionAllRows, 'row')?.row ?? 0;
+    const maxRow = maxBy(dataValuesOfSectionAllRows, 'row')?.row ?? 0;
+
+    const rows = [];
+    for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
+      rows.push(this.processSection(section, rowIndex));
+    }
+    return {
+      name: section.name,
+      rows,
+    };
+  }
+
+  processSection(section: DataSection, rowIndex?: number) {
+    const dataValuesOfSection = this.model.getDataValuesBySectionId(
+      section.id,
+      rowIndex,
+    );
+
+    const children = this.processDataFields(section, dataValuesOfSection);
+    for (const subSectionId of section.subSections) {
+      const subSection =
+        this.productDataModel.findSectionByIdOrFail(subSectionId);
+      children.push(this.processSection(subSection, rowIndex));
+    }
+
+    return {
+      name: isGroupSection(section) ? section.name : undefined,
+      layout: section.layout,
+      children,
+    };
+  }
+
+  processDataFields(section: DataSection, dataValuesOfSection: DataValue[]) {
+    const result = [];
+    for (const dataField of section.dataFields) {
+      const dataValue = dataValuesOfSection.find(
+        (v) => v.dataFieldId === dataField.id,
+      );
+      result.push({
+        type: dataField.type,
+        name: dataField.name,
+        value: dataValue?.value,
+        layout: dataField.layout,
+      });
+    }
+    return result;
   }
 }

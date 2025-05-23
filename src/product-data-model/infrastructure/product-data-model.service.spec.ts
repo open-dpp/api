@@ -6,7 +6,7 @@ import {
 } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { SectionType } from '../domain/section';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { Connection } from 'mongoose';
@@ -48,18 +48,65 @@ describe('ProductDataModelService', () => {
     createdByUserId: user.id,
     sections: [
       {
+        id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 7 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
         dataFields: [
           {
             name: 'Serial number',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
           {
             name: 'Processor',
             type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
           },
         ],
+        subSections: ['s1.1'],
+      },
+      {
+        id: 's1.1',
+        parentId: 's1',
+        name: 'CO2',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            name: 'Consumption',
+            type: 'TextField',
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+          },
+        ],
+        subSections: [],
       },
     ],
   };

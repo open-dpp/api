@@ -4,6 +4,7 @@ import 'reflect-metadata';
 import {
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
 
@@ -12,6 +13,7 @@ export async function bootstrap() {
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
+    new ValueErrorFilter(),
   );
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
