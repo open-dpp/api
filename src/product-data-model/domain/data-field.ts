@@ -1,15 +1,7 @@
 import { z } from 'zod';
 import { Expose, plainToInstance } from 'class-transformer';
-import { randomUUID } from 'crypto';
-import {
-  DataFieldBase,
-  DataFieldType,
-} from '../../data-modelling/domain/data-field-base';
-
-export enum DataFieldType {
-  TEXT_FIELD = 'TextField',
-  NUMERIC_FIELD = 'NumericField',
-}
+import { DataFieldBase } from '../../data-modelling/domain/data-field-base';
+import { DataFieldType } from './data-field-type';
 
 export class DataFieldValidationResult {
   @Expose()
