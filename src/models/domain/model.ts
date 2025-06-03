@@ -23,11 +23,26 @@ export class DataValue {
   @Expose()
   readonly row?: number;
 
+  constructor(
+    dataSectionId: string,
+    dataFieldId: string,
+    value: unknown,
+    row?: number,
+  ) {
+    this.dataSectionId = dataSectionId;
+    this.dataFieldId = dataFieldId;
+    this.value = value;
+    this.row = row;
+  }
+
   static fromPlain(plain: Partial<DataValue>) {
     return plainToInstance(DataValue, plain, {
       excludeExtraneousValues: true,
       exposeDefaultValues: true,
     });
+  }
+  toPlain() {
+    return instanceToPlain(this);
   }
 }
 

@@ -297,14 +297,19 @@ describe('Model', () => {
   });
 
   describe('DataValue', () => {
-    it('should create a data value with default values', () => {
-      const dataValue = new DataValue();
+    it('should create a data value', () => {
+      const dataValue = new DataValue(
+        'test-section-id',
+        'test-id',
+        'test-value',
+        0,
+      );
 
       expect(dataValue.id).toBeDefined();
-      expect(dataValue.value).toBeUndefined();
-      expect(dataValue.dataSectionId).toBeUndefined();
-      expect(dataValue.dataFieldId).toBeUndefined();
-      expect(dataValue.row).toBeUndefined();
+      expect(dataValue.value).toBe('test-value');
+      expect(dataValue.dataSectionId).toBe('test-section-id');
+      expect(dataValue.dataFieldId).toBe('test-id');
+      expect(dataValue.row).toBe(0);
     });
 
     it('should create from plain object', () => {
