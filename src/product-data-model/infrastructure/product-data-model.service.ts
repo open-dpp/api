@@ -32,6 +32,7 @@ export class ProductDataModelService {
         id: s._id,
         name: s.name,
         type: s.type,
+        granularityLevel: s.granularityLevel,
         dataFields: s.dataFields.map((f) => ({
           id: f._id,
           type: f.type,
@@ -58,6 +59,7 @@ export class ProductDataModelService {
           _id: s.id,
           name: s.name,
           type: s.type,
+          granularityLevel: s.granularityLevel,
           dataFields: s.dataFields.map((d) => ({
             _id: d.id,
             name: d.name,

@@ -7,13 +7,19 @@ import {
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export class DataSectionDraft extends DataSectionBase {
   @Expose()
   @Type(() => DataFieldDraft)
   readonly dataFields: DataFieldDraft[];
 
-  static create(plain: { name: string; type: SectionType; layout: Layout }) {
+  static create(plain: {
+    name: string;
+    type: SectionType;
+    layout: Layout;
+    granularityLevel: GranularityLevel;
+  }) {
     return plainToInstance(
       DataSectionDraft,
       { ...plain, dataFields: [] },

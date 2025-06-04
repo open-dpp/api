@@ -16,6 +16,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from './product-data-model.schema';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -50,6 +51,7 @@ describe('ProductDataModelService', () => {
       {
         id: 's1',
         name: 'Environment',
+        granularityLevel: GranularityLevel.MODEL,
         type: SectionType.GROUP,
         layout: {
           cols: { sm: 3 },
@@ -86,6 +88,7 @@ describe('ProductDataModelService', () => {
         id: 's1.1',
         parentId: 's1',
         name: 'CO2',
+        granularityLevel: GranularityLevel.MODEL,
         type: SectionType.GROUP,
         layout: {
           cols: { sm: 2 },

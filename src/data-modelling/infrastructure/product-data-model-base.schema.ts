@@ -3,6 +3,7 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { DataFieldType } from '../domain/data-field-base';
 import { SectionType } from '../domain/section-base';
 import { LayoutDoc, LayoutSchema } from './layout.schema';
+import { GranularityLevel } from '../domain/granularity-level';
 
 @Schema()
 class DataFieldDoc {
@@ -39,6 +40,13 @@ class SectionDoc {
   subSections: string[];
   @Prop({ required: true, type: LayoutSchema })
   layout: LayoutDoc[];
+
+  @Prop({
+    required: true,
+    enum: GranularityLevel,
+    default: GranularityLevel.MODEL,
+  })
+  granularityLevel: GranularityLevel;
 }
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 

@@ -15,6 +15,7 @@ import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductDataModelDraftMongoService', () => {
   let service: ProductDataModelDraftService;
@@ -42,6 +43,7 @@ describe('ProductDataModelDraftMongoService', () => {
   const laptopModelPlain = {
     name: 'Laptop',
     version: 'v2',
+
     sections: [
       {
         id: 's1',
@@ -78,6 +80,7 @@ describe('ProductDataModelDraftMongoService', () => {
         ],
         parentId: undefined,
         subSections: ['s1.1', 's1.2'],
+        granularityLevel: GranularityLevel.MODEL,
       },
       {
         parentId: 's1',
@@ -93,6 +96,7 @@ describe('ProductDataModelDraftMongoService', () => {
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
         },
+        granularityLevel: GranularityLevel.MODEL,
       },
       {
         parentId: 's1.1',
@@ -118,6 +122,7 @@ describe('ProductDataModelDraftMongoService', () => {
             },
           },
         ],
+        granularityLevel: GranularityLevel.MODEL,
       },
       {
         parentId: 's1',
@@ -132,6 +137,7 @@ describe('ProductDataModelDraftMongoService', () => {
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
         },
+        granularityLevel: GranularityLevel.MODEL,
       },
     ],
     publications: [
@@ -181,16 +187,19 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.ITEM,
     });
     const section11 = DataSectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.ITEM,
     });
     const section2 = DataSectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.ITEM,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section11);
@@ -222,6 +231,7 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Tech specs',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.ITEM,
     });
     productDataModelDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
