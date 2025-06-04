@@ -30,6 +30,7 @@ import {
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -208,6 +209,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
@@ -378,6 +380,7 @@ describe('ProductsDataModelDraftController', () => {
           rowSpan: { sm: 3 },
           cols: { sm: 3 },
         },
+        granularityLevel: GranularityLevel.MODEL,
       },
     ]);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
@@ -404,6 +407,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
@@ -452,6 +456,7 @@ describe('ProductsDataModelDraftController', () => {
           rowStart: { lg: 1, sm: 1 },
           rowSpan: { lg: 1, sm: 1 },
         },
+        granularityLevel: GranularityLevel.MODEL,
       },
     ];
     expect(response.body.sections).toEqual(expectedSectionsBody);
@@ -514,6 +519,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Tecs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
@@ -587,6 +593,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Tecs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
@@ -676,6 +683,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Tecs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
     await productDataModelDraftService.save(laptopDraft);
@@ -747,6 +755,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
@@ -842,6 +851,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
     const dataField = DataFieldDraft.create({
@@ -945,6 +955,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 

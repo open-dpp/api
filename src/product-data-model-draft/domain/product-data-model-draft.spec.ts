@@ -7,6 +7,7 @@ import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { randomUUID } from 'crypto';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductDataModelDraft', () => {
   const userId = randomUUID();
@@ -360,11 +361,13 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSection(section2);
@@ -382,11 +385,13 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section2.assignParent(section1);
     productDataModelDraft.addSection(section1);
@@ -405,11 +410,13 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section2);
@@ -430,6 +437,7 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
 
     expect(() =>
@@ -447,6 +455,7 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section);
     const newLayout = {
@@ -476,31 +485,37 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section11 = DataSectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section12 = DataSectionDraft.create({
       name: 'section12',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section111 = DataSectionDraft.create({
       name: 'Measurement',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section112 = DataSectionDraft.create({
       name: 'Measurement 2',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = DataSectionDraft.create({
       name: 'section2',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, section11);
@@ -528,6 +543,7 @@ describe('ProductDataModelDraft', () => {
           rowSpan: { sm: 1 },
           rowStart: { sm: 1 },
         },
+        granularityLevel: GranularityLevel.MODEL,
       },
     ]);
   });
@@ -542,6 +558,7 @@ describe('ProductDataModelDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section);
 
