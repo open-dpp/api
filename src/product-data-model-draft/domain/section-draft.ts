@@ -18,8 +18,11 @@ export class DataSectionDraft extends DataSectionBase {
     name: string;
     type: SectionType;
     layout: Layout;
-    granularityLevel: GranularityLevel;
+    granularityLevel?: GranularityLevel;
   }) {
+    if (plain.type === SectionType.REPEATABLE && !plain.granularityLevel) {
+      throw new ValueError(`Repeatable must have a granularity level`);
+    }
     return plainToInstance(
       DataSectionDraft,
       { ...plain, dataFields: [] },

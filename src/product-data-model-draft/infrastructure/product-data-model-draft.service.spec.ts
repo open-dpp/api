@@ -175,6 +175,59 @@ describe('ProductDataModelDraftMongoService', () => {
     rowStart: { sm: 1 },
     rowSpan: { sm: 1 },
   });
+
+  it('sets correct default granularity level', async () => {
+    const laptopModel = {
+      name: 'Laptop',
+      version: 'v2',
+      sections: [
+        {
+          id: 's1',
+          name: 'Environment',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 7 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [],
+          parentId: undefined,
+          subSections: [],
+        },
+        {
+          id: 's2',
+          name: 'Materials',
+          type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 7 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [],
+          parentId: undefined,
+          subSections: [],
+        },
+      ],
+      publications: [],
+    };
+
+    const productDataModelDraft = ProductDataModelDraft.fromPlain({
+      ...laptopModel,
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+    });
+    const { id } = await service.save(productDataModelDraft);
+    const found = await service.findOneOrFail(id);
+    expect(found.findSectionOrFail('s1').granularityLevel).toBeUndefined();
+    expect(found.findSectionOrFail('s2').granularityLevel).toEqual(
+      GranularityLevel.MODEL,
+    );
+  });
+
   it('should delete section on product data model draft', async () => {
     const userId = randomUUID();
     const organizationId = randomUUID();

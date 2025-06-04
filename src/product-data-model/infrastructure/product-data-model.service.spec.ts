@@ -130,6 +130,56 @@ describe('ProductDataModelService', () => {
     expect(found).toEqual(productDataModel);
   });
 
+  it('sets correct default granularity level', async () => {
+    const laptopModel = {
+      name: 'Laptop',
+      version: 'v2',
+      sections: [
+        {
+          id: 's1',
+          name: 'Environment',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 7 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [],
+          parentId: undefined,
+          subSections: [],
+        },
+        {
+          id: 's2',
+          name: 'Materials',
+          type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 7 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [],
+          parentId: undefined,
+          subSections: [],
+        },
+      ],
+      publications: [],
+    };
+
+    const productDataModelDraft = ProductDataModel.fromPlain({
+      ...laptopModel,
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+    });
+    const { id } = await service.save(productDataModelDraft);
+    const found = await service.findOneOrFail(id);
+    expect(found.sections[0].granularityLevel).toBeUndefined();
+    expect(found.sections[1].granularityLevel).toEqual(GranularityLevel.MODEL);
+  });
+
   it('should return product data models by name', async () => {
     const productDataModel = ProductDataModel.fromPlain({
       ...laptopModelPlain,

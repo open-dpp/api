@@ -40,6 +40,16 @@ describe('DataSectionDraft', () => {
     expect(section2.granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
+  it('fails on creation if no granularity level is set for repeater section', () => {
+    expect(() =>
+      DataSectionDraft.create({
+        name: 'Material',
+        type: SectionType.REPEATABLE,
+        layout,
+      }),
+    ).toThrow(new ValueError('Repeatable must have a granularity level'));
+  });
+
   it('is renamed', () => {
     const section = DataSectionDraft.create({
       name: 'Technical specification',

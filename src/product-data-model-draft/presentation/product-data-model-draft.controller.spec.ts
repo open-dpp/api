@@ -350,6 +350,7 @@ describe('ProductsDataModelDraftController', () => {
         rowSpan: { sm: 3 },
         cols: { sm: 3 },
       },
+      granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
       .post(
@@ -424,6 +425,7 @@ describe('ProductsDataModelDraftController', () => {
         rowStart: { lg: 1, sm: 1 },
         rowSpan: { lg: 1, sm: 1 },
       },
+      granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
       .post(

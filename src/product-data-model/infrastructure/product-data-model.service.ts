@@ -11,6 +11,8 @@ import {
   ProductDataModelDoc,
   ProductDataModelDocSchemaVersion,
 } from './product-data-model.schema';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 @Injectable()
 export class ProductDataModelService {
@@ -32,7 +34,11 @@ export class ProductDataModelService {
         id: s._id,
         name: s.name,
         type: s.type,
-        granularityLevel: s.granularityLevel,
+        granularityLevel: s.granularityLevel
+          ? s.granularityLevel
+          : s.type === SectionType.REPEATABLE
+            ? GranularityLevel.MODEL
+            : undefined,
         dataFields: s.dataFields.map((f) => ({
           id: f._id,
           type: f.type,

@@ -7,6 +7,8 @@ import {
 } from './product-data-model-draft.schema';
 import { ProductDataModelDraft } from '../domain/product-data-model-draft';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 @Injectable()
 export class ProductDataModelDraftService {
@@ -75,7 +77,11 @@ export class ProductDataModelDraftService {
         layout: s.layout,
         subSections: s.subSections,
         parentId: s.parentId,
-        granularityLevel: s.granularityLevel,
+        granularityLevel: s.granularityLevel
+          ? s.granularityLevel
+          : s.type === SectionType.REPEATABLE
+            ? GranularityLevel.MODEL
+            : undefined,
       })),
       publications: plainDoc.publications,
       createdByUserId: plainDoc.createdByUserId,

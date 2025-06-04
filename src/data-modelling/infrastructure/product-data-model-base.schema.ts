@@ -42,11 +42,9 @@ class SectionDoc {
   layout: LayoutDoc[];
 
   @Prop({
-    required: true,
     enum: GranularityLevel,
-    default: GranularityLevel.MODEL,
   })
-  granularityLevel: GranularityLevel;
+  granularityLevel?: GranularityLevel;
 }
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 
