@@ -73,11 +73,13 @@ describe('DataSectionDraft', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
@@ -96,11 +98,13 @@ describe('DataSectionDraft', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
@@ -143,6 +147,7 @@ describe('DataSectionDraft', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     expect(() =>
@@ -170,16 +175,19 @@ describe('DataSectionDraft', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField3 = DataFieldDraft.create({
       name: 'Storage',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
@@ -199,6 +207,7 @@ describe('DataSectionDraft', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
 
@@ -285,6 +294,7 @@ describe('DataSectionDraft', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     const publishedSection = section.publish();

@@ -217,6 +217,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout: Layout.create({ ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
     await productDataModelDraftService.save(laptopDraft);
@@ -770,6 +771,7 @@ describe('ProductsDataModelDraftController', () => {
       layout: {
         ...layoutWithoutCols,
       },
+      granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
       .post(
@@ -793,6 +795,7 @@ describe('ProductsDataModelDraftController', () => {
         id: expect.any(String),
         options: { min: 2 },
         layout: layoutWithoutCols,
+        granularityLevel: GranularityLevel.MODEL,
       },
     ]);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
@@ -860,6 +863,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout: Layout.create({ ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
@@ -965,6 +969,7 @@ describe('ProductsDataModelDraftController', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout: Layout.create({ ...layoutWithoutCols }),
+      granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 

@@ -17,6 +17,12 @@ class DataFieldDoc {
   options: Record<string, unknown>;
   @Prop({ required: true, type: LayoutSchema })
   layout: LayoutDoc;
+  @Prop({
+    required: true,
+    enum: GranularityLevel,
+    default: GranularityLevel.MODEL,
+  })
+  granularityLevel: GranularityLevel;
 }
 const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
 
