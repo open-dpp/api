@@ -6,6 +6,7 @@ import {
 } from 'class-transformer';
 import { ProductDataModel } from '../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
+import { GranularityLevel } from '../data-modelling/domain/granularity-level';
 
 export class DataValue {
   @Expose()
@@ -28,6 +29,8 @@ export class DataValue {
 }
 
 export abstract class Passport {
+  abstract granularityLevel: GranularityLevel;
+
   @Expose({ name: 'productDataModelId' })
   private _productDataModelId: string | undefined = undefined;
 

@@ -1,8 +1,10 @@
 import { randomUUID } from 'crypto';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { Passport } from '../../passport/passport';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export class Item extends Passport {
+  granularityLevel = GranularityLevel.ITEM;
   private _model: string;
   constructor(
     public readonly id: string = randomUUID(),

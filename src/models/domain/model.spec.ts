@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { DataValue } from '../../passport/passport';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('Model', () => {
   it('should create unique product identifiers on model creation', () => {
@@ -277,6 +278,7 @@ describe('Model', () => {
       createdByUserId: 'user-1',
       ownedByOrganizationId: 'org-1',
       uniqueProductIdentifiers: [],
+      granularityLevel: GranularityLevel.MODEL,
     });
   });
 

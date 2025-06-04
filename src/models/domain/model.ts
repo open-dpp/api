@@ -4,8 +4,10 @@ import { Expose, plainToInstance, Type } from 'class-transformer';
 import { Organization } from '../../organizations/domain/organization';
 import { User } from '../../users/domain/user';
 import { Passport } from '../../passport/passport';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export class Model extends Passport {
+  granularityLevel = GranularityLevel.MODEL;
   @Expose()
   name: string;
   @Expose()
