@@ -1,4 +1,3 @@
-import { DataValue } from '../../models/domain/model';
 import {
   DataField,
   dataFieldSubtypes,
@@ -10,6 +9,7 @@ import {
   DataSectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
+import { DataValue } from '../../passport/passport';
 
 export abstract class DataSection extends DataSectionBase {
   @Expose()

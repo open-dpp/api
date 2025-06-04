@@ -1,13 +1,14 @@
 import { Expose, plainToInstance } from 'class-transformer';
 import { maxBy, minBy } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { DataValue, Model } from '../../models/domain/model';
+import { Model } from '../../models/domain/model';
 import {
   DataSection,
   isGroupSection,
   isRepeaterSection,
   RepeaterSection,
 } from '../../product-data-model/domain/section';
+import { DataValue } from '../../passport/passport';
 
 export class View {
   @Expose()

@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { DataValue } from '../../models/domain/model';
 import {
   Expose,
   instanceToPlain,
@@ -11,6 +10,7 @@ import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataSection, sectionSubTypes } from './section';
+import { DataValue } from '../../passport/passport';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];

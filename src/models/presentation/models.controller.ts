@@ -13,10 +13,12 @@ import { ModelsService } from '../infrastructure/models.service';
 import { CreateModelDto } from './dto/create-model.dto';
 import { UpdateModelDto } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
+import { DataValue } from '../../passport/passport';
+import { UpdateDataValueDto } from './dto/update-data-value.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -104,8 +106,14 @@ export class ModelsController {
     const model = await this.modelsService.findOne(modelId);
     await this.organizationService.findOneOrFail(organizationId);
 
-    const mergedModel = model.mergeWithPlain(updateModelDto);
-    return (await this.modelsService.save(mergedModel)).toPlain();
+    if (updateModelDto.name) {
+      model.rename(updateModelDto.name);
+    }
+    if (updateModelDto.description) {
+      model.modifyDescription(updateModelDto.description);
+    }
+
+    return (await this.modelsService.save(model)).toPlain();
   }
 
   @Post(':modelId/product-data-models/:productDataModelId')
@@ -138,7 +146,7 @@ export class ModelsController {
   async updateDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() updateDataValues: unknown,
+    @Body() updateDataValues: UpdateDataValueDto[],
     @Request() req: AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
@@ -153,15 +161,15 @@ export class ModelsController {
       req.authContext,
     );
 
-    const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
+    model.modifyDataValues(updateDataValues);
     const productDataModel = await this.productDataModelService.findOneOrFail(
-      mergedModel.productDataModelId,
+      model.productDataModelId,
     );
-    const validationResult = productDataModel.validate(mergedModel.dataValues);
+    const validationResult = productDataModel.validate(model.dataValues);
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
-    return (await this.modelsService.save(mergedModel)).toPlain();
+    return (await this.modelsService.save(model)).toPlain();
   }
 
   @Post(':modelId/data-values')

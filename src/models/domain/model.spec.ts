@@ -1,8 +1,9 @@
-import { DataValue, Model } from './model';
+import { Model } from './model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { DataValue } from '../../passport/passport';
 
 describe('Model', () => {
   it('should create unique product identifiers on model creation', () => {
@@ -196,7 +197,21 @@ describe('Model', () => {
     );
   });
 
-  it('is merged with plain', () => {
+  it('is renamed', () => {
+    const user = new User(randomUUID(), 'test@example.com');
+    const organization = Organization.create({ name: 'orga', user });
+    const model = Model.create({
+      name: 'My Name',
+      user,
+      organization,
+    });
+    model.rename('new Name');
+    model.modifyDescription('new description');
+    expect(model.name).toEqual('new Name');
+    expect(model.description).toEqual('new description');
+  });
+
+  it('modifies data values', () => {
     const model = Model.fromPlain({
       name: 'My Name',
       description: 'Some description',
@@ -206,47 +221,16 @@ describe('Model', () => {
         { id: 'd3', value: 'v3', dataSectionId: 's2', dataFieldId: 'f3' },
       ],
     });
-    const plain = {
-      name: 'Plain name',
-      ownedByOrganizationId: randomUUID(),
-      dataValues: [
-        { id: 'd1', value: 'v1', fieldToIgnore: 3, dataFieldId: 'f9' },
-        { id: 'd3', value: 'v3 new' },
-      ],
-      fieldToIgnore: 'hello',
-    };
-    const mergedModel = model.mergeWithPlain(plain);
-    expect(mergedModel.id).toEqual(expect.any(String));
-    expect(mergedModel.name).toEqual(plain.name);
-    expect(mergedModel.description).toEqual(model.description);
-    expect(
-      mergedModel.isOwnedBy(
-        Organization.fromPlain({ id: plain.ownedByOrganizationId }),
-      ),
-    ).toBeTruthy();
-    expect(mergedModel.dataValues).toEqual([
+    const dataValues = [
+      { id: 'd1', value: 'v1' },
+      { id: 'd3', value: 'v3 new' },
+    ];
+    model.modifyDataValues(dataValues);
+    expect(model.dataValues).toEqual([
       { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
       { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
       { id: 'd3', value: 'v3 new', dataSectionId: 's2', dataFieldId: 'f3' },
     ]);
-  });
-
-  it('handles merging with empty plain object', () => {
-    const model = Model.fromPlain({
-      name: 'Original Name',
-      description: 'Original Description',
-      dataValues: [
-        { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      ],
-    });
-
-    // Empty plain object should preserve original values
-    const mergedModel = model.mergeWithPlain({});
-
-    expect(mergedModel.name).toEqual('Original Name');
-    expect(mergedModel.description).toEqual('Original Description');
-    expect(mergedModel.dataValues).toHaveLength(1);
-    expect(mergedModel.dataValues[0].id).toEqual('d1');
   });
 
   it('tests all getter methods', () => {

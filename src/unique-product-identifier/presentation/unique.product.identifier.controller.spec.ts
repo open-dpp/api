@@ -15,7 +15,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { ModelsModule } from '../../models/models.module';
 import { UniqueProductIdentifierModule } from '../unique.product.identifier.module';
-import { DataValue, Model } from '../../models/domain/model';
+import { Model } from '../../models/domain/model';
 import * as request from 'supertest';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { UserEntity } from '../../users/infrastructure/user.entity';
@@ -29,6 +29,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../../product-data-model/infrastructure/product-data-model.schema';
+import { DataValue } from '../../passport/passport';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {

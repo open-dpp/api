@@ -264,7 +264,7 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
-      granularityLevel: GranularityLevel.MODEL,
+      granularityLevel: GranularityLevel.ITEM,
     });
     productDataModelDraft.addDataFieldToSection(section1.id, dataField);
 
@@ -288,7 +288,7 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Tech specs',
       type: SectionType.GROUP,
       layout,
-      granularityLevel: GranularityLevel.ITEM,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({

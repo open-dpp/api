@@ -12,7 +12,7 @@ import { ModelsService } from '../infrastructure/models.service';
 import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { AuthContext } from '../../auth/auth-request';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
@@ -33,6 +33,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../../product-data-model/infrastructure/product-data-model.schema';
+import { DataValue } from '../../passport/passport';
 
 describe('ModelsController', () => {
   let app: INestApplication;

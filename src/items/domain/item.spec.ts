@@ -1,5 +1,6 @@
 import { Item } from './item';
 import { randomUUID } from 'crypto';
+import { DataValue } from '../../passport/passport';
 
 describe('Item', () => {
   it('should create an item and defines model', () => {
@@ -22,5 +23,65 @@ describe('Item', () => {
     ]);
     expect(uniqueProductIdentifier1.referenceId).toEqual(item.id);
     expect(uniqueProductIdentifier2.referenceId).toEqual(item.id);
+  });
+
+  it('add data values', () => {
+    const item = new Item();
+    item.addDataValues([
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId2',
+        dataSectionId: 'sid2',
+        value: 'value 2',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId3',
+        dataSectionId: 'sid2',
+        value: 'value 3',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId2',
+        dataSectionId: 'sid2',
+        value: 'value 4',
+        row: 1,
+      }),
+      DataValue.fromPlain({
+        dataFieldId: 'fieldId3',
+        dataSectionId: 'sid2',
+        value: 'value 5',
+        row: 1,
+      }),
+    ]);
+    expect(item.dataValues).toEqual([
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId2',
+        value: 'value 2',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId3',
+        value: 'value 3',
+        row: 0,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId2',
+        value: 'value 4',
+        row: 1,
+      }),
+      DataValue.fromPlain({
+        id: expect.anything(),
+        dataSectionId: 'sid2',
+        dataFieldId: 'fieldId3',
+        value: 'value 5',
+        row: 1,
+      }),
+    ]);
   });
 });

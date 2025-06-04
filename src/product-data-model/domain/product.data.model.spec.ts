@@ -1,10 +1,10 @@
 import { ProductDataModel, VisibilityLevel } from './product.data.model';
-import { DataValue } from '../../models/domain/model';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
+import { DataValue } from '../../passport/passport';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {

@@ -8,7 +8,7 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
@@ -21,6 +21,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataValue } from '../../passport/passport';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
