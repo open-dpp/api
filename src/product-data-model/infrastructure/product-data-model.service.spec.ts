@@ -70,6 +70,7 @@ describe('ProductDataModelService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             name: 'Processor',
@@ -80,6 +81,7 @@ describe('ProductDataModelService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
         subSections: ['s1.1'],
@@ -107,6 +109,7 @@ describe('ProductDataModelService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
         subSections: [],

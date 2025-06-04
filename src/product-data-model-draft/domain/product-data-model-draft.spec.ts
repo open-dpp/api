@@ -593,11 +593,13 @@ describe('ProductDataModelDraft', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
 
     productDataModelDraft.addDataFieldToSection('section-1', dataField1);
@@ -638,11 +640,13 @@ describe('ProductDataModelDraft', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
 
     productDataModelDraft.addDataFieldToSection('section-1', dataField1);
@@ -662,11 +666,13 @@ describe('ProductDataModelDraft', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const productDataModelDraft = ProductDataModelDraft.fromPlain({
       id: 'product-1',

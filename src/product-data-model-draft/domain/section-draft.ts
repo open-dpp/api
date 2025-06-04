@@ -46,6 +46,14 @@ export class DataSectionDraft extends DataSectionBase {
   }
 
   addDataField(dataField: DataFieldDraft) {
+    if (
+      this.granularityLevel &&
+      this.granularityLevel !== dataField.granularityLevel
+    ) {
+      throw new ValueError(
+        `Data field ${dataField.id} has a granularity level of ${dataField.granularityLevel} which does not match the section's granularity level of ${this.granularityLevel}`,
+      );
+    }
     this.dataFields.push(dataField);
   }
 

@@ -29,6 +29,7 @@ import {
   ProductDataModelSchema,
 } from '../infrastructure/product-data-model.schema';
 import { Connection } from 'mongoose';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
@@ -115,6 +116,7 @@ describe('ProductsDataModelController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: 'f12',
@@ -127,6 +129,7 @@ describe('ProductsDataModelController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
       },

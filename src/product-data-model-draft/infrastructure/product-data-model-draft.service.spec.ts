@@ -66,6 +66,7 @@ describe('ProductDataModelDraftMongoService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             name: 'Processor',
@@ -76,6 +77,7 @@ describe('ProductDataModelDraftMongoService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
         parentId: undefined,
@@ -120,6 +122,7 @@ describe('ProductDataModelDraftMongoService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
         granularityLevel: GranularityLevel.MODEL,
@@ -261,6 +264,7 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addDataFieldToSection(section1.id, dataField);
 
@@ -291,11 +295,13 @@ describe('ProductDataModelDraftMongoService', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
 
     productDataModelDraft.addDataFieldToSection(section.id, dataField1);
