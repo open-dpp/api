@@ -246,13 +246,14 @@ describe('ModelsController', () => {
       user: authContext.user,
     });
     await organizationsService.save(organization);
-    const model = Model.fromPlain({
-      name: 'Model Y',
-      description: 'My desc',
-      productDataModelId: productDataModel.id,
-      ownedByOrganizationId: organization.id,
-      createdByUserId: authContext.user.id,
-      dataValues: [
+    const model = Model.fromPlain(
+      randomUUID(),
+      'Model Y',
+      organization.id,
+      authContext.user.id,
+      [],
+      productDataModel.id,
+      [
         DataValue.fromPlain({
           id: randomUUID(),
           dataFieldId: dataFieldId1,
@@ -317,7 +318,9 @@ describe('ModelsController', () => {
           row: 0,
         }),
       ],
-    });
+      'My desc',
+      undefined,
+    );
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockReturnValue(true);

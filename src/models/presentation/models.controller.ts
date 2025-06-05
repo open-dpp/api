@@ -44,11 +44,11 @@ export class ModelsController {
     if (!organization.isMember(req.authContext.user)) {
       throw new ForbiddenException();
     }
-    const model = Model.create({
-      name: createModelDto.name,
-      user: req.authContext.user,
-      organization: organization,
-    });
+    const model = Model.create(
+      createModelDto.name,
+      req.authContext.user,
+      organization,
+    );
     model.createUniqueProductIdentifier();
     return (await this.modelsService.save(model)).toPlain();
   }

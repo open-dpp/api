@@ -24,13 +24,14 @@ export class ModelsService {
     modelEntity: ModelEntity,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    return Model.fromPlain({
-      id: modelEntity.id,
-      name: modelEntity.name,
-      description: modelEntity.description ?? undefined,
-      uniqueProductIdentifiers: uniqueProductIdentifiers,
-      productDataModelId: modelEntity.productDataModelId ?? undefined,
-      dataValues: modelEntity.dataValues
+    return Model.fromPlain(
+      modelEntity.id,
+      modelEntity.name,
+      modelEntity.ownedByOrganizationId,
+      modelEntity.createdByUserId,
+      uniqueProductIdentifiers,
+      modelEntity.productDataModelId ?? undefined,
+      modelEntity.dataValues
         ? modelEntity.dataValues.map((dv) => ({
             id: dv.id,
             value: dv.value ?? undefined,
@@ -39,10 +40,10 @@ export class ModelsService {
             row: dv.row ?? undefined,
           }))
         : [],
-      createdByUserId: modelEntity.createdByUserId,
-      ownedByOrganizationId: modelEntity.ownedByOrganizationId,
-      createdAt: modelEntity.createdAt,
-    });
+
+      modelEntity.description ?? undefined,
+      modelEntity.createdAt,
+    );
   }
 
   async save(model: Model) {

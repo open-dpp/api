@@ -4,7 +4,7 @@ import { DataValue } from '../../passport/passport';
 
 describe('Item', () => {
   it('should create an item and defines model', () => {
-    const item = new Item();
+    const item = Item.create();
     const productId = randomUUID();
 
     item.defineModel(productId);
@@ -12,7 +12,7 @@ describe('Item', () => {
   });
 
   it('should create unique product identifier on item creation', () => {
-    const item = new Item();
+    const item = Item.create();
     const uniqueProductIdentifier1 = item.createUniqueProductIdentifier();
     const uniqueProductIdentifier2 = item.createUniqueProductIdentifier();
 
@@ -26,7 +26,7 @@ describe('Item', () => {
   });
 
   it('add data values', () => {
-    const item = new Item();
+    const item = Item.create();
     item.addDataValues([
       DataValue.fromPlain({
         dataFieldId: 'fieldId2',

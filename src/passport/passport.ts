@@ -1,9 +1,4 @@
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Type,
-} from 'class-transformer';
+import { Expose, plainToInstance, Type } from 'class-transformer';
 import { ProductDataModel } from '../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../data-modelling/domain/granularity-level';
@@ -45,6 +40,15 @@ export abstract class Passport {
   public get dataValues() {
     return this._dataValues;
   }
+
+  protected constructor(
+    productDataModelId: string | undefined,
+    dataValues: DataValue[],
+  ) {
+    this._productDataModelId = productDataModelId;
+    this._dataValues = dataValues;
+  }
+
   public getDataValuesBySectionId(sectionId: string, row?: number) {
     const allRows = this.dataValues.filter(
       (d) => d.dataSectionId === sectionId,
@@ -88,9 +92,5 @@ export abstract class Passport {
     }
     this._productDataModelId = productDataModel.id;
     this._dataValues = productDataModel.createInitialDataValues();
-  }
-
-  public toPlain() {
-    return instanceToPlain(this);
   }
 }

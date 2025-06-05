@@ -72,14 +72,10 @@ describe('ProductsService', () => {
   it('should create and find item for a model', async () => {
     const organization = Organization.create({ name: 'My Orga', user });
     await organizationsService.save(organization);
-    const model = Model.create({
-      name: 'name',
-      user,
-      organization,
-    });
+    const model = Model.create('name', user, organization);
 
     const savedModel = await modelsService.save(model);
-    const item = new Item();
+    const item = Item.create();
     item.defineModel(savedModel.id);
     const savedItem = await itemService.save(item);
     expect(savedItem.model).toEqual(savedModel.id);
@@ -90,25 +86,17 @@ describe('ProductsService', () => {
   it('should create multiple items for a model and find them by model', async () => {
     const organization = Organization.create({ name: 'My Orga', user });
     await organizationsService.save(organization);
-    const model = Model.create({
-      name: 'name',
-      user,
-      organization,
-    });
-    const model2 = Model.create({
-      name: 'name',
-      user,
-      organization,
-    });
+    const model = Model.create('name', user, organization);
+    const model2 = Model.create('name', user, organization);
     const savedModel1 = await modelsService.save(model);
     const savedModel2 = await modelsService.save(model2);
-    const item1 = new Item();
+    const item1 = Item.create();
     item1.defineModel(savedModel1.id);
-    const item2 = new Item();
+    const item2 = Item.create();
     item2.defineModel(savedModel1.id);
     await itemService.save(item1);
     await itemService.save(item2);
-    const item3 = new Item();
+    const item3 = Item.create();
     item3.defineModel(savedModel2.id);
 
     const foundItems = await itemService.findAllByModel(savedModel1.id);
@@ -116,7 +104,7 @@ describe('ProductsService', () => {
   });
 
   it('should throw an error when saving item with non-existent model', async () => {
-    const item = new Item();
+    const item = Item.create();
     const nonExistentModelId = randomUUID();
     item.defineModel(nonExistentModelId);
 
@@ -129,15 +117,11 @@ describe('ProductsService', () => {
     // Create organization and model
     const organization = Organization.create({ name: 'Org with UPIs', user });
     await organizationsService.save(organization);
-    const model = Model.create({
-      name: 'Model with UPIs',
-      user,
-      organization,
-    });
+    const model = Model.create('Model with UPIs', user, organization);
     const savedModel = await modelsService.save(model);
 
     // Create item with unique product identifiers
-    const item = new Item();
+    const item = Item.create();
     item.defineModel(savedModel.id);
 
     // Add unique product identifiers to the item

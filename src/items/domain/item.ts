@@ -1,16 +1,38 @@
 import { randomUUID } from 'crypto';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { Passport } from '../../passport/passport';
+
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue, Passport } from '../../passport/passport';
 
 export class Item extends Passport {
   granularityLevel = GranularityLevel.ITEM;
   private _model: string;
-  constructor(
-    public readonly id: string = randomUUID(),
-    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
+
+  private constructor(
+    public readonly id: string,
+    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[],
+    productDataModelId: string | undefined,
+    dataValues: DataValue[],
   ) {
-    super();
+    super(productDataModelId, dataValues);
+  }
+
+  public static create() {
+    return new Item(randomUUID(), [], undefined, []);
+  }
+
+  public static fromPlain(
+    id: string,
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
+    productDataModelId: string | undefined,
+    dataValues: DataValue[],
+  ) {
+    return new Item(
+      id,
+      uniqueProductIdentifiers,
+      productDataModelId,
+      dataValues,
+    );
   }
 
   get model() {

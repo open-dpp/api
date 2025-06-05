@@ -63,11 +63,7 @@ describe('ModelsService', () => {
   it('should create a model', async () => {
     const organization = Organization.create({ name: 'My orga', user: user });
     await organizationService.save(organization);
-    const model = Model.create({
-      name: 'My product',
-      user,
-      organization,
-    });
+    const model = Model.create('My product', user, organization);
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
@@ -207,21 +203,9 @@ describe('ModelsService', () => {
   it('should find all models of organization', async () => {
     const organization = Organization.create({ name: 'My orga', user: user });
     await organizationService.save(organization);
-    const model1 = Model.create({
-      name: 'Product A',
-      user,
-      organization,
-    });
-    const model2 = Model.create({
-      name: 'Product B',
-      user,
-      organization,
-    });
-    const model3 = Model.create({
-      name: 'Product C',
-      user,
-      organization,
-    });
+    const model1 = Model.create('Product A', user, organization);
+    const model2 = Model.create('Product B', user, organization);
+    const model3 = Model.create('Product C', user, organization);
     await modelsService.save(model1);
     await modelsService.save(model2);
     await modelsService.save(model3);
@@ -229,7 +213,9 @@ describe('ModelsService', () => {
     const foundModels = await modelsService.findAllByOrganization(
       organization.id,
     );
-    expect(foundModels).toEqual([model1, model2, model3]);
+    expect(foundModels.map((m) => m.toPlain())).toEqual(
+      [model1, model2, model3].map((m) => m.toPlain()),
+    );
   });
 
   afterEach(async () => {

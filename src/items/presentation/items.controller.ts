@@ -27,7 +27,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = new Item();
+    const item = Item.create();
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
     return this.itemToDto(await this.itemsService.save(item));

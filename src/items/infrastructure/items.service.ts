@@ -23,7 +23,13 @@ export class ItemsService {
     itemEntity: ItemEntity,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    const item = new Item(itemEntity.id, uniqueProductIdentifiers);
+    // TODO: Replace hard coded values
+    const item = Item.fromPlain(
+      itemEntity.id,
+      uniqueProductIdentifiers,
+      undefined,
+      [],
+    );
     item.defineModel(itemEntity.modelId);
     return item;
   }
