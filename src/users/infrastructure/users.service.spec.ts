@@ -22,7 +22,6 @@ describe('UsersService', () => {
     updatedAt: new Date(),
     deletedAt: null,
     organizations: [],
-    createdModels: [],
     creatorOfOrganizations: [],
     ownerOfOrganizations: [],
   };

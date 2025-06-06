@@ -6,16 +6,13 @@ import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
-import { UniqueProductIdentifierEntity } from '../infrastructure/unique.product.identifier.entity';
 import { INestApplication } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
-import { ModelsModule } from '../../models/models.module';
 import { UniqueProductIdentifierModule } from '../unique.product.identifier.module';
-import { Model } from '../../models/domain/model';
+import { DataValue, Model } from '../../models/domain/model';
 import * as request from 'supertest';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { UserEntity } from '../../users/infrastructure/user.entity';
@@ -24,12 +21,6 @@ import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../../product-data-model/infrastructure/product-data-model.schema';
-import { DataValue } from '../../passport/passport';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -60,7 +51,7 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
   };
 });
 
-describe('ModelsController', () => {
+describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let productDataModelService: ProductDataModelService;
@@ -77,19 +68,8 @@ describe('ModelsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ModelEntity,
-          UserEntity,
-          UniqueProductIdentifierEntity,
-        ]),
+        TypeOrmModule.forFeature([UserEntity]),
         MongooseTestingModule,
-        MongooseModule.forFeature([
-          {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
-          },
-        ]),
-        ModelsModule,
         UniqueProductIdentifierModule,
         ProductDataModelModule,
       ],
@@ -246,14 +226,13 @@ describe('ModelsController', () => {
       user: authContext.user,
     });
     await organizationsService.save(organization);
-    const model = Model.fromPlain(
-      randomUUID(),
-      'Model Y',
-      organization.id,
-      authContext.user.id,
-      [],
-      productDataModel.id,
-      [
+    const model = Model.fromPlain({
+      name: 'Model Y',
+      description: 'My desc',
+      productDataModelId: productDataModel.id,
+      ownedByOrganizationId: organization.id,
+      createdByUserId: authContext.user.id,
+      dataValues: [
         DataValue.fromPlain({
           id: randomUUID(),
           dataFieldId: dataFieldId1,
@@ -318,9 +297,7 @@ describe('ModelsController', () => {
           row: 0,
         }),
       ],
-      'My desc',
-      undefined,
-    );
+    });
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockReturnValue(true);

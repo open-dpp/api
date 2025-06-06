@@ -6,9 +6,7 @@ import { randomUUID } from 'crypto';
 import { Test } from '@nestjs/testing';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import * as request from 'supertest';
@@ -16,7 +14,6 @@ import { Model } from '../../models/domain/model';
 import { ItemsService } from '../infrastructure/items.service';
 import { ItemsModule } from '../items.module';
 import { Item } from '../domain/item';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
@@ -26,11 +23,7 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../../product-data-model/infrastructure/product-data-model.schema';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -47,16 +40,9 @@ describe('ItemsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
+        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
         MongooseTestingModule,
-        MongooseModule.forFeature([
-          {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
-          },
-        ]),
         ItemsModule,
-        UniqueProductIdentifierModule,
         PermissionsModule,
       ],
       providers: [
@@ -122,7 +108,6 @@ describe('ItemsController', () => {
       uniqueProductIdentifiers: [
         {
           uuid: foundUniqueProductIdentifiers[0].uuid,
-          view: foundUniqueProductIdentifiers[0].view,
           referenceId: found.id,
         },
       ],
@@ -203,7 +188,6 @@ describe('ItemsController', () => {
         {
           referenceId: item.id,
           uuid: uniqueProductId.uuid,
-          view: uniqueProductId.view,
         },
       ],
     });
@@ -295,7 +279,6 @@ describe('ItemsController', () => {
           {
             referenceId: item.id,
             uuid: uniqueProductId1.uuid,
-            view: uniqueProductId1.view,
           },
         ],
       },
@@ -305,7 +288,6 @@ describe('ItemsController', () => {
           {
             referenceId: item2.id,
             uuid: uniqueProductId2.uuid,
-            view: uniqueProductId2.view,
           },
         ],
       },

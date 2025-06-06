@@ -3,16 +3,11 @@ import { INestApplication } from '@nestjs/common';
 import { ModelsModule } from '../models.module';
 import * as request from 'supertest';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { ModelEntity } from '../infrastructure/model.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { ModelsService } from '../infrastructure/models.service';
-import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { AuthContext } from '../../auth/auth-request';
-import { Model } from '../domain/model';
+import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
@@ -20,7 +15,6 @@ import { ProductDataModelService } from '../../product-data-model/infrastructure
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationsModule } from '../../organizations/organizations.module';
@@ -33,7 +27,6 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../../product-data-model/infrastructure/product-data-model.schema';
-import { DataValue } from '../../passport/passport';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -49,17 +42,9 @@ describe('ModelsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
         MongooseTestingModule,
-        MongooseModule.forFeature([
-          {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
-          },
-        ]),
         ModelsModule,
         OrganizationsModule,
-        UniqueProductIdentifierModule,
         ProductDataModelModule,
       ],
       providers: [
@@ -266,7 +251,11 @@ describe('ModelsController', () => {
 
     const models: Model[] = await Promise.all(
       modelNames.map(async (pn) => {
-        const model = Model.create(pn, authContext.user, organization);
+        const model = Model.create({
+          name: pn,
+          organization,
+          user: authContext.user,
+        });
         return await modelsService.save(model);
       }),
     );
@@ -276,7 +265,11 @@ describe('ModelsController', () => {
     });
     await organizationsService.save(otherOrganization);
     await modelsService.save(
-      Model.create('Other Orga', authContext.user, otherOrganization),
+      Model.create({
+        name: 'Other Orga',
+        organization: otherOrganization,
+        user: authContext.user,
+      }),
     );
 
     const response = await request(app.getHttpServer())
@@ -298,7 +291,11 @@ describe('ModelsController', () => {
     const otherUser = new User(randomUUID(), 'other@example.com');
     const organization = await createOrganization(otherUser);
 
-    const model = Model.create('Model', otherUser, organization);
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: otherUser,
+    });
     await modelsService.save(model);
 
     const response = await request(app.getHttpServer())
@@ -316,7 +313,11 @@ describe('ModelsController', () => {
 
   it(`/GET model`, async () => {
     const organization = await createOrganization();
-    const model = Model.create('Model', authContext.user, organization);
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}`)
@@ -335,7 +336,11 @@ describe('ModelsController', () => {
   it(`/GET model fails if user is not member of organization`, async () => {
     const otherUser = new User(randomUUID(), 'test@example.com');
     const organization = await createOrganization(otherUser);
-    const model = Model.create('Model', otherUser, organization);
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: otherUser,
+    });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}`)
@@ -348,7 +353,11 @@ describe('ModelsController', () => {
 
   it(`/GET model fails if model does not belong to organization`, async () => {
     const organization = await createOrganization();
-    const model = Model.create('Model', authContext.user, organization);
+    const model = Model.create({
+      name: 'Model',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
     const otherOrganization = await createOrganization();
     const response = await request(app.getHttpServer())
@@ -368,7 +377,11 @@ describe('ModelsController', () => {
     const body = { name: 'My name', description: 'My desc' };
     const organization = await createOrganization();
 
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
 
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
@@ -423,7 +436,11 @@ describe('ModelsController', () => {
     const otherUser = new User(randomUUID(), 'other@example.com');
     const organization = await createOrganization(otherUser);
 
-    const model = Model.create('My name', otherUser, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: otherUser,
+    });
     await modelsService.save(model);
 
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
@@ -445,7 +462,11 @@ describe('ModelsController', () => {
     const body = { name: 'My name', description: 'My desc' };
     const organization = await createOrganization();
 
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     await modelsService.save(model);
 
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
@@ -477,7 +498,11 @@ describe('ModelsController', () => {
   it('update data values of model', async () => {
     const organization = await createOrganization();
 
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -526,7 +551,11 @@ describe('ModelsController', () => {
     const otherUser = new User(randomUUID(), 'test@example.com');
     const organization = await createOrganization(otherUser);
 
-    const model = Model.create('My name', otherUser, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: otherUser,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -546,7 +575,11 @@ describe('ModelsController', () => {
   it('update data values fails if model does not belong to organization', async () => {
     const organization = await createOrganization();
 
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization: organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -578,7 +611,11 @@ describe('ModelsController', () => {
   it('update data values fails caused by validation', async () => {
     const organization = await createOrganization();
 
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization: organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -615,7 +652,11 @@ describe('ModelsController', () => {
   //
   it('add data values to model', async () => {
     const organization = await createOrganization();
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -665,7 +706,11 @@ describe('ModelsController', () => {
   it('add data values to model fails if user is not member of organization', async () => {
     const otherUser = new User(randomUUID(), 'test@example.com');
     const organization = await createOrganization(otherUser);
-    const model = Model.create('My name', otherUser, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: otherUser,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
@@ -683,7 +728,11 @@ describe('ModelsController', () => {
 
   it('add data values to model fails if model does not belong to organization', async () => {
     const organization = await createOrganization();
-    const model = Model.create('My name', authContext.user, organization);
+    const model = Model.create({
+      name: 'My name',
+      organization,
+      user: authContext.user,
+    });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);

@@ -8,62 +8,48 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { DataSource } from 'typeorm';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
-import { Model } from '../domain/model';
+import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { PermissionsModule } from '../../permissions/permissions.module';
-import { ConfigModule } from '@nestjs/config';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataValue } from '../../passport/passport';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
-  let organizationService: OrganizationsService;
-  let dataSource: DataSource;
-  const user = new User(randomUUID(), 'test@test.test');
+  const user = new User(randomUUID(), 'test@example.com');
+  const organization = Organization.create({ name: 'Firma Y', user });
+  let mongoConnection: Connection;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ModelEntity,
-          UniqueProductIdentifierEntity,
-          UserEntity,
-          OrganizationEntity,
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
         ]),
-        ConfigModule,
-        PermissionsModule,
       ],
-      providers: [
-        ModelsService,
-        UniqueProductIdentifierService,
-        UsersService,
-        OrganizationsService,
-        KeycloakResourcesService,
-      ],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useClass(KeycloakResourcesServiceTesting)
-      .compile();
-
-    dataSource = module.get<DataSource>(DataSource);
+      providers: [ModelsService, UniqueProductIdentifierService],
+    }).compile();
     modelsService = module.get<ModelsService>(ModelsService);
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
+    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   it('should create a model', async () => {
     const organization = Organization.create({ name: 'My orga', user: user });
     await organizationService.save(organization);
-    const model = Model.create('My product', user, organization);
+    const model = Model.create({
+      name: 'My product',
+      user,
+      organization,
+    });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
@@ -203,22 +189,34 @@ describe('ModelsService', () => {
   it('should find all models of organization', async () => {
     const organization = Organization.create({ name: 'My orga', user: user });
     await organizationService.save(organization);
-    const model1 = Model.create('Product A', user, organization);
-    const model2 = Model.create('Product B', user, organization);
-    const model3 = Model.create('Product C', user, organization);
+    const model1 = Model.create({
+      name: 'Product A',
+      user,
+      organization,
+    });
+    const model2 = Model.create({
+      name: 'Product B',
+      user,
+      organization,
+    });
+    const model3 = Model.create({
+      name: 'Product C',
+      user,
+      organization,
+    });
     await modelsService.save(model1);
     await modelsService.save(model2);
     await modelsService.save(model3);
 
     const foundModels = await modelsService.findAllByOrganization(
-      organization.id,
+      otherOrganization.id,
     );
     expect(foundModels.map((m) => m.toPlain())).toEqual(
       [model1, model2, model3].map((m) => m.toPlain()),
     );
   });
 
-  afterEach(async () => {
-    await dataSource.destroy();
+  afterAll(async () => {
+    await mongoConnection.close();
   });
 });
