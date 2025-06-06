@@ -293,7 +293,6 @@ describe('OrganizationsService', () => {
         orgEntity.id = saved.id;
         orgEntity.name = name;
         orgEntity.members = [];
-        orgEntity.models = []; // Empty models array
 
         jest
           .spyOn(organizationsService['organizationRepository'], 'findOne')

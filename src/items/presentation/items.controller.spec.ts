@@ -23,8 +23,6 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { ModelsMigrationService } from '../../models/infrastructure/models-migration.service';
-import { ItemsMigrationService } from '../infrastructure/items-migration.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 describe('ItemsController', () => {
@@ -68,10 +66,6 @@ describe('ItemsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
-      .overrideProvider(ItemsMigrationService)
-      .useValue({})
-      .overrideProvider(ModelsMigrationService)
-      .useValue({})
       .compile();
 
     modelsService = moduleRef.get(ModelsService);
