@@ -49,46 +49,46 @@ export class Model extends Passport {
     this.createdAt = createdAt;
   }
 
-  static create(
-    name: string,
-    user: User,
-    organization: Organization,
-    description?: string,
-  ) {
+  static create(data: {
+    name: string;
+    user: User;
+    organization: Organization;
+    description?: string;
+  }) {
     return new Model(
       randomUUID(),
-      name,
-      organization.id,
-      user.id,
+      data.name,
+      data.organization.id,
+      data.user.id,
       [],
       undefined,
       [],
-      description,
+      data.description,
       undefined,
     );
   }
 
-  static fromPlain(
-    id: string,
-    name: string,
-    ownedByOrganizationId: string,
-    createdByUserId: string,
-    uniqueProductIdentifiers: UniqueProductIdentifier[],
-    productDataModelId: string | undefined,
-    dataValues: DataValue[],
-    description: string | undefined,
-    createdAt: Date | undefined,
-  ) {
+  static loadFromDb(data: {
+    id: string;
+    name: string;
+    ownedByOrganizationId: string;
+    createdByUserId: string;
+    uniqueProductIdentifiers: UniqueProductIdentifier[];
+    productDataModelId: string | undefined;
+    dataValues: DataValue[];
+    description: string | undefined;
+    createdAt: Date | undefined;
+  }) {
     return new Model(
-      id,
-      name,
-      ownedByOrganizationId,
-      createdByUserId,
-      uniqueProductIdentifiers,
-      productDataModelId,
-      dataValues,
-      description,
-      createdAt,
+      data.id,
+      data.name,
+      data.ownedByOrganizationId,
+      data.createdByUserId,
+      data.uniqueProductIdentifiers,
+      data.productDataModelId,
+      data.dataValues,
+      data.description,
+      data.createdAt,
     );
   }
 

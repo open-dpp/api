@@ -1,27 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { DataSource } from 'typeorm';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
-import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
 import { Model } from '../../models/domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
-import { ItemEntity } from './item.entity';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Organization } from '../../organizations/domain/organization';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { PermissionsModule } from '../../permissions/permissions.module';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import { ItemDoc, ItemSchema } from './item.schema';
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { Connection } from 'mongoose';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -63,12 +57,12 @@ describe('ItemsService', () => {
       organization,
     });
 
-    const item = new Item();
+    const item = Item.create();
     item.defineModel(model.id);
     const savedItem = await itemService.save(item);
-    expect(savedItem.model).toEqual(model.id);
+    expect(savedItem.modelId).toEqual(model.id);
     const foundItem = await itemService.findById(item.id);
-    expect(foundItem.model).toEqual(model.id);
+    expect(foundItem.modelId).toEqual(model.id);
   });
 
   it('should create multiple items for a model and find them by model', async () => {
@@ -82,13 +76,13 @@ describe('ItemsService', () => {
       user,
       organization,
     });
-    const item1 = new Item();
+    const item1 = Item.create();
     item1.defineModel(model1.id);
-    const item2 = new Item();
+    const item2 = Item.create();
     item2.defineModel(model1.id);
     await itemService.save(item1);
     await itemService.save(item2);
-    const item3 = new Item();
+    const item3 = Item.create();
     item3.defineModel(model2.id);
 
     const foundItems = await itemService.findAllByModel(model1.id);
@@ -102,7 +96,7 @@ describe('ItemsService', () => {
       organization,
     });
     // Create item with unique product identifiers
-    const item = new Item();
+    const item = Item.create();
     item.defineModel(model.id);
 
     // Add unique product identifiers to the item
@@ -148,7 +142,7 @@ describe('ItemsService', () => {
     // Verify conversion
     expect(item).toBeInstanceOf(Item);
     expect(item.id).toBe(itemId);
-    expect(item.model).toBe(modelId);
+    expect(item.modelId).toBe(modelId);
     expect(item.uniqueProductIdentifiers).toEqual(upis);
     expect(item.uniqueProductIdentifiers).toHaveLength(2);
   });

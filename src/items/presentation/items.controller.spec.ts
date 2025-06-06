@@ -86,7 +86,11 @@ describe('ItemsController', () => {
       user: authContext.user,
     });
     await organizationsService.save(organization);
-    const model = Model.create('name', authContext.user, organization);
+    const model = Model.create({
+      name: 'name',
+      user: authContext.user,
+      organization,
+    });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -122,7 +126,7 @@ describe('ItemsController', () => {
     });
     await organizationsService.save(organization);
 
-    const model = Model.create('name', otherUser, organization);
+    const model = Model.create({ name: 'name', user: otherUser, organization });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -140,7 +144,11 @@ describe('ItemsController', () => {
     });
     await organizationsService.save(organization);
 
-    const model = Model.create('name', authContext.user, organization);
+    const model = Model.create({
+      name: 'name',
+      user: authContext.user,
+      organization,
+    });
     await modelsService.save(model);
     const otherOrganization = Organization.create({
       name: 'My orga',
@@ -163,7 +171,11 @@ describe('ItemsController', () => {
     });
     await organizationsService.save(organization);
 
-    const model = Model.create('name', authContext.user, organization);
+    const model = Model.create({
+      name: 'name',
+      user: authContext.user,
+      organization,
+    });
     await modelsService.save(model);
     const item = Item.create();
     item.defineModel(model.id);
@@ -201,7 +213,7 @@ describe('ItemsController', () => {
     });
     await organizationsService.save(organization);
 
-    const model = Model.create('name', otherUser, organization);
+    const model = Model.create({ name: 'name', user: otherUser, organization });
     await modelsService.save(model);
     const item = Item.create();
     item.defineModel(model.id);
@@ -224,7 +236,11 @@ describe('ItemsController', () => {
     });
     await organizationsService.save(organization);
 
-    const model = Model.create('name', authContext.user, organization);
+    const model = Model.create({
+      name: 'name',
+      user: authContext.user,
+      organization,
+    });
     await modelsService.save(model);
     const item = Item.create();
     item.defineModel(model.id);
@@ -251,7 +267,11 @@ describe('ItemsController', () => {
       user: authContext.user,
     });
     await organizationsService.save(organization);
-    const model = Model.create('name', authContext.user, organization);
+    const model = Model.create({
+      name: 'name',
+      user: authContext.user,
+      organization,
+    });
     await modelsService.save(model);
     const item = Item.create();
     item.defineModel(model.id);
@@ -301,7 +321,7 @@ describe('ItemsController', () => {
       user: otherUser,
     });
     await organizationsService.save(organization);
-    const model = Model.create('name', otherUser, organization);
+    const model = Model.create({ name: 'name', user: otherUser, organization });
     await modelsService.save(model);
     const item = Item.create();
     item.defineModel(model.id);
@@ -324,7 +344,11 @@ describe('ItemsController', () => {
       user: authContext.user,
     });
     await organizationsService.save(organization);
-    const model = Model.create('name', authContext.user, organization);
+    const model = Model.create({
+      name: 'name',
+      user: authContext.user,
+      organization,
+    });
     await modelsService.save(model);
     const item = Item.create();
     item.defineModel(model.id);

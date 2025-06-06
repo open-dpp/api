@@ -10,7 +10,7 @@ describe('Model', () => {
   const user = new User(randomUUID(), 'test@example.com');
   const organization = Organization.create({ name: 'My orga', user });
   it('should create unique product identifiers on model creation', () => {
-    const model = Model.create('My model', user, organization);
+    const model = Model.create({ name: 'My model', user, organization });
     const uniqueModelIdentifier1 = model.createUniqueProductIdentifier();
     const uniqueModelIdentifier2 = model.createUniqueProductIdentifier();
 
@@ -24,7 +24,7 @@ describe('Model', () => {
   });
 
   it('should create new model', () => {
-    const model = Model.create('My model', user, organization);
+    const model = Model.create({ name: 'My model', user, organization });
 
     expect(model.isOwnedBy(organization)).toBeTruthy();
     expect(
@@ -33,7 +33,12 @@ describe('Model', () => {
   });
 
   it('is created from plain with defaults', () => {
-    const model = Model.create('My name', user, organization, 'my description');
+    const model = Model.create({
+      name: 'My name',
+      user,
+      organization,
+      description: 'my description',
+    });
     expect(model.id).toEqual(expect.any(String));
     expect(model.name).toEqual('My name');
     expect(model.description).toEqual('my description');
@@ -66,17 +71,17 @@ describe('Model', () => {
     const createdByUserId = randomUUID();
     const ownedByOrganizationId = randomUUID();
 
-    const model = Model.fromPlain(
+    const model = Model.loadFromDb({
       id,
       name,
       ownedByOrganizationId,
       createdByUserId,
-      [],
+      uniqueProductIdentifiers: [],
       productDataModelId,
       dataValues,
       description,
-      undefined,
-    );
+      createdAt: undefined,
+    });
     expect(model.id).toEqual(id);
     expect(model.name).toEqual(name);
     expect(model.description).toEqual(description);
@@ -88,7 +93,7 @@ describe('Model', () => {
   });
 
   it('add data values', () => {
-    const model = Model.create('My name', user, organization);
+    const model = Model.create({ name: 'My name', user, organization });
     model.addDataValues([
       DataValue.fromPlain({
         dataFieldId: 'fieldId2',
@@ -157,17 +162,13 @@ describe('Model', () => {
         row: 0,
       }),
     ];
-    const model = Model.fromPlain(
-      randomUUID(),
-      'My name',
-      organization.id,
-      user.id,
-      [],
-      undefined,
-      dataValues,
-      undefined,
-      undefined,
-    );
+    const model = Model.create({
+      name: 'my name',
+      organization,
+      user,
+    });
+    model.addDataValues(dataValues);
+
     expect(() =>
       model.addDataValues([
         DataValue.fromPlain({
@@ -191,7 +192,7 @@ describe('Model', () => {
   it('is renamed', () => {
     const user = new User(randomUUID(), 'test@example.com');
     const organization = Organization.create({ name: 'orga', user });
-    const model = Model.create('My Name', user, organization);
+    const model = Model.create({ name: 'My Name', user, organization });
     model.rename('new Name');
     model.modifyDescription('new description');
     expect(model.name).toEqual('new Name');
@@ -219,17 +220,12 @@ describe('Model', () => {
         dataFieldId: 'f3',
       }),
     ];
-    const model = Model.fromPlain(
-      randomUUID(),
-      'My name',
-      organization.id,
-      user.id,
-      [],
-      undefined,
-      dataValues,
-      undefined,
-      undefined,
-    );
+    const model = Model.create({
+      name: 'my name',
+      organization,
+      user,
+    });
+    model.addDataValues(dataValues);
     const dataValueUpdates = [
       { id: 'd1', value: 'v1' },
       { id: 'd3', value: 'v3 new' },
@@ -251,32 +247,35 @@ describe('Model', () => {
         dataFieldId: 'f1',
       }),
     ];
-    const model = Model.fromPlain(
-      'id',
-      'Test Model',
-      'org-1',
-      'user-1',
-      [],
-      'dataModelId',
-      dataValues,
-      'Test Description',
-      undefined,
-    );
+    const model = Model.create({
+      name: 'Test Model',
+      organization,
+      user,
+      description: 'Test Description',
+    });
+    const productDataModel = ProductDataModel.create({
+      name: 'Test Product Data Model',
+      user,
+      organization,
+    });
+
+    model.assignProductDataModel(productDataModel);
+    model.addDataValues(dataValues);
 
     const plain = model.toPlain();
 
     expect(plain).toEqual({
-      id: 'id',
+      id: model.id,
       name: 'Test Model',
       description: 'Test Description',
       dataValues: [
         { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
       ],
-      createdByUserId: 'user-1',
-      ownedByOrganizationId: 'org-1',
+      createdByUserId: user.id,
+      ownedByOrganizationId: organization.id,
       uniqueProductIdentifiers: [],
       granularityLevel: GranularityLevel.MODEL,
-      productDataModelId: 'dataModelId',
+      productDataModelId: productDataModel.id,
     });
   });
 
@@ -325,7 +324,7 @@ describe('Model', () => {
 
   describe('assignProductDataModel', () => {
     it('should assign product data model and initialize data values', () => {
-      const model = Model.create('Test Model', user, organization);
+      const model = Model.create({ name: 'Test Model', user, organization });
 
       // Create a mock product data model
       const productDataModel = {
@@ -351,7 +350,7 @@ describe('Model', () => {
     });
 
     it('should throw error if model already has a product data model', () => {
-      const model = Model.create('Test Model', user, organization);
+      const model = Model.create({ name: 'Test Model', user, organization });
 
       const productDataModel1 = ProductDataModel.create({
         name: 'existing-pdm',

@@ -19,9 +19,14 @@ export class ItemsService {
     itemDoc: ItemDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    const item = new Item(itemEntity.id, uniqueProductIdentifiers);
-    item.defineModel(itemEntity.modelId);
-    return item;
+    // TODO: Replace hardcoded dataValues and productDataModelId with actual data
+    return Item.loadFromDb({
+      id: itemDoc.id,
+      uniqueProductIdentifiers,
+      modelId: itemDoc.modelId,
+      dataValues: [],
+      productDataModelId: undefined,
+    });
   }
 
   async save(item: Item) {
@@ -29,7 +34,7 @@ export class ItemsService {
       { _id: item.id },
       {
         _schemaVersion: ItemDocSchemaVersion.v1_0_0,
-        modelId: item.model,
+        modelId: item.modelId,
       },
       {
         new: true, // Return the updated document

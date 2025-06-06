@@ -8,7 +8,7 @@ describe('Item', () => {
     const productId = randomUUID();
 
     item.defineModel(productId);
-    expect(item.model).toEqual(productId);
+    expect(item.modelId).toEqual(productId);
   });
 
   it('should create unique product identifier on item creation', () => {

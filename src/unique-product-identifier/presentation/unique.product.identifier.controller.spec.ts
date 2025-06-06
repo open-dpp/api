@@ -12,7 +12,7 @@ import { APP_GUARD, Reflector } from '@nestjs/core';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UniqueProductIdentifierModule } from '../unique.product.identifier.module';
-import { DataValue, Model } from '../../models/domain/model';
+import { Model } from '../../models/domain/model';
 import * as request from 'supertest';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { UserEntity } from '../../users/infrastructure/user.entity';
@@ -21,6 +21,8 @@ import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { DataValue } from '../../passport/passport';
+import { undefined } from 'zod';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -226,12 +228,15 @@ describe('UniqueProductIdentifierController', () => {
       user: authContext.user,
     });
     await organizationsService.save(organization);
-    const model = Model.fromPlain({
+    const model = Model.loadFromDb({
+      id: randomUUID(),
       name: 'Model Y',
       description: 'My desc',
       productDataModelId: productDataModel.id,
       ownedByOrganizationId: organization.id,
       createdByUserId: authContext.user.id,
+      uniqueProductIdentifiers: [],
+      createdAt: new Date(),
       dataValues: [
         DataValue.fromPlain({
           id: randomUUID(),

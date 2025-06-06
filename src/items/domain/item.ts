@@ -6,41 +6,45 @@ import { DataValue, Passport } from '../../passport/passport';
 
 export class Item extends Passport {
   granularityLevel = GranularityLevel.ITEM;
-  private _model: string;
+  private _modelId: string;
 
   private constructor(
     public readonly id: string,
     public readonly uniqueProductIdentifiers: UniqueProductIdentifier[],
+    modelId: string | undefined,
     productDataModelId: string | undefined,
     dataValues: DataValue[],
   ) {
     super(productDataModelId, dataValues);
+    this._modelId = modelId;
   }
 
   public static create() {
-    return new Item(randomUUID(), [], undefined, []);
+    return new Item(randomUUID(), [], undefined, undefined, []);
   }
 
-  public static fromPlain(
-    id: string,
-    uniqueProductIdentifiers: UniqueProductIdentifier[],
-    productDataModelId: string | undefined,
-    dataValues: DataValue[],
-  ) {
+  public static loadFromDb(data: {
+    id: string;
+    uniqueProductIdentifiers: UniqueProductIdentifier[];
+    modelId: string | undefined;
+    productDataModelId: string | undefined;
+    dataValues: DataValue[];
+  }) {
     return new Item(
-      id,
-      uniqueProductIdentifiers,
-      productDataModelId,
-      dataValues,
+      data.id,
+      data.uniqueProductIdentifiers,
+      data.modelId,
+      data.productDataModelId,
+      data.dataValues,
     );
   }
 
-  get model() {
-    return this._model;
+  get modelId() {
+    return this._modelId;
   }
 
   defineModel(modelId: string) {
-    this._model = modelId;
+    this._modelId = modelId;
   }
 
   public createUniqueProductIdentifier() {

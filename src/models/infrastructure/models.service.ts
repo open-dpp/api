@@ -19,7 +19,7 @@ export class ModelsService {
     modelDoc: ModelDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    return Model.fromPlain({
+    return Model.loadFromDb({
       id: modelDoc._id,
       name: modelDoc.name,
       ownedByOrganizationId: modelDoc.ownedByOrganizationId,
