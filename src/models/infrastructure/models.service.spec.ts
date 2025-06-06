@@ -214,8 +214,8 @@ describe('ModelsService', () => {
     const foundModels = await modelsService.findAllByOrganization(
       otherOrganization.id,
     );
-    expect(foundModels.map((m) => m.toPlain())).toEqual(
-      [model1, model2, model3].map((m) => m.toPlain()),
+    expect(foundModels.map((m) => m)).toEqual(
+      [model1, model2, model3].map((m) => m),
     );
   });
 

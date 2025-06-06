@@ -4,7 +4,6 @@ import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { DataValue } from '../../passport/passport';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('Model', () => {
   const user = new User(randomUUID(), 'test@example.com');
@@ -45,7 +44,6 @@ describe('Model', () => {
     expect(model.uniqueProductIdentifiers).toEqual([]);
     expect(model.productDataModelId).toBeUndefined();
     expect(model.dataValues).toEqual([]);
-    expect(model.createdAt).toBeUndefined();
   });
 
   it('is created from persistence', () => {
@@ -236,47 +234,6 @@ describe('Model', () => {
       { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
       { id: 'd3', value: 'v3 new', dataSectionId: 's2', dataFieldId: 'f3' },
     ]);
-  });
-
-  it('allows converting to plain object', () => {
-    const dataValues = [
-      DataValue.fromPlain({
-        id: 'd1',
-        value: 'v1',
-        dataSectionId: 's1',
-        dataFieldId: 'f1',
-      }),
-    ];
-    const model = Model.create({
-      name: 'Test Model',
-      organization,
-      user,
-      description: 'Test Description',
-    });
-    const productDataModel = ProductDataModel.create({
-      name: 'Test Product Data Model',
-      user,
-      organization,
-    });
-
-    model.assignProductDataModel(productDataModel);
-    model.addDataValues(dataValues);
-
-    const plain = model.toPlain();
-
-    expect(plain).toEqual({
-      id: model.id,
-      name: 'Test Model',
-      description: 'Test Description',
-      dataValues: [
-        { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      ],
-      createdByUserId: user.id,
-      ownedByOrganizationId: organization.id,
-      uniqueProductIdentifiers: [],
-      granularityLevel: GranularityLevel.MODEL,
-      productDataModelId: productDataModel.id,
-    });
   });
 
   describe('DataValue', () => {

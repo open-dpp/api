@@ -24,6 +24,7 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { DataValue } from '../../passport/passport';
+import { modelToDto } from './dto/model.dto';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -281,7 +282,7 @@ describe('ModelsController', () => {
       );
     expect(response.status).toEqual(200);
 
-    expect(response.body).toEqual(models.map((m) => m.toPlain()));
+    expect(response.body).toEqual(models.map((m) => modelToDto(m)));
   });
 
   it(`/GET models of organization fails if user is not part of organization`, async () => {
@@ -327,7 +328,7 @@ describe('ModelsController', () => {
         ),
       );
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual(model.toPlain());
+    expect(response.body).toEqual(modelToDto(model));
   });
 
   it(`/GET model fails if user is not member of organization`, async () => {

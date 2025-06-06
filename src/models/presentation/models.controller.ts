@@ -19,6 +19,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { PermissionsService } from '../../permissions/permissions.service';
 import { DataValue } from '../../passport/passport';
 import { UpdateDataValueDto } from './dto/update-data-value.dto';
+import { modelToDto } from './dto/model.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -50,7 +51,7 @@ export class ModelsController {
       organization,
     });
     model.createUniqueProductIdentifier();
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Get()
@@ -68,7 +69,7 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
-      (m) => m.toPlain(),
+      (m) => modelToDto(m),
     );
   }
 
@@ -89,7 +90,7 @@ export class ModelsController {
       organization.id,
       req.authContext,
     );
-    return model.toPlain();
+    return modelToDto(model);
   }
 
   @Patch(':modelId')
@@ -113,7 +114,7 @@ export class ModelsController {
       model.modifyDescription(updateModelDto.description);
     }
 
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Post(':modelId/product-data-models/:productDataModelId')
@@ -139,7 +140,7 @@ export class ModelsController {
     );
 
     model.assignProductDataModel(productDataModel);
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Patch(':modelId/data-values')
@@ -169,7 +170,7 @@ export class ModelsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Post(':modelId/data-values')
@@ -193,6 +194,6 @@ export class ModelsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 }

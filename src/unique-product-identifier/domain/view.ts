@@ -1,4 +1,3 @@
-import { Expose, plainToInstance } from 'class-transformer';
 import { maxBy, minBy } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Model } from '../../models/domain/model';
@@ -11,17 +10,13 @@ import {
 import { DataValue } from '../../passport/passport';
 
 export class View {
-  @Expose()
-  readonly productDataModel: ProductDataModel;
+  private constructor(
+    private readonly productDataModel: ProductDataModel,
+    private readonly model: Model,
+  ) {}
 
-  @Expose()
-  readonly model: Model;
-
-  static fromPlain(plain: Partial<View>) {
-    return plainToInstance(View, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  static create(data: { productDataModel: ProductDataModel; model: Model }) {
+    return new View(data.productDataModel, data.model);
   }
 
   build() {
