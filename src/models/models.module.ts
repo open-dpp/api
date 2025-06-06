@@ -14,11 +14,18 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
+import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
+import { ModelsSQLService } from './infrastructure/models.sql.service';
+import { ModelsMigrationService } from './infrastructure/models-migration.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ModelEntity, DataValueEntity]),
     MongooseModule.forFeature([
+      {
+        name: ModelDoc.name,
+        schema: ModelSchema,
+      },
       {
         name: ProductDataModelDoc.name,
         schema: ProductDataModelSchema,
@@ -31,7 +38,7 @@ import {
     PermissionsModule,
   ],
   controllers: [ModelsController],
-  providers: [ModelsService],
+  providers: [ModelsService, ModelsSQLService, ModelsMigrationService],
   exports: [ModelsService],
 })
 export class ModelsModule {}

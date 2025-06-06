@@ -2,18 +2,14 @@ import { Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
 import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
-import { ModelsService } from '../../models/infrastructure/models.service';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
   constructor(
     private readonly itemsService: ItemsService,
-    private readonly organizationsService: OrganizationsService,
-    private readonly modelsService: ModelsService,
     private readonly permissionsService: PermissionsService,
   ) {}
 
@@ -67,7 +63,6 @@ export class ItemsController {
       id: item.id,
       uniqueProductIdentifiers: item.uniqueProductIdentifiers.map((u) => ({
         uuid: u.uuid,
-        view: u.view,
         referenceId: u.referenceId,
       })),
     });

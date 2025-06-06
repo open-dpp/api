@@ -8,9 +8,6 @@ export class UniqueProductIdentifier {
   @Expose()
   readonly uuid: string = randomUUID();
 
-  @Expose()
-  readonly view: 'all' | 'manufacturer' | 'compliance' | 'client' = 'all';
-
   public get referenceId() {
     return this._referenceId;
   }

@@ -3,14 +3,9 @@ import { INestApplication } from '@nestjs/common';
 import { ModelsModule } from '../models.module';
 import * as request from 'supertest';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { ModelEntity } from '../infrastructure/model.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { ModelsService } from '../infrastructure/models.service';
-import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { AuthContext } from '../../auth/auth-request';
 import { DataValue, Model } from '../domain/model';
 import { User } from '../../users/domain/user';
@@ -20,7 +15,6 @@ import { ProductDataModelService } from '../../product-data-model/infrastructure
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationsModule } from '../../organizations/organizations.module';
@@ -28,11 +22,8 @@ import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.ha
 import { SectionType } from '../../data-modelling/domain/section-base';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../../product-data-model/infrastructure/product-data-model.schema';
+import { ModelsMigrationService } from '../infrastructure/models-migration.service';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -43,22 +34,15 @@ describe('ModelsController', () => {
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@example.com');
+  const mockService = {};
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
         MongooseTestingModule,
-        MongooseModule.forFeature([
-          {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
-          },
-        ]),
         ModelsModule,
         OrganizationsModule,
-        UniqueProductIdentifierModule,
         ProductDataModelModule,
       ],
       providers: [
@@ -74,6 +58,8 @@ describe('ModelsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
+      .overrideProvider(ModelsMigrationService)
+      .useValue(mockService)
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(

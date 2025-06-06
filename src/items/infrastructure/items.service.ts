@@ -1,44 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Equal, Repository } from 'typeorm';
-import { ItemEntity } from './item.entity';
 import { Item } from '../domain/item';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { Model } from '../../models/domain/model';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model as MongooseModel } from 'mongoose';
+import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 @Injectable()
 export class ItemsService {
   constructor(
-    @InjectRepository(ItemEntity)
-    private itemsRepository: Repository<ItemEntity>,
-    @InjectRepository(ModelEntity)
-    private modelRepository: Repository<ModelEntity>,
+    @InjectModel(ItemDoc.name)
+    private itemDoc: MongooseModel<ItemDoc>,
     private uniqueModelIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   convertToDomain(
-    itemEntity: ItemEntity,
+    itemDoc: ItemDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    const item = new Item(itemEntity.id, uniqueProductIdentifiers);
-    item.defineModel(itemEntity.modelId);
+    const item = new Item(itemDoc.id, uniqueProductIdentifiers);
+    item.defineModel(itemDoc.modelId);
     return item;
   }
 
   async save(item: Item) {
-    const modelEntity = await this.modelRepository.findOne({
-      where: { id: Equal(item.model) },
-    });
-    if (!modelEntity) {
-      throw new NotFoundInDatabaseException(Model.name);
-    }
-    const itemEntity = await this.itemsRepository.save({
-      id: item.id,
-      model: modelEntity,
-    });
+    const itemEntity = await this.itemDoc.findOneAndUpdate(
+      { _id: item.id },
+      {
+        _schemaVersion: ItemDocSchemaVersion.v1_0_0,
+        modelId: item.model,
+      },
+      {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if none found
+        runValidators: true,
+      },
+    );
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
@@ -46,33 +44,27 @@ export class ItemsService {
   }
 
   async findById(id: string) {
-    const itemEntity = await this.itemsRepository.findOne({
-      where: { id: Equal(id) },
-    });
-    if (!itemEntity) {
+    const itemDoc = await this.itemDoc.findById(id);
+    if (!itemDoc) {
       throw new NotFoundInDatabaseException(Item.name);
     }
     return this.convertToDomain(
-      itemEntity,
-      await this.uniqueModelIdentifierService.findAllByReferencedId(
-        itemEntity.id,
-      ),
+      itemDoc,
+      await this.uniqueModelIdentifierService.findAllByReferencedId(itemDoc.id),
     );
   }
 
   async findAllByModel(modelId: string) {
-    const itemEntities = await this.itemsRepository.find({
-      where: {
-        model: {
-          id: Equal(modelId),
-        },
-      },
+    const itemDocs = await this.itemDoc.find({
+      modelId: modelId,
     });
     return await Promise.all(
-      itemEntities.map(async (ie) =>
+      itemDocs.map(async (idocs) =>
         this.convertToDomain(
-          ie,
-          await this.uniqueModelIdentifierService.findAllByReferencedId(ie.id),
+          idocs,
+          await this.uniqueModelIdentifierService.findAllByReferencedId(
+            idocs.id,
+          ),
         ),
       ),
     );

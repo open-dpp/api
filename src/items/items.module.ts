@@ -11,10 +11,25 @@ import { OrganizationEntity } from '../organizations/infrastructure/organization
 import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
+import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
+import { ItemsMigrationService } from './infrastructure/items-migration.service';
+import { ItemsSQLService } from './infrastructure/items.sql.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ModelEntity, ItemEntity, OrganizationEntity]),
+    MongooseModule.forFeature([
+      {
+        name: ItemDoc.name,
+        schema: ItemSchema,
+      },
+      {
+        name: ModelDoc.name,
+        schema: ModelSchema,
+      },
+    ]),
     ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,
@@ -22,7 +37,12 @@ import { PermissionsModule } from '../permissions/permissions.module';
     PermissionsModule,
   ],
   controllers: [ItemsController],
-  providers: [ItemsService, OrganizationsService],
+  providers: [
+    ItemsService,
+    ItemsSQLService,
+    OrganizationsService,
+    ItemsMigrationService,
+  ],
   exports: [ItemsService],
 })
 export class ItemsModule {}
