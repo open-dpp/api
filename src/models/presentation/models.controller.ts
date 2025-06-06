@@ -10,15 +10,18 @@ import {
   Request,
 } from '@nestjs/common';
 import { ModelsService } from '../infrastructure/models.service';
-import { CreateModelDto } from './dto/create-model.dto';
-import { UpdateModelDto } from './dto/update-model.dto';
+import { CreateModelDto, CreateModelDtoSchema } from './dto/create-model.dto';
+import { UpdateModelDto, UpdateModelDtoSchema } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
 import { Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { DataValue } from '../../passport/passport';
-import { UpdateDataValueDto } from './dto/update-data-value.dto';
+import {
+  UpdateDataValueDto,
+  UpdateDataValueDtoSchema,
+} from './dto/update-data-value.dto';
 import { modelToDto } from './dto/model.dto';
 
 @Controller('/organizations/:orgaId/models')
@@ -33,9 +36,10 @@ export class ModelsController {
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
-    @Body() createModelDto: CreateModelDto,
+    @Body() requestBody: CreateModelDto,
     @Request() req: AuthRequest,
   ) {
+    const createModelDto = CreateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -47,6 +51,7 @@ export class ModelsController {
     }
     const model = Model.create({
       name: createModelDto.name,
+      description: createModelDto.description,
       user: req.authContext.user,
       organization,
     });
@@ -97,9 +102,10 @@ export class ModelsController {
   async update(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() updateModelDto: UpdateModelDto,
+    @Body() requestBody: UpdateModelDto,
     @Request() req: AuthRequest,
   ) {
+    const updateModelDto = UpdateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -147,9 +153,11 @@ export class ModelsController {
   async updateDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() updateDataValues: UpdateDataValueDto[],
+    @Body() requestBody: UpdateDataValueDto[],
     @Request() req: AuthRequest,
   ) {
+    const updateDataValues =
+      UpdateDataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,

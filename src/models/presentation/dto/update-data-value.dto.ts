@@ -1,9 +1,8 @@
-import { IsNotEmpty, IsNotEmptyObject, IsUUID } from 'class-validator';
+import { z } from 'zod/v4';
 
-export class UpdateDataValueDto {
-  @IsUUID()
-  @IsNotEmpty()
-  id: string;
-  @IsNotEmptyObject()
-  value: unknown;
-}
+export const UpdateDataValueDtoSchema = z.object({
+  id: z.string(),
+  value: z.unknown(),
+});
+
+export type UpdateDataValueDto = z.infer<typeof UpdateDataValueDtoSchema>;

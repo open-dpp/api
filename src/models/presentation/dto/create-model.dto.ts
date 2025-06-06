@@ -1,10 +1,8 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { z } from 'zod/v4';
 
-export class CreateModelDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-  @IsString()
-  @IsOptional()
-  description: string;
-}
+export const CreateModelDtoSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+});
+
+export type CreateModelDto = z.infer<typeof CreateModelDtoSchema>;
