@@ -22,7 +22,6 @@ import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.ha
 import { SectionType } from '../../data-modelling/domain/section-base';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { ModelsMigrationService } from '../infrastructure/models-migration.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 describe('ModelsController', () => {
@@ -34,7 +33,6 @@ describe('ModelsController', () => {
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@example.com');
-  const mockService = {};
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -58,8 +56,6 @@ describe('ModelsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
-      .overrideProvider(ModelsMigrationService)
-      .useValue(mockService)
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(

@@ -87,7 +87,7 @@ export class OrganizationsService {
   async findOneOrFail(id: string) {
     const organizationEntity = await this.organizationRepository.findOne({
       where: { id: Equal(id) },
-      relations: { members: true, models: true },
+      relations: { members: true },
     });
     if (!organizationEntity) {
       throw new NotFoundInDatabaseException(Organization.name);

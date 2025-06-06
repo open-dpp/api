@@ -10,7 +10,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -45,9 +44,6 @@ export class UserEntity {
     ],
   })
   organizations: OrganizationEntity[];
-
-  @OneToMany(() => ModelEntity, (model) => model.createdByUser)
-  createdModels: ModelEntity[];
 
   @OneToMany(() => OrganizationEntity, (org) => org.createdByUserId)
   creatorOfOrganizations: OrganizationEntity[];

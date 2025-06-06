@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../models/infrastructure/model.entity';
-import { ItemEntity } from './infrastructure/item.entity';
 import { ModelsModule } from '../models/models.module';
 import { ItemsController } from './presentation/items.controller';
 import { ItemsService } from './infrastructure/items.service';
@@ -14,12 +12,10 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
-import { ItemsMigrationService } from './infrastructure/items-migration.service';
-import { ItemsSQLService } from './infrastructure/items.sql.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ModelEntity, ItemEntity, OrganizationEntity]),
+    TypeOrmModule.forFeature([OrganizationEntity]),
     MongooseModule.forFeature([
       {
         name: ItemDoc.name,
@@ -37,12 +33,7 @@ import { ItemsSQLService } from './infrastructure/items.sql.service';
     PermissionsModule,
   ],
   controllers: [ItemsController],
-  providers: [
-    ItemsService,
-    ItemsSQLService,
-    OrganizationsService,
-    ItemsMigrationService,
-  ],
+  providers: [ItemsService, OrganizationsService],
   exports: [ItemsService],
 })
 export class ItemsModule {}
