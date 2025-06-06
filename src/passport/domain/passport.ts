@@ -1,4 +1,3 @@
-import { Expose, Type } from 'class-transformer';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -31,27 +30,17 @@ export class DataValue {
 export abstract class Passport {
   abstract granularityLevel: GranularityLevel;
 
-  @Expose({ name: 'productDataModelId' })
-  private _productDataModelId: string | undefined = undefined;
+  protected constructor(
+    private _productDataModelId: string | undefined = undefined,
+    private _dataValues: DataValue[] = [],
+  ) {}
 
   public get productDataModelId() {
     return this._productDataModelId;
   }
 
-  @Expose({ name: 'dataValues' })
-  @Type(() => DataValue)
-  private _dataValues: DataValue[] = [];
-
   public get dataValues() {
     return this._dataValues;
-  }
-
-  protected constructor(
-    productDataModelId: string | undefined,
-    dataValues: DataValue[],
-  ) {
-    this._productDataModelId = productDataModelId;
-    this._dataValues = dataValues;
   }
 
   public getDataValuesBySectionId(sectionId: string, row?: number) {

@@ -81,7 +81,7 @@ export class ModelsService {
         return this.convertToDomain(
           entity,
           await this.uniqueModelIdentifierService.findAllByReferencedId(
-            entity.id,
+            entity._id,
           ),
         );
       }),
