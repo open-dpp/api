@@ -21,7 +21,7 @@ import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 import { undefined } from 'zod';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {

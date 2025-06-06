@@ -2,7 +2,7 @@ import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/
 import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { User } from '../../users/domain/user';
-import { DataValue, Passport } from '../../passport/passport';
+import { DataValue, Passport } from '../../passport/domain/passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export class Model extends Passport {

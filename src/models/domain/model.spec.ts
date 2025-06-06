@@ -3,7 +3,7 @@ import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 import { undefined } from 'zod';
 import { ignoreIds } from '../../../test/utils';
 

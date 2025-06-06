@@ -9,7 +9,7 @@ import {
   DataSectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 
 export abstract class DataSection extends DataSectionBase {
   @Expose()

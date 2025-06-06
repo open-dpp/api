@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 
 describe('ProductDataModel', () => {

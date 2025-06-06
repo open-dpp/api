@@ -16,7 +16,7 @@ import {
 import { ModelDoc, ModelSchema } from './model.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 
 describe('ModelsService', () => {

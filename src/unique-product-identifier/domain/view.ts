@@ -7,7 +7,7 @@ import {
   isRepeaterSection,
   RepeaterSection,
 } from '../../product-data-model/domain/section';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 
 export class View {
   private constructor(

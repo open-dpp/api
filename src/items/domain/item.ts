@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue, Passport } from '../../passport/passport';
+import { DataValue, Passport } from '../../passport/domain/passport';
 
 export class Item extends Passport {
   granularityLevel = GranularityLevel.ITEM;

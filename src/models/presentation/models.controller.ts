@@ -17,7 +17,7 @@ import { Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 import {
   UpdateDataValueDto,
   UpdateDataValueDtoSchema,

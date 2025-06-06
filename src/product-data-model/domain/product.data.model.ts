@@ -10,7 +10,7 @@ import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataSection, sectionSubTypes } from './section';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];

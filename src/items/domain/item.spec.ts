@@ -1,6 +1,6 @@
 import { Item } from './item';
 import { randomUUID } from 'crypto';
-import { DataValue } from '../../passport/passport';
+import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 
 describe('Item', () => {
