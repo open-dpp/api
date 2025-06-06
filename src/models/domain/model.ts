@@ -64,7 +64,6 @@ export class Model extends Passport {
     productDataModelId: string | undefined;
     dataValues: DataValue[];
     description: string | undefined;
-    createdAt: Date | undefined;
   }) {
     return new Model(
       data.id,

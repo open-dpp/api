@@ -23,6 +23,10 @@ import {
   UpdateDataValueDtoSchema,
 } from './dto/update-data-value.dto';
 import { modelToDto } from './dto/model.dto';
+import {
+  AddDataValueDto,
+  AddDataValueDtoSchema,
+} from './dto/add-data-value.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -185,16 +189,17 @@ export class ModelsController {
   async addDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() addedDataValues: unknown[],
+    @Body() requestBody: AddDataValueDto[],
     @Request() req: AuthRequest,
   ) {
+    const addDataValues = AddDataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
     await this.organizationService.findOneOrFail(organizationId);
-    model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
+    model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );

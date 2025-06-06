@@ -25,6 +25,7 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { DataValue } from '../../passport/passport';
 import { modelToDto } from './dto/model.dto';
+import { ignoreIds } from '../../../test/utils';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -409,23 +410,25 @@ describe('ModelsController', () => {
           keycloakAuthTestingGuard,
         ),
       );
-    expect(responseGet.body.dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: sectionId1,
-        dataFieldId: dataFieldId1,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: sectionId1,
-        dataFieldId: dataFieldId2,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: sectionId2,
-        dataFieldId: dataFieldId3,
-      }),
-    ]);
+    expect(responseGet.body.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId1,
+          value: undefined,
+        }),
+        DataValue.create({
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId2,
+          value: undefined,
+        }),
+        DataValue.create({
+          dataSectionId: sectionId2,
+          dataFieldId: dataFieldId3,
+          value: undefined,
+        }),
+      ]),
+    );
     expect(responseGet.body.productDataModelId).toEqual(productDataModel.id);
   });
 
@@ -688,9 +691,9 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(201);
     const expected = [
       ...existingDataValues,
-      ...addedValues.map((value) => ({ id: expect.any(String), ...value })),
+      ...addedValues.map((d) => DataValue.create(d)),
     ];
-    expect(response.body.dataValues).toEqual(expected);
+    expect(response.body.dataValues).toEqual(ignoreIds(expected));
 
     const foundModel = await modelsService.findOne(response.body.id);
     const sortFn = (a, b) => {

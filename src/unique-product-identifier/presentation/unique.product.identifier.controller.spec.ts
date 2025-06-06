@@ -236,66 +236,56 @@ describe('UniqueProductIdentifierController', () => {
       ownedByOrganizationId: organization.id,
       createdByUserId: authContext.user.id,
       uniqueProductIdentifiers: [],
-      createdAt: new Date(),
       dataValues: [
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId1,
           dataSectionId: sectionId1,
           value: 'val1,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId2,
           dataSectionId: sectionId1,
           value: 'val2,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId3,
           dataSectionId: sectionId2,
           value: 'val3,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId4,
           dataSectionId: sectionId2,
           value: 'val4,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId1,
           dataSectionId: sectionId1,
           value: 'val1,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId2,
           dataSectionId: sectionId1,
           value: 'val2,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId3,
           dataSectionId: sectionId2,
           value: 'val3,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId4,
           dataSectionId: sectionId2,
           value: 'val4,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId5,
           dataSectionId: sectionId3,
           value: 'val5,0',

@@ -37,7 +37,6 @@ export class ModelsService {
         : [],
 
       description: modelDoc.description ?? undefined,
-      createdAt: modelDoc.createdAt,
     });
   }
 

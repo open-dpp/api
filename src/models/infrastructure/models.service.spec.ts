@@ -17,6 +17,7 @@ import { ModelDoc, ModelSchema } from './model.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { DataValue } from '../../passport/passport';
+import { ignoreIds } from '../../../test/utils';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -143,7 +144,8 @@ describe('ModelsService', () => {
 
     model.assignProductDataModel(productDataModel);
     model.addDataValues([
-      DataValue.fromPlain({
+      DataValue.create({
+        value: undefined,
         dataSectionId: productDataModel.sections[2].id,
         dataFieldId: productDataModel.sections[2].dataFields[0].id,
         row: 0,
@@ -154,29 +156,31 @@ describe('ModelsService', () => {
     expect(foundModel.name).toEqual(model.name);
     expect(foundModel.description).toEqual(model.description);
     expect(foundModel.productDataModelId).toEqual(productDataModel.id);
-    expect(foundModel.dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[0].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[1].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[1].id,
-        dataFieldId: productDataModel.sections[1].dataFields[0].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[2].id,
-        dataFieldId: productDataModel.sections[2].dataFields[0].id,
-        row: 0,
-      }),
-    ]);
+    expect(foundModel.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[1].id,
+          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[2].id,
+          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          row: 0,
+        }),
+      ]),
+    );
     expect(foundModel.createdByUserId).toEqual(user.id);
     expect(foundModel.isOwnedBy(organization)).toBeTruthy();
   });

@@ -5,6 +5,7 @@ import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataValue } from '../../passport/passport';
+import { ignoreIds } from '../../../test/utils';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {
@@ -163,52 +164,54 @@ describe('ProductDataModel', () => {
   it('should create data values', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     const dataValues = productDataModel.createInitialDataValues();
-    expect(dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-1',
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-2',
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'section-3',
-        dataFieldId: 'field-5',
-      }),
-    ]);
+    expect(dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          dataSectionId: 'section-1',
+          dataFieldId: 'field-1',
+          value: undefined,
+        }),
+        DataValue.create({
+          dataSectionId: 'section-1',
+          dataFieldId: 'field-2',
+          value: undefined,
+        }),
+        DataValue.create({
+          dataSectionId: 'section-3',
+          dataFieldId: 'field-5',
+          value: undefined,
+        }),
+      ]),
+    );
   });
   //
   it('should validate values successfully', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
 
     const dataValues = [
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 1',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 2',
         dataSectionId: 'section-1',
         dataFieldId: 'field-2',
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 3',
         dataSectionId: 'section-2',
         dataFieldId: 'field-3',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 4',
         dataSectionId: 'section-2',
         dataFieldId: 'field-4',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 5',
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',
@@ -250,17 +253,17 @@ describe('ProductDataModel', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
 
     const dataValues = [
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 1',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 2',
         dataSectionId: 'section-1',
         dataFieldId: 'field-2',
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 5',
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',
@@ -291,18 +294,18 @@ describe('ProductDataModel', () => {
   it('should fail validation caused by missing field and wrong type', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     const dataValues = [
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 1',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: 'value 4',
         dataSectionId: 'section-2',
         dataFieldId: 'field-4',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         value: { wrongType: 'crazyMan' },
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',

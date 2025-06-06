@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { DataValue } from '../../passport/passport';
+import { undefined } from 'zod';
+import { ignoreIds } from '../../../test/utils';
 
 describe('Model', () => {
   const user = new User(randomUUID(), 'test@example.com');
@@ -78,7 +80,6 @@ describe('Model', () => {
       productDataModelId,
       dataValues,
       description,
-      createdAt: undefined,
     });
     expect(model.id).toEqual(id);
     expect(model.name).toEqual(name);
@@ -93,67 +94,64 @@ describe('Model', () => {
   it('add data values', () => {
     const model = Model.create({ name: 'My name', user, organization });
     model.addDataValues([
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId2',
         dataSectionId: 'sid2',
         value: 'value 2',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId3',
         dataSectionId: 'sid2',
         value: 'value 3',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId2',
         dataSectionId: 'sid2',
         value: 'value 4',
         row: 1,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId3',
         dataSectionId: 'sid2',
         value: 'value 5',
         row: 1,
       }),
     ]);
-    expect(model.dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId2',
-        value: 'value 2',
-        row: 0,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId3',
-        value: 'value 3',
-        row: 0,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId2',
-        value: 'value 4',
-        row: 1,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId3',
-        value: 'value 5',
-        row: 1,
-      }),
-    ]);
+    expect(model.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId2',
+          value: 'value 2',
+          row: 0,
+        }),
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId3',
+          value: 'value 3',
+          row: 0,
+        }),
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId2',
+          value: 'value 4',
+          row: 1,
+        }),
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId3',
+          value: 'value 5',
+          row: 1,
+        }),
+      ]),
+    );
   });
 
   it('add data values fails if data values already exist', () => {
     const dataValues = [
-      DataValue.fromPlain({
-        id: 'd1',
+      DataValue.create({
         value: undefined,
         dataSectionId: 'sid1',
         dataFieldId: 'fieldId1',
@@ -169,13 +167,13 @@ describe('Model', () => {
 
     expect(() =>
       model.addDataValues([
-        DataValue.fromPlain({
+        DataValue.create({
           dataFieldId: 'fieldId2',
           dataSectionId: 'sid1',
           value: 'value 2',
           row: 0,
         }),
-        DataValue.fromPlain({
+        DataValue.create({
           dataFieldId: 'fieldId1',
           dataSectionId: 'sid1',
           value: 'value 1',
@@ -198,25 +196,24 @@ describe('Model', () => {
   });
 
   it('modifies data values', () => {
+    const dataValue1 = DataValue.create({
+      value: undefined,
+      dataSectionId: 's1',
+      dataFieldId: 'f1',
+    });
+    const dataValue3 = DataValue.create({
+      value: 'v3',
+      dataSectionId: 's2',
+      dataFieldId: 'f3',
+    });
     const dataValues = [
-      DataValue.fromPlain({
-        id: 'd1',
-        value: undefined,
-        dataSectionId: 's1',
-        dataFieldId: 'f1',
-      }),
-      DataValue.fromPlain({
-        id: 'd2',
+      dataValue1,
+      DataValue.create({
         value: 'v2',
         dataSectionId: 's1',
         dataFieldId: 'f2',
       }),
-      DataValue.fromPlain({
-        id: 'd3',
-        value: 'v3',
-        dataSectionId: 's2',
-        dataFieldId: 'f3',
-      }),
+      dataValue3,
     ];
     const model = Model.create({
       name: 'my name',
@@ -225,28 +222,32 @@ describe('Model', () => {
     });
     model.addDataValues(dataValues);
     const dataValueUpdates = [
-      { id: 'd1', value: 'v1' },
-      { id: 'd3', value: 'v3 new' },
+      { id: dataValue1.id, value: 'v1' },
+      { id: dataValue3.id, value: 'v3 new' },
     ];
     model.modifyDataValues(dataValueUpdates);
-    expect(model.dataValues).toEqual([
-      { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
-      { id: 'd3', value: 'v3 new', dataSectionId: 's2', dataFieldId: 'f3' },
-    ]);
+    expect(model.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: 'v1',
+          dataSectionId: 's1',
+          dataFieldId: 'f1',
+        }),
+        DataValue.create({
+          value: 'v2',
+          dataSectionId: 's1',
+          dataFieldId: 'f2',
+        }),
+        DataValue.create({
+          value: 'v3 new',
+          dataSectionId: 's2',
+          dataFieldId: 'f3',
+        }),
+      ]),
+    );
   });
 
   describe('DataValue', () => {
-    it('should create a data value with default values', () => {
-      const dataValue = new DataValue();
-
-      expect(dataValue.id).toBeDefined();
-      expect(dataValue.value).toBeUndefined();
-      expect(dataValue.dataSectionId).toBeUndefined();
-      expect(dataValue.dataFieldId).toBeUndefined();
-      expect(dataValue.row).toBeUndefined();
-    });
-
     it('should create from plain object', () => {
       const plain = {
         value: 'test-value',
@@ -255,7 +256,7 @@ describe('Model', () => {
         row: 3,
       };
 
-      const dataValue = DataValue.fromPlain(plain);
+      const dataValue = DataValue.create(plain);
 
       expect(dataValue.id).toBeDefined();
       expect(dataValue.value).toBe('test-value');
@@ -272,7 +273,7 @@ describe('Model', () => {
         extraProperty: 'should be ignored',
       };
 
-      const dataValue = DataValue.fromPlain(plain as any);
+      const dataValue = DataValue.create(plain as any);
 
       expect(dataValue.value).toBe('test-value');
       expect((dataValue as any).extraProperty).toBeUndefined();
@@ -287,13 +288,15 @@ describe('Model', () => {
       const productDataModel = {
         id: 'pdm-1',
         createInitialDataValues: jest.fn().mockReturnValue([
-          DataValue.fromPlain({
+          DataValue.create({
             dataSectionId: 'section-1',
             dataFieldId: 'field-1',
+            value: undefined,
           }),
-          DataValue.fromPlain({
+          DataValue.create({
             dataSectionId: 'section-1',
             dataFieldId: 'field-2',
+            value: undefined,
           }),
         ]),
       } as unknown as ProductDataModel;

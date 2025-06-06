@@ -2,8 +2,7 @@ import { Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
 import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
-import { GetItemDto } from './dto/get.item.dto';
-import { plainToInstance } from 'class-transformer';
+import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
@@ -26,7 +25,7 @@ export class ItemsController {
     const item = Item.create();
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
-    return this.itemToDto(await this.itemsService.save(item));
+    return itemToDto(await this.itemsService.save(item));
   }
 
   @Get()
@@ -40,7 +39,7 @@ export class ItemsController {
       req.authContext,
     );
     return (await this.itemsService.findAllByModel(modelId)).map((item) =>
-      this.itemToDto(item),
+      itemToDto(item),
     );
   }
 
@@ -55,16 +54,6 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    return this.itemToDto(await this.itemsService.findById(itemId));
-  }
-
-  private itemToDto(item: Item) {
-    return plainToInstance(GetItemDto, {
-      id: item.id,
-      uniqueProductIdentifiers: item.uniqueProductIdentifiers.map((u) => ({
-        uuid: u.uuid,
-        referenceId: u.referenceId,
-      })),
-    });
+    return itemToDto(await this.itemsService.findById(itemId));
   }
 }

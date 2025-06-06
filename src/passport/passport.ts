@@ -1,25 +1,30 @@
-import { Expose, plainToInstance, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { ProductDataModel } from '../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../data-modelling/domain/granularity-level';
 
 export class DataValue {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly value: unknown;
-  @Expose()
-  readonly dataSectionId: string;
-  @Expose()
-  readonly dataFieldId: string;
-  @Expose()
-  readonly row?: number;
+  private constructor(
+    public readonly id: string,
+    public readonly value: unknown,
+    public readonly dataSectionId: string,
+    public readonly dataFieldId: string,
+    public readonly row?: number,
+  ) {}
 
-  static fromPlain(plain: Partial<DataValue>) {
-    return plainToInstance(DataValue, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  static create(data: {
+    value: unknown;
+    dataSectionId: string;
+    dataFieldId: string;
+    row?: number;
+  }) {
+    return new DataValue(
+      randomUUID(),
+      data.value,
+      data.dataSectionId,
+      data.dataFieldId,
+      data.row,
+    );
   }
 }
 

@@ -145,11 +145,17 @@ export class ProductDataModel {
     return validationOutput;
   }
   public createInitialDataValues(): DataValue[] {
-    return this.sections
-      .filter((s) => s.type === SectionType.GROUP)
+    const filteredSections = this.sections.filter(
+      (s) => s.type === SectionType.GROUP,
+    );
+    return filteredSections
       .map((s) =>
         s.dataFields.map((f) =>
-          DataValue.fromPlain({ dataSectionId: s.id, dataFieldId: f.id }),
+          DataValue.create({
+            dataSectionId: s.id,
+            dataFieldId: f.id,
+            value: undefined,
+          }),
         ),
       )
       .flat();
