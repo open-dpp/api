@@ -8,9 +8,6 @@ export enum ModelDocSchemaVersion {
 @Schema({ collection: 'models', timestamps: true })
 export class ModelDoc extends PassportDoc {
   @Prop({ required: true })
-  _id: string;
-
-  @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })

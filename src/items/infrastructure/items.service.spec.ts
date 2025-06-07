@@ -16,6 +16,11 @@ import {
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
 import { Connection } from 'mongoose';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataValue } from '../../passport/domain/passport';
+import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -63,6 +68,141 @@ describe('ItemsService', () => {
     expect(savedItem.modelId).toEqual(model.id);
     const foundItem = await itemService.findById(item.id);
     expect(foundItem.modelId).toEqual(model.id);
+  });
+
+  it('should create an item with product data model', async () => {
+    const item = Item.create();
+    const productDataModel = ProductDataModel.fromPlain({
+      name: 'Laptop',
+      version: '1.0',
+      sections: [
+        {
+          name: 'Section 1',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title',
+              options: { min: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+            {
+              type: 'TextField',
+              name: 'Title 2',
+              options: { min: 7 },
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+        {
+          name: 'Section 2',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 3',
+              options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+        {
+          name: 'Section 3',
+          type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 4',
+              options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+      ],
+    });
+
+    item.assignProductDataModel(productDataModel);
+    item.addDataValues([
+      DataValue.create({
+        value: undefined,
+        dataSectionId: productDataModel.sections[2].id,
+        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        row: 0,
+      }),
+    ]);
+    const { id } = await itemService.save(item);
+    const foundItem = await itemService.findById(id);
+    expect(foundItem.productDataModelId).toEqual(productDataModel.id);
+    expect(foundItem.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[1].id,
+          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[2].id,
+          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          row: 0,
+        }),
+      ]),
+    );
   });
 
   it('should create multiple items for a model and find them by model', async () => {

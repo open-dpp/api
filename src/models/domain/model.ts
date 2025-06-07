@@ -10,10 +10,6 @@ export class Model extends Passport {
   name: string;
   description: string | undefined;
 
-  readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [];
-
-  readonly id: string;
-
   private _ownedByOrganizationId: string;
 
   private _createdByUserId: string;
@@ -28,12 +24,10 @@ export class Model extends Passport {
     dataValues: DataValue[],
     description: string | undefined,
   ) {
-    super(productDataModelId, dataValues);
-    this.id = id;
+    super(id, uniqueProductIdentifiers, productDataModelId, dataValues);
     this.name = name;
     this._ownedByOrganizationId = ownedByOrganizationId;
     this._createdByUserId = createdByUserId;
-    this.uniqueProductIdentifiers = uniqueProductIdentifiers;
     this.description = description;
   }
 
@@ -95,12 +89,5 @@ export class Model extends Passport {
 
   public isOwnedBy(organization: Organization) {
     return this._ownedByOrganizationId === organization.id;
-  }
-
-  public createUniqueProductIdentifier() {
-    const uniqueProductIdentifier = new UniqueProductIdentifier();
-    uniqueProductIdentifier.linkTo(this.id);
-    this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
-    return uniqueProductIdentifier;
   }
 }

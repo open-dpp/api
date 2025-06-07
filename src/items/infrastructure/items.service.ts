@@ -19,13 +19,20 @@ export class ItemsService {
     itemDoc: ItemDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    // TODO: Replace hardcoded dataValues and productDataModelId with actual data
     return Item.loadFromDb({
       id: itemDoc.id,
       uniqueProductIdentifiers,
       modelId: itemDoc.modelId,
-      dataValues: [],
-      productDataModelId: undefined,
+      dataValues: itemDoc.dataValues
+        ? itemDoc.dataValues.map((dv) => ({
+            id: dv._id,
+            value: dv.value ?? undefined,
+            dataSectionId: dv.dataSectionId,
+            dataFieldId: dv.dataFieldId,
+            row: dv.row ?? undefined,
+          }))
+        : [],
+      productDataModelId: itemDoc.productDataModelId,
     });
   }
 
@@ -35,6 +42,14 @@ export class ItemsService {
       {
         _schemaVersion: ItemDocSchemaVersion.v1_0_0,
         modelId: item.modelId,
+        productDataModelId: item.productDataModelId,
+        dataValues: item.dataValues.map((d) => ({
+          _id: d.id,
+          value: d.value,
+          dataSectionId: d.dataSectionId,
+          dataFieldId: d.dataFieldId,
+          row: d.row,
+        })),
       },
       {
         new: true, // Return the updated document

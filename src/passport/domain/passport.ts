@@ -1,6 +1,7 @@
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 export class DataValue {
   private constructor(
@@ -31,6 +32,8 @@ export abstract class Passport {
   abstract granularityLevel: GranularityLevel;
 
   protected constructor(
+    public readonly id: string,
+    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
     private _productDataModelId: string | undefined = undefined,
     private _dataValues: DataValue[] = [],
   ) {}
@@ -86,5 +89,12 @@ export abstract class Passport {
     }
     this._productDataModelId = productDataModel.id;
     this._dataValues = productDataModel.createInitialDataValues();
+  }
+
+  public createUniqueProductIdentifier() {
+    const uniqueProductIdentifier = new UniqueProductIdentifier();
+    uniqueProductIdentifier.linkTo(this.id);
+    this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
+    return uniqueProductIdentifier;
   }
 }

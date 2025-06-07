@@ -6,17 +6,14 @@ import { DataValue, Passport } from '../../passport/domain/passport';
 
 export class Item extends Passport {
   granularityLevel = GranularityLevel.ITEM;
-  private _modelId: string;
-
   private constructor(
-    public readonly id: string,
-    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[],
-    modelId: string | undefined,
+    id: string,
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
+    private _modelId: string | undefined,
     productDataModelId: string | undefined,
     dataValues: DataValue[],
   ) {
-    super(productDataModelId, dataValues);
-    this._modelId = modelId;
+    super(id, uniqueProductIdentifiers, productDataModelId, dataValues);
   }
 
   public static create() {
@@ -45,12 +42,5 @@ export class Item extends Passport {
 
   defineModel(modelId: string) {
     this._modelId = modelId;
-  }
-
-  public createUniqueProductIdentifier() {
-    const uniqueProductIdentifier = new UniqueProductIdentifier();
-    uniqueProductIdentifier.linkTo(this.id);
-    this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
-    return uniqueProductIdentifier;
   }
 }

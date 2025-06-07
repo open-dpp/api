@@ -1,15 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { PassportDoc } from '../../passport/infrastructure/passport.schema';
 
 export enum ItemDocSchemaVersion {
   v1_0_0 = '1.0.0',
 }
 
 @Schema({ collection: 'items', timestamps: true })
-export class ItemDoc extends Document {
-  @Prop({ required: true })
-  _id: string;
-
+export class ItemDoc extends PassportDoc {
   @Prop({
     default: ItemDocSchemaVersion.v1_0_0,
     enum: ItemDocSchemaVersion,

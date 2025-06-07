@@ -18,6 +18,8 @@ export class DataValueDoc {
 export const DataValueSchema = SchemaFactory.createForClass(DataValueDoc);
 
 export abstract class PassportDoc extends Document {
+  @Prop({ required: true })
+  _id: string;
   @Prop({ type: [DataValueSchema], default: [] })
   dataValues: DataValueDoc[];
 
