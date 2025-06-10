@@ -3,7 +3,6 @@ import { z } from 'zod/v4';
 import { Model } from '../../domain/model';
 
 export const DataValueDtoSchema = z.object({
-  id: z.uuid(),
   row: z.number().optional(),
   value: z.unknown(),
   dataSectionId: z.uuid(),

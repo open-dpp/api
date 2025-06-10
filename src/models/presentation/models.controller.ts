@@ -175,7 +175,7 @@ export class ModelsController {
       req.authContext,
     );
 
-    model.modifyDataValues(updateDataValues);
+    model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );

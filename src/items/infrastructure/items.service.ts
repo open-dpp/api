@@ -27,7 +27,6 @@ export class ItemsService {
       modelId: itemDoc.modelId,
       dataValues: itemDoc.dataValues
         ? itemDoc.dataValues.map((dv) => ({
-            id: dv._id,
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
@@ -48,7 +47,6 @@ export class ItemsService {
         ownedByOrganizationId: item.ownedByOrganizationId,
         createdByUserId: item.createdByUserId,
         dataValues: item.dataValues.map((d) => ({
-          _id: d.id,
           value: d.value,
           dataSectionId: d.dataSectionId,
           dataFieldId: d.dataFieldId,

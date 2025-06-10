@@ -28,7 +28,6 @@ export class ModelsService {
       productDataModelId: modelDoc.productDataModelId ?? undefined,
       dataValues: modelDoc.dataValues
         ? modelDoc.dataValues.map((dv) => ({
-            id: dv._id,
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
@@ -49,7 +48,6 @@ export class ModelsService {
         description: model.description,
         productDataModelId: model.productDataModelId,
         dataValues: model.dataValues.map((d) => ({
-          _id: d.id,
           value: d.value,
           dataSectionId: d.dataSectionId,
           dataFieldId: d.dataFieldId,

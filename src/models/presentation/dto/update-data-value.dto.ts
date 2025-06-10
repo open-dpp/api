@@ -1,8 +1,5 @@
 import { z } from 'zod/v4';
+import { DataValueDtoSchema } from './model.dto';
 
-export const UpdateDataValueDtoSchema = z.object({
-  id: z.string(),
-  value: z.unknown(),
-});
-
+export const UpdateDataValueDtoSchema = DataValueDtoSchema;
 export type UpdateDataValueDto = z.infer<typeof UpdateDataValueDtoSchema>;

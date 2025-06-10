@@ -1,12 +1,10 @@
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { Organization } from '../../organizations/domain/organization';
 
 export class DataValue {
   private constructor(
-    public readonly id: string,
     public readonly value: unknown,
     public readonly dataSectionId: string,
     public readonly dataFieldId: string,
@@ -20,7 +18,6 @@ export class DataValue {
     row?: number;
   }) {
     return new DataValue(
-      randomUUID(),
       data.value,
       data.dataSectionId,
       data.dataFieldId,
@@ -86,10 +83,12 @@ export abstract class Passport {
     this.dataValues.push(...dataValues);
   }
 
-  public modifyDataValues(dataValues: { id: string; value: unknown }[]) {
+  public modifyDataValues(dataValues: DataValue[]) {
     this._dataValues = this.dataValues.map((existingDataValue) => {
       const incomingDataValue = dataValues.find(
-        (dataValue) => dataValue.id === existingDataValue.id,
+        (dataValue) =>
+          dataValue.dataFieldId === existingDataValue.dataFieldId &&
+          dataValue.row === existingDataValue.row,
       );
       if (incomingDataValue) {
         return { ...existingDataValue, value: incomingDataValue.value };

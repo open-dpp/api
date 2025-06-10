@@ -518,8 +518,16 @@ describe('ModelsController', () => {
     const dataValue2 = model.dataValues[1];
     const dataValue3 = model.dataValues[2];
     const updatedValues = [
-      { id: dataValue1.id, value: 'value 1' },
-      { id: dataValue3.id, value: 'value 3' },
+      {
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: 'value 1',
+      },
+      {
+        dataFieldId: dataValue3.dataFieldId,
+        dataSectionId: dataValue3.dataSectionId,
+        value: 'value 3',
+      },
     ];
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
@@ -548,10 +556,7 @@ describe('ModelsController', () => {
     ];
     expect(response.body.dataValues).toEqual(expectedDataValues);
     const foundModel = await modelsService.findOne(response.body.id);
-    const sortFn = (a, b) => a.id.localeCompare(b.id);
-    expect([...foundModel.dataValues].sort(sortFn)).toEqual(
-      [...expectedDataValues].sort(sortFn),
-    );
+    expect(foundModel.dataValues).toEqual(expectedDataValues);
   });
 
   it('update data values fails if user is not member of organization', async () => {
@@ -568,7 +573,13 @@ describe('ModelsController', () => {
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
-    const updatedValues = [{ id: dataValue1.id, value: 'value 1' }];
+    const updatedValues = [
+      {
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: 'value 1',
+      },
+    ];
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
@@ -597,7 +608,13 @@ describe('ModelsController', () => {
     });
     await organizationsService.save(otherOrganization);
     const dataValue1 = model.dataValues[0];
-    const updatedValues = [{ id: dataValue1.id, value: 'value 1' }];
+    const updatedValues = [
+      {
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: 'value 1',
+      },
+    ];
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${otherOrganization.id}/models/${model.id}/data-values`,
@@ -630,8 +647,16 @@ describe('ModelsController', () => {
     const dataValue1 = model.dataValues[0];
     const dataValue3 = model.dataValues[2];
     const updatedValues = [
-      { id: dataValue1.id, value: { wrongValue: 'value 1' } },
-      { id: dataValue3.id, value: 'value 3' },
+      {
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: { wrongValue: 'value 1' },
+      },
+      {
+        dataFieldId: dataValue3.dataFieldId,
+        dataSectionId: dataValue3.dataSectionId,
+        value: 'value 3',
+      },
     ];
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
@@ -702,12 +727,8 @@ describe('ModelsController', () => {
     expect(response.body.dataValues).toEqual(ignoreIds(expected));
 
     const foundModel = await modelsService.findOne(response.body.id);
-    const sortFn = (a, b) => {
-      return a.id.localeCompare(b.id);
-    };
-    expect([...foundModel.dataValues].sort(sortFn)).toEqual(
-      [...response.body.dataValues].sort(sortFn),
-    );
+
+    expect(foundModel.dataValues).toEqual(response.body.dataValues);
   });
 
   it('add data values to model fails if user is not member of organization', async () => {

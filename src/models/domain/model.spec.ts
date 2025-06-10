@@ -222,8 +222,16 @@ describe('Model', () => {
     });
     model.addDataValues(dataValues);
     const dataValueUpdates = [
-      { id: dataValue1.id, value: 'v1' },
-      { id: dataValue3.id, value: 'v3 new' },
+      DataValue.create({
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: 'v1',
+      }),
+      DataValue.create({
+        dataFieldId: dataValue3.dataFieldId,
+        dataSectionId: dataValue3.dataSectionId,
+        value: 'v3 new',
+      }),
     ];
     model.modifyDataValues(dataValueUpdates);
     expect(model.dataValues).toEqual(
@@ -258,7 +266,6 @@ describe('Model', () => {
 
       const dataValue = DataValue.create(plain);
 
-      expect(dataValue.id).toBeDefined();
       expect(dataValue.value).toBe('test-value');
       expect(dataValue.dataSectionId).toBe('section-1');
       expect(dataValue.dataFieldId).toBe('field-1');

@@ -3,8 +3,6 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 
 @Schema({ _id: false })
 export class DataValueDoc {
-  @Prop({ required: true })
-  _id: string;
   @Prop({ type: MongooseSchema.Types.Mixed, required: false })
   value?: unknown;
   @Prop({ required: false })
