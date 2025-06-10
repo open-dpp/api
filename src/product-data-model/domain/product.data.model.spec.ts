@@ -6,6 +6,7 @@ import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductDataModel', () => {
   it('is created from plain', () => {
@@ -99,12 +100,28 @@ describe('ProductDataModel', () => {
             type: 'TextField',
             name: 'Title',
             options: { min: 2 },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: 'field-2',
             type: 'TextField',
             name: 'Title 2',
             options: { min: 7 },
+            granularityLevel: GranularityLevel.MODEL,
+          },
+          {
+            id: 'field-1-item',
+            type: 'TextField',
+            name: 'Title Field 1 at item level',
+            options: { min: 2 },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: 'field-2-item',
+            type: 'TextField',
+            name: 'Title Field 2 at item level',
+            options: { min: 7 },
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
@@ -118,12 +135,28 @@ describe('ProductDataModel', () => {
             type: 'TextField',
             name: 'Title 3',
             options: { min: 8 },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: 'field-4',
             type: 'TextField',
             name: 'Title 4',
             options: { min: 8 },
+            granularityLevel: GranularityLevel.MODEL,
+          },
+          {
+            id: 'field-3-item',
+            type: 'TextField',
+            name: 'Title Field 3 at item level',
+            options: { min: 8 },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: 'field-4-item',
+            type: 'TextField',
+            name: 'Title Field 4 at item level',
+            options: { min: 8 },
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
@@ -137,6 +170,14 @@ describe('ProductDataModel', () => {
             type: 'TextField',
             name: 'Title 5',
             options: { min: 8 },
+            granularityLevel: GranularityLevel.MODEL,
+          },
+          {
+            id: 'field-5-item',
+            type: 'TextField',
+            name: 'Title Field 5 at item level',
+            options: { min: 8 },
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
@@ -161,9 +202,11 @@ describe('ProductDataModel', () => {
     expect(dataModel.visibility).toEqual(VisibilityLevel.PUBLIC);
   });
 
-  it('should create data values', () => {
+  it('should create data values at model level', () => {
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
-    const dataValues = productDataModel.createInitialDataValues();
+    const dataValues = productDataModel.createInitialDataValues(
+      GranularityLevel.MODEL,
+    );
     expect(dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -179,6 +222,32 @@ describe('ProductDataModel', () => {
         DataValue.create({
           dataSectionId: 'section-3',
           dataFieldId: 'field-5',
+          value: undefined,
+        }),
+      ]),
+    );
+  });
+
+  it('should create data values at item level', () => {
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const dataValues = productDataModel.createInitialDataValues(
+      GranularityLevel.ITEM,
+    );
+    expect(dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          dataSectionId: 'section-1',
+          dataFieldId: 'field-1-item',
+          value: undefined,
+        }),
+        DataValue.create({
+          dataSectionId: 'section-1',
+          dataFieldId: 'field-2-item',
+          value: undefined,
+        }),
+        DataValue.create({
+          dataSectionId: 'section-3',
+          dataFieldId: 'field-5-item',
           value: undefined,
         }),
       ]),
@@ -217,7 +286,10 @@ describe('ProductDataModel', () => {
         dataFieldId: 'field-5',
       }),
     ];
-    const validationOutput = productDataModel.validate(dataValues);
+    const validationOutput = productDataModel.validate(
+      dataValues,
+      GranularityLevel.MODEL,
+    );
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
@@ -269,7 +341,10 @@ describe('ProductDataModel', () => {
         dataFieldId: 'field-5',
       }),
     ];
-    const validationOutput = productDataModel.validate(dataValues);
+    const validationOutput = productDataModel.validate(
+      dataValues,
+      GranularityLevel.MODEL,
+    );
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
@@ -311,7 +386,10 @@ describe('ProductDataModel', () => {
         dataFieldId: 'field-5',
       }),
     ];
-    const validationOutput = productDataModel.validate(dataValues);
+    const validationOutput = productDataModel.validate(
+      dataValues,
+      GranularityLevel.MODEL,
+    );
 
     expect(validationOutput.isValid).toBeFalsy();
     expect(validationOutput.validationResults).toEqual([

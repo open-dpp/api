@@ -8,20 +8,39 @@ export class Item extends Passport {
   granularityLevel = GranularityLevel.ITEM;
   private constructor(
     id: string,
+    ownedByOrganizationId: string,
+    createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
     private _modelId: string | undefined,
     productDataModelId: string | undefined,
     dataValues: DataValue[],
   ) {
-    super(id, uniqueProductIdentifiers, productDataModelId, dataValues);
+    super(
+      id,
+      ownedByOrganizationId,
+      createdByUserId,
+      uniqueProductIdentifiers,
+      productDataModelId,
+      dataValues,
+    );
   }
 
-  public static create() {
-    return new Item(randomUUID(), [], undefined, undefined, []);
+  public static create(data: { organizationId: string; userId: string }) {
+    return new Item(
+      randomUUID(),
+      data.organizationId,
+      data.userId,
+      [],
+      undefined,
+      undefined,
+      [],
+    );
   }
 
   public static loadFromDb(data: {
     id: string;
+    organizationId: string;
+    userId: string;
     uniqueProductIdentifiers: UniqueProductIdentifier[];
     modelId: string | undefined;
     productDataModelId: string | undefined;
@@ -29,6 +48,8 @@ export class Item extends Passport {
   }) {
     return new Item(
       data.id,
+      data.organizationId,
+      data.userId,
       data.uniqueProductIdentifiers,
       data.modelId,
       data.productDataModelId,

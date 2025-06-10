@@ -24,6 +24,7 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { ItemOrgaUserMigrationService } from '../infrastructure/item-orga-user-migration.service';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -66,6 +67,8 @@ describe('ItemsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
+      .overrideProvider(ItemOrgaUserMigrationService)
+      .useValue({})
       .compile();
 
     modelsService = moduleRef.get(ModelsService);
@@ -177,7 +180,10 @@ describe('ItemsController', () => {
       organization,
     });
     await modelsService.save(model);
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item.defineModel(model.id);
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
@@ -215,7 +221,10 @@ describe('ItemsController', () => {
 
     const model = Model.create({ name: 'name', user: otherUser, organization });
     await modelsService.save(model);
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item.defineModel(model.id);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
@@ -242,7 +251,10 @@ describe('ItemsController', () => {
       organization,
     });
     await modelsService.save(model);
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item.defineModel(model.id);
     await itemsService.save(item);
     const otherOrganization = Organization.create({
@@ -273,11 +285,17 @@ describe('ItemsController', () => {
       organization,
     });
     await modelsService.save(model);
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item.defineModel(model.id);
     const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
-    const item2 = Item.create();
+    const item2 = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
     item2.defineModel(model.id);
     await itemsService.save(item2);
@@ -323,10 +341,16 @@ describe('ItemsController', () => {
     await organizationsService.save(organization);
     const model = Model.create({ name: 'name', user: otherUser, organization });
     await modelsService.save(model);
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item.defineModel(model.id);
     await itemsService.save(item);
-    const item2 = Item.create();
+    const item2 = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item2.defineModel(model.id);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
@@ -350,10 +374,16 @@ describe('ItemsController', () => {
       organization,
     });
     await modelsService.save(model);
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item.defineModel(model.id);
     await itemsService.save(item);
-    const item2 = Item.create();
+    const item2 = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
     item2.defineModel(model.id);
     await itemsService.save(item2);
     const otherOrganization = Organization.create({

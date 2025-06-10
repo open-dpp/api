@@ -27,6 +27,7 @@ import {
   AddDataValueDto,
   AddDataValueDtoSchema,
 } from './dto/add-data-value.dto';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -178,7 +179,10 @@ export class ModelsController {
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );
-    const validationResult = productDataModel.validate(model.dataValues);
+    const validationResult = productDataModel.validate(
+      model.dataValues,
+      GranularityLevel.MODEL,
+    );
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
@@ -203,7 +207,10 @@ export class ModelsController {
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );
-    const validationResult = productDataModel.validate(model.dataValues);
+    const validationResult = productDataModel.validate(
+      model.dataValues,
+      GranularityLevel.MODEL,
+    );
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }

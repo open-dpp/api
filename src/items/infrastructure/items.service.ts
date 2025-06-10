@@ -22,6 +22,8 @@ export class ItemsService {
     return Item.loadFromDb({
       id: itemDoc.id,
       uniqueProductIdentifiers,
+      organizationId: itemDoc.ownedByOrganizationId,
+      userId: itemDoc.createdByUserId,
       modelId: itemDoc.modelId,
       dataValues: itemDoc.dataValues
         ? itemDoc.dataValues.map((dv) => ({
@@ -40,9 +42,11 @@ export class ItemsService {
     const itemEntity = await this.itemDoc.findOneAndUpdate(
       { _id: item.id },
       {
-        _schemaVersion: ItemDocSchemaVersion.v1_0_0,
+        _schemaVersion: ItemDocSchemaVersion.v1_0_1,
         modelId: item.modelId,
         productDataModelId: item.productDataModelId,
+        ownedByOrganizationId: item.ownedByOrganizationId,
+        createdByUserId: item.createdByUserId,
         dataValues: item.dataValues.map((d) => ({
           _id: d.id,
           value: d.value,

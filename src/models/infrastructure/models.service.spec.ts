@@ -18,6 +18,7 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -77,6 +78,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
             {
               type: 'TextField',
@@ -88,6 +90,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -112,6 +115,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -136,6 +140,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },

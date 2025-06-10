@@ -4,16 +4,21 @@ import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 
 describe('Item', () => {
+  const organizationId = randomUUID();
+  const userId = randomUUID();
   it('should create an item and defines model', () => {
-    const item = Item.create();
+    const item = Item.create({ organizationId, userId });
     const productId = randomUUID();
 
     item.defineModel(productId);
+    expect(item.id).toBeDefined();
     expect(item.modelId).toEqual(productId);
+    expect(item.ownedByOrganizationId).toEqual(organizationId);
+    expect(item.createdByUserId).toEqual(userId);
   });
 
   it('should create unique product identifier on item creation', () => {
-    const item = Item.create();
+    const item = Item.create({ organizationId, userId });
     const uniqueProductIdentifier1 = item.createUniqueProductIdentifier();
     const uniqueProductIdentifier2 = item.createUniqueProductIdentifier();
 
@@ -27,7 +32,7 @@ describe('Item', () => {
   });
 
   it('add data values', () => {
-    const item = Item.create();
+    const item = Item.create({ organizationId, userId });
     item.addDataValues([
       DataValue.create({
         dataFieldId: 'fieldId2',

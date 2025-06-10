@@ -62,7 +62,10 @@ describe('ItemsService', () => {
       organization,
     });
 
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: user.id,
+    });
     item.defineModel(model.id);
     const savedItem = await itemService.save(item);
     expect(savedItem.modelId).toEqual(model.id);
@@ -71,7 +74,10 @@ describe('ItemsService', () => {
   });
 
   it('should create an item with product data model', async () => {
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: user.id,
+    });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
@@ -216,13 +222,22 @@ describe('ItemsService', () => {
       user,
       organization,
     });
-    const item1 = Item.create();
+    const item1 = Item.create({
+      organizationId: organization.id,
+      userId: user.id,
+    });
     item1.defineModel(model1.id);
-    const item2 = Item.create();
+    const item2 = Item.create({
+      organizationId: organization.id,
+      userId: user.id,
+    });
     item2.defineModel(model1.id);
     await itemService.save(item1);
     await itemService.save(item2);
-    const item3 = Item.create();
+    const item3 = Item.create({
+      organizationId: organization.id,
+      userId: user.id,
+    });
     item3.defineModel(model2.id);
 
     const foundItems = await itemService.findAllByModel(model1.id);
@@ -236,7 +251,10 @@ describe('ItemsService', () => {
       organization,
     });
     // Create item with unique product identifiers
-    const item = Item.create();
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: user.id,
+    });
     item.defineModel(model.id);
 
     // Add unique product identifiers to the item

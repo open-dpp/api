@@ -10,12 +10,6 @@ export class ModelDoc extends PassportDoc {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true })
-  createdByUserId: string;
-
-  @Prop({ required: true })
-  ownedByOrganizationId: string;
-
   @Prop({
     default: ModelDocSchemaVersion.v1_0_0,
     enum: ModelDocSchemaVersion,
@@ -24,11 +18,5 @@ export class ModelDoc extends PassportDoc {
 
   @Prop({ required: false })
   description?: string;
-
-  @Prop()
-  createdAt?: Date;
-
-  @Prop()
-  updatedAt?: Date;
 }
 export const ModelSchema = SchemaFactory.createForClass(ModelDoc);

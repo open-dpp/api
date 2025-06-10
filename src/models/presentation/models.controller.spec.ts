@@ -26,6 +26,7 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { DataValue } from '../../passport/domain/passport';
 import { modelToDto } from './dto/model.dto';
 import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -121,6 +122,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: dataFieldId2,
@@ -133,6 +135,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
       },
@@ -159,6 +162,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
       },
@@ -185,6 +189,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: dataFieldId5,
@@ -197,6 +202,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
       },

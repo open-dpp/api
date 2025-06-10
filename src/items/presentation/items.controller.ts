@@ -22,7 +22,10 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = Item.create();
+    const item = Item.create({
+      organizationId,
+      userId: req.authContext.user.id,
+    });
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
     return itemToDto(await this.itemsService.save(item));

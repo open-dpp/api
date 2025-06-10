@@ -2,6 +2,7 @@ import { ProductDataModel } from '../../product-data-model/domain/product.data.m
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import { Organization } from '../../organizations/domain/organization';
 
 export class DataValue {
   private constructor(
@@ -33,10 +34,24 @@ export abstract class Passport {
 
   protected constructor(
     public readonly id: string,
+    private _ownedByOrganizationId: string,
+    private _createdByUserId: string,
     public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
     private _productDataModelId: string | undefined = undefined,
     private _dataValues: DataValue[] = [],
   ) {}
+
+  public get createdByUserId() {
+    return this._createdByUserId;
+  }
+
+  public get ownedByOrganizationId() {
+    return this._ownedByOrganizationId;
+  }
+
+  public isOwnedBy(organization: Organization) {
+    return this._ownedByOrganizationId === organization.id;
+  }
 
   public get productDataModelId() {
     return this._productDataModelId;
@@ -88,7 +103,9 @@ export abstract class Passport {
       throw Error('This model is already connected to a product data model');
     }
     this._productDataModelId = productDataModel.id;
-    this._dataValues = productDataModel.createInitialDataValues();
+    this._dataValues = productDataModel.createInitialDataValues(
+      this.granularityLevel,
+    );
   }
 
   public createUniqueProductIdentifier() {
