@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from '../../models/domain/model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
-import { Organization } from '../../organizations/domain/organization';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
@@ -24,8 +22,8 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -58,13 +56,13 @@ describe('ItemsService', () => {
   it('should create and find item for a model', async () => {
     const model = Model.create({
       name: 'name',
-      user,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
 
     const item = Item.create({
-      organizationId: organization.id,
-      userId: user.id,
+      userId: userId,
+      organizationId: organizationId,
     });
     item.defineModel(model);
     const savedItem = await itemService.save(item);
@@ -75,12 +73,14 @@ describe('ItemsService', () => {
 
   it('should create an item with product data model', async () => {
     const item = Item.create({
-      organizationId: organization.id,
-      userId: user.id,
+      userId: userId,
+      organizationId: organizationId,
     });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
       sections: [
         {
           name: 'Section 1',
@@ -214,29 +214,29 @@ describe('ItemsService', () => {
   it('should create multiple items for a model and find them by model', async () => {
     const model1 = Model.create({
       name: 'name',
-      user,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
     const model2 = Model.create({
       name: 'name',
-      user,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
     const item1 = Item.create({
-      organizationId: organization.id,
-      userId: user.id,
+      userId: userId,
+      organizationId: organizationId,
     });
     item1.defineModel(model1);
     const item2 = Item.create({
-      organizationId: organization.id,
-      userId: user.id,
+      userId: userId,
+      organizationId: organizationId,
     });
     item2.defineModel(model1);
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = Item.create({
-      organizationId: organization.id,
-      userId: user.id,
+      userId: userId,
+      organizationId: organizationId,
     });
     item3.defineModel(model2);
 
@@ -247,13 +247,13 @@ describe('ItemsService', () => {
   it('should save item with unique product identifiers', async () => {
     const model = Model.create({
       name: 'Model with UPIs',
-      user,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
     // Create item with unique product identifiers
     const item = Item.create({
-      organizationId: organization.id,
-      userId: user.id,
+      userId: userId,
+      organizationId: organizationId,
     });
     item.defineModel(model);
 

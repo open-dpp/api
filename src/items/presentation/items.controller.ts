@@ -44,11 +44,16 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
+    const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+
     const item = Item.create({
       organizationId,
       userId: req.authContext.user.id,
     });
-    const model = await this.modelsService.findOne(modelId);
+
     const productDataModel = model.productDataModelId
       ? await this.productDataModelService.findOneOrFail(
           model.productDataModelId,
@@ -69,6 +74,10 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
+    const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     return (await this.itemsService.findAllByModel(modelId)).map((item) =>
       itemToDto(item),
     );
@@ -77,7 +86,6 @@ export class ItemsController {
   @Get(':id')
   async get(
     @Param('orgaId') organizationId: string,
-    @Param('modelId') modelId: string,
     @Param('id') itemId: string,
     @Request() req: AuthRequest,
   ) {
@@ -85,7 +93,11 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    return itemToDto(await this.itemsService.findById(itemId));
+    const item = await this.itemsService.findById(itemId);
+    if (!item.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    return itemToDto(item);
   }
 
   @Post(':itemId/data-values')
@@ -101,7 +113,7 @@ export class ItemsController {
       req.authContext,
     );
     const item = await this.itemsService.findById(itemId);
-    if (item.ownedByOrganizationId !== organizationId) {
+    if (!item.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
@@ -131,7 +143,7 @@ export class ItemsController {
       req.authContext,
     );
     const item = await this.itemsService.findById(itemId);
-    if (item.ownedByOrganizationId !== organizationId) {
+    if (!item.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
 

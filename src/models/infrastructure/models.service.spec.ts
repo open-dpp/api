@@ -50,8 +50,8 @@ describe('ModelsService', () => {
   it('should create a model', async () => {
     const model = Model.create({
       name: 'My product',
-      user,
-      organization,
+      userId: user.id,
+      organizationId: organization.id,
     });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
@@ -187,7 +187,7 @@ describe('ModelsService', () => {
       ]),
     );
     expect(foundModel.createdByUserId).toEqual(user.id);
-    expect(foundModel.isOwnedBy(organization)).toBeTruthy();
+    expect(foundModel.isOwnedBy(organization.id)).toBeTruthy();
   });
 
   it('fails if requested model could not be found', async () => {
@@ -197,32 +197,28 @@ describe('ModelsService', () => {
   });
 
   it('should find all models of organization', async () => {
-    const otherOrganization = Organization.create({
-      name: 'My orga',
-      user: user,
-    });
+    const otherOrganizationId = randomUUID();
     const model1 = Model.create({
       name: 'Product A',
-      user,
-      organization: otherOrganization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     const model2 = Model.create({
       name: 'Product B',
-      user,
-      organization: otherOrganization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     const model3 = Model.create({
       name: 'Product C',
-      user,
-      organization: otherOrganization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     await modelsService.save(model1);
     await modelsService.save(model2);
     await modelsService.save(model3);
 
-    const foundModels = await modelsService.findAllByOrganization(
-      otherOrganization.id,
-    );
+    const foundModels =
+      await modelsService.findAllByOrganization(otherOrganizationId);
     expect(foundModels.map((m) => m)).toEqual(
       [model1, model2, model3].map((m) => m),
     );

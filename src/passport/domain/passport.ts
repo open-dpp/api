@@ -1,7 +1,6 @@
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { Organization } from '../../organizations/domain/organization';
 
 export class DataValue {
   private constructor(
@@ -46,8 +45,8 @@ export abstract class Passport {
     return this._ownedByOrganizationId;
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this._ownedByOrganizationId === organization.id;
+  public isOwnedBy(organizationId: string) {
+    return this.ownedByOrganizationId === organizationId;
   }
 
   public get productDataModelId() {

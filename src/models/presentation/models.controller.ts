@@ -15,7 +15,6 @@ import { UpdateModelDto, UpdateModelDtoSchema } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
 import { Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { DataValue } from '../../passport/domain/passport';
 
@@ -32,7 +31,6 @@ import {
 export class ModelsController {
   constructor(
     private readonly modelsService: ModelsService,
-    private readonly organizationService: OrganizationsService,
     private readonly productDataModelService: ProductDataModelService,
     private readonly permissionsService: PermissionsService,
   ) {}
@@ -48,16 +46,11 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
-      user: req.authContext.user,
-      organization,
+      userId: req.authContext.user.id,
+      organizationId: organizationId,
     });
     model.createUniqueProductIdentifier();
     return modelToDto(await this.modelsService.save(model));
@@ -72,11 +65,6 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
       (m) => modelToDto(m),
     );
@@ -93,12 +81,9 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(id);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organization.id,
-      req.authContext,
-    );
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     return modelToDto(model);
   }
 
@@ -115,7 +100,9 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    await this.organizationService.findOneOrFail(organizationId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
 
     if (updateModelDto.name) {
       model.rename(updateModelDto.name);
@@ -142,12 +129,10 @@ export class ModelsController {
     const productDataModel =
       await this.productDataModelService.findOneOrFail(productDataModelId);
     const model = await this.modelsService.findOne(modelId);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organization.id,
-      req.authContext,
-    );
+
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
 
     model.assignProductDataModel(productDataModel);
     return modelToDto(await this.modelsService.save(model));
@@ -166,12 +151,9 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organization.id,
-      req.authContext,
-    );
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
     }

@@ -4,8 +4,6 @@ import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Model } from '../../models/domain/model';
-import { Organization } from '../../organizations/domain/organization';
-import { User } from '../../users/domain/user';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
@@ -54,15 +52,10 @@ describe('Item', () => {
 
   it('should create an item and defines model', () => {
     const item = Item.create({ organizationId, userId });
-    const user = new User(userId, 'test@example.com');
-    const organization = Organization.create({
-      name: 'My orga',
-      user,
-    });
     const model = Model.create({
       name: 'name',
-      user,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     model.assignProductDataModel(productDataModel);

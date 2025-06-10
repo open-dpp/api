@@ -8,10 +8,10 @@ import { undefined } from 'zod';
 import { ignoreIds } from '../../../test/utils';
 
 describe('Model', () => {
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'My orga', user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   it('should create unique product identifiers on model creation', () => {
-    const model = Model.create({ name: 'My model', user, organization });
+    const model = Model.create({ name: 'My model', userId, organizationId });
     const uniqueModelIdentifier1 = model.createUniqueProductIdentifier();
     const uniqueModelIdentifier2 = model.createUniqueProductIdentifier();
 
@@ -25,19 +25,17 @@ describe('Model', () => {
   });
 
   it('should create new model', () => {
-    const model = Model.create({ name: 'My model', user, organization });
+    const model = Model.create({ name: 'My model', userId, organizationId });
 
-    expect(model.isOwnedBy(organization)).toBeTruthy();
-    expect(
-      model.isOwnedBy(Organization.create({ name: 'My orga', user })),
-    ).toBeFalsy();
+    expect(model.isOwnedBy(organizationId)).toBeTruthy();
+    expect(model.isOwnedBy(randomUUID())).toBeFalsy();
   });
 
   it('is created from plain with defaults', () => {
     const model = Model.create({
       name: 'My name',
-      user,
-      organization,
+      userId,
+      organizationId,
       description: 'my description',
     });
     expect(model.id).toEqual(expect.any(String));
@@ -84,15 +82,13 @@ describe('Model', () => {
     expect(model.id).toEqual(id);
     expect(model.name).toEqual(name);
     expect(model.description).toEqual(description);
-    expect(
-      model.isOwnedBy(Organization.fromPlain({ id: ownedByOrganizationId })),
-    ).toBeTruthy();
+    expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy();
     expect(model.dataValues).toEqual(dataValues);
     expect(model.productDataModelId).toEqual(productDataModelId);
   });
 
   it('add data values', () => {
-    const model = Model.create({ name: 'My name', user, organization });
+    const model = Model.create({ name: 'My name', userId, organizationId });
     model.addDataValues([
       DataValue.create({
         dataFieldId: 'fieldId2',
@@ -160,8 +156,8 @@ describe('Model', () => {
     ];
     const model = Model.create({
       name: 'my name',
-      organization,
-      user,
+      userId,
+      organizationId,
     });
     model.addDataValues(dataValues);
 
@@ -186,9 +182,7 @@ describe('Model', () => {
   });
 
   it('is renamed', () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'orga', user });
-    const model = Model.create({ name: 'My Name', user, organization });
+    const model = Model.create({ name: 'My Name', userId, organizationId });
     model.rename('new Name');
     model.modifyDescription('new description');
     expect(model.name).toEqual('new Name');
@@ -217,8 +211,8 @@ describe('Model', () => {
     ];
     const model = Model.create({
       name: 'my name',
-      organization,
-      user,
+      userId,
+      organizationId,
     });
     model.addDataValues(dataValues);
     const dataValueUpdates = [
@@ -289,7 +283,11 @@ describe('Model', () => {
 
   describe('assignProductDataModel', () => {
     it('should assign product data model and initialize data values', () => {
-      const model = Model.create({ name: 'Test Model', user, organization });
+      const model = Model.create({
+        name: 'Test Model',
+        userId,
+        organizationId,
+      });
 
       // Create a mock product data model
       const productDataModel = {
@@ -317,7 +315,13 @@ describe('Model', () => {
     });
 
     it('should throw error if model already has a product data model', () => {
-      const model = Model.create({ name: 'Test Model', user, organization });
+      const user = new User(userId, 'test@example.com');
+      const organization = Organization.create({ name: 'orga', user });
+      const model = Model.create({
+        name: 'Test Model',
+        userId,
+        organizationId: organization.id,
+      });
 
       const productDataModel1 = ProductDataModel.create({
         name: 'existing-pdm',

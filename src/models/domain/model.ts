@@ -1,7 +1,5 @@
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
-import { Organization } from '../../organizations/domain/organization';
-import { User } from '../../users/domain/user';
 import { DataValue, Passport } from '../../passport/domain/passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
@@ -34,15 +32,15 @@ export class Model extends Passport {
 
   static create(data: {
     name: string;
-    user: User;
-    organization: Organization;
+    userId: string;
+    organizationId: string;
     description?: string;
   }) {
     return new Model(
       randomUUID(),
       data.name,
-      data.organization.id,
-      data.user.id,
+      data.organizationId,
+      data.userId,
       [],
       undefined,
       [],
