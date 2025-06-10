@@ -18,16 +18,15 @@ import { ProductDataModelService } from '../../product-data-model/infrastructure
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { DataValue } from '../../passport/domain/passport';
-import {
-  UpdateDataValueDto,
-  UpdateDataValueDtoSchema,
-} from './dto/update-data-value.dto';
+
 import { modelToDto } from './dto/model.dto';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
   AddDataValueDto,
   AddDataValueDtoSchema,
-} from './dto/add-data-value.dto';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+  DataValueDto,
+  DataValueDtoSchema,
+} from '../../passport/presentation/dto/data-value.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -158,11 +157,10 @@ export class ModelsController {
   async updateDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() requestBody: UpdateDataValueDto[],
+    @Body() requestBody: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
-    const updateDataValues =
-      UpdateDataValueDtoSchema.array().parse(requestBody);
+    const updateDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -174,6 +172,9 @@ export class ModelsController {
       organization.id,
       req.authContext,
     );
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
@@ -202,7 +203,9 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    await this.organizationService.findOneOrFail(organizationId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,

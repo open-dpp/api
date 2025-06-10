@@ -25,11 +25,18 @@ import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemOrgaUserMigrationService } from '../infrastructure/item-orga-user-migration.service';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { DataValue } from '../../passport/domain/passport';
+import { ignoreIds } from '../../../test/utils';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
+  let productDataModelService: ProductDataModelService;
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
@@ -73,6 +80,7 @@ describe('ItemsController', () => {
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
+    productDataModelService = moduleRef.get(ProductDataModelService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
@@ -82,6 +90,129 @@ describe('ItemsController', () => {
 
     await app.init();
   });
+
+  const sectionId1 = randomUUID();
+  const sectionId2 = randomUUID();
+  const sectionId3 = randomUUID();
+  const dataFieldId1 = randomUUID();
+  const dataFieldId2 = randomUUID();
+  const dataFieldId3 = randomUUID();
+  const dataFieldId4 = randomUUID();
+  const dataFieldId5 = randomUUID();
+
+  const laptopModel = {
+    name: 'Laptop',
+    version: '1.0',
+    sections: [
+      {
+        id: sectionId1,
+        name: 'Section name',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId1,
+            type: 'TextField',
+            name: 'Title',
+            options: { min: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: dataFieldId2,
+            type: 'TextField',
+            name: 'Title 2',
+            options: { min: 7 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        id: sectionId2,
+        name: 'Section name 2',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId3,
+            type: 'TextField',
+            name: 'Title 3',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        id: sectionId3,
+        name: 'Repeating Section',
+        type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId4,
+            type: 'TextField',
+            name: 'Title 4',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: dataFieldId5,
+            type: 'TextField',
+            name: 'Title 5',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+    ],
+  };
 
   it(`/CREATE item`, async () => {
     const organization = Organization.create({
@@ -118,6 +249,7 @@ describe('ItemsController', () => {
           referenceId: found.id,
         },
       ],
+      dataValues: [],
     });
   });
 
@@ -167,6 +299,54 @@ describe('ItemsController', () => {
     expect(response.status).toEqual(403);
   });
 
+  it('add data values to model', async () => {
+    const organizationId = randomUUID();
+    const userId = randomUUID();
+    const item = Item.create({ organizationId, userId });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    item.assignProductDataModel(productDataModel);
+    await itemsService.save(item);
+    const existingDataValues = item.dataValues;
+    const addedValues = [
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId4,
+        value: 'value 4',
+        row: 0,
+      },
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId5,
+        value: 'value 5',
+        row: 0,
+      },
+    ];
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(addedValues);
+    expect(response.status).toEqual(201);
+    const expected = [
+      ...existingDataValues,
+      ...addedValues.map((d) => DataValue.create(d)),
+    ];
+    expect(response.body.dataValues).toEqual(ignoreIds(expected));
+
+    const foundItem = await itemsService.findById(response.body.id);
+
+    expect(foundItem.dataValues).toEqual(response.body.dataValues);
+  });
+
   it(`/GET item`, async () => {
     const organization = Organization.create({
       name: 'My orga',
@@ -208,6 +388,7 @@ describe('ItemsController', () => {
           uuid: uniqueProductId.uuid,
         },
       ],
+      dataValues: [],
     });
   });
   //
@@ -319,6 +500,7 @@ describe('ItemsController', () => {
             uuid: uniqueProductId1.uuid,
           },
         ],
+        dataValues: [],
       },
       {
         id: item2.id,
@@ -328,6 +510,7 @@ describe('ItemsController', () => {
             uuid: uniqueProductId2.uuid,
           },
         ],
+        dataValues: [],
       },
     ]);
   });
