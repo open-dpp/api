@@ -6,6 +6,7 @@ import { ProductDataModelService } from '../../product-data-model/infrastructure
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Model } from '../../models/domain/model';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
+import { Item } from '../../items/domain/item';
 
 @Controller('unique-product-identifiers')
 export class UniqueProductIdentifierController {
@@ -22,8 +23,9 @@ export class UniqueProductIdentifierController {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOne(id);
     let model: Model;
+    let item: Item | undefined = undefined;
     try {
-      const item = await this.itemService.findById(
+      item = await this.itemService.findById(
         uniqueProductIdentifier.referenceId,
       );
       model = await this.modelsService.findOne(item.modelId);
@@ -40,6 +42,7 @@ export class UniqueProductIdentifierController {
     return View.create({
       model: model,
       productDataModel: productDataModel,
+      item,
     }).build();
   }
 }
