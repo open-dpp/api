@@ -2,19 +2,85 @@ import { Item } from './item';
 import { randomUUID } from 'crypto';
 import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Model } from '../../models/domain/model';
+import { Organization } from '../../organizations/domain/organization';
+import { User } from '../../users/domain/user';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('Item', () => {
   const organizationId = randomUUID();
   const userId = randomUUID();
+
+  const sectionId1 = randomUUID();
+  const dataFieldId1 = randomUUID();
+
+  const laptopModel = {
+    name: 'Laptop',
+    version: '1.0',
+    ownedByOrganizationId: organizationId,
+    createdByUserId: userId,
+    sections: [
+      {
+        id: sectionId1,
+        name: 'Section name',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId1,
+            type: 'TextField',
+            name: 'Title',
+            options: { min: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+    ],
+  };
+
   it('should create an item and defines model', () => {
     const item = Item.create({ organizationId, userId });
-    const productId = randomUUID();
+    const user = new User(userId, 'test@example.com');
+    const organization = Organization.create({
+      name: 'My orga',
+      user,
+    });
+    const model = Model.create({
+      name: 'name',
+      user,
+      organization,
+    });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    model.assignProductDataModel(productDataModel);
 
-    item.defineModel(productId);
+    item.defineModel(model, productDataModel);
     expect(item.id).toBeDefined();
-    expect(item.modelId).toEqual(productId);
+    expect(item.modelId).toEqual(model.id);
     expect(item.ownedByOrganizationId).toEqual(organizationId);
     expect(item.createdByUserId).toEqual(userId);
+    expect(item.productDataModelId).toEqual(model.productDataModelId);
+    expect(item.uniqueProductIdentifiers).toEqual([]);
+    expect(item.dataValues).toEqual([
+      DataValue.create({
+        dataSectionId: sectionId1,
+        dataFieldId: dataFieldId1,
+        value: undefined,
+      }),
+    ]);
   });
 
   it('should create unique product identifier on item creation', () => {

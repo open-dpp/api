@@ -3,6 +3,9 @@ import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/
 
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue, Passport } from '../../passport/domain/passport';
+import { Model } from '../../models/domain/model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { ValueError } from '../../exceptions/domain.errors';
 
 export class Item extends Passport {
   granularityLevel = GranularityLevel.ITEM;
@@ -61,7 +64,13 @@ export class Item extends Passport {
     return this._modelId;
   }
 
-  defineModel(modelId: string) {
-    this._modelId = modelId;
+  defineModel(model: Model, productDataModel?: ProductDataModel) {
+    if (productDataModel && model.productDataModelId !== productDataModel.id) {
+      throw new ValueError('Model and product data model do not match');
+    }
+    this._modelId = model.id;
+    if (productDataModel) {
+      this.assignProductDataModel(productDataModel);
+    }
   }
 }

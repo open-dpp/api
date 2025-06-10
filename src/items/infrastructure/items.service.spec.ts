@@ -66,7 +66,7 @@ describe('ItemsService', () => {
       organizationId: organization.id,
       userId: user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     const savedItem = await itemService.save(item);
     expect(savedItem.modelId).toEqual(model.id);
     const foundItem = await itemService.findById(item.id);
@@ -226,19 +226,19 @@ describe('ItemsService', () => {
       organizationId: organization.id,
       userId: user.id,
     });
-    item1.defineModel(model1.id);
+    item1.defineModel(model1);
     const item2 = Item.create({
       organizationId: organization.id,
       userId: user.id,
     });
-    item2.defineModel(model1.id);
+    item2.defineModel(model1);
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = Item.create({
       organizationId: organization.id,
       userId: user.id,
     });
-    item3.defineModel(model2.id);
+    item3.defineModel(model2);
 
     const foundItems = await itemService.findAllByModel(model1.id);
     expect(foundItems).toEqual([item1, item2]);
@@ -255,7 +255,7 @@ describe('ItemsService', () => {
       organizationId: organization.id,
       userId: user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
 
     // Add unique product identifiers to the item
     const upi1 = item.createUniqueProductIdentifier();

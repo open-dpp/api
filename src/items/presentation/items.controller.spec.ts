@@ -225,6 +225,9 @@ describe('ItemsController', () => {
       user: authContext.user,
       organization,
     });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    model.assignProductDataModel(productDataModel);
+    await productDataModelService.save(productDataModel);
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -249,7 +252,24 @@ describe('ItemsController', () => {
           referenceId: found.id,
         },
       ],
-      dataValues: [],
+      dataValues: [
+        {
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId1,
+          value: undefined,
+        },
+        {
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId2,
+          value: undefined,
+        },
+        {
+          dataSectionId: sectionId2,
+          dataFieldId: dataFieldId3,
+          value: undefined,
+        },
+      ],
+      productDataModelId: model.productDataModelId,
     });
   });
 
@@ -364,7 +384,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
@@ -406,7 +426,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
@@ -436,7 +456,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     await itemsService.save(item);
     const otherOrganization = Organization.create({
       name: 'My orga',
@@ -470,7 +490,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const item2 = Item.create({
@@ -478,7 +498,7 @@ describe('ItemsController', () => {
       userId: authContext.user.id,
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
-    item2.defineModel(model.id);
+    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -528,13 +548,13 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item2.defineModel(model.id);
+    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -561,13 +581,13 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item.defineModel(model.id);
+    item.defineModel(model);
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    item2.defineModel(model.id);
+    item2.defineModel(model);
     await itemsService.save(item2);
     const otherOrganization = Organization.create({
       name: 'My orga',

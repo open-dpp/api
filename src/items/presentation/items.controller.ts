@@ -20,12 +20,14 @@ import {
   AddDataValueDto,
   AddDataValueDtoSchema,
 } from '../../passport/presentation/dto/data-value.dto';
+import { ModelsService } from '../../models/infrastructure/models.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
   constructor(
     private readonly itemsService: ItemsService,
     private readonly permissionsService: PermissionsService,
+    private readonly modelsService: ModelsService,
     private readonly productDataModelService: ProductDataModelService,
   ) {}
 
@@ -43,7 +45,13 @@ export class ItemsController {
       organizationId,
       userId: req.authContext.user.id,
     });
-    item.defineModel(modelId);
+    const model = await this.modelsService.findOne(modelId);
+    const productDataModel = model.productDataModelId
+      ? await this.productDataModelService.findOneOrFail(
+          model.productDataModelId,
+        )
+      : undefined;
+    item.defineModel(model, productDataModel);
     item.createUniqueProductIdentifier();
     return itemToDto(await this.itemsService.save(item));
   }
