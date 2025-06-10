@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Get,
   Param,
+  Patch,
   Post,
   Request,
 } from '@nestjs/common';
@@ -19,6 +20,8 @@ import { ProductDataModelService } from '../../product-data-model/infrastructure
 import {
   AddDataValueDto,
   AddDataValueDtoSchema,
+  DataValueDto,
+  DataValueDtoSchema,
 } from '../../passport/presentation/dto/data-value.dto';
 import { ModelsService } from '../../models/infrastructure/models.service';
 
@@ -108,6 +111,37 @@ export class ItemsController {
     const validationResult = productDataModel.validate(
       item.dataValues,
       GranularityLevel.MODEL,
+    );
+    if (!validationResult.isValid) {
+      throw new BadRequestException(validationResult.toJson());
+    }
+    return itemToDto(await this.itemsService.save(item));
+  }
+
+  @Patch(':itemId/data-values')
+  async updateDataValues(
+    @Param('orgaId') organizationId: string,
+    @Param('itemId') itemId: string,
+    @Body() requestBody: DataValueDto[],
+    @Request() req: AuthRequest,
+  ) {
+    const updateDataValues = DataValueDtoSchema.array().parse(requestBody);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const item = await this.itemsService.findById(itemId);
+    if (item.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+
+    item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
+    const productDataModel = await this.productDataModelService.findOneOrFail(
+      item.productDataModelId,
+    );
+    const validationResult = productDataModel.validate(
+      item.dataValues,
+      GranularityLevel.ITEM,
     );
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
