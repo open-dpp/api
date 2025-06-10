@@ -30,7 +30,7 @@ export class ItemsService {
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
-            row: dv.row ?? undefined,
+            row: dv.row,
           }))
         : [],
       productDataModelId: itemDoc.productDataModelId,

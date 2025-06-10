@@ -9,6 +9,7 @@ describe('DataValue', () => {
       value: undefined,
       dataSectionId,
       dataFieldId,
+      row: 0,
     });
     expect(dataValue.value).toBeUndefined();
     expect(dataValue.dataSectionId).toEqual(dataSectionId);

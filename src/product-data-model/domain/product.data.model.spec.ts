@@ -213,16 +213,19 @@ describe('ProductDataModel', () => {
           dataSectionId: 'section-1',
           dataFieldId: 'field-1',
           value: undefined,
+          row: 0,
         }),
         DataValue.create({
           dataSectionId: 'section-1',
           dataFieldId: 'field-2',
           value: undefined,
+          row: 0,
         }),
         DataValue.create({
           dataSectionId: 'section-3',
           dataFieldId: 'field-5',
           value: undefined,
+          row: 0,
         }),
       ]),
     );
@@ -239,16 +242,19 @@ describe('ProductDataModel', () => {
           dataSectionId: 'section-1',
           dataFieldId: 'field-1-item',
           value: undefined,
+          row: 0,
         }),
         DataValue.create({
           dataSectionId: 'section-1',
           dataFieldId: 'field-2-item',
           value: undefined,
+          row: 0,
         }),
         DataValue.create({
           dataSectionId: 'section-3',
           dataFieldId: 'field-5-item',
           value: undefined,
+          row: 0,
         }),
       ]),
     );
@@ -262,11 +268,13 @@ describe('ProductDataModel', () => {
         value: 'value 1',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
+        row: 0,
       }),
       DataValue.create({
         value: 'value 2',
         dataSectionId: 'section-1',
         dataFieldId: 'field-2',
+        row: 0,
       }),
       DataValue.create({
         value: 'value 3',
@@ -284,6 +292,7 @@ describe('ProductDataModel', () => {
         value: 'value 5',
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',
+        row: 0,
       }),
     ];
     const validationOutput = productDataModel.validate(
@@ -329,16 +338,19 @@ describe('ProductDataModel', () => {
         value: 'value 1',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
+        row: 0,
       }),
       DataValue.create({
         value: 'value 2',
         dataSectionId: 'section-1',
         dataFieldId: 'field-2',
+        row: 0,
       }),
       DataValue.create({
         value: 'value 5',
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',
+        row: 0,
       }),
     ];
     const validationOutput = productDataModel.validate(
@@ -373,6 +385,7 @@ describe('ProductDataModel', () => {
         value: 'value 1',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
+        row: 0,
       }),
       DataValue.create({
         value: 'value 4',
@@ -384,6 +397,7 @@ describe('ProductDataModel', () => {
         value: { wrongType: 'crazyMan' },
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',
+        row: 0,
       }),
     ];
     const validationOutput = productDataModel.validate(

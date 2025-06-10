@@ -5,8 +5,8 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 export class DataValueDoc {
   @Prop({ type: MongooseSchema.Types.Mixed, required: false })
   value?: unknown;
-  @Prop({ required: false })
-  row?: number;
+  @Prop({ required: true, default: 0 })
+  row: number;
   @Prop({ required: true })
   dataSectionId: string;
   @Prop({ required: true })

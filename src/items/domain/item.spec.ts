@@ -72,6 +72,7 @@ describe('Item', () => {
         dataSectionId: sectionId1,
         dataFieldId: dataFieldId1,
         value: undefined,
+        row: 0,
       }),
     ]);
   });

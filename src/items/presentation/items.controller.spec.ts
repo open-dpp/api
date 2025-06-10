@@ -258,16 +258,19 @@ describe('ItemsController', () => {
           dataSectionId: sectionId1,
           dataFieldId: dataFieldId1,
           value: undefined,
+          row: 0,
         },
         {
           dataSectionId: sectionId1,
           dataFieldId: dataFieldId2,
           value: undefined,
+          row: 0,
         },
         {
           dataSectionId: sectionId2,
           dataFieldId: dataFieldId3,
           value: undefined,
+          row: 0,
         },
       ],
       productDataModelId: model.productDataModelId,
@@ -430,11 +433,13 @@ describe('ItemsController', () => {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
         value: 'value 1',
+        row: 0,
       },
       {
         dataFieldId: dataValue3.dataFieldId,
         dataSectionId: dataValue3.dataSectionId,
         value: 'value 3',
+        row: 0,
       },
     ];
     await itemsService.save(item);
@@ -482,6 +487,7 @@ describe('ItemsController', () => {
         dataFieldId: randomUUID(),
         dataSectionId: randomUUID(),
         value: 'value 1',
+        row: 0,
       },
     ];
 
@@ -513,6 +519,7 @@ describe('ItemsController', () => {
         dataFieldId: randomUUID(),
         dataSectionId: randomUUID(),
         value: 'value 1',
+        row: 0,
       },
     ];
 

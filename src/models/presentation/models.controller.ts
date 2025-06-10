@@ -21,8 +21,6 @@ import { DataValue } from '../../passport/domain/passport';
 import { modelToDto } from './dto/model.dto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
-  AddDataValueDto,
-  AddDataValueDtoSchema,
   DataValueDto,
   DataValueDtoSchema,
 } from '../../passport/presentation/dto/data-value.dto';
@@ -176,10 +174,10 @@ export class ModelsController {
   async addDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() requestBody: AddDataValueDto[],
+    @Body() requestBody: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
-    const addDataValues = AddDataValueDtoSchema.array().parse(requestBody);
+    const addDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,

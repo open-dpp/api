@@ -53,16 +53,16 @@ describe('Model', () => {
     const productDataModelId = randomUUID();
     const dataValues = [
       {
-        id: 'someId 1',
         value: 'value1',
         dataSectionId: 'sectionId 1',
         dataFieldId: 'dataField 1',
+        row: 0,
       },
       {
-        id: 'someId 2',
         value: 'value2',
         dataSectionId: 'sectionId 2',
         dataFieldId: 'dataField 2',
+        row: 0,
       },
     ];
 
@@ -194,11 +194,13 @@ describe('Model', () => {
       value: undefined,
       dataSectionId: 's1',
       dataFieldId: 'f1',
+      row: 0,
     });
     const dataValue3 = DataValue.create({
       value: 'v3',
       dataSectionId: 's2',
       dataFieldId: 'f3',
+      row: 0,
     });
     const dataValues = [
       dataValue1,
@@ -206,6 +208,7 @@ describe('Model', () => {
         value: 'v2',
         dataSectionId: 's1',
         dataFieldId: 'f2',
+        row: 0,
       }),
       dataValue3,
     ];
@@ -220,11 +223,13 @@ describe('Model', () => {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
         value: 'v1',
+        row: 0,
       }),
       DataValue.create({
         dataFieldId: dataValue3.dataFieldId,
         dataSectionId: dataValue3.dataSectionId,
         value: 'v3 new',
+        row: 0,
       }),
     ];
     model.modifyDataValues(dataValueUpdates);
@@ -234,16 +239,19 @@ describe('Model', () => {
           value: 'v1',
           dataSectionId: 's1',
           dataFieldId: 'f1',
+          row: 0,
         }),
         DataValue.create({
           value: 'v2',
           dataSectionId: 's1',
           dataFieldId: 'f2',
+          row: 0,
         }),
         DataValue.create({
           value: 'v3 new',
           dataSectionId: 's2',
           dataFieldId: 'f3',
+          row: 0,
         }),
       ]),
     );
@@ -297,11 +305,13 @@ describe('Model', () => {
             dataSectionId: 'section-1',
             dataFieldId: 'field-1',
             value: undefined,
+            row: 0,
           }),
           DataValue.create({
             dataSectionId: 'section-1',
             dataFieldId: 'field-2',
             value: undefined,
+            row: 0,
           }),
         ]),
       } as unknown as ProductDataModel;

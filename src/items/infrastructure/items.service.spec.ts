@@ -190,16 +190,19 @@ describe('ItemsService', () => {
           value: undefined,
           dataSectionId: productDataModel.sections[0].id,
           dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          row: 0,
         }),
         DataValue.create({
           value: undefined,
           dataSectionId: productDataModel.sections[0].id,
           dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          row: 0,
         }),
         DataValue.create({
           value: undefined,
           dataSectionId: productDataModel.sections[1].id,
           dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          row: 0,
         }),
         DataValue.create({
           value: undefined,

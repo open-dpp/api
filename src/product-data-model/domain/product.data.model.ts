@@ -159,6 +159,7 @@ export class ProductDataModel {
               dataSectionId: s.id,
               dataFieldId: f.id,
               value: undefined,
+              row: 0,
             }),
           ),
       )

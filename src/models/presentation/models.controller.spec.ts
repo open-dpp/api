@@ -412,16 +412,19 @@ describe('ModelsController', () => {
           dataSectionId: sectionId1,
           dataFieldId: dataFieldId1,
           value: undefined,
+          row: 0,
         }),
         DataValue.create({
           dataSectionId: sectionId1,
           dataFieldId: dataFieldId2,
           value: undefined,
+          row: 0,
         }),
         DataValue.create({
           dataSectionId: sectionId2,
           dataFieldId: dataFieldId3,
           value: undefined,
+          row: 0,
         }),
       ]),
     );
@@ -507,11 +510,13 @@ describe('ModelsController', () => {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
         value: 'value 1',
+        row: 0,
       },
       {
         dataFieldId: dataValue3.dataFieldId,
         dataSectionId: dataValue3.dataSectionId,
         value: 'value 3',
+        row: 0,
       },
     ];
     const response = await request(app.getHttpServer())
@@ -530,13 +535,16 @@ describe('ModelsController', () => {
       {
         ...dataValue1,
         value: 'value 1',
+        row: 0,
       },
       {
         ...dataValue2,
+        row: 0,
       },
       {
         ...dataValue3,
         value: 'value 3',
+        row: 0,
       },
     ];
     expect(response.body.dataValues).toEqual(expectedDataValues);
@@ -561,6 +569,7 @@ describe('ModelsController', () => {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
         value: 'value 1',
+        row: 0,
       },
     ];
     const response = await request(app.getHttpServer())
@@ -597,6 +606,7 @@ describe('ModelsController', () => {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
         value: 'value 1',
+        row: 0,
       },
     ];
     const response = await request(app.getHttpServer())
@@ -631,11 +641,13 @@ describe('ModelsController', () => {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
         value: { wrongValue: 'value 1' },
+        row: 0,
       },
       {
         dataFieldId: dataValue3.dataFieldId,
         dataSectionId: dataValue3.dataSectionId,
         value: 'value 3',
+        row: 0,
       },
     ];
     const response = await request(app.getHttpServer())
