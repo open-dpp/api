@@ -1,0 +1,20 @@
+import { z } from 'zod/v4';
+import { DataValue } from '../../domain/passport';
+
+export const DataValueDtoSchema = z.object({
+  value: z.unknown(),
+  dataSectionId: z.uuid(),
+  dataFieldId: z.uuid(),
+  row: z.int(),
+});
+
+export type DataValueDto = z.infer<typeof DataValueDtoSchema>;
+
+export function dataValueToDto(dataValue: DataValue) {
+  return DataValueDtoSchema.parse({
+    dataFieldId: dataValue.dataFieldId,
+    dataSectionId: dataValue.dataSectionId,
+    row: dataValue.row,
+    value: dataValue.value,
+  });
+}

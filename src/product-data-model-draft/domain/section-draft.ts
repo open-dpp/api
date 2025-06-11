@@ -7,13 +7,22 @@ import {
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { omit } from 'lodash';
 import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export class DataSectionDraft extends DataSectionBase {
   @Expose()
   @Type(() => DataFieldDraft)
   readonly dataFields: DataFieldDraft[];
 
-  static create(plain: { name: string; type: SectionType; layout: Layout }) {
+  static create(plain: {
+    name: string;
+    type: SectionType;
+    layout: Layout;
+    granularityLevel?: GranularityLevel;
+  }) {
+    if (plain.type === SectionType.REPEATABLE && !plain.granularityLevel) {
+      throw new ValueError(`Repeatable must have a granularity level`);
+    }
     return plainToInstance(
       DataSectionDraft,
       { ...plain, dataFields: [] },
@@ -37,6 +46,14 @@ export class DataSectionDraft extends DataSectionBase {
   }
 
   addDataField(dataField: DataFieldDraft) {
+    if (
+      this.granularityLevel &&
+      this.granularityLevel !== dataField.granularityLevel
+    ) {
+      throw new ValueError(
+        `Data field ${dataField.id} has a granularity level of ${dataField.granularityLevel} which does not match the section's granularity level of ${this.granularityLevel}`,
+      );
+    }
     this.dataFields.push(dataField);
   }
 

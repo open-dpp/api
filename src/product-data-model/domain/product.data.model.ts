@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { DataValue } from '../../models/domain/model';
 import {
   Expose,
   instanceToPlain,
@@ -11,6 +10,8 @@ import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataSection, sectionSubTypes } from './section';
+import { DataValue } from '../../passport/domain/passport';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -130,6 +131,7 @@ export class ProductDataModel {
 
   validate(
     values: DataValue[],
+    granularity: GranularityLevel,
     includeSectionIds: string[] = [],
   ): ValidationResult {
     const validationOutput = new ValidationResult();
@@ -139,18 +141,27 @@ export class ProductDataModel {
         : this.sections.filter((s) => includeSectionIds.includes(s.id));
     for (const section of sectionsToValidate) {
       section
-        .validate(this.version, values)
+        .validate(this.version, values, granularity)
         .map((v) => validationOutput.addValidationResult(v));
     }
     return validationOutput;
   }
-  public createInitialDataValues(): DataValue[] {
-    return this.sections
-      .filter((s) => s.type === SectionType.GROUP)
+  public createInitialDataValues(granularity: GranularityLevel): DataValue[] {
+    const filteredSections = this.sections.filter(
+      (s) => s.type === SectionType.GROUP,
+    );
+    return filteredSections
       .map((s) =>
-        s.dataFields.map((f) =>
-          DataValue.fromPlain({ dataSectionId: s.id, dataFieldId: f.id }),
-        ),
+        s.dataFields
+          .filter((f) => f.granularityLevel === granularity)
+          .map((f) =>
+            DataValue.create({
+              dataSectionId: s.id,
+              dataFieldId: f.id,
+              value: undefined,
+              row: 0,
+            }),
+          ),
       )
       .flat();
   }

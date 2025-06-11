@@ -1,26 +1,30 @@
-import { Expose, plainToInstance } from 'class-transformer';
 import { maxBy, minBy } from 'lodash';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { DataValue, Model } from '../../models/domain/model';
+import { Model } from '../../models/domain/model';
 import {
   DataSection,
   isGroupSection,
   isRepeaterSection,
   RepeaterSection,
 } from '../../product-data-model/domain/section';
+import { DataValue } from '../../passport/domain/passport';
+import { Item } from '../../items/domain/item';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { SectionType } from '../../data-modelling/domain/section-base';
 
 export class View {
-  @Expose()
-  readonly productDataModel: ProductDataModel;
+  private constructor(
+    private readonly productDataModel: ProductDataModel,
+    private readonly model: Model,
+    private readonly item: Item | undefined,
+  ) {}
 
-  @Expose()
-  readonly model: Model;
-
-  static fromPlain(plain: Partial<View>) {
-    return plainToInstance(View, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  static create(data: {
+    productDataModel: ProductDataModel;
+    model: Model;
+    item?: Item;
+  }) {
+    return new View(data.productDataModel, data.model, data.item);
   }
 
   build() {
@@ -42,9 +46,10 @@ export class View {
   }
 
   processRepeaterSection(section: RepeaterSection) {
-    const dataValuesOfSectionAllRows = this.model.getDataValuesBySectionId(
-      section.id,
-    );
+    const dataValuesOfSectionAllRows =
+      section.granularityLevel === GranularityLevel.MODEL
+        ? this.model.getDataValuesBySectionId(section.id)
+        : (this.item?.getDataValuesBySectionId(section.id) ?? []);
     const minRow = minBy(dataValuesOfSectionAllRows, 'row')?.row ?? 0;
     const maxRow = maxBy(dataValuesOfSectionAllRows, 'row')?.row ?? 0;
 
@@ -59,10 +64,19 @@ export class View {
   }
 
   processSection(section: DataSection, rowIndex?: number) {
-    const dataValuesOfSection = this.model.getDataValuesBySectionId(
-      section.id,
-      rowIndex,
-    );
+    let dataValuesOfSection: DataValue[];
+    if (section.type === SectionType.REPEATABLE) {
+      dataValuesOfSection =
+        section.granularityLevel === GranularityLevel.MODEL
+          ? this.model.getDataValuesBySectionId(section.id, rowIndex)
+          : (this.item?.getDataValuesBySectionId(section.id, rowIndex) ?? []);
+    } else {
+      dataValuesOfSection = this.model
+        .getDataValuesBySectionId(section.id, rowIndex)
+        .concat(
+          this.item?.getDataValuesBySectionId(section.id, rowIndex) ?? [],
+        );
+    }
 
     const children = this.processDataFields(section, dataValuesOfSection);
     for (const subSectionId of section.subSections) {
@@ -87,7 +101,7 @@ export class View {
       result.push({
         type: dataField.type,
         name: dataField.name,
-        value: dataValue.value,
+        value: dataValue?.value,
         layout: dataField.layout,
       });
     }

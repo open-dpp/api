@@ -1,71 +1,57 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from './model.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { DataSource } from 'typeorm';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
-import { UniqueProductIdentifierEntity } from '../../unique-product-identifier/infrastructure/unique.product.identifier.entity';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { PermissionsModule } from '../../permissions/permissions.module';
-import { ConfigModule } from '@nestjs/config';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { Connection } from 'mongoose';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { ModelDoc, ModelSchema } from './model.schema';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { DataValue } from '../../passport/domain/passport';
+import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
-  let organizationService: OrganizationsService;
-  let dataSource: DataSource;
-  const user = new User(randomUUID(), 'test@test.test');
+  const user = new User(randomUUID(), 'test@example.com');
+  const organization = Organization.create({ name: 'Firma Y', user });
+  let mongoConnection: Connection;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ModelEntity,
-          UniqueProductIdentifierEntity,
-          UserEntity,
-          OrganizationEntity,
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
         ]),
-        ConfigModule,
-        PermissionsModule,
       ],
-      providers: [
-        ModelsService,
-        UniqueProductIdentifierService,
-        UsersService,
-        OrganizationsService,
-        KeycloakResourcesService,
-      ],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useClass(KeycloakResourcesServiceTesting)
-      .compile();
-
-    dataSource = module.get<DataSource>(DataSource);
+      providers: [ModelsService, UniqueProductIdentifierService],
+    }).compile();
     modelsService = module.get<ModelsService>(ModelsService);
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
+    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   it('should create a model', async () => {
-    const organization = Organization.create({ name: 'My orga', user: user });
-    await organizationService.save(organization);
     const model = Model.create({
       name: 'My product',
-      user,
-      organization,
+      userId: user.id,
+      organizationId: organization.id,
     });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
@@ -92,6 +78,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
             {
               type: 'TextField',
@@ -103,6 +90,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -127,6 +115,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -151,6 +140,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -159,7 +149,8 @@ describe('ModelsService', () => {
 
     model.assignProductDataModel(productDataModel);
     model.addDataValues([
-      DataValue.fromPlain({
+      DataValue.create({
+        value: undefined,
         dataSectionId: productDataModel.sections[2].id,
         dataFieldId: productDataModel.sections[2].dataFields[0].id,
         row: 0,
@@ -170,31 +161,36 @@ describe('ModelsService', () => {
     expect(foundModel.name).toEqual(model.name);
     expect(foundModel.description).toEqual(model.description);
     expect(foundModel.productDataModelId).toEqual(productDataModel.id);
-    expect(foundModel.dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[0].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[1].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[1].id,
-        dataFieldId: productDataModel.sections[1].dataFields[0].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[2].id,
-        dataFieldId: productDataModel.sections[2].dataFields[0].id,
-        row: 0,
-      }),
-    ]);
+    expect(foundModel.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[1].id,
+          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[2].id,
+          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          row: 0,
+        }),
+      ]),
+    );
     expect(foundModel.createdByUserId).toEqual(user.id);
-    expect(foundModel.isOwnedBy(organization)).toBeTruthy();
+    expect(foundModel.isOwnedBy(organization.id)).toBeTruthy();
   });
 
   it('fails if requested model could not be found', async () => {
@@ -204,34 +200,34 @@ describe('ModelsService', () => {
   });
 
   it('should find all models of organization', async () => {
-    const organization = Organization.create({ name: 'My orga', user: user });
-    await organizationService.save(organization);
+    const otherOrganizationId = randomUUID();
     const model1 = Model.create({
       name: 'Product A',
-      user,
-      organization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     const model2 = Model.create({
       name: 'Product B',
-      user,
-      organization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     const model3 = Model.create({
       name: 'Product C',
-      user,
-      organization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     await modelsService.save(model1);
     await modelsService.save(model2);
     await modelsService.save(model3);
 
-    const foundModels = await modelsService.findAllByOrganization(
-      organization.id,
+    const foundModels =
+      await modelsService.findAllByOrganization(otherOrganizationId);
+    expect(foundModels.map((m) => m)).toEqual(
+      [model1, model2, model3].map((m) => m),
     );
-    expect(foundModels).toEqual([model1, model2, model3]);
   });
 
-  afterEach(async () => {
-    await dataSource.destroy();
+  afterAll(async () => {
+    await mongoConnection.close();
   });
 });

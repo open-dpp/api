@@ -1,6 +1,7 @@
 import { Expose, instanceToPlain, Type } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { Layout } from './layout';
+import { GranularityLevel } from './granularity-level';
 
 export enum SectionType {
   GROUP = 'Group',
@@ -23,6 +24,9 @@ export abstract class DataSectionBase {
   protected _subSections: string[] = [];
   @Expose({ name: 'parentId' })
   protected _parentId?: string;
+
+  @Expose()
+  readonly granularityLevel?: GranularityLevel;
 
   get name() {
     return this._name;

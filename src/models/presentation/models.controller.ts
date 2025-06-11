@@ -10,19 +10,25 @@ import {
   Request,
 } from '@nestjs/common';
 import { ModelsService } from '../infrastructure/models.service';
-import { CreateModelDto } from './dto/create-model.dto';
-import { UpdateModelDto } from './dto/update-model.dto';
+import { CreateModelDto, CreateModelDtoSchema } from './dto/create-model.dto';
+import { UpdateModelDto, UpdateModelDtoSchema } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
+import { DataValue } from '../../passport/domain/passport';
+
+import { modelToDto } from './dto/model.dto';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import {
+  DataValueDto,
+  DataValueDtoSchema,
+} from '../../passport/presentation/dto/data-value.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
   constructor(
     private readonly modelsService: ModelsService,
-    private readonly organizationService: OrganizationsService,
     private readonly productDataModelService: ProductDataModelService,
     private readonly permissionsService: PermissionsService,
   ) {}
@@ -30,25 +36,22 @@ export class ModelsController {
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
-    @Body() createModelDto: CreateModelDto,
+    @Body() requestBody: CreateModelDto,
     @Request() req: AuthRequest,
   ) {
+    const createModelDto = CreateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
     const model = Model.create({
       name: createModelDto.name,
-      user: req.authContext.user,
-      organization: organization,
+      description: createModelDto.description,
+      userId: req.authContext.user.id,
+      organizationId: organizationId,
     });
     model.createUniqueProductIdentifier();
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Get()
@@ -60,13 +63,8 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    if (!organization.isMember(req.authContext.user)) {
-      throw new ForbiddenException();
-    }
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
-      (m) => m.toPlain(),
+      (m) => modelToDto(m),
     );
   }
 
@@ -81,31 +79,37 @@ export class ModelsController {
       req.authContext,
     );
     const model = await this.modelsService.findOne(id);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organization.id,
-      req.authContext,
-    );
-    return model.toPlain();
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    return modelToDto(model);
   }
 
   @Patch(':modelId')
   async update(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() updateModelDto: UpdateModelDto,
+    @Body() requestBody: UpdateModelDto,
     @Request() req: AuthRequest,
   ) {
+    const updateModelDto = UpdateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    await this.organizationService.findOneOrFail(organizationId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
 
-    const mergedModel = model.mergeWithPlain(updateModelDto);
-    return (await this.modelsService.save(mergedModel)).toPlain();
+    if (updateModelDto.name) {
+      model.rename(updateModelDto.name);
+    }
+    if (updateModelDto.description) {
+      model.modifyDescription(updateModelDto.description);
+    }
+
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Post(':modelId/product-data-models/:productDataModelId')
@@ -123,68 +127,76 @@ export class ModelsController {
     const productDataModel =
       await this.productDataModelService.findOneOrFail(productDataModelId);
     const model = await this.modelsService.findOne(modelId);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organization.id,
-      req.authContext,
-    );
+
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
 
     model.assignProductDataModel(productDataModel);
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Patch(':modelId/data-values')
   async updateDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() updateDataValues: unknown,
+    @Body() requestBody: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
+    const updateDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organization.id,
-      req.authContext,
-    );
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
 
-    const mergedModel = model.mergeWithPlain({ dataValues: updateDataValues });
+    model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
-      mergedModel.productDataModelId,
+      model.productDataModelId,
     );
-    const validationResult = productDataModel.validate(mergedModel.dataValues);
+    const validationResult = productDataModel.validate(
+      model.dataValues,
+      GranularityLevel.MODEL,
+    );
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
-    return (await this.modelsService.save(mergedModel)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 
   @Post(':modelId/data-values')
   async addDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() addedDataValues: unknown[],
+    @Body() requestBody: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
+    const addDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
     const model = await this.modelsService.findOne(modelId);
-    await this.organizationService.findOneOrFail(organizationId);
-    model.addDataValues(addedDataValues.map((d) => DataValue.fromPlain(d)));
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );
-    const validationResult = productDataModel.validate(model.dataValues);
+    const validationResult = productDataModel.validate(
+      model.dataValues,
+      GranularityLevel.MODEL,
+    );
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
-    return (await this.modelsService.save(model)).toPlain();
+    return modelToDto(await this.modelsService.save(model));
   }
 }

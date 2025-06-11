@@ -6,29 +6,24 @@ import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
-import { UniqueProductIdentifierEntity } from '../infrastructure/unique.product.identifier.entity';
 import { INestApplication } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
-import { ModelsModule } from '../../models/models.module';
 import { UniqueProductIdentifierModule } from '../unique.product.identifier.module';
-import { DataValue, Model } from '../../models/domain/model';
+import { Model } from '../../models/domain/model';
 import * as request from 'supertest';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { Organization } from '../../organizations/domain/organization';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../../product-data-model/infrastructure/product-data-model.schema';
+import { DataValue } from '../../passport/domain/passport';
+import { undefined } from 'zod';
+import { Item } from '../../items/domain/item';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { ItemsService } from '../../items/infrastructure/items.service';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -59,14 +54,16 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
   };
 });
 
-describe('ModelsController', () => {
+describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
   let modelsService: ModelsService;
+  let itemsService: ItemsService;
+
   let productDataModelService: ProductDataModelService;
-  let organizationsService: OrganizationsService;
   const reflector: Reflector = new Reflector();
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), `${randomUUID()}@example.com`);
+  const organizationId = randomUUID();
 
   beforeEach(() => {
     jest.spyOn(reflector, 'get').mockReturnValue(false);
@@ -76,19 +73,8 @@ describe('ModelsController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([
-          ModelEntity,
-          UserEntity,
-          UniqueProductIdentifierEntity,
-        ]),
+        TypeOrmModule.forFeature([UserEntity]),
         MongooseTestingModule,
-        MongooseModule.forFeature([
-          {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
-          },
-        ]),
-        ModelsModule,
         UniqueProductIdentifierModule,
         ProductDataModelModule,
       ],
@@ -104,7 +90,7 @@ describe('ModelsController', () => {
     }).compile();
 
     modelsService = moduleRef.get(ModelsService);
-    organizationsService = moduleRef.get(OrganizationsService);
+    itemsService = moduleRef.get(ItemsService);
     productDataModelService = moduleRef.get<ProductDataModelService>(
       ProductDataModelService,
     );
@@ -118,15 +104,26 @@ describe('ModelsController', () => {
   const sectionId2 = randomUUID();
   const sectionId3 = randomUUID();
 
+  const sectionIdForItem1 = randomUUID();
+  const sectionIdForItem2 = randomUUID();
+
   const dataFieldId1 = randomUUID();
   const dataFieldId2 = randomUUID();
   const dataFieldId3 = randomUUID();
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
+  const dataFieldIdForItem1 = randomUUID();
+  const dataFieldIdForItem2 = randomUUID();
+  const dataFieldIdForItem3 = randomUUID();
+  const dataFieldIdForItem4 = randomUUID();
+  const dataFieldIdForItem5 = randomUUID();
+
   const laptopModel = {
     name: 'Laptop',
     version: '1.0',
+    ownedByOrganizationId: organizationId,
+    createdByUserId: authContext.user.id,
     sections: [
       {
         id: sectionId1,
@@ -139,6 +136,7 @@ describe('ModelsController', () => {
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
         },
+        granularityLevel: GranularityLevel.MODEL,
         subSections: [sectionId2],
         dataFields: [
           {
@@ -152,6 +150,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: dataFieldId2,
@@ -164,6 +163,49 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
+          },
+        ],
+      },
+      {
+        id: sectionIdForItem1,
+        name: 'Repeating Section for item',
+        type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        granularityLevel: GranularityLevel.ITEM,
+        subSections: [sectionIdForItem2],
+        dataFields: [
+          {
+            id: dataFieldIdForItem1,
+            type: 'TextField',
+            name: 'Title 1 for item',
+            options: { min: 7 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: dataFieldIdForItem2,
+            type: 'TextField',
+            name: 'Title 2 for item',
+            options: { min: 7 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
@@ -180,6 +222,7 @@ describe('ModelsController', () => {
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
         },
+        granularityLevel: GranularityLevel.MODEL,
         dataFields: [
           {
             id: dataFieldId3,
@@ -192,6 +235,7 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             id: dataFieldId4,
@@ -204,6 +248,50 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
+          },
+        ],
+      },
+      {
+        parentId: sectionIdForItem1,
+        id: sectionIdForItem2,
+        name: 'Group Section for item',
+        type: SectionType.GROUP,
+        subSections: [],
+        layout: {
+          cols: { sm: 3 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 1 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        granularityLevel: GranularityLevel.ITEM,
+        dataFields: [
+          {
+            id: dataFieldIdForItem3,
+            type: 'TextField',
+            name: 'Title 3 for item',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: dataFieldIdForItem4,
+            type: 'TextField',
+            name: 'Title 4 for item',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
@@ -231,6 +319,20 @@ describe('ModelsController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
+          },
+          {
+            id: dataFieldIdForItem5,
+            type: 'TextField',
+            name: 'Title sg21 for item',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 2 },
+              colSpan: { sm: 1 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
@@ -240,76 +342,65 @@ describe('ModelsController', () => {
   it(`/GET public view for unique product identifier`, async () => {
     const productDataModel = ProductDataModel.fromPlain({ ...laptopModel });
     await productDataModelService.save(productDataModel);
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
-    const model = Model.fromPlain({
+
+    const model = Model.loadFromDb({
+      id: randomUUID(),
       name: 'Model Y',
       description: 'My desc',
       productDataModelId: productDataModel.id,
-      ownedByOrganizationId: organization.id,
+      ownedByOrganizationId: organizationId,
       createdByUserId: authContext.user.id,
+      uniqueProductIdentifiers: [],
       dataValues: [
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId1,
           dataSectionId: sectionId1,
           value: 'val1,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId2,
           dataSectionId: sectionId1,
           value: 'val2,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId3,
           dataSectionId: sectionId2,
           value: 'val3,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId4,
           dataSectionId: sectionId2,
           value: 'val4,0',
           row: 0,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId1,
           dataSectionId: sectionId1,
           value: 'val1,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId2,
           dataSectionId: sectionId1,
           value: 'val2,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId3,
           dataSectionId: sectionId2,
           value: 'val3,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId4,
           dataSectionId: sectionId2,
           value: 'val4,1',
           row: 1,
         }),
-        DataValue.fromPlain({
-          id: randomUUID(),
+        DataValue.create({
           dataFieldId: dataFieldId5,
           dataSectionId: sectionId3,
           value: 'val5,0',
@@ -317,7 +408,73 @@ describe('ModelsController', () => {
         }),
       ],
     });
-    const { uuid } = model.createUniqueProductIdentifier();
+
+    const item = Item.loadFromDb({
+      id: randomUUID(),
+      productDataModelId: productDataModel.id,
+      organizationId: organizationId,
+      userId: authContext.user.id,
+      modelId: model.id,
+      uniqueProductIdentifiers: [],
+      dataValues: [
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem1,
+          dataSectionId: sectionIdForItem1,
+          value: 'val1,0,item',
+          row: 0,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem2,
+          dataSectionId: sectionIdForItem1,
+          value: 'val2,0,item',
+          row: 0,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem3,
+          dataSectionId: sectionIdForItem2,
+          value: 'val3,0,item',
+          row: 0,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem4,
+          dataSectionId: sectionIdForItem2,
+          value: 'val4,0,item',
+          row: 0,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem1,
+          dataSectionId: sectionIdForItem1,
+          value: 'val1,1,item',
+          row: 1,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem2,
+          dataSectionId: sectionIdForItem1,
+          value: 'val2,1,item',
+          row: 1,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem3,
+          dataSectionId: sectionIdForItem2,
+          value: 'val3,1,item',
+          row: 1,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem4,
+          dataSectionId: sectionIdForItem2,
+          value: 'val4,1,item',
+          row: 1,
+        }),
+        DataValue.create({
+          dataFieldId: dataFieldIdForItem5,
+          dataSectionId: sectionId3,
+          value: 'val5,0,item',
+          row: 0,
+        }),
+      ],
+    });
+    const { uuid } = item.createUniqueProductIdentifier();
+    await itemsService.save(item);
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockReturnValue(true);
     const response = await request(app.getHttpServer()).get(
@@ -468,6 +625,145 @@ describe('ModelsController', () => {
           ],
         },
         {
+          name: 'Repeating Section for item',
+          rows: [
+            {
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val1,0,item',
+                  name: 'Title 1 for item',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val2,0,item',
+                  name: 'Title 2 for item',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  name: 'Group Section for item',
+                  layout: {
+                    cols: { sm: 3 },
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                  children: [
+                    {
+                      type: 'TextField',
+                      value: 'val3,0,item',
+                      name: 'Title 3 for item',
+                      layout: {
+                        colStart: { sm: 1 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                    {
+                      type: 'TextField',
+                      value: 'val4,0,item',
+                      name: 'Title 4 for item',
+                      layout: {
+                        colStart: { sm: 2 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val1,1,item',
+                  name: 'Title 1 for item',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val2,1,item',
+                  name: 'Title 2 for item',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  name: 'Group Section for item',
+                  layout: {
+                    cols: { sm: 3 },
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                  children: [
+                    {
+                      type: 'TextField',
+                      value: 'val3,1,item',
+                      name: 'Title 3 for item',
+                      layout: {
+                        colStart: { sm: 1 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                    {
+                      type: 'TextField',
+                      value: 'val4,1,item',
+                      name: 'Title 4 for item',
+                      layout: {
+                        colStart: { sm: 2 },
+                        colSpan: { sm: 1 },
+                        rowStart: { sm: 1 },
+                        rowSpan: { sm: 1 },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
           name: 'Group Section 2',
           layout: {
             cols: { sm: 2 },
@@ -483,6 +779,17 @@ describe('ModelsController', () => {
               name: 'Title sg21',
               layout: {
                 colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              type: 'TextField',
+              value: 'val5,0,item',
+              name: 'Title sg21 for item',
+              layout: {
+                colStart: { sm: 2 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },

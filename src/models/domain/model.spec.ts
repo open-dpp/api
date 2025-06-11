@@ -1,15 +1,17 @@
-import { DataValue, Model } from './model';
+import { Model } from './model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { DataValue } from '../../passport/domain/passport';
+import { undefined } from 'zod';
+import { ignoreIds } from '../../../test/utils';
 
 describe('Model', () => {
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   it('should create unique product identifiers on model creation', () => {
-    const model = Model.fromPlain({
-      name: 'My model',
-      description: 'This is my model',
-    });
+    const model = Model.create({ name: 'My model', userId, organizationId });
     const uniqueModelIdentifier1 = model.createUniqueProductIdentifier();
     const uniqueModelIdentifier2 = model.createUniqueProductIdentifier();
 
@@ -23,168 +25,151 @@ describe('Model', () => {
   });
 
   it('should create new model', () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'My orga', user });
-    const model = Model.create({ name: 'My model', user, organization });
+    const model = Model.create({ name: 'My model', userId, organizationId });
 
-    expect(model.isOwnedBy(organization)).toBeTruthy();
-    expect(
-      model.isOwnedBy(Organization.create({ name: 'My orga', user })),
-    ).toBeFalsy();
+    expect(model.isOwnedBy(organizationId)).toBeTruthy();
+    expect(model.isOwnedBy(randomUUID())).toBeFalsy();
   });
 
   it('is created from plain with defaults', () => {
-    const plain = {
+    const model = Model.create({
       name: 'My name',
-      description: 'Some description',
-    };
-    const model = Model.fromPlain(plain);
+      userId,
+      organizationId,
+      description: 'my description',
+    });
     expect(model.id).toEqual(expect.any(String));
-    expect(model.name).toEqual(plain.name);
-    expect(model.description).toEqual(plain.description);
+    expect(model.name).toEqual('My name');
+    expect(model.description).toEqual('my description');
     expect(model.uniqueProductIdentifiers).toEqual([]);
     expect(model.productDataModelId).toBeUndefined();
     expect(model.dataValues).toEqual([]);
-    expect(model.createdAt).toBeUndefined();
   });
 
-  it('is created from plain', () => {
-    const plain = {
-      id: randomUUID(),
-      name: 'My name',
-      description: 'Some description',
-      productDataModelId: randomUUID(),
-      dataValues: [
-        {
-          id: 'someId 1',
-          value: 'value1',
-          dataSectionId: 'sectionId 1',
-          dataFieldId: 'dataField 1',
-        },
-        {
-          id: 'someId 2',
-          value: 'value2',
-          dataSectionId: 'sectionId 2',
-          dataFieldId: 'dataField 2',
-        },
-      ],
-      createdByUserId: randomUUID(),
-      ownedByOrganizationId: randomUUID(),
-    };
-    const model = Model.fromPlain(plain);
-    expect(model.id).toEqual(plain.id);
-    expect(model.name).toEqual(plain.name);
-    expect(model.description).toEqual(plain.description);
-    expect(
-      model.isOwnedBy(
-        Organization.fromPlain({ id: plain.ownedByOrganizationId }),
-      ),
-    ).toBeTruthy();
-    expect(model.dataValues).toEqual(plain.dataValues);
-    expect(model.productDataModelId).toEqual(plain.productDataModelId);
+  it('is created from persistence', () => {
+    const id = randomUUID();
+    const name = 'My name';
+    const description = 'Some description';
+    const productDataModelId = randomUUID();
+    const dataValues = [
+      {
+        value: 'value1',
+        dataSectionId: 'sectionId 1',
+        dataFieldId: 'dataField 1',
+        row: 0,
+      },
+      {
+        value: 'value2',
+        dataSectionId: 'sectionId 2',
+        dataFieldId: 'dataField 2',
+        row: 0,
+      },
+    ];
+
+    const createdByUserId = randomUUID();
+    const ownedByOrganizationId = randomUUID();
+
+    const model = Model.loadFromDb({
+      id,
+      name,
+      ownedByOrganizationId,
+      createdByUserId,
+      uniqueProductIdentifiers: [],
+      productDataModelId,
+      dataValues,
+      description,
+    });
+    expect(model.id).toEqual(id);
+    expect(model.name).toEqual(name);
+    expect(model.description).toEqual(description);
+    expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy();
+    expect(model.dataValues).toEqual(dataValues);
+    expect(model.productDataModelId).toEqual(productDataModelId);
   });
 
   it('add data values', () => {
-    const plain = {
-      name: 'My name',
-      description: 'Some description',
-      dataValues: [
-        {
-          id: 'd1',
-          value: undefined,
-          dataSectionId: 'sid1',
-          dataFieldId: 'fieldId1',
-        },
-      ],
-    };
-    const model = Model.fromPlain(plain);
+    const model = Model.create({ name: 'My name', userId, organizationId });
     model.addDataValues([
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId2',
         dataSectionId: 'sid2',
         value: 'value 2',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId3',
         dataSectionId: 'sid2',
         value: 'value 3',
         row: 0,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId2',
         dataSectionId: 'sid2',
         value: 'value 4',
         row: 1,
       }),
-      DataValue.fromPlain({
+      DataValue.create({
         dataFieldId: 'fieldId3',
         dataSectionId: 'sid2',
         value: 'value 5',
         row: 1,
       }),
     ]);
-    expect(model.dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid1',
-        dataFieldId: 'fieldId1',
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId2',
-        value: 'value 2',
-        row: 0,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId3',
-        value: 'value 3',
-        row: 0,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId2',
-        value: 'value 4',
-        row: 1,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: 'sid2',
-        dataFieldId: 'fieldId3',
-        value: 'value 5',
-        row: 1,
-      }),
-    ]);
+    expect(model.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId2',
+          value: 'value 2',
+          row: 0,
+        }),
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId3',
+          value: 'value 3',
+          row: 0,
+        }),
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId2',
+          value: 'value 4',
+          row: 1,
+        }),
+        DataValue.create({
+          dataSectionId: 'sid2',
+          dataFieldId: 'fieldId3',
+          value: 'value 5',
+          row: 1,
+        }),
+      ]),
+    );
   });
 
   it('add data values fails if data values already exist', () => {
-    const plain = {
-      name: 'My name',
-      description: 'Some description',
-      dataValues: [
-        {
-          id: 'd1',
-          value: undefined,
-          dataSectionId: 'sid1',
-          dataFieldId: 'fieldId1',
-          row: 0,
-        },
-      ],
-    };
-    const model = Model.fromPlain(plain);
+    const dataValues = [
+      DataValue.create({
+        value: undefined,
+        dataSectionId: 'sid1',
+        dataFieldId: 'fieldId1',
+        row: 0,
+      }),
+    ];
+    const model = Model.create({
+      name: 'my name',
+      userId,
+      organizationId,
+    });
+    model.addDataValues(dataValues);
+
     expect(() =>
       model.addDataValues([
-        DataValue.fromPlain({
+        DataValue.create({
           dataFieldId: 'fieldId2',
           dataSectionId: 'sid1',
           value: 'value 2',
           row: 0,
         }),
-        DataValue.fromPlain({
+        DataValue.create({
           dataFieldId: 'fieldId1',
           dataSectionId: 'sid1',
           value: 'value 1',
@@ -196,122 +181,83 @@ describe('Model', () => {
     );
   });
 
-  it('is merged with plain', () => {
-    const model = Model.fromPlain({
-      name: 'My Name',
-      description: 'Some description',
-      dataValues: [
-        { id: 'd1', value: undefined, dataSectionId: 's1', dataFieldId: 'f1' },
-        { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
-        { id: 'd3', value: 'v3', dataSectionId: 's2', dataFieldId: 'f3' },
-      ],
-    });
-    const plain = {
-      name: 'Plain name',
-      ownedByOrganizationId: randomUUID(),
-      dataValues: [
-        { id: 'd1', value: 'v1', fieldToIgnore: 3, dataFieldId: 'f9' },
-        { id: 'd3', value: 'v3 new' },
-      ],
-      fieldToIgnore: 'hello',
-    };
-    const mergedModel = model.mergeWithPlain(plain);
-    expect(mergedModel.id).toEqual(expect.any(String));
-    expect(mergedModel.name).toEqual(plain.name);
-    expect(mergedModel.description).toEqual(model.description);
-    expect(
-      mergedModel.isOwnedBy(
-        Organization.fromPlain({ id: plain.ownedByOrganizationId }),
-      ),
-    ).toBeTruthy();
-    expect(mergedModel.dataValues).toEqual([
-      { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      { id: 'd2', value: 'v2', dataSectionId: 's1', dataFieldId: 'f2' },
-      { id: 'd3', value: 'v3 new', dataSectionId: 's2', dataFieldId: 'f3' },
-    ]);
+  it('is renamed', () => {
+    const model = Model.create({ name: 'My Name', userId, organizationId });
+    model.rename('new Name');
+    model.modifyDescription('new description');
+    expect(model.name).toEqual('new Name');
+    expect(model.description).toEqual('new description');
   });
 
-  it('handles merging with empty plain object', () => {
-    const model = Model.fromPlain({
-      name: 'Original Name',
-      description: 'Original Description',
-      dataValues: [
-        { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      ],
+  it('modifies data values', () => {
+    const dataValue1 = DataValue.create({
+      value: undefined,
+      dataSectionId: 's1',
+      dataFieldId: 'f1',
+      row: 0,
     });
-
-    // Empty plain object should preserve original values
-    const mergedModel = model.mergeWithPlain({});
-
-    expect(mergedModel.name).toEqual('Original Name');
-    expect(mergedModel.description).toEqual('Original Description');
-    expect(mergedModel.dataValues).toHaveLength(1);
-    expect(mergedModel.dataValues[0].id).toEqual('d1');
-  });
-
-  it('tests all getter methods', () => {
-    const userId = 'user-123';
-    const orgId = 'org-456';
-    const pdmId = 'pdm-789';
-
-    const model = Model.fromPlain({
-      createdByUserId: userId,
-      ownedByOrganizationId: orgId,
-      productDataModelId: pdmId,
-      dataValues: [
-        { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      ],
+    const dataValue3 = DataValue.create({
+      value: 'v3',
+      dataSectionId: 's2',
+      dataFieldId: 'f3',
+      row: 0,
     });
-
-    // Test getter methods
-    expect(model.createdByUserId).toEqual(userId);
-    expect(model.ownedByOrganizationId).toEqual(orgId);
-    expect(model.productDataModelId).toEqual(pdmId);
-    expect(model.dataValues).toHaveLength(1);
-  });
-
-  it('allows converting to plain object', () => {
-    const model = Model.fromPlain({
-      name: 'Test Model',
-      description: 'Test Description',
-      dataValues: [
-        { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      ],
-      createdByUserId: 'user-1',
-      ownedByOrganizationId: 'org-1',
+    const dataValues = [
+      dataValue1,
+      DataValue.create({
+        value: 'v2',
+        dataSectionId: 's1',
+        dataFieldId: 'f2',
+        row: 0,
+      }),
+      dataValue3,
+    ];
+    const model = Model.create({
+      name: 'my name',
+      userId,
+      organizationId,
     });
-
-    const plain = model.toPlain();
-
-    expect(plain).toEqual({
-      id: model.id,
-      name: 'Test Model',
-      description: 'Test Description',
-      dataValues: [
-        { id: 'd1', value: 'v1', dataSectionId: 's1', dataFieldId: 'f1' },
-      ],
-      createdByUserId: 'user-1',
-      ownedByOrganizationId: 'org-1',
-      uniqueProductIdentifiers: [],
-    });
+    model.addDataValues(dataValues);
+    const dataValueUpdates = [
+      DataValue.create({
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: 'v1',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId: dataValue3.dataFieldId,
+        dataSectionId: dataValue3.dataSectionId,
+        value: 'v3 new',
+        row: 0,
+      }),
+    ];
+    model.modifyDataValues(dataValueUpdates);
+    expect(model.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: 'v1',
+          dataSectionId: 's1',
+          dataFieldId: 'f1',
+          row: 0,
+        }),
+        DataValue.create({
+          value: 'v2',
+          dataSectionId: 's1',
+          dataFieldId: 'f2',
+          row: 0,
+        }),
+        DataValue.create({
+          value: 'v3 new',
+          dataSectionId: 's2',
+          dataFieldId: 'f3',
+          row: 0,
+        }),
+      ]),
+    );
   });
 
   describe('DataValue', () => {
-    it('should create a data value', () => {
-      const dataValue = new DataValue(
-        'test-section-id',
-        'test-id',
-        'test-value',
-        0,
-      );
-
-      expect(dataValue.id).toBeDefined();
-      expect(dataValue.value).toBe('test-value');
-      expect(dataValue.dataSectionId).toBe('test-section-id');
-      expect(dataValue.dataFieldId).toBe('test-id');
-      expect(dataValue.row).toBe(0);
-    });
-
     it('should create from plain object', () => {
       const plain = {
         value: 'test-value',
@@ -320,9 +266,8 @@ describe('Model', () => {
         row: 3,
       };
 
-      const dataValue = DataValue.fromPlain(plain);
+      const dataValue = DataValue.create(plain);
 
-      expect(dataValue.id).toBeDefined();
       expect(dataValue.value).toBe('test-value');
       expect(dataValue.dataSectionId).toBe('section-1');
       expect(dataValue.dataFieldId).toBe('field-1');
@@ -337,7 +282,7 @@ describe('Model', () => {
         extraProperty: 'should be ignored',
       };
 
-      const dataValue = DataValue.fromPlain(plain as any);
+      const dataValue = DataValue.create(plain as any);
 
       expect(dataValue.value).toBe('test-value');
       expect((dataValue as any).extraProperty).toBeUndefined();
@@ -346,21 +291,27 @@ describe('Model', () => {
 
   describe('assignProductDataModel', () => {
     it('should assign product data model and initialize data values', () => {
-      const model = Model.fromPlain({
+      const model = Model.create({
         name: 'Test Model',
+        userId,
+        organizationId,
       });
 
       // Create a mock product data model
       const productDataModel = {
         id: 'pdm-1',
         createInitialDataValues: jest.fn().mockReturnValue([
-          DataValue.fromPlain({
+          DataValue.create({
             dataSectionId: 'section-1',
             dataFieldId: 'field-1',
+            value: undefined,
+            row: 0,
           }),
-          DataValue.fromPlain({
+          DataValue.create({
             dataSectionId: 'section-1',
             dataFieldId: 'field-2',
+            value: undefined,
+            row: 0,
           }),
         ]),
       } as unknown as ProductDataModel;
@@ -374,18 +325,30 @@ describe('Model', () => {
     });
 
     it('should throw error if model already has a product data model', () => {
-      const model = Model.fromPlain({
+      const user = new User(userId, 'test@example.com');
+      const organization = Organization.create({ name: 'orga', user });
+      const model = Model.create({
         name: 'Test Model',
-        productDataModelId: 'existing-pdm',
+        userId,
+        organizationId: organization.id,
       });
 
-      // Create a mock product data model
-      const productDataModel = {
-        id: 'pdm-2',
-      } as unknown as ProductDataModel;
+      const productDataModel1 = ProductDataModel.create({
+        name: 'existing-pdm',
+        user,
+        organization,
+      });
+
+      model.assignProductDataModel(productDataModel1);
+
+      const productDataModel2 = ProductDataModel.create({
+        name: 'other-pdm',
+        user,
+        organization,
+      });
 
       // Try to assign a second product data model
-      expect(() => model.assignProductDataModel(productDataModel)).toThrow(
+      expect(() => model.assignProductDataModel(productDataModel2)).toThrow(
         'This model is already connected to a product data model',
       );
     });

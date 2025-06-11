@@ -48,7 +48,7 @@
     "semver": "^7.7.1",
     "typeorm": "^0.3.21",
     "uuid": "^11.1.0",
-    "zod": "^3.24.2"
+    "zod": "^3.25.55"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.5",

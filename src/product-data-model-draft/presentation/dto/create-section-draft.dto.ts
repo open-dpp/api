@@ -3,11 +3,13 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { SectionType } from '../../../data-modelling/domain/section-base';
 import { Type } from 'class-transformer';
 import { SectionLayout } from './layout.dto';
+import { GranularityLevel } from '../../../data-modelling/domain/granularity-level';
 
 export class CreateSectionDraftDto {
   @IsString()
@@ -21,4 +23,7 @@ export class CreateSectionDraftDto {
   @Type(() => SectionLayout)
   @ValidateNested()
   readonly layout: SectionLayout;
+  @ValidateIf((o) => o.type === SectionType.REPEATABLE)
+  @IsEnum(GranularityLevel)
+  readonly granularityLevel?: GranularityLevel;
 }

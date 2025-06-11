@@ -1,11 +1,12 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { UniqueProductIdentifierService } from '../infrastructure/unique.product.identifier.service';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { Public } from '../../auth/public/public.decorator';
 import { View } from '../domain/view';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Model } from '../../models/domain/model';
+import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
+import { Item } from '../../items/domain/item';
 
 @Controller('unique-product-identifiers')
 export class UniqueProductIdentifierController {
@@ -22,11 +23,12 @@ export class UniqueProductIdentifierController {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOne(id);
     let model: Model;
+    let item: Item | undefined = undefined;
     try {
-      const item = await this.itemService.findById(
+      item = await this.itemService.findById(
         uniqueProductIdentifier.referenceId,
       );
-      model = await this.modelsService.findOne(item.model);
+      model = await this.modelsService.findOne(item.modelId);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (NotFoundException) {
       model = await this.modelsService.findOne(
@@ -37,9 +39,10 @@ export class UniqueProductIdentifierController {
     const productDataModel = await this.productDataModelService.findOneOrFail(
       model.productDataModelId,
     );
-    return View.fromPlain({
+    return View.create({
       model: model,
       productDataModel: productDataModel,
+      item,
     }).build();
   }
 }
