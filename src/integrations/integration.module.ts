@@ -2,35 +2,48 @@ import { Module } from '@nestjs/common';
 import { AasMappingController } from './presentation/aas-mapping.controller';
 import { ModelsService } from '../models/infrastructure/models.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../models/infrastructure/model.entity';
-import { DataValueEntity } from '../models/infrastructure/data.value.entity';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../product-data-model/infrastructure/product-data-model.schema';
-import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
-import { OrganizationsModule } from '../organizations/organizations.module';
 import { UniqueProductIdentifierModule } from '../unique-product-identifier/unique.product.identifier.module';
 import { UsersModule } from '../users/users.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
+import { ItemDoc, ItemSchema } from '../items/infrastructure/item.schema';
+import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
+import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { ModelsModule } from '../models/models.module';
+import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
+import {
+  AasMappingDoc,
+  AasMappingSchema,
+} from './infrastructure/aas-mapping.schema';
+import { AasMappingService } from './infrastructure/aas-mapping.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ModelEntity, DataValueEntity]),
+    TypeOrmModule.forFeature([OrganizationEntity]),
     MongooseModule.forFeature([
       {
-        name: ProductDataModelDoc.name,
-        schema: ProductDataModelSchema,
+        name: ItemDoc.name,
+        schema: ItemSchema,
+      },
+      {
+        name: ModelDoc.name,
+        schema: ModelSchema,
+      },
+      {
+        name: AasMappingDoc.name,
+        schema: AasMappingSchema,
       },
     ]),
-    OrganizationsModule,
+    ProductDataModelModule,
+    ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,
+    KeycloakResourcesModule,
     PermissionsModule,
   ],
   controllers: [AasMappingController],
-  providers: [ModelsService],
+  providers: [ModelsService, AasMappingService],
   exports: [],
 })
 export class IntegrationModule {}

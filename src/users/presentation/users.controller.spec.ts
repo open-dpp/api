@@ -1,12 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UserEntity } from '../infrastructure/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { AuthContext } from '../../auth/auth-request';
-import { User } from '../../users/domain/user';
+import { User } from '../domain/user';
 import { randomUUID } from 'crypto';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';

@@ -1,17 +1,16 @@
 import { AasFieldMapping, AasMapping } from './aas-mapping';
-import { DataValue } from '../../models/domain/model';
 import { ignoreIds } from '../../../test/utils';
 import { aasTruckExample } from './truck-example';
-import { omit } from 'lodash';
+import { DataValue } from '../../passport/domain/passport';
 
 describe('AasMapping', () => {
   it('should create field mapping', () => {
-    const fieldMapping = new AasFieldMapping(
-      'internalField',
-      'internalSectionId',
-      'externalFieldParent',
-      'externalField',
-    );
+    const fieldMapping = AasFieldMapping.create({
+      dataFieldId: 'internalField',
+      sectionId: 'internalSectionId',
+      idShortParent: 'externalFieldParent',
+      idShort: 'externalField',
+    });
     expect(fieldMapping.dataFieldId).toEqual('internalField');
     expect(fieldMapping.sectionId).toEqual('internalSectionId');
     expect(fieldMapping.idShort).toEqual('externalField');
@@ -20,34 +19,41 @@ describe('AasMapping', () => {
 
   it('should create aas mapping and add field mappings', () => {
     const dataModelId = 'dataModelId';
-    const aasMapping = new AasMapping(dataModelId);
+    const aasMapping = AasMapping.create({ dataModelId });
     expect(aasMapping.id).toEqual(expect.any(String));
     expect(aasMapping.dataModelId).toEqual(dataModelId);
     expect(aasMapping.fieldMappings).toEqual([]);
-    const fieldMapping = new AasFieldMapping(
-      'internalField',
-      'internalSectionId',
-      'externalFieldParent',
-      'externalField',
-    );
+    const fieldMapping = AasFieldMapping.create({
+      dataFieldId: 'internalField',
+      sectionId: 'internalSectionId',
+      idShortParent: 'externalFieldParent',
+      idShort: 'externalField',
+    });
     aasMapping.addFieldMapping(fieldMapping);
     expect(aasMapping.fieldMappings).toEqual([fieldMapping]);
   });
 
   it('should generate data values for truck example', () => {
     const dataModelId = 'dataModelId';
-    const aasMapping = new AasMapping(dataModelId);
-    const fieldMapping = new AasFieldMapping(
-      'internalField',
-      'internalSectionId',
-      'ProductCarbonFootprint_A1A3',
-      'PCFCO2eq',
-    );
+    const aasMapping = AasMapping.create({ dataModelId });
+    const fieldMapping = AasFieldMapping.create({
+      dataFieldId: 'internalField',
+      sectionId: 'internalSectionId',
+      idShortParent: 'ProductCarbonFootprint_A1A3',
+      idShort: 'PCFCO2eq',
+    });
     aasMapping.addFieldMapping(fieldMapping);
 
     const dataValues = aasMapping.generateDataValues(aasTruckExample);
     expect(dataValues).toEqual(
-      ignoreIds([new DataValue('internalSectionId', 'internalField', 2.63)]),
+      ignoreIds([
+        DataValue.create({
+          dataSectionId: 'internalSectionId',
+          dataFieldId: 'internalField',
+          value: 2.63,
+          row: 0,
+        }),
+      ]),
     );
   });
 });

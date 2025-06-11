@@ -1,8 +1,8 @@
-import { Expose } from 'class-transformer';
 import { randomUUID } from 'crypto';
-import { DataValue } from '../../models/domain/model';
+
 import { z } from 'zod';
 import { flatMap, get } from 'lodash';
+import { DataValue } from '../../passport/domain/passport';
 
 const AASPropertySchema = z.object({
   idShort: z.string(),
@@ -19,16 +19,22 @@ const AASPropertyWithParentSchema = z.object({
 });
 
 export class AasMapping {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly dataModelId: string;
+  private constructor(
+    public readonly id: string,
+    public readonly dataModelId: string,
+    public readonly fieldMappings: AasFieldMapping[],
+  ) {}
 
-  @Expose()
-  readonly fieldMappings: AasFieldMapping[] = [];
+  static create(data: { dataModelId: string }) {
+    return new AasMapping(randomUUID(), data.dataModelId, []);
+  }
 
-  constructor(dataModelId: string) {
-    this.dataModelId = dataModelId;
+  static loadFromDb(data: {
+    id: string;
+    dataModelId: string;
+    fieldMappings: AasFieldMapping[];
+  }) {
+    return new AasMapping(data.id, data.dataModelId, data.fieldMappings);
   }
 
   generateDataValues(aasData: any) {
@@ -49,11 +55,12 @@ export class AasMapping {
             fieldMapping.idShortParent === parentIdShort,
         );
         if (field) {
-          return new DataValue(
-            field.sectionId,
-            field.dataFieldId,
-            this.parseValue(property),
-          );
+          return DataValue.create({
+            dataSectionId: field.sectionId,
+            dataFieldId: field.dataFieldId,
+            value: this.parseValue(property),
+            row: 0, // TODO: Replace hard coded row id
+          });
         }
         return undefined;
       })
@@ -89,28 +96,24 @@ export class AasMapping {
 }
 
 export class AasFieldMapping {
-  @Expose()
-  readonly dataFieldId: string;
-  @Expose()
-  readonly sectionId: string;
-  @Expose()
-  readonly idShortParent: string;
-  @Expose()
-  readonly idShort: string;
+  private constructor(
+    public readonly dataFieldId: string,
+    public readonly sectionId: string,
+    public readonly idShortParent: string,
+    public readonly idShort: string,
+  ) {}
 
-  constructor(
-    dataFieldId: string,
-    sectionId: string,
-    idShortParent: string,
-    idShort: string,
-  ) {
-    this.dataFieldId = dataFieldId;
-    this.idShort = idShort;
-    this.sectionId = sectionId;
-    this.idShortParent = idShortParent;
-  }
-
-  toPlain() {
-    return this;
+  public static create(data: {
+    dataFieldId: string;
+    sectionId: string;
+    idShortParent: string;
+    idShort: string;
+  }) {
+    return new AasFieldMapping(
+      data.dataFieldId,
+      data.sectionId,
+      data.idShortParent,
+      data.idShort,
+    );
   }
 }

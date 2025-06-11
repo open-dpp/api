@@ -7,6 +7,7 @@ import {
   ValueErrorFilter,
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
+import { json } from 'express';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,10 @@ export async function bootstrap() {
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
+  );
+  app.use(
+    '/organizations/:organizationId/integration/aas/:aasMappingId',
+    json({ limit: '50mb' }),
   );
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
