@@ -5,7 +5,6 @@ import { UserEntity } from './infrastructure/user.entity';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { KeycloakSyncOnStartupService } from '../keycloak-sync-on-startup/keycloak-sync-on-startup/keycloak-sync-on-startup.service';
-import { UsersController } from './presentation/users.controller';
 
 @Module({
   imports: [
@@ -13,7 +12,7 @@ import { UsersController } from './presentation/users.controller';
     forwardRef(() => OrganizationsModule),
     KeycloakResourcesModule,
   ],
-  controllers: [UsersController],
+  controllers: [],
   providers: [UsersService, KeycloakSyncOnStartupService],
   exports: [UsersService],
 })

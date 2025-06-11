@@ -17,9 +17,10 @@ export async function bootstrap() {
     new ValueErrorFilter(),
   );
   app.use(
-    '/organizations/:organizationId/integration/aas/:aasMappingId',
+    '/organizations/:organizationId/integration',
     json({ limit: '50mb' }),
   );
+  app.use(json({ limit: '100kb' }));
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: '*',

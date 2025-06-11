@@ -13,7 +13,6 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { JwtService } from '@nestjs/jwt';
-import { keycloakUsers } from '../../../test/users-and-orgs';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -64,7 +63,6 @@ export class KeycloakAuthGuard implements CanActivate {
     });
     const user: KeycloakUserInToken = payload;
     authContext.keycloakUser = user;
-    console.log(authContext.keycloakUser);
     await this.usersService.create(user, true);
     authContext.user = new User(payload.sub, user.email);
     const memberships = payload.memberships || ([] as string[]);
