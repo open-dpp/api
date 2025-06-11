@@ -21,7 +21,7 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { DppEventsModule } from '../../dpp-events/dpp-events.module';
+import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { userObj1 } from '../../../test/users-and-orgs';
 import { AuthContext } from '../../auth/auth-request';
@@ -47,7 +47,7 @@ describe('ProductsService', () => {
         ]),
         MongooseTestingModule,
         PermissionsModule,
-        DppEventsModule,
+        TraceabilityEventsModule,
       ],
       providers: [
         ItemsService,

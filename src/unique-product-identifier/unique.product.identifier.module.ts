@@ -15,7 +15,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
-import { DppEventsModule } from '../dpp-events/dpp-events.module';
+import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 
 @Module({
   imports: [
@@ -32,7 +32,7 @@ import { DppEventsModule } from '../dpp-events/dpp-events.module';
     ]),
     OrganizationsModule,
     UsersModule,
-    DppEventsModule,
+    TraceabilityEventsModule,
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [

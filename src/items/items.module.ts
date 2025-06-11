@@ -11,7 +11,7 @@ import { OrganizationEntity } from '../organizations/infrastructure/organization
 import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { PermissionsModule } from '../permissions/permissions.module';
-import { DppEventsModule } from '../dpp-events/dpp-events.module';
+import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { DppEventsModule } from '../dpp-events/dpp-events.module';
     UsersModule,
     KeycloakResourcesModule,
     PermissionsModule,
-    DppEventsModule,
+    TraceabilityEventsModule,
   ],
   controllers: [ItemsController],
   providers: [ItemsService, OrganizationsService],

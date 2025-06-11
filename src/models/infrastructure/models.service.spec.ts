@@ -20,8 +20,8 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
-import { DppEvent } from '../../dpp-events/domain/dpp-event';
+import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
+import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
 import { userObj1 } from '../../../test/users-and-orgs';
 
 describe('ModelsService', () => {
@@ -49,11 +49,11 @@ describe('ModelsService', () => {
         OrganizationsService,
         KeycloakResourcesService,
         {
-          provide: DppEventsService,
+          provide: TraceabilityEventsService,
           useValue: {
             save: jest
               .fn()
-              .mockImplementation((event: DppEvent) => Promise.resolve(event)),
+              .mockImplementation((event: TraceabilityEventWrapper) => Promise.resolve(event)),
           },
         },
       ],

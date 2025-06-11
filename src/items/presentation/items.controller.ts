@@ -7,9 +7,9 @@ import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { ItemCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/item-created.event';
-import { DppEventsService } from '../../dpp-events/infrastructure/dpp-events.service';
-import { UniqueProductIdentifierCreatedEvent } from '../../dpp-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
+import { ItemCreatedEvent } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created.event';
+import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
+import { UniqueProductIdentifierCreatedEvent } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -18,7 +18,7 @@ export class ItemsController {
     private readonly organizationsService: OrganizationsService,
     private readonly modelsService: ModelsService,
     private readonly permissionsService: PermissionsService,
-    private readonly dppEventsService: DppEventsService,
+    private readonly traceabilityEventsService: TraceabilityEventsService,
   ) {}
 
   @Post()
@@ -35,12 +35,14 @@ export class ItemsController {
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
     const itemDto = this.itemToDto(await this.itemsService.save(item));
-    await this.dppEventsService.saveOpenDppEventData(
+    await this.traceabilityEventsService.saveOpenDppEventData(
+      item.id,
       ItemCreatedEvent.create({ itemId: itemDto.id }),
       req.authContext,
     );
     for (const uniqueProductIdentifier of itemDto.uniqueProductIdentifiers) {
-      await this.dppEventsService.saveOpenDppEventData(
+      await this.traceabilityEventsService.saveOpenDppEventData(
+        item.id,
         UniqueProductIdentifierCreatedEvent.create({
           uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
         }),

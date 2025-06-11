@@ -10,7 +10,7 @@ import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { DppEventsModule } from '../../dpp-events/dpp-events.module';
+import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;
@@ -22,7 +22,7 @@ describe('UniqueProductIdentifierService', () => {
         TypeOrmTestingModule,
         MongooseTestingModule,
         TypeOrmModule.forFeature([UniqueProductIdentifierEntity, ModelEntity]),
-        DppEventsModule,
+        TraceabilityEventsModule,
       ],
       providers: [UniqueProductIdentifierService],
     }).compile();
