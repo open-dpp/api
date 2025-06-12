@@ -5,34 +5,34 @@ import { TraceabilityEventType } from './traceability-event-type.enum';
 
 export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
   @Expose()
-  readonly id: string = randomUUID();
+  readonly id: string;
 
   @Expose()
-  readonly createdAt: Date = new Date();
+  readonly createdAt: Date;
 
   @Expose()
-  readonly updatedAt: Date = new Date();
+  readonly updatedAt: Date;
 
   @Expose()
-  readonly ip: string | null = null;
+  readonly ip: string | null;
 
   @Expose()
-  readonly userId: string | null = null;
+  readonly userId: string | null;
 
   @Expose()
-  readonly articleId: string | null = null;
+  readonly articleId: string | null;
 
   @Expose()
-  readonly chargeId: string | null = null;
+  readonly chargeId: string | null;
 
   @Expose()
-  readonly organizationId: string | null = null;
+  readonly organizationId: string | null;
 
   @Expose()
   readonly geolocation: {
     latitude: string;
     longitude: string;
-  } | null = null;
+  } | null;
 
   @Expose()
   readonly type: TraceabilityEventType;
