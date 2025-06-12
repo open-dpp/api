@@ -41,9 +41,9 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
   readonly data: T;
 
   private constructor(
-    id: string | null,
-    createdAt: Date | null,
-    updatedAt: Date | null,
+    id: string,
+    createdAt: Date,
+    updatedAt: Date,
     ip: string | null,
     userId: string | null,
     articleId: string | null,
@@ -104,9 +104,9 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     plain: any,
   ): TraceabilityEventWrapper<T> {
     return new TraceabilityEventWrapper(
-      plain._id,
-      plain.createdAt,
-      plain.updatedAt,
+      plain._id || randomUUID(),
+      plain.createdAt || new Date(),
+      plain.updatedAt || new Date(),
       plain.ip,
       plain.userId,
       plain.articleId,
