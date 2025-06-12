@@ -75,7 +75,7 @@ describe('ItemsService', () => {
 
   it('should create and find item for a model', async () => {
     const organization = Organization.create({
-      name: 'My Orga',
+      name: `My Orga ${randomUUID()}`,
       user: userObj1,
     });
     await organizationsService.save(organization);
@@ -95,7 +95,7 @@ describe('ItemsService', () => {
 
   it('should create multiple items for a model and find them by model', async () => {
     const organization = Organization.create({
-      name: 'My Orga',
+      name: `My Orga ${randomUUID()}`,
       user: userObj1,
     });
     await organizationsService.save(organization);
