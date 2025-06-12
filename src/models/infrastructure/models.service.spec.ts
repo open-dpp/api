@@ -23,6 +23,7 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
 import { userObj1 } from '../../../test/users-and-orgs';
+import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -53,7 +54,10 @@ describe('ModelsService', () => {
           useValue: {
             save: jest
               .fn()
-              .mockImplementation((event: TraceabilityEventWrapper) => Promise.resolve(event)),
+              .mockImplementation(
+                (event: TraceabilityEventWrapper<TraceabilityEvent>) =>
+                  Promise.resolve(event),
+              ),
           },
         },
       ],

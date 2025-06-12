@@ -20,17 +20,38 @@ export class TraceabilityEventDocument extends Document {
   })
   _schemaVersion: TraceabilityEventSchemaVersion;
 
-  @Prop({
-    type: TraceabilityEvent,
-    required: true,
-  })
-  data: TraceabilityEvent;
-
   @Prop({ required: true })
   createdAt: Date;
 
   @Prop({ required: true })
   updatedAt: Date;
+
+  @Prop({ required: false, default: null })
+  ip: string | null;
+
+  @Prop({ required: false, default: null })
+  userId: string | null;
+
+  @Prop({ required: false, default: null })
+  articleId: string | null;
+
+  @Prop({ required: false, default: null })
+  chargeId: string | null;
+
+  @Prop({ required: false, default: null })
+  organizationId: string | null;
+
+  @Prop({ required: false, default: null, type: Object })
+  geolocation: {
+    latitude: string;
+    longitude: string;
+  } | null;
+
+  @Prop({
+    type: Object,
+    required: true,
+  })
+  data: TraceabilityEvent;
 }
 
 export const DppEventSchema = SchemaFactory.createForClass(

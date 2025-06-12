@@ -35,15 +35,20 @@ export class ItemsController {
     item.defineModel(modelId);
     item.createUniqueProductIdentifier();
     const itemDto = this.itemToDto(await this.itemsService.save(item));
-    await this.traceabilityEventsService.saveOpenDppEventData(
-      item.id,
-      ItemCreatedEvent.create({ itemId: itemDto.id }),
+    await this.traceabilityEventsService.create(
+      ItemCreatedEvent.create({
+        articleId: item.id,
+        userId: req.authContext.user.id,
+        organizationId: organizationId,
+      }),
       req.authContext,
     );
     for (const uniqueProductIdentifier of itemDto.uniqueProductIdentifiers) {
-      await this.traceabilityEventsService.saveOpenDppEventData(
-        item.id,
+      await this.traceabilityEventsService.create(
         UniqueProductIdentifierCreatedEvent.create({
+          articleId: item.id,
+          userId: req.authContext.user.id,
+          organizationId: organizationId,
           uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
         }),
         req.authContext,

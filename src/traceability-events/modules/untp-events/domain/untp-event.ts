@@ -1,19 +1,32 @@
 import { Expose } from 'class-transformer';
 import { TraceabilityEventType } from '../../../domain/traceability-event-type.enum';
 import { TraceabilityEvent } from '../../../domain/traceability-event';
+import { TraceabilityEventWrapper } from '../../../domain/traceability-event-wrapper';
 
 export class UntpEvent extends TraceabilityEvent {
-  readonly type: TraceabilityEventType = TraceabilityEventType.UNTP;
-
   @Expose()
   readonly data: any;
 
   private constructor(data: any) {
-    super();
+    super(TraceabilityEventType.UNTP);
     this.data = data;
   }
 
-  static create(data: any) {
-    return new UntpEvent(data);
+  static create(data: {
+    userId: string;
+    articleId: string;
+    organizationId: string;
+    childData: any;
+  }): TraceabilityEventWrapper<UntpEvent> {
+    return TraceabilityEventWrapper.create({
+      type: TraceabilityEventType.UNTP,
+      ip: null,
+      userId: data.userId,
+      articleId: data.articleId,
+      organizationId: data.organizationId,
+      chargeId: null,
+      geolocation: null,
+      data: new UntpEvent(data.childData),
+    });
   }
 }

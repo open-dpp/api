@@ -1,6 +1,7 @@
 import { Expose } from 'class-transformer';
 import { OpenDppEventType } from '../open-dpp-event-type.enum';
 import { OpenDppEventData } from '../open-dpp-event-data';
+import { OpenDppEvent } from '../open-dpp-event';
 
 export class ItemCreatedEvent extends OpenDppEventData {
   @Expose()
@@ -14,7 +15,16 @@ export class ItemCreatedEvent extends OpenDppEventData {
     this.itemId = itemId;
   }
 
-  static create(plain: { itemId: string }) {
-    return new ItemCreatedEvent(plain?.itemId);
+  static create(data: {
+    userId: string;
+    articleId: string;
+    organizationId: string;
+  }) {
+    return OpenDppEvent.create({
+      userId: data.userId,
+      articleId: data.articleId,
+      organizationId: data.organizationId,
+      childData: new ItemCreatedEvent(data.articleId),
+    });
   }
 }

@@ -14,6 +14,8 @@ import {
 import { TraceabilityEventWrapper } from '../domain/traceability-event-wrapper';
 import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
 import { randomUUID } from 'crypto';
+import { OpenEpcisEvent } from '../modules/openepcis-events/domain/openepcis-event';
+import { UntpEvent } from '../modules/untp-events/domain/untp-event';
 
 describe('TraceabilityEventsService', () => {
   let service: TraceabilityEventsService;
@@ -259,6 +261,7 @@ describe('TraceabilityEventsService', () => {
           data: {
             type: TraceabilityEventType.OPEN_DPP,
           },
+          type: TraceabilityEventType.OPEN_DPP,
         });
 
         // Act
@@ -297,6 +300,7 @@ describe('TraceabilityEventsService', () => {
           data: {
             type: TraceabilityEventType.OPENEPCIS,
           },
+          type: TraceabilityEventType.OPENEPCIS,
         });
         const id = openepcisEvent.id;
 
@@ -319,6 +323,63 @@ describe('TraceabilityEventsService', () => {
           TraceabilityEventType.OPENEPCIS,
         );
       });
+
+      describe('OpenEpcisEvent class', () => {
+        it('should create an OpenEpcisEvent with the correct type', () => {
+          // Arrange & Act
+          const eventData = { key: 'value' };
+          const userId = randomUUID();
+          const articleId = randomUUID();
+          const organizationId = randomUUID();
+          const wrapper = OpenEpcisEvent.create({
+            userId,
+            articleId,
+            organizationId,
+            childData: eventData,
+          });
+
+          // Assert
+          expect(wrapper).toBeDefined();
+          expect(wrapper.type).toBe(TraceabilityEventType.OPENEPCIS);
+          expect(wrapper.data.data).toEqual(eventData);
+        });
+
+        it('should store and retrieve OpenEpcisEvent data correctly', async () => {
+          // Arrange
+          const eventData = {
+            productId: randomUUID(),
+            quantity: 10,
+            location: 'Warehouse A',
+          };
+          const userId = randomUUID();
+          const articleId = randomUUID();
+          const organizationId = randomUUID();
+
+          const wrapper = OpenEpcisEvent.create({
+            userId,
+            articleId,
+            organizationId,
+            childData: eventData,
+          });
+
+          // Act
+          await service.create(wrapper);
+
+          // Assert
+          const retrievedEvents = await service.findByDataType(
+            TraceabilityEventType.OPENEPCIS,
+          );
+
+          expect(retrievedEvents).toHaveLength(1);
+          expect(retrievedEvents[0].data.type).toBe(
+            TraceabilityEventType.OPENEPCIS,
+          );
+
+          // Cast to OpenEpcisEvent to access data property
+          const retrievedEvent = retrievedEvents[0].data as OpenEpcisEvent;
+          expect(retrievedEvent.data).toEqual(eventData);
+        });
+      });
     });
 
     describe('UntpEvent discriminator', () => {
@@ -327,11 +388,11 @@ describe('TraceabilityEventsService', () => {
         const userId = randomUUID();
         const articleId = randomUUID();
         const organizationId = randomUUID();
-        const untpEvent = TraceabilityEventWrapper.create({
+        const untpEvent = UntpEvent.create({
           userId,
           articleId,
           organizationId,
-          data: {
+          childData: {
             type: TraceabilityEventType.UNTP,
           },
         });
@@ -353,6 +414,62 @@ describe('TraceabilityEventsService', () => {
         expect(retrievedEvents).toHaveLength(1);
         expect(retrievedEvents[0].id).toBe(id);
         expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.UNTP);
+      });
+
+      describe('UntpEvent class', () => {
+        it('should create a UntpEvent with the correct type', () => {
+          // Arrange & Act
+          const eventData = { key: 'value' };
+          const userId = randomUUID();
+          const articleId = randomUUID();
+          const organizationId = randomUUID();
+          const wrapper = UntpEvent.create({
+            userId,
+            articleId,
+            organizationId,
+            childData: eventData,
+          });
+
+          // Assert
+          expect(wrapper).toBeDefined();
+          expect(wrapper.type).toBe(TraceabilityEventType.UNTP);
+          expect(wrapper.data.data).toEqual(eventData);
+        });
+
+        it('should store and retrieve UntpEvent data correctly', async () => {
+          // Arrange
+          const eventData = {
+            transactionId: randomUUID(),
+            amount: 500,
+            currency: 'USD',
+            status: 'completed',
+          };
+
+          const userId = randomUUID();
+          const articleId = randomUUID();
+          const organizationId = randomUUID();
+          const wrapper = UntpEvent.create({
+            userId,
+            articleId,
+            organizationId,
+            childData: eventData,
+          });
+
+          // Act
+          await service.create(wrapper);
+
+          // Assert
+          const retrievedEvents = await service.findByDataType(
+            TraceabilityEventType.UNTP,
+          );
+
+          expect(retrievedEvents).toHaveLength(1);
+          expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.UNTP);
+
+          // Cast to UntpEvent to access data property
+          const retrievedEvent = retrievedEvents[0].data as UntpEvent;
+          expect(retrievedEvent.data).toEqual(eventData);
+        });
       });
     });
 

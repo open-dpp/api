@@ -1,8 +1,9 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { TraceabilityEvent } from './traceability-event';
+import { TraceabilityEventType } from './traceability-event-type.enum';
 
-export class TraceabilityEventWrapper {
+export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
   @Expose()
   readonly id: string = randomUUID();
 
@@ -34,8 +35,10 @@ export class TraceabilityEventWrapper {
   } | null = null;
 
   @Expose()
-  @Type(() => TraceabilityEvent)
-  readonly data: TraceabilityEvent;
+  readonly type: TraceabilityEventType;
+
+  @Expose()
+  readonly data: T;
 
   private constructor(
     id: string | null,
@@ -50,7 +53,8 @@ export class TraceabilityEventWrapper {
       latitude: string;
       longitude: string;
     } | null,
-    data: TraceabilityEvent,
+    type: TraceabilityEventType,
+    data: T,
   ) {
     this.id = id;
     this.createdAt = createdAt;
@@ -61,10 +65,11 @@ export class TraceabilityEventWrapper {
     this.chargeId = chargeId;
     this.organizationId = organizationId;
     this.geolocation = geolocation;
+    this.type = type;
     this.data = data;
   }
 
-  static create(data: {
+  static create<T extends TraceabilityEvent>(data: {
     ip?: string | null | undefined;
     userId: string;
     articleId: string;
@@ -77,7 +82,8 @@ export class TraceabilityEventWrapper {
         }
       | null
       | undefined;
-    data: TraceabilityEvent;
+    type: TraceabilityEventType;
+    data: T;
   }) {
     return new TraceabilityEventWrapper(
       randomUUID(),
@@ -89,11 +95,14 @@ export class TraceabilityEventWrapper {
       data.chargeId,
       data.organizationId,
       data.geolocation,
+      data.type,
       data.data,
     );
   }
 
-  static loadFromDb(plain: any): TraceabilityEventWrapper {
+  static loadFromDb<T extends TraceabilityEvent>(
+    plain: any,
+  ): TraceabilityEventWrapper<T> {
     return new TraceabilityEventWrapper(
       plain._id,
       plain.createdAt,
@@ -104,6 +113,7 @@ export class TraceabilityEventWrapper {
       plain.chargeId,
       plain.organizationId,
       plain.geolocation,
+      plain.type,
       plain.data,
     );
   }

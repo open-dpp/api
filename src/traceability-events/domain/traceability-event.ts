@@ -1,7 +1,9 @@
 import { TraceabilityEventType } from './traceability-event-type.enum';
-import { Expose } from 'class-transformer';
 
 export abstract class TraceabilityEvent {
-  @Expose()
   type: TraceabilityEventType;
+
+  protected constructor(type: TraceabilityEventType) {
+    this.type = type;
+  }
 }

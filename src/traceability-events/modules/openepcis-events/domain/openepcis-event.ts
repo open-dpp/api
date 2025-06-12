@@ -1,19 +1,32 @@
 import { Expose } from 'class-transformer';
 import { TraceabilityEventType } from '../../../domain/traceability-event-type.enum';
 import { TraceabilityEvent } from '../../../domain/traceability-event';
+import { TraceabilityEventWrapper } from '../../../domain/traceability-event-wrapper';
 
 export class OpenEpcisEvent extends TraceabilityEvent {
-  readonly type: TraceabilityEventType = TraceabilityEventType.OPENEPCIS;
-
   @Expose()
   readonly data: any;
 
   private constructor(data: any) {
-    super();
+    super(TraceabilityEventType.OPENEPCIS);
     this.data = data;
   }
 
-  static create(data: any) {
-    return new OpenEpcisEvent(data);
+  static create(data: {
+    userId: string;
+    articleId: string;
+    organizationId: string;
+    childData: any;
+  }): TraceabilityEventWrapper<OpenEpcisEvent> {
+    return TraceabilityEventWrapper.create({
+      type: TraceabilityEventType.OPENEPCIS,
+      ip: null,
+      userId: data.userId,
+      articleId: data.articleId,
+      organizationId: data.organizationId,
+      chargeId: null,
+      geolocation: null,
+      data: new OpenEpcisEvent(data.childData),
+    });
   }
 }
