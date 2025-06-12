@@ -16,14 +16,14 @@ import { AuthRequest } from '../../auth/auth-request';
 import { Model } from '../domain/model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { DataValue } from '../../passport/domain/passport';
 
 import { modelToDto } from './dto/model.dto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
   DataValueDto,
   DataValueDtoSchema,
-} from '../../passport/presentation/dto/data-value.dto';
+} from '../../product-passport/presentation/dto/data-value.dto';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -150,9 +150,6 @@ export class ModelsController {
     );
     const model = await this.modelsService.findOne(modelId);
     if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-    if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
     }
 

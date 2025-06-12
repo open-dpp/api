@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
-import { DataValue } from './passport';
+
+import { DataValue } from './data-value';
 
 describe('DataValue', () => {
   it('should be created', () => {

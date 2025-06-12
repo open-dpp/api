@@ -14,14 +14,14 @@ import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
 import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { DataValue } from '../../passport/domain/passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import {
   DataValueDto,
   DataValueDtoSchema,
-} from '../../passport/presentation/dto/data-value.dto';
+} from '../../product-passport/presentation/dto/data-value.dto';
 import { ModelsService } from '../../models/infrastructure/models.service';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -84,6 +84,7 @@ export class ItemsController {
   @Get(':id')
   async get(
     @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
     @Param('id') itemId: string,
     @Request() req: AuthRequest,
   ) {
@@ -92,7 +93,7 @@ export class ItemsController {
       req.authContext,
     );
     const item = await this.itemsService.findById(itemId);
-    if (!item.isOwnedBy(organizationId)) {
+    if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
     return itemToDto(item);
@@ -101,6 +102,7 @@ export class ItemsController {
   @Post(':itemId/data-values')
   async addDataValues(
     @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
     @Param('itemId') itemId: string,
     @Body() requestBody: DataValueDto[],
     @Request() req: AuthRequest,
@@ -111,7 +113,7 @@ export class ItemsController {
       req.authContext,
     );
     const item = await this.itemsService.findById(itemId);
-    if (!item.isOwnedBy(organizationId)) {
+    if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
@@ -131,6 +133,7 @@ export class ItemsController {
   @Patch(':itemId/data-values')
   async updateDataValues(
     @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
     @Param('itemId') itemId: string,
     @Body() requestBody: DataValueDto[],
     @Request() req: AuthRequest,
@@ -141,7 +144,7 @@ export class ItemsController {
       req.authContext,
     );
     const item = await this.itemsService.findById(itemId);
-    if (!item.isOwnedBy(organizationId)) {
+    if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
 

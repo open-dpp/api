@@ -26,11 +26,11 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemOrgaUserMigrationService } from '../infrastructure/item-orga-user-migration.service';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -324,10 +324,16 @@ describe('ItemsController', () => {
   it('add data values to item', async () => {
     const organizationId = randomUUID();
     const userId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({ organizationId, userId });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
-    item.assignProductDataModel(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    item.defineModel(model, productDataModel);
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
     const addedValues = [
@@ -346,7 +352,7 @@ describe('ItemsController', () => {
     ];
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
+        `/organizations/${organizationId}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         'Authorization',
@@ -371,15 +377,21 @@ describe('ItemsController', () => {
 
   it('add data values to item fails if user is not member of organization', async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
+    item.defineModel(model);
     await itemsService.save(item);
     const addedValues = [];
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrganizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
+        `/organizations/${otherOrganizationId}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         'Authorization',
@@ -395,15 +407,21 @@ describe('ItemsController', () => {
 
   it('add data values to item fails if item does not belong to organization', async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
+    item.defineModel(model);
     await itemsService.save(item);
     const addedValues = [];
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organization.id}/models/${randomUUID()}/items/${item.id}/data-values`,
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         'Authorization',
@@ -418,13 +436,19 @@ describe('ItemsController', () => {
   });
 
   it('update data values of item', async () => {
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
     });
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
-    item.assignProductDataModel(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    item.defineModel(model, productDataModel);
     const dataValue1 = item.dataValues[0];
     const dataValue2 = item.dataValues[1];
     const dataValue3 = item.dataValues[2];
@@ -445,7 +469,7 @@ describe('ItemsController', () => {
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organization.id}/models/${randomUUID()}/items/${item.id}/data-values`,
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         'Authorization',
@@ -509,10 +533,16 @@ describe('ItemsController', () => {
 
   it('update data values fails if item does not belong to organization', async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
+    item.defineModel(model);
     await itemsService.save(item);
     const updatedValues = [
       {
@@ -525,7 +555,7 @@ describe('ItemsController', () => {
 
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organization.id}/models/${randomUUID()}/items/${item.id}/data-values`,
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         'Authorization',
@@ -580,15 +610,21 @@ describe('ItemsController', () => {
   //
   it(`/GET item fails if user is not member of organization`, async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
 
+    item.defineModel(model);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
-        `/organizations/${organization.id}/models/${randomUUID()}/items/${item.id}`,
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
       .set(
         'Authorization',
@@ -603,10 +639,16 @@ describe('ItemsController', () => {
 
   it(`/GET item fails if item does not belong to organization`, async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
+    item.defineModel(model);
 
     await itemsService.save(item);
     const otherOrganization = Organization.create({
@@ -616,7 +658,7 @@ describe('ItemsController', () => {
     await organizationsService.save(otherOrganization);
     const response = await request(app.getHttpServer())
       .get(
-        `/organizations/${organization.id}/models/${randomUUID()}/items/${item.id}`,
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
       .set(
         'Authorization',

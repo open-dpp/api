@@ -19,11 +19,10 @@ import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { DataValue } from '../../passport/domain/passport';
-import { undefined } from 'zod';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ItemsService } from '../../items/infrastructure/items.service';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {

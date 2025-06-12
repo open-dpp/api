@@ -28,6 +28,10 @@ export abstract class DataSectionBase {
   @Expose()
   granularityLevel?: GranularityLevel;
 
+  public setGranularityLevel(level: GranularityLevel): void {
+    this.granularityLevel = level;
+  }
+
   get name() {
     return this._name;
   }

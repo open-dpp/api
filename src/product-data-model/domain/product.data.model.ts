@@ -10,8 +10,8 @@ import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataSection, sectionSubTypes } from './section';
-import { DataValue } from '../../passport/domain/passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];

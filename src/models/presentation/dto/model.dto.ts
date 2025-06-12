@@ -4,7 +4,7 @@ import { Model } from '../../domain/model';
 import {
   DataValueDtoSchema,
   dataValueToDto,
-} from '../../../passport/presentation/dto/data-value.dto';
+} from '../../../product-passport/presentation/dto/data-value.dto';
 
 export const ModelDtoSchema = z.object({
   id: z.uuid(),

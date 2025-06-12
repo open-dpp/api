@@ -158,6 +158,7 @@ export class ProductDataModelDraft {
     const parentSection = this.findSectionOrFail(parentSectionId);
     if (
       section.granularityLevel &&
+      parentSection.granularityLevel &&
       section.granularityLevel !== parentSection.granularityLevel
     ) {
       throw new ValueError(
@@ -165,7 +166,7 @@ export class ProductDataModelDraft {
       );
     }
     if (!section.granularityLevel && parentSection.granularityLevel) {
-      section.granularityLevel = parentSection.granularityLevel;
+      section.setGranularityLevel(parentSection.granularityLevel);
     }
 
     parentSection.addSubSection(section);

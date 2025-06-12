@@ -7,10 +7,10 @@ import {
   isRepeaterSection,
   RepeaterSection,
 } from '../../product-data-model/domain/section';
-import { DataValue } from '../../passport/domain/passport';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 export class View {
   private constructor(

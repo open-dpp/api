@@ -1,9 +1,10 @@
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
-import { DataValue, Passport } from '../../passport/domain/passport';
+import { ProductPassport } from '../../product-passport/domain/product-passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
-export class Model extends Passport {
+export class Model extends ProductPassport {
   granularityLevel = GranularityLevel.MODEL;
   name: string;
   description: string | undefined;

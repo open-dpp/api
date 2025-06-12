@@ -18,7 +18,7 @@ export class ItemOrgaUserMigrationService implements OnApplicationBootstrap {
     @InjectModel(ItemDoc.name)
     private itemDoc: MongooseModel<ItemDoc>,
     private readonly itemsService: ItemsService,
-    private readonly uniqueModelIdentifierService: UniqueProductIdentifierService,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly modelsService: ModelsService,
     private readonly productDataModelService: ProductDataModelService,
   ) {}
@@ -37,7 +37,7 @@ export class ItemOrgaUserMigrationService implements OnApplicationBootstrap {
           const item = Item.loadFromDb({
             id: itemDoc.id,
             uniqueProductIdentifiers:
-              await this.uniqueModelIdentifierService.findAllByReferencedId(
+              await this.uniqueProductIdentifierService.findAllByReferencedId(
                 itemDoc.id,
               ),
             organizationId: model.ownedByOrganizationId,

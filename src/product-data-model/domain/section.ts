@@ -9,8 +9,8 @@ import {
   DataSectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
-import { DataValue } from '../../passport/domain/passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 export abstract class DataSection extends DataSectionBase {
   @Expose()
