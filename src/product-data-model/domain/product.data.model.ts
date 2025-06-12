@@ -147,10 +147,16 @@ export class ProductDataModel {
     return validationOutput;
   }
   public createInitialDataValues(granularity: GranularityLevel): DataValue[] {
-    const filteredSections = this.sections.filter(
-      (s) => s.type === SectionType.GROUP,
+    const rootGroupSections = this.sections
+      .filter((s) => s.parentId === undefined)
+      .filter((s) => s.type === SectionType.GROUP);
+    const relevantGroupSections = rootGroupSections.concat(
+      rootGroupSections
+        .map((g) => g.subSections.map((s) => this.findSectionByIdOrFail(s)))
+        .flat(),
     );
-    return filteredSections
+
+    return relevantGroupSections
       .map((s) =>
         s.dataFields
           .filter((f) => f.granularityLevel === granularity)

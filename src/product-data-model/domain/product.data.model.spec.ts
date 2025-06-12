@@ -159,6 +159,8 @@ describe('ProductDataModel', () => {
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
+        subSections: ['section-4'],
+        granularityLevel: GranularityLevel.MODEL,
       },
       {
         id: 'section-3',
@@ -178,6 +180,21 @@ describe('ProductDataModel', () => {
             name: 'Title Field 5 at item level',
             options: { min: 8 },
             granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        parentId: 'section-2',
+        id: 'section-4',
+        name: 'Section 4',
+        type: SectionType.GROUP,
+        dataFields: [
+          {
+            id: 'field-6',
+            type: 'TextField',
+            name: 'Title 6',
+            options: { min: 8 },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
       },
@@ -294,6 +311,12 @@ describe('ProductDataModel', () => {
         dataFieldId: 'field-5',
         row: 0,
       }),
+      DataValue.create({
+        value: 'value 6',
+        dataSectionId: 'section-4',
+        dataFieldId: 'field-6',
+        row: 0,
+      }),
     ];
     const validationOutput = productDataModel.validate(
       dataValues,
@@ -327,6 +350,11 @@ describe('ProductDataModel', () => {
         dataFieldName: 'Title 5',
         isValid: true,
       }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-6',
+        dataFieldName: 'Title 6',
+        isValid: true,
+      }),
     ]);
   });
 
@@ -352,6 +380,12 @@ describe('ProductDataModel', () => {
         dataFieldId: 'field-5',
         row: 0,
       }),
+      DataValue.create({
+        value: 'value 6',
+        dataSectionId: 'section-4',
+        dataFieldId: 'field-6',
+        row: 0,
+      }),
     ];
     const validationOutput = productDataModel.validate(
       dataValues,
@@ -373,6 +407,11 @@ describe('ProductDataModel', () => {
       DataFieldValidationResult.fromPlain({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
+        isValid: true,
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-6',
+        dataFieldName: 'Title 6',
         isValid: true,
       }),
     ]);
@@ -397,6 +436,12 @@ describe('ProductDataModel', () => {
         value: { wrongType: 'crazyMan' },
         dataSectionId: 'section-3',
         dataFieldId: 'field-5',
+        row: 0,
+      }),
+      DataValue.create({
+        value: 'value 6',
+        dataSectionId: 'section-4',
+        dataFieldId: 'field-6',
         row: 0,
       }),
     ];
@@ -435,6 +480,11 @@ describe('ProductDataModel', () => {
         dataFieldName: 'Title 5',
         isValid: false,
         errorMessage: 'Expected string, received object',
+      }),
+      DataFieldValidationResult.fromPlain({
+        dataFieldId: 'field-6',
+        dataFieldName: 'Title 6',
+        isValid: true,
       }),
     ]);
   });
