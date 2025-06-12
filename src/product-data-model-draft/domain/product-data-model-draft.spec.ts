@@ -445,6 +445,60 @@ describe('ProductDataModelDraft', () => {
     ).toThrow(new NotFoundError(DataSectionDraft.name, 'some id'));
   });
 
+  it('should fail to add subSection if its granularity level differs from parent', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organizationId,
+      userId,
+    });
+    const parentSection = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    productDataModelDraft.addSection(parentSection);
+    const section = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+      granularityLevel: GranularityLevel.ITEM,
+    });
+
+    expect(() =>
+      productDataModelDraft.addSubSection(parentSection.id, section),
+    ).toThrow(
+      new ValueError(
+        `Sub section ${section.id} has a granularity level of ${section.granularityLevel} which does not match the parent section's  granularity level of ${parentSection.granularityLevel}`,
+      ),
+    );
+  });
+
+  it('should set subSection granularity level to parent one if undefined', () => {
+    const productDataModelDraft = ProductDataModelDraft.create({
+      name: 'Laptop',
+      organizationId,
+      userId,
+    });
+    const parentSection = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    productDataModelDraft.addSection(parentSection);
+    const section = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+    });
+    productDataModelDraft.addSubSection(parentSection.id, section);
+
+    expect(
+      productDataModelDraft.findSectionOrFail(section.id).granularityLevel,
+    ).toEqual(parentSection.granularityLevel);
+  });
+
   it('should modify section', () => {
     const productDataModelDraft = ProductDataModelDraft.create({
       name: 'Laptop',
@@ -565,53 +619,6 @@ describe('ProductDataModelDraft', () => {
     expect(() => productDataModelDraft.deleteSection('unknown-id')).toThrow(
       new ValueError('Could not found and delete section with id unknown-id'),
     );
-  });
-
-  it('should add field', () => {
-    const productDataModelDraft = ProductDataModelDraft.fromPlain({
-      id: 'product-1',
-      name: 'Laptop',
-      version: '1.0',
-      ownedByOrganizationId: organizationId,
-      createdByUserId: userId,
-      sections: [
-        {
-          id: 'section-1',
-          name: 'Section 1',
-          type: SectionType.GROUP,
-          dataFields: [],
-        },
-        {
-          id: 'section-2',
-          name: 'Section 2',
-          type: SectionType.REPEATABLE,
-          dataFields: [],
-        },
-      ],
-    });
-    const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
-      type: DataFieldType.TEXT_FIELD,
-      layout,
-      granularityLevel: GranularityLevel.MODEL,
-    });
-    const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
-      type: DataFieldType.TEXT_FIELD,
-      layout,
-      granularityLevel: GranularityLevel.MODEL,
-    });
-
-    productDataModelDraft.addDataFieldToSection('section-1', dataField1);
-    productDataModelDraft.addDataFieldToSection('section-1', dataField2);
-
-    expect(
-      productDataModelDraft.findSectionOrFail('section-1').dataFields,
-    ).toEqual([dataField1, dataField2]);
-
-    expect(() =>
-      productDataModelDraft.addDataFieldToSection('section-3', dataField1),
-    ).toThrow(new NotFoundError(DataSectionDraft.name, 'section-3'));
   });
 
   it('should add field', () => {

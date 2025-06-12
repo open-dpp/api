@@ -156,6 +156,18 @@ export class ProductDataModelDraft {
 
   addSubSection(parentSectionId: string, section: DataSectionDraft) {
     const parentSection = this.findSectionOrFail(parentSectionId);
+    if (
+      section.granularityLevel &&
+      section.granularityLevel !== parentSection.granularityLevel
+    ) {
+      throw new ValueError(
+        `Sub section ${section.id} has a granularity level of ${section.granularityLevel} which does not match the parent section's  granularity level of ${parentSection.granularityLevel}`,
+      );
+    }
+    if (!section.granularityLevel && parentSection.granularityLevel) {
+      section.granularityLevel = parentSection.granularityLevel;
+    }
+
     parentSection.addSubSection(section);
     this.sections.push(section);
   }

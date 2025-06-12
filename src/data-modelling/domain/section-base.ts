@@ -26,7 +26,7 @@ export abstract class DataSectionBase {
   protected _parentId?: string;
 
   @Expose()
-  readonly granularityLevel?: GranularityLevel;
+  granularityLevel?: GranularityLevel;
 
   get name() {
     return this._name;
