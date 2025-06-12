@@ -5,9 +5,9 @@ import { Item } from '../domain/item';
 import { GetItemDto } from './dto/get.item.dto';
 import { plainToInstance } from 'class-transformer';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { ItemCreatedEvent } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created.event';
+import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
-import { UniqueProductIdentifierCreatedEvent } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created.event';
+import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -32,16 +32,16 @@ export class ItemsController {
     item.createUniqueProductIdentifier();
     const itemDto = this.itemToDto(await this.itemsService.save(item));
     await this.traceabilityEventsService.create(
-      ItemCreatedEvent.create({
+      ItemCreatedEventData.create({
         itemId: item.id,
         userId: req.authContext.user.id,
         organizationId: organizationId,
       }),
       req.authContext,
     );
-    for (const uniqueProductIdentifier of itemDto.uniqueProductIdentifiers) {
+    for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
       await this.traceabilityEventsService.create(
-        UniqueProductIdentifierCreatedEvent.create({
+        UniqueProductIdentifierCreatedEventData.create({
           itemId: item.id,
           userId: req.authContext.user.id,
           organizationId: organizationId,

@@ -1,6 +1,7 @@
 import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { TraceabilityEvent } from '../domain/traceability-event';
+import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
 
 export enum TraceabilityEventSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -9,7 +10,7 @@ export enum TraceabilityEventSchemaVersion {
 /**
  * TraceabilityEvent schema
  */
-@Schema({ collection: 'traceability-events' })
+@Schema({ collection: 'traceability_events', timestamps: true })
 export class TraceabilityEventDocument extends Document {
   @Prop({ required: true })
   _id: string;
@@ -49,8 +50,9 @@ export class TraceabilityEventDocument extends Document {
 
   @Prop({
     required: false,
+    enum: TraceabilityEventType,
   })
-  type: string;
+  type: TraceabilityEventType;
 
   @Prop({
     type: Object,

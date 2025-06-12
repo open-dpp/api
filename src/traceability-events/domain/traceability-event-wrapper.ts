@@ -51,21 +51,37 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     );
   }
 
-  static loadFromDb<T extends TraceabilityEvent>(
-    plain: any,
-  ): TraceabilityEventWrapper<T> {
+  static loadFromDb<T extends TraceabilityEvent>(payload: {
+    _id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    ip: string | null;
+    userId: string;
+    itemId: string;
+    chargeId?: string | null | undefined;
+    organizationId: string;
+    geolocation?:
+      | {
+          latitude: string;
+          longitude: string;
+        }
+      | null
+      | undefined;
+    type: TraceabilityEventType;
+    data: T;
+  }): TraceabilityEventWrapper<T> {
     return new TraceabilityEventWrapper(
-      plain._id || randomUUID(),
-      plain.createdAt || new Date(),
-      plain.updatedAt || new Date(),
-      plain.ip,
-      plain.userId,
-      plain.itemId,
-      plain.chargeId,
-      plain.organizationId,
-      plain.geolocation,
-      plain.type,
-      plain.data,
+      payload._id,
+      payload.createdAt || new Date(),
+      payload.updatedAt || new Date(),
+      payload.ip,
+      payload.userId,
+      payload.itemId,
+      payload.chargeId,
+      payload.organizationId,
+      payload.geolocation,
+      payload.type,
+      payload.data,
     );
   }
 }

@@ -51,17 +51,9 @@ export class TraceabilityEventsService {
 
   async findByDataType(type: TraceabilityEventType) {
     const foundData = await this.traceabilityEventDocument
-      .find(
-        {
-          'data.type': type,
-        },
-        {
-          _id: true,
-          data: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      )
+      .find({
+        'data.type': type,
+      })
       .exec();
     return foundData.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
   }

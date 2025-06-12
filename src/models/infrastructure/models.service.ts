@@ -69,12 +69,7 @@ export class ModelsService {
     for (const uniqueProductIdentifier of model.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
-    const domainObject = this.convertToDomain(
-      dataModelDoc,
-      model.uniqueProductIdentifiers,
-    );
-
-    return domainObject;
+    return this.convertToDomain(dataModelDoc, model.uniqueProductIdentifiers);
   }
 
   async findAllByOrganization(organizationId: string) {
