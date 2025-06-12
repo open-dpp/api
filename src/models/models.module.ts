@@ -11,6 +11,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
+import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
 
 @Module({
@@ -30,6 +31,7 @@ import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
     UniqueProductIdentifierModule,
     UsersModule,
     PermissionsModule,
+    TraceabilityEventsModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],

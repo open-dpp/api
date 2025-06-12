@@ -1,14 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from '../../models/domain/model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
 import { Organization } from '../../organizations/domain/organization';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { Connection } from 'mongoose';
+import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { userObj1 } from '../../../test/users-and-orgs';
+import { AuthContext } from '../../auth/auth-request';
+import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { ItemDoc, ItemSchema } from './item.schema';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
@@ -16,12 +18,21 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { PermissionsModule } from '../../permissions/permissions.module';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { UsersService } from '../../users/infrastructure/users.service';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
   let mongoConnection: Connection;
+  let organizationsService: OrganizationsService;
+  const authContext = new AuthContext();
+  authContext.user = userObj1;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,10 +48,22 @@ describe('ItemsService', () => {
             schema: UniqueProductIdentifierSchema,
           },
         ]),
+        PermissionsModule,
+        TraceabilityEventsModule,
+        TypeOrmTestingModule,
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
-      providers: [ItemsService, UniqueProductIdentifierService],
+      providers: [
+        ItemsService,
+        UniqueProductIdentifierService,
+        OrganizationsService,
+        KeycloakResourcesService,
+        UsersService,
+      ],
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);
+    organizationsService =
+      module.get<OrganizationsService>(OrganizationsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
@@ -51,9 +74,14 @@ describe('ItemsService', () => {
   });
 
   it('should create and find item for a model', async () => {
+    const organization = Organization.create({
+      name: `My Orga ${randomUUID()}`,
+      user: userObj1,
+    });
+    await organizationsService.save(organization);
     const model = Model.create({
       name: 'name',
-      user,
+      user: userObj1,
       organization,
     });
 
@@ -66,14 +94,19 @@ describe('ItemsService', () => {
   });
 
   it('should create multiple items for a model and find them by model', async () => {
+    const organization = Organization.create({
+      name: `My Orga ${randomUUID()}`,
+      user: userObj1,
+    });
+    await organizationsService.save(organization);
     const model1 = Model.create({
       name: 'name',
-      user,
+      user: userObj1,
       organization,
     });
     const model2 = Model.create({
       name: 'name',
-      user,
+      user: userObj1,
       organization,
     });
     const item1 = new Item();
@@ -90,9 +123,15 @@ describe('ItemsService', () => {
   });
 
   it('should save item with unique product identifiers', async () => {
+    // Create organization and model
+    const organization = Organization.create({
+      name: 'Org with UPIs',
+      user: userObj1,
+    });
+    await organizationsService.save(organization);
     const model = Model.create({
       name: 'Model with UPIs',
-      user,
+      user: userObj1,
       organization,
     });
     // Create item with unique product identifiers

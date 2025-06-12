@@ -1,11 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
 import { DataValue, Model } from '../domain/model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
+import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
+import { userObj1 } from '../../../test/users-and-orgs';
+import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
 import { Connection } from 'mongoose';
 import { ModelDoc, ModelSchema } from './model.schema';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -16,11 +19,20 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { User } from '../../users/domain/user';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
+  let organizationService: OrganizationsService;
   const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -37,15 +49,49 @@ describe('ModelsService', () => {
             schema: ModelSchema,
           },
         ]),
+        TypeOrmTestingModule,
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
-      providers: [ModelsService, UniqueProductIdentifierService],
-    }).compile();
+      providers: [
+        ModelsService,
+        UniqueProductIdentifierService,
+        OrganizationsService,
+        UsersService,
+        KeycloakResourcesService,
+        {
+          provide: TraceabilityEventsService,
+          useValue: {
+            save: jest
+              .fn()
+              .mockImplementation(
+                (event: TraceabilityEventWrapper<TraceabilityEvent>) =>
+                  Promise.resolve(event),
+              ),
+          },
+        },
+      ],
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useClass(KeycloakResourcesServiceTesting)
+      .compile();
+
     modelsService = module.get<ModelsService>(ModelsService);
+    organizationService =
+      module.get<OrganizationsService>(OrganizationsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   it('should create a model', async () => {
-    const model = Model.create({ name: 'My product', user, organization });
+    const organization = Organization.create({
+      name: 'My orga',
+      user: userObj1,
+    });
+    await organizationService.save(organization);
+    const model = Model.create({
+      name: 'My product',
+      user: userObj1,
+      organization,
+    });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
@@ -172,7 +218,7 @@ describe('ModelsService', () => {
         row: 0,
       }),
     ]);
-    expect(foundModel.createdByUserId).toEqual(user.id);
+    expect(foundModel.createdByUserId).toEqual(userObj1.id);
     expect(foundModel.isOwnedBy(organization)).toBeTruthy();
   });
 
@@ -189,17 +235,17 @@ describe('ModelsService', () => {
     });
     const model1 = Model.create({
       name: 'Product A',
-      user,
+      user: userObj1,
       organization: otherOrganization,
     });
     const model2 = Model.create({
       name: 'Product B',
-      user,
+      user: userObj1,
       organization: otherOrganization,
     });
     const model3 = Model.create({
       name: 'Product C',
-      user,
+      user: userObj1,
       organization: otherOrganization,
     });
     await modelsService.save(model1);
