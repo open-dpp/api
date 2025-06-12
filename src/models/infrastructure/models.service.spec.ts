@@ -19,13 +19,20 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { User } from '../../users/domain/user';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
   let organizationService: OrganizationsService;
-  let dataSource: DataSource;
   const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -42,12 +49,14 @@ describe('ModelsService', () => {
             schema: ModelSchema,
           },
         ]),
+        TypeOrmTestingModule,
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         ModelsService,
         UniqueProductIdentifierService,
-        UsersService,
         OrganizationsService,
+        UsersService,
         KeycloakResourcesService,
         {
           provide: TraceabilityEventsService,
@@ -66,8 +75,9 @@ describe('ModelsService', () => {
       .useClass(KeycloakResourcesServiceTesting)
       .compile();
 
-    dataSource = module.get<DataSource>(DataSource);
     modelsService = module.get<ModelsService>(ModelsService);
+    organizationService =
+      module.get<OrganizationsService>(OrganizationsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 

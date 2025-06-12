@@ -6,13 +6,13 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
 import { Connection } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from './unique-product-identifier.schema';
 import { UniqueProductIdentifierService } from './unique-product-identifier.service';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;
