@@ -15,7 +15,7 @@ export class OpenDppEvent extends TraceabilityEvent {
 
   static create(data: {
     userId: string;
-    articleId: string;
+    itemId: string;
     organizationId: string;
     childData: OpenDppEventData;
     ip?: string | null | undefined;
@@ -32,7 +32,7 @@ export class OpenDppEvent extends TraceabilityEvent {
       type: TraceabilityEventType.OPEN_DPP,
       ip: data.ip,
       userId: data.userId,
-      articleId: data.articleId,
+      itemId: data.itemId,
       organizationId: data.organizationId,
       chargeId: data.chargeId,
       geolocation: data.geolocation,

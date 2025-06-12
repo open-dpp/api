@@ -25,7 +25,7 @@ export class TraceabilityEventsService {
       ip: dppEvent.ip,
       data: dppEvent.data,
       userId: authContext ? authContext.user.id : dppEvent.userId,
-      articleId: dppEvent.articleId,
+      itemId: dppEvent.itemId,
       chargeId: dppEvent.chargeId,
       organizationId: dppEvent.organizationId,
       geolocation: dppEvent.geolocation,

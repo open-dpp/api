@@ -20,7 +20,7 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
   readonly userId: string | null;
 
   @Expose()
-  readonly articleId: string | null;
+  readonly itemId: string | null;
 
   @Expose()
   readonly chargeId: string | null;
@@ -46,7 +46,7 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     updatedAt: Date,
     ip: string | null,
     userId: string | null,
-    articleId: string | null,
+    itemId: string | null,
     chargeId: string | null,
     organizationId: string | null,
     geolocation: {
@@ -61,7 +61,7 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     this.updatedAt = updatedAt;
     this.ip = ip;
     this.userId = userId;
-    this.articleId = articleId;
+    this.itemId = itemId;
     this.chargeId = chargeId;
     this.organizationId = organizationId;
     this.geolocation = geolocation;
@@ -72,7 +72,7 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
   static create<T extends TraceabilityEvent>(data: {
     ip?: string | null | undefined;
     userId: string;
-    articleId: string;
+    itemId: string;
     chargeId?: string | null | undefined;
     organizationId: string;
     geolocation?:
@@ -91,7 +91,7 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
       new Date(),
       data.ip,
       data.userId,
-      data.articleId,
+      data.itemId,
       data.chargeId,
       data.organizationId,
       data.geolocation,
@@ -109,7 +109,7 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
       plain.updatedAt || new Date(),
       plain.ip,
       plain.userId,
-      plain.articleId,
+      plain.itemId,
       plain.chargeId,
       plain.organizationId,
       plain.geolocation,

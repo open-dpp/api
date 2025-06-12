@@ -14,7 +14,7 @@ export class OpenEpcisEvent extends TraceabilityEvent {
 
   static create(data: {
     userId: string;
-    articleId: string;
+    itemId: string;
     organizationId: string;
     childData: any;
   }): TraceabilityEventWrapper<OpenEpcisEvent> {
@@ -22,7 +22,7 @@ export class OpenEpcisEvent extends TraceabilityEvent {
       type: TraceabilityEventType.OPENEPCIS,
       ip: null,
       userId: data.userId,
-      articleId: data.articleId,
+      itemId: data.itemId,
       organizationId: data.organizationId,
       chargeId: null,
       geolocation: null,

@@ -33,7 +33,7 @@ export class TraceabilityEventDocument extends Document {
   userId: string | null;
 
   @Prop({ required: false, default: null })
-  articleId: string | null;
+  itemId: string | null;
 
   @Prop({ required: false, default: null })
   chargeId: string | null;

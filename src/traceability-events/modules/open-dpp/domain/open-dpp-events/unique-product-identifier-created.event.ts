@@ -18,13 +18,13 @@ export class UniqueProductIdentifierCreatedEvent extends OpenDppEventData {
 
   static create(data: {
     userId: string;
-    articleId: string;
+    itemId: string;
     organizationId: string;
     uniqueProductIdentifierId: string;
   }) {
     return OpenDppEvent.create({
       userId: data.userId,
-      articleId: data.articleId,
+      itemId: data.itemId,
       organizationId: data.organizationId,
       childData: new UniqueProductIdentifierCreatedEvent(
         data.uniqueProductIdentifierId,

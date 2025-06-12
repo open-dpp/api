@@ -17,14 +17,14 @@ export class ItemCreatedEvent extends OpenDppEventData {
 
   static create(data: {
     userId: string;
-    articleId: string;
+    itemId: string;
     organizationId: string;
   }) {
     return OpenDppEvent.create({
       userId: data.userId,
-      articleId: data.articleId,
+      itemId: data.itemId,
       organizationId: data.organizationId,
-      childData: new ItemCreatedEvent(data.articleId),
+      childData: new ItemCreatedEvent(data.itemId),
     });
   }
 }

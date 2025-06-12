@@ -174,7 +174,7 @@ describe('TraceabilityEventsService', () => {
       const updatedAt = new Date('2023-01-02');
       const ip = '192.168.1.1';
       const userId = 'user123';
-      const articleId = 'article123';
+      const itemId = 'article123';
       const chargeId = 'charge123';
       const organizationId = 'org123';
       const geolocation = {
@@ -189,7 +189,7 @@ describe('TraceabilityEventsService', () => {
         updatedAt,
         ip,
         userId,
-        articleId,
+        itemId,
         chargeId,
         organizationId,
         geolocation,
@@ -207,7 +207,7 @@ describe('TraceabilityEventsService', () => {
       expect(result.id).toBe(id);
       expect(result.ip).toBe(ip);
       expect(result.userId).toBe(userId);
-      expect(result.articleId).toBe(articleId);
+      expect(result.itemId).toBe(itemId);
       expect(result.chargeId).toBe(chargeId);
       expect(result.organizationId).toBe(organizationId);
       expect(result.geolocation).toEqual(geolocation);
@@ -219,7 +219,7 @@ describe('TraceabilityEventsService', () => {
       expect(savedDoc._id).toBe(id);
       expect(savedDoc.ip).toBe(ip);
       expect(savedDoc.userId).toBe(userId);
-      expect(savedDoc.articleId).toBe(articleId);
+      expect(savedDoc.itemId).toBe(itemId);
       expect(savedDoc.chargeId).toBe(chargeId);
       expect(savedDoc.organizationId).toBe(organizationId);
       expect(savedDoc.geolocation).toEqual(geolocation);
@@ -311,11 +311,11 @@ describe('TraceabilityEventsService', () => {
       it('should save and retrieve an OpenDppEvent with proper discriminator', async () => {
         // Arrange
         const userId = randomUUID();
-        const articleId = randomUUID();
+        const itemId = randomUUID();
         const organizationId = randomUUID();
         const openDppEvent = TraceabilityEventWrapper.create({
           userId,
-          articleId,
+          itemId,
           organizationId,
           data: {
             type: TraceabilityEventType.OPEN_DPP,
@@ -350,11 +350,11 @@ describe('TraceabilityEventsService', () => {
       it('should save and retrieve an OpenepcisEvent with proper discriminator', async () => {
         // Arrange
         const userId = randomUUID();
-        const articleId = randomUUID();
+        const itemId = randomUUID();
         const organizationId = randomUUID();
         const openepcisEvent = TraceabilityEventWrapper.create({
           userId,
-          articleId,
+          itemId,
           organizationId,
           data: {
             type: TraceabilityEventType.OPENEPCIS,
@@ -388,11 +388,11 @@ describe('TraceabilityEventsService', () => {
           // Arrange & Act
           const eventData = { key: 'value' };
           const userId = randomUUID();
-          const articleId = randomUUID();
+          const itemId = randomUUID();
           const organizationId = randomUUID();
           const wrapper = OpenEpcisEvent.create({
             userId,
-            articleId,
+            itemId,
             organizationId,
             childData: eventData,
           });
@@ -411,12 +411,12 @@ describe('TraceabilityEventsService', () => {
             location: 'Warehouse A',
           };
           const userId = randomUUID();
-          const articleId = randomUUID();
+          const itemId = randomUUID();
           const organizationId = randomUUID();
 
           const wrapper = OpenEpcisEvent.create({
             userId,
-            articleId,
+            itemId,
             organizationId,
             childData: eventData,
           });
@@ -445,11 +445,11 @@ describe('TraceabilityEventsService', () => {
       it('should save and retrieve a UntpEvent with proper discriminator', async () => {
         // Arrange
         const userId = randomUUID();
-        const articleId = randomUUID();
+        const itemId = randomUUID();
         const organizationId = randomUUID();
         const untpEvent = UntpEvent.create({
           userId,
-          articleId,
+          itemId,
           organizationId,
           childData: {
             type: TraceabilityEventType.UNTP,
@@ -480,11 +480,11 @@ describe('TraceabilityEventsService', () => {
           // Arrange & Act
           const eventData = { key: 'value' };
           const userId = randomUUID();
-          const articleId = randomUUID();
+          const itemId = randomUUID();
           const organizationId = randomUUID();
           const wrapper = UntpEvent.create({
             userId,
-            articleId,
+            itemId,
             organizationId,
             childData: eventData,
           });
@@ -505,11 +505,11 @@ describe('TraceabilityEventsService', () => {
           };
 
           const userId = randomUUID();
-          const articleId = randomUUID();
+          const itemId = randomUUID();
           const organizationId = randomUUID();
           const wrapper = UntpEvent.create({
             userId,
-            articleId,
+            itemId,
             organizationId,
             childData: eventData,
           });

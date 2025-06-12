@@ -14,7 +14,7 @@ export class UntpEvent extends TraceabilityEvent {
 
   static create(data: {
     userId: string;
-    articleId: string;
+    itemId: string;
     organizationId: string;
     childData: any;
   }): TraceabilityEventWrapper<UntpEvent> {
@@ -22,7 +22,7 @@ export class UntpEvent extends TraceabilityEvent {
       type: TraceabilityEventType.UNTP,
       ip: null,
       userId: data.userId,
-      articleId: data.articleId,
+      itemId: data.itemId,
       organizationId: data.organizationId,
       chargeId: null,
       geolocation: null,
