@@ -1,80 +1,76 @@
 import { Injectable } from '@nestjs/common';
-import { ModelEntity } from './model.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Equal, Repository } from 'typeorm';
-import { Model } from '../domain/model';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { DataValueEntity } from './data.value.entity';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { InjectModel } from '@nestjs/mongoose';
+import { ModelDoc, ModelDocSchemaVersion } from './model.schema';
+import { Model as MongooseModel } from 'mongoose';
+import { Model } from '../domain/model';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 @Injectable()
 export class ModelsService {
   constructor(
-    @InjectRepository(ModelEntity)
-    private modelRepository: Repository<ModelEntity>,
-    private organizationService: OrganizationsService,
+    @InjectModel(ModelDoc.name)
+    private modelDoc: MongooseModel<ModelDoc>,
     private uniqueModelIdentifierService: UniqueProductIdentifierService,
-    private readonly usersService: UsersService,
   ) {}
 
   convertToDomain(
-    modelEntity: ModelEntity,
+    modelDoc: ModelDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
     return Model.fromPlain({
-      id: modelEntity.id,
-      name: modelEntity.name,
-      description: modelEntity.description ?? undefined,
-      uniqueProductIdentifiers: uniqueProductIdentifiers,
-      productDataModelId: modelEntity.productDataModelId ?? undefined,
-      dataValues: modelEntity.dataValues
-        ? modelEntity.dataValues.map((dv) => ({
-            id: dv.id,
+      id: modelDoc._id,
+      name: modelDoc.name,
+      ownedByOrganizationId: modelDoc.ownedByOrganizationId,
+      createdByUserId: modelDoc.createdByUserId,
+      uniqueProductIdentifiers,
+      productDataModelId: modelDoc.productDataModelId ?? undefined,
+      dataValues: modelDoc.dataValues
+        ? modelDoc.dataValues.map((dv) => ({
+            id: dv._id,
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
             row: dv.row ?? undefined,
           }))
         : [],
-      createdByUserId: modelEntity.createdByUserId,
-      ownedByOrganizationId: modelEntity.ownedByOrganizationId,
-      createdAt: modelEntity.createdAt,
+
+      description: modelDoc.description ?? undefined,
+      createdAt: modelDoc.createdAt,
     });
   }
 
   async save(model: Model) {
-    const userEntity = await this.usersService.findOneAndFail(
-      model.createdByUserId,
+    const dataModelDoc = await this.modelDoc.findOneAndUpdate(
+      { _id: model.id },
+      {
+        _schemaVersion: ModelDocSchemaVersion.v1_0_0,
+        name: model.name,
+        description: model.description,
+        productDataModelId: model.productDataModelId,
+        dataValues: model.dataValues.map((d) => ({
+          _id: d.id,
+          value: d.value,
+          dataSectionId: d.dataSectionId,
+          dataFieldId: d.dataFieldId,
+          row: d.row,
+        })),
+        createdByUserId: model.createdByUserId,
+        ownedByOrganizationId: model.ownedByOrganizationId,
+      },
+      {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if none found
+        runValidators: true,
+      },
     );
-    const organizationEntity = await this.organizationService.findOneOrFail(
-      model.ownedByOrganizationId,
-    );
-    const dataValueEntities = model.dataValues.map((dv) => {
-      const dataValueEntity = new DataValueEntity();
-      dataValueEntity.id = dv.id;
-      dataValueEntity.value = dv.value;
-      dataValueEntity.dataSectionId = dv.dataSectionId;
-      dataValueEntity.dataFieldId = dv.dataFieldId;
-      dataValueEntity.row = dv.row;
-      return dataValueEntity;
-    });
-    const modelEntity = await this.modelRepository.save({
-      id: model.id,
-      name: model.name,
-      description: model.description,
-      productDataModelId: model.productDataModelId,
-      dataValues: dataValueEntities,
-      createdByUser: userEntity,
-      ownedByOrganization: organizationEntity,
-    });
+
     for (const uniqueProductIdentifier of model.uniqueProductIdentifiers) {
       await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
     }
     const domainObject = this.convertToDomain(
-      modelEntity,
+      dataModelDoc,
       model.uniqueProductIdentifiers,
     );
 
@@ -82,12 +78,12 @@ export class ModelsService {
   }
 
   async findAllByOrganization(organizationId: string) {
-    const productEntities = await this.modelRepository.find({
-      where: { ownedByOrganizationId: Equal(organizationId) },
-      order: { name: 'ASC' },
-    });
+    const modelDocs = await this.modelDoc
+      .find({ ownedByOrganizationId: organizationId })
+      .sort({ name: 1 })
+      .exec();
     return await Promise.all(
-      productEntities.map(async (entity: ModelEntity) => {
+      modelDocs.map(async (entity: ModelDoc) => {
         return this.convertToDomain(
           entity,
           await this.uniqueModelIdentifierService.findAllByReferencedId(
@@ -99,17 +95,14 @@ export class ModelsService {
   }
 
   async findOne(id: string): Promise<Model> {
-    const modelEntity = await this.modelRepository.findOne({
-      where: { id: Equal(id) },
-      relations: ['dataValues'],
-    });
-    if (!modelEntity) {
+    const modelDoc = await this.modelDoc.findById(id);
+    if (!modelDoc) {
       throw new NotFoundInDatabaseException(Model.name);
     }
     return this.convertToDomain(
-      modelEntity,
+      modelDoc,
       await this.uniqueModelIdentifierService.findAllByReferencedId(
-        modelEntity.id,
+        modelDoc.id,
       ),
     );
   }

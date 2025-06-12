@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../models/infrastructure/model.entity';
-import { ItemEntity } from './infrastructure/item.entity';
 import { ModelsModule } from '../models/models.module';
 import { ItemsController } from './presentation/items.controller';
 import { ItemsService } from './infrastructure/items.service';
@@ -12,10 +10,23 @@ import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
+import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ModelEntity, ItemEntity, OrganizationEntity]),
+    TypeOrmModule.forFeature([OrganizationEntity]),
+    MongooseModule.forFeature([
+      {
+        name: ItemDoc.name,
+        schema: ItemSchema,
+      },
+      {
+        name: ModelDoc.name,
+        schema: ModelSchema,
+      },
+    ]),
     ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,
