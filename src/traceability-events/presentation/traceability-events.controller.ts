@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
 import { TraceabilityEventsService } from '../infrastructure/traceability-events.service';
 
@@ -7,8 +7,8 @@ export class TraceabilityEventsController {
   constructor(private readonly dppEventsService: TraceabilityEventsService) {}
 
   @Post()
-  async create(@Request() req: AuthRequest) {
-    return await this.dppEventsService.create(req.body);
+  async create(@Body() body: any, @Request() req: AuthRequest) {
+    return await this.dppEventsService.create(body, req.authContext);
   }
 
   @Get(':id')
