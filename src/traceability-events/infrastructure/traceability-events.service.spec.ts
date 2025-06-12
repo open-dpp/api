@@ -166,6 +166,65 @@ describe('TraceabilityEventsService', () => {
       // The updatedAt date should be updated to the current time
       expect(savedDoc.updatedAt).not.toEqual(updatedAt);
     });
+
+    it('should save a TraceabilityEventWrapper with all metadata fields', async () => {
+      // Arrange
+      const id = randomUUID();
+      const createdAt = new Date('2023-01-01');
+      const updatedAt = new Date('2023-01-02');
+      const ip = '192.168.1.1';
+      const userId = 'user123';
+      const articleId = 'article123';
+      const chargeId = 'charge123';
+      const organizationId = 'org123';
+      const geolocation = {
+        latitude: '52.5200',
+        longitude: '13.4050',
+      };
+      const type = TraceabilityEventType.OPENEPCIS;
+
+      const dppEvent = TraceabilityEventWrapper.loadFromDb({
+        _id: id,
+        createdAt,
+        updatedAt,
+        ip,
+        userId,
+        articleId,
+        chargeId,
+        organizationId,
+        geolocation,
+        type,
+        data: {
+          type: TraceabilityEventType.OPENEPCIS,
+        },
+      });
+
+      // Act
+      const result = await service.create(dppEvent);
+
+      // Assert
+      expect(result).toBeInstanceOf(TraceabilityEventWrapper);
+      expect(result.id).toBe(id);
+      expect(result.ip).toBe(ip);
+      expect(result.userId).toBe(userId);
+      expect(result.articleId).toBe(articleId);
+      expect(result.chargeId).toBe(chargeId);
+      expect(result.organizationId).toBe(organizationId);
+      expect(result.geolocation).toEqual(geolocation);
+      expect(result.type).toBe(type);
+
+      // Verify it was saved to the database
+      const savedDoc = await dppEventModel.findOne({ _id: id }).exec();
+      expect(savedDoc).toBeDefined();
+      expect(savedDoc._id).toBe(id);
+      expect(savedDoc.ip).toBe(ip);
+      expect(savedDoc.userId).toBe(userId);
+      expect(savedDoc.articleId).toBe(articleId);
+      expect(savedDoc.chargeId).toBe(chargeId);
+      expect(savedDoc.organizationId).toBe(organizationId);
+      expect(savedDoc.geolocation).toEqual(geolocation);
+      expect(savedDoc.type).toBe(type);
+    });
   });
 
   describe('findById', () => {

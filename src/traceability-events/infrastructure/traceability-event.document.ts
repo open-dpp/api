@@ -48,6 +48,11 @@ export class TraceabilityEventDocument extends Document {
   } | null;
 
   @Prop({
+    required: false,
+  })
+  type: string;
+
+  @Prop({
     type: Object,
     required: true,
   })

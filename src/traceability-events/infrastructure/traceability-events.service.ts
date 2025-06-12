@@ -21,11 +21,15 @@ export class TraceabilityEventsService {
     const newTraceabilityEvent = await this.traceabilityEventDocument.create({
       _id: dppEvent.id,
       createdAt: dppEvent.createdAt,
-      updatedAt: new Date(),
+      updatedAt: new Date(), // Always set updatedAt to current time when creating a new event
+      ip: dppEvent.ip,
       data: dppEvent.data,
-      userId: authContext ? authContext.user.id : null,
+      userId: authContext ? authContext.user.id : dppEvent.userId,
       articleId: dppEvent.articleId,
+      chargeId: dppEvent.chargeId,
       organizationId: dppEvent.organizationId,
+      geolocation: dppEvent.geolocation,
+      type: dppEvent.type,
     });
     return TraceabilityEventWrapper.loadFromDb<T>(newTraceabilityEvent);
   }
