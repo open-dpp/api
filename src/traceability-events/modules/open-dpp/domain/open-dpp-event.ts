@@ -18,15 +18,24 @@ export class OpenDppEvent extends TraceabilityEvent {
     articleId: string;
     organizationId: string;
     childData: OpenDppEventData;
+    ip?: string | null | undefined;
+    chargeId?: string | null | undefined;
+    geolocation?:
+      | {
+          latitude: string;
+          longitude: string;
+        }
+      | null
+      | undefined;
   }): TraceabilityEventWrapper<OpenDppEvent> {
     return TraceabilityEventWrapper.create({
       type: TraceabilityEventType.OPEN_DPP,
-      ip: null,
+      ip: data.ip,
       userId: data.userId,
       articleId: data.articleId,
       organizationId: data.organizationId,
-      chargeId: null,
-      geolocation: null,
+      chargeId: data.chargeId,
+      geolocation: data.geolocation,
       data: new OpenDppEvent(data.childData),
     });
   }
