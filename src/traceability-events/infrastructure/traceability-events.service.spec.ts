@@ -321,6 +321,9 @@ describe('TraceabilityEventsService', () => {
             type: TraceabilityEventType.OPEN_DPP,
           },
           type: TraceabilityEventType.OPEN_DPP,
+          ip: null,
+          chargeId: null,
+          geolocation: null,
         });
 
         // Act
@@ -360,6 +363,9 @@ describe('TraceabilityEventsService', () => {
             type: TraceabilityEventType.OPENEPCIS,
           },
           type: TraceabilityEventType.OPENEPCIS,
+          ip: null,
+          chargeId: null,
+          geolocation: null,
         });
         const id = openepcisEvent.id;
 

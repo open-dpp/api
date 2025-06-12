@@ -1,76 +1,27 @@
-import { Expose } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { TraceabilityEvent } from './traceability-event';
 import { TraceabilityEventType } from './traceability-event-type.enum';
 
 export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
-  @Expose()
-  readonly id: string;
-
-  @Expose()
-  readonly createdAt: Date;
-
-  @Expose()
-  readonly updatedAt: Date;
-
-  @Expose()
-  readonly ip: string | null;
-
-  @Expose()
-  readonly userId: string | null;
-
-  @Expose()
-  readonly itemId: string | null;
-
-  @Expose()
-  readonly chargeId: string | null;
-
-  @Expose()
-  readonly organizationId: string | null;
-
-  @Expose()
-  readonly geolocation: {
-    latitude: string;
-    longitude: string;
-  } | null;
-
-  @Expose()
-  readonly type: TraceabilityEventType;
-
-  @Expose()
-  readonly data: T;
-
   private constructor(
-    id: string,
-    createdAt: Date,
-    updatedAt: Date,
-    ip: string | null,
-    userId: string | null,
-    itemId: string | null,
-    chargeId: string | null,
-    organizationId: string | null,
-    geolocation: {
+    public readonly id: string,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date,
+    public readonly ip: string | null,
+    public readonly userId: string | null,
+    public readonly itemId: string | null,
+    public readonly chargeId: string | null,
+    public readonly organizationId: string | null,
+    public readonly geolocation: {
       latitude: string;
       longitude: string;
     } | null,
-    type: TraceabilityEventType,
-    data: T,
-  ) {
-    this.id = id;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-    this.ip = ip;
-    this.userId = userId;
-    this.itemId = itemId;
-    this.chargeId = chargeId;
-    this.organizationId = organizationId;
-    this.geolocation = geolocation;
-    this.type = type;
-    this.data = data;
-  }
+    public readonly type: TraceabilityEventType,
+    public readonly data: T,
+  ) {}
 
   static create<T extends TraceabilityEvent>(data: {
-    ip?: string | null | undefined;
+    ip: string | null;
     userId: string;
     itemId: string;
     chargeId?: string | null | undefined;

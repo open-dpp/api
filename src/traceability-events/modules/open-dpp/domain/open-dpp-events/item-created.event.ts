@@ -1,16 +1,11 @@
-import { Expose } from 'class-transformer';
 import { OpenDppEventType } from '../open-dpp-event-type.enum';
 import { OpenDppEventData } from '../open-dpp-event-data';
 import { OpenDppEvent } from '../open-dpp-event';
 
 export class ItemCreatedEvent extends OpenDppEventData {
-  @Expose()
   readonly type: OpenDppEventType = OpenDppEventType.ITEM_CREATED;
 
-  @Expose()
-  readonly itemId: string;
-
-  private constructor(itemId: string) {
+  private constructor(public readonly itemId: string) {
     super();
     this.itemId = itemId;
   }
