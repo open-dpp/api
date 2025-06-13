@@ -12,7 +12,6 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
-import { ItemOrgaUserMigrationService } from './infrastructure/item-orga-user-migration.service';
 import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
 
 @Module({
@@ -36,7 +35,7 @@ import { ProductDataModelModule } from '../product-data-model/product.data.model
     PermissionsModule,
   ],
   controllers: [ItemsController],
-  providers: [ItemsService, OrganizationsService, ItemOrgaUserMigrationService],
+  providers: [ItemsService, OrganizationsService],
   exports: [ItemsService],
 })
 export class ItemsModule {}
