@@ -1,11 +1,11 @@
 import { Item } from './item';
 import { randomUUID } from 'crypto';
-import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Model } from '../../models/domain/model';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('Item', () => {
   const organizationId = randomUUID();

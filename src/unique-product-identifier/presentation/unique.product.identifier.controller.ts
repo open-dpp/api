@@ -28,10 +28,10 @@ export class UniqueProductIdentifierController {
       item = await this.itemService.findById(
         uniqueProductIdentifier.referenceId,
       );
-      model = await this.modelsService.findOne(item.modelId);
+      model = await this.modelsService.findOneOrFail(item.modelId);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (NotFoundException) {
-      model = await this.modelsService.findOne(
+      model = await this.modelsService.findOneOrFail(
         uniqueProductIdentifier.referenceId,
       );
     }

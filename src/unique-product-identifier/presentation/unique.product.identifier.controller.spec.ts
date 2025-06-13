@@ -19,11 +19,10 @@ import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { DataValue } from '../../passport/domain/passport';
-import { undefined } from 'zod';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ItemsService } from '../../items/infrastructure/items.service';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -473,300 +472,22 @@ describe('UniqueProductIdentifierController', () => {
         }),
       ],
     });
+    const { uuid: modelUUID } = model.createUniqueProductIdentifier();
     const { uuid } = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const response = await request(app.getHttpServer()).get(
+    let response = await request(app.getHttpServer()).get(
       `/unique-product-identifiers/${uuid}/view`,
     );
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual({
-      name: model.name,
-      description: model.description,
-      nodes: [
+
+    const expectedNode1 = {
+      name: 'Repeating Section',
+      rows: [
         {
-          name: 'Repeating Section',
-          rows: [
-            {
-              layout: {
-                cols: { sm: 3 },
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
-              children: [
-                {
-                  type: 'TextField',
-                  value: 'val1,0',
-                  name: 'Title 1',
-                  layout: {
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  type: 'TextField',
-                  value: 'val2,0',
-                  name: 'Title 2',
-                  layout: {
-                    colStart: { sm: 2 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  name: 'Group Section',
-                  layout: {
-                    cols: { sm: 3 },
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                  children: [
-                    {
-                      type: 'TextField',
-                      value: 'val3,0',
-                      name: 'Title 3',
-                      layout: {
-                        colStart: { sm: 1 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                    {
-                      type: 'TextField',
-                      value: 'val4,0',
-                      name: 'Title 4',
-                      layout: {
-                        colStart: { sm: 2 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              layout: {
-                cols: { sm: 3 },
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
-              children: [
-                {
-                  type: 'TextField',
-                  value: 'val1,1',
-                  name: 'Title 1',
-                  layout: {
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  type: 'TextField',
-                  value: 'val2,1',
-                  name: 'Title 2',
-                  layout: {
-                    colStart: { sm: 2 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  name: 'Group Section',
-                  layout: {
-                    cols: { sm: 3 },
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                  children: [
-                    {
-                      type: 'TextField',
-                      value: 'val3,1',
-                      name: 'Title 3',
-                      layout: {
-                        colStart: { sm: 1 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                    {
-                      type: 'TextField',
-                      value: 'val4,1',
-                      name: 'Title 4',
-                      layout: {
-                        colStart: { sm: 2 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          name: 'Repeating Section for item',
-          rows: [
-            {
-              layout: {
-                cols: { sm: 3 },
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
-              children: [
-                {
-                  type: 'TextField',
-                  value: 'val1,0,item',
-                  name: 'Title 1 for item',
-                  layout: {
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  type: 'TextField',
-                  value: 'val2,0,item',
-                  name: 'Title 2 for item',
-                  layout: {
-                    colStart: { sm: 2 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  name: 'Group Section for item',
-                  layout: {
-                    cols: { sm: 3 },
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                  children: [
-                    {
-                      type: 'TextField',
-                      value: 'val3,0,item',
-                      name: 'Title 3 for item',
-                      layout: {
-                        colStart: { sm: 1 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                    {
-                      type: 'TextField',
-                      value: 'val4,0,item',
-                      name: 'Title 4 for item',
-                      layout: {
-                        colStart: { sm: 2 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              layout: {
-                cols: { sm: 3 },
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
-              children: [
-                {
-                  type: 'TextField',
-                  value: 'val1,1,item',
-                  name: 'Title 1 for item',
-                  layout: {
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  type: 'TextField',
-                  value: 'val2,1,item',
-                  name: 'Title 2 for item',
-                  layout: {
-                    colStart: { sm: 2 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                },
-                {
-                  name: 'Group Section for item',
-                  layout: {
-                    cols: { sm: 3 },
-                    colStart: { sm: 1 },
-                    colSpan: { sm: 1 },
-                    rowStart: { sm: 1 },
-                    rowSpan: { sm: 1 },
-                  },
-                  children: [
-                    {
-                      type: 'TextField',
-                      value: 'val3,1,item',
-                      name: 'Title 3 for item',
-                      layout: {
-                        colStart: { sm: 1 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                    {
-                      type: 'TextField',
-                      value: 'val4,1,item',
-                      name: 'Title 4 for item',
-                      layout: {
-                        colStart: { sm: 2 },
-                        colSpan: { sm: 1 },
-                        rowStart: { sm: 1 },
-                        rowSpan: { sm: 1 },
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          name: 'Group Section 2',
           layout: {
-            cols: { sm: 2 },
+            cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
@@ -775,8 +496,8 @@ describe('UniqueProductIdentifierController', () => {
           children: [
             {
               type: 'TextField',
-              value: 'val5,0',
-              name: 'Title sg21',
+              value: 'val1,0',
+              name: 'Title 1',
               layout: {
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
@@ -786,8 +507,8 @@ describe('UniqueProductIdentifierController', () => {
             },
             {
               type: 'TextField',
-              value: 'val5,0,item',
-              name: 'Title sg21 for item',
+              value: 'val2,0',
+              name: 'Title 2',
               layout: {
                 colStart: { sm: 2 },
                 colSpan: { sm: 1 },
@@ -795,7 +516,303 @@ describe('UniqueProductIdentifierController', () => {
                 rowSpan: { sm: 1 },
               },
             },
+            {
+              name: 'Group Section',
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val3,0',
+                  name: 'Title 3',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val4,0',
+                  name: 'Title 4',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+              ],
+            },
           ],
+        },
+        {
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          children: [
+            {
+              type: 'TextField',
+              value: 'val1,1',
+              name: 'Title 1',
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              type: 'TextField',
+              value: 'val2,1',
+              name: 'Title 2',
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              name: 'Group Section',
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val3,1',
+                  name: 'Title 3',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val4,1',
+                  name: 'Title 4',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const expectedNode2 = {
+      name: 'Repeating Section for item',
+      rows: [
+        {
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          children: [
+            {
+              type: 'TextField',
+              value: 'val1,0,item',
+              name: 'Title 1 for item',
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              type: 'TextField',
+              value: 'val2,0,item',
+              name: 'Title 2 for item',
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              name: 'Group Section for item',
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val3,0,item',
+                  name: 'Title 3 for item',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val4,0,item',
+                  name: 'Title 4 for item',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          children: [
+            {
+              type: 'TextField',
+              value: 'val1,1,item',
+              name: 'Title 1 for item',
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              type: 'TextField',
+              value: 'val2,1,item',
+              name: 'Title 2 for item',
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+            },
+            {
+              name: 'Group Section for item',
+              layout: {
+                cols: { sm: 3 },
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              children: [
+                {
+                  type: 'TextField',
+                  value: 'val3,1,item',
+                  name: 'Title 3 for item',
+                  layout: {
+                    colStart: { sm: 1 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+                {
+                  type: 'TextField',
+                  value: 'val4,1,item',
+                  name: 'Title 4 for item',
+                  layout: {
+                    colStart: { sm: 2 },
+                    colSpan: { sm: 1 },
+                    rowStart: { sm: 1 },
+                    rowSpan: { sm: 1 },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const expectedNode3 = {
+      name: 'Group Section 2',
+      layout: {
+        cols: { sm: 2 },
+        colStart: { sm: 1 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 1 },
+        rowSpan: { sm: 1 },
+      },
+      children: [
+        {
+          type: 'TextField',
+          value: 'val5,0',
+          name: 'Title sg21',
+          layout: {
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+        },
+        {
+          type: 'TextField',
+          value: 'val5,0,item',
+          name: 'Title sg21 for item',
+          layout: {
+            colStart: { sm: 2 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+        },
+      ],
+    };
+
+    expect(response.body).toEqual({
+      name: model.name,
+      description: model.description,
+      nodes: [expectedNode1, expectedNode2, expectedNode3],
+    });
+
+    response = await request(app.getHttpServer()).get(
+      `/unique-product-identifiers/${modelUUID}/view`,
+    );
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      name: model.name,
+      description: model.description,
+      nodes: [
+        expectedNode1,
+        {
+          ...expectedNode3,
+          children: expectedNode3.children.slice(0, 1),
         },
       ],
     });

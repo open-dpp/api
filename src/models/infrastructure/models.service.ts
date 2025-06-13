@@ -12,7 +12,7 @@ export class ModelsService {
   constructor(
     @InjectModel(ModelDoc.name)
     private modelDoc: MongooseModel<ModelDoc>,
-    private uniqueModelIdentifierService: UniqueProductIdentifierService,
+    private uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   convertToDomain(
@@ -64,7 +64,7 @@ export class ModelsService {
     );
 
     for (const uniqueProductIdentifier of model.uniqueProductIdentifiers) {
-      await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
+      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
     }
     return this.convertToDomain(dataModelDoc, model.uniqueProductIdentifiers);
   }
@@ -75,26 +75,26 @@ export class ModelsService {
       .sort({ name: 1 })
       .exec();
     return await Promise.all(
-      modelDocs.map(async (entity: ModelDoc) => {
+      modelDocs.map(async (modelDoc: ModelDoc) => {
         return this.convertToDomain(
-          entity,
-          await this.uniqueModelIdentifierService.findAllByReferencedId(
-            entity._id,
+          modelDoc,
+          await this.uniqueProductIdentifierService.findAllByReferencedId(
+            modelDoc._id,
           ),
         );
       }),
     );
   }
 
-  async findOne(id: string): Promise<Model> {
+  async findOneOrFail(id: string): Promise<Model> {
     const modelDoc = await this.modelDoc.findById(id);
     if (!modelDoc) {
       throw new NotFoundInDatabaseException(Model.name);
     }
     return this.convertToDomain(
       modelDoc,
-      await this.uniqueModelIdentifierService.findAllByReferencedId(
-        modelDoc.id,
+      await this.uniqueProductIdentifierService.findAllByReferencedId(
+        modelDoc._id,
       ),
     );
   }

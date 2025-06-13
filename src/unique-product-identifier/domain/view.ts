@@ -7,10 +7,10 @@ import {
   isRepeaterSection,
   RepeaterSection,
 } from '../../product-data-model/domain/section';
-import { DataValue } from '../../passport/domain/passport';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 export class View {
   private constructor(
@@ -29,9 +29,17 @@ export class View {
 
   build() {
     const nodes = [];
-    for (const section of this.productDataModel.sections.filter(
+    const rootSections = this.productDataModel.sections.filter(
       (s) => s.parentId === undefined,
-    )) {
+    );
+    const rootSectionsFilteredByLevel = this.item
+      ? rootSections // at the item level we show all root sections
+      : rootSections.filter(
+          (s) =>
+            s.granularityLevel === GranularityLevel.MODEL ||
+            s.granularityLevel === undefined,
+        );
+    for (const section of rootSectionsFilteredByLevel) {
       if (isRepeaterSection(section)) {
         nodes.push(this.processRepeaterSection(section));
       } else if (isGroupSection(section)) {
@@ -98,12 +106,15 @@ export class View {
       const dataValue = dataValuesOfSection.find(
         (v) => v.dataFieldId === dataField.id,
       );
-      result.push({
-        type: dataField.type,
-        name: dataField.name,
-        value: dataValue?.value,
-        layout: dataField.layout,
-      });
+      // for model view: filter out data fields that are not in the model
+      if (this.item || dataField.granularityLevel !== GranularityLevel.ITEM) {
+        result.push({
+          type: dataField.type,
+          name: dataField.name,
+          value: dataValue?.value,
+          layout: dataField.layout,
+        });
+      }
     }
     return result;
   }

@@ -12,7 +12,7 @@ export class ItemsService {
   constructor(
     @InjectModel(ItemDoc.name)
     private itemDoc: MongooseModel<ItemDoc>,
-    private uniqueModelIdentifierService: UniqueProductIdentifierService,
+    private uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   convertToDomain(
@@ -60,7 +60,7 @@ export class ItemsService {
       },
     );
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
-      await this.uniqueModelIdentifierService.save(uniqueProductIdentifier);
+      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
     }
     return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
   }
@@ -72,7 +72,9 @@ export class ItemsService {
     }
     return this.convertToDomain(
       itemDoc,
-      await this.uniqueModelIdentifierService.findAllByReferencedId(itemDoc.id),
+      await this.uniqueProductIdentifierService.findAllByReferencedId(
+        itemDoc.id,
+      ),
     );
   }
 
@@ -84,7 +86,7 @@ export class ItemsService {
       itemDocs.map(async (idocs) =>
         this.convertToDomain(
           idocs,
-          await this.uniqueModelIdentifierService.findAllByReferencedId(
+          await this.uniqueProductIdentifierService.findAllByReferencedId(
             idocs.id,
           ),
         ),

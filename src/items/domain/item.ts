@@ -2,12 +2,13 @@ import { randomUUID } from 'crypto';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue, Passport } from '../../passport/domain/passport';
+import { ProductPassport } from '../../product-passport/domain/product-passport';
 import { Model } from '../../models/domain/model';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ValueError } from '../../exceptions/domain.errors';
+import { DataValue } from '../../product-passport/domain/data-value';
 
-export class Item extends Passport {
+export class Item extends ProductPassport {
   granularityLevel = GranularityLevel.ITEM;
   private constructor(
     id: string,

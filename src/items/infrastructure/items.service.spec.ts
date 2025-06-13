@@ -16,9 +16,9 @@ import { Connection } from 'mongoose';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataValue } from '../../passport/domain/passport';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;

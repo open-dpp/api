@@ -1,31 +1,9 @@
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import { DataValue } from './data-value';
 
-export class DataValue {
-  private constructor(
-    public readonly value: unknown,
-    public readonly dataSectionId: string,
-    public readonly dataFieldId: string,
-    public readonly row: number,
-  ) {}
-
-  static create(data: {
-    value: unknown;
-    dataSectionId: string;
-    dataFieldId: string;
-    row: number;
-  }) {
-    return new DataValue(
-      data.value,
-      data.dataSectionId,
-      data.dataFieldId,
-      data.row,
-    );
-  }
-}
-
-export abstract class Passport {
+export abstract class ProductPassport {
   abstract granularityLevel: GranularityLevel;
 
   protected constructor(
@@ -87,10 +65,16 @@ export abstract class Passport {
       const incomingDataValue = dataValues.find(
         (dataValue) =>
           dataValue.dataFieldId === existingDataValue.dataFieldId &&
+          dataValue.dataSectionId === existingDataValue.dataSectionId &&
           dataValue.row === existingDataValue.row,
       );
       if (incomingDataValue) {
-        return { ...existingDataValue, value: incomingDataValue.value };
+        return DataValue.create({
+          value: incomingDataValue.value,
+          dataSectionId: existingDataValue.dataSectionId,
+          dataFieldId: existingDataValue.dataFieldId,
+          row: existingDataValue.row,
+        });
       }
       return existingDataValue;
     });
