@@ -16,6 +16,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from './product-data-model.schema';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -50,6 +51,7 @@ describe('ProductDataModelService', () => {
       {
         id: 's1',
         name: 'Environment',
+        granularityLevel: GranularityLevel.MODEL,
         type: SectionType.GROUP,
         layout: {
           cols: { sm: 3 },
@@ -68,6 +70,7 @@ describe('ProductDataModelService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
           {
             name: 'Processor',
@@ -78,6 +81,7 @@ describe('ProductDataModelService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
         subSections: ['s1.1'],
@@ -86,6 +90,7 @@ describe('ProductDataModelService', () => {
         id: 's1.1',
         parentId: 's1',
         name: 'CO2',
+        granularityLevel: GranularityLevel.MODEL,
         type: SectionType.GROUP,
         layout: {
           cols: { sm: 2 },
@@ -104,6 +109,7 @@ describe('ProductDataModelService', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
+            granularityLevel: GranularityLevel.MODEL,
           },
         ],
         subSections: [],
@@ -125,6 +131,56 @@ describe('ProductDataModelService', () => {
     const { id } = await service.save(productDataModel);
     const found = await service.findOneOrFail(id);
     expect(found).toEqual(productDataModel);
+  });
+
+  it('sets correct default granularity level', async () => {
+    const laptopModel = {
+      name: 'Laptop',
+      version: 'v2',
+      sections: [
+        {
+          id: 's1',
+          name: 'Environment',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 7 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [],
+          parentId: undefined,
+          subSections: [],
+        },
+        {
+          id: 's2',
+          name: 'Materials',
+          type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 7 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [],
+          parentId: undefined,
+          subSections: [],
+        },
+      ],
+      publications: [],
+    };
+
+    const productDataModelDraft = ProductDataModel.fromPlain({
+      ...laptopModel,
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+    });
+    const { id } = await service.save(productDataModelDraft);
+    const found = await service.findOneOrFail(id);
+    expect(found.sections[0].granularityLevel).toBeUndefined();
+    expect(found.sections[1].granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
   it('should return product data models by name', async () => {

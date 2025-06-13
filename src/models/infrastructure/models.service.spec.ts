@@ -1,21 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
-import { DataValue, Model } from '../domain/model';
+import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Connection } from 'mongoose';
-import { ModelDoc, ModelSchema } from './model.schema';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { ModelDoc, ModelSchema } from './model.schema';
+import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -45,7 +48,11 @@ describe('ModelsService', () => {
   });
 
   it('should create a model', async () => {
-    const model = Model.create({ name: 'My product', user, organization });
+    const model = Model.create({
+      name: 'My product',
+      userId: user.id,
+      organizationId: organization.id,
+    });
     const productDataModel = ProductDataModel.fromPlain({
       name: 'Laptop',
       version: '1.0',
@@ -71,6 +78,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
             {
               type: 'TextField',
@@ -82,6 +90,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -106,6 +115,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -130,6 +140,7 @@ describe('ModelsService', () => {
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
               },
+              granularityLevel: GranularityLevel.MODEL,
             },
           ],
         },
@@ -138,79 +149,81 @@ describe('ModelsService', () => {
 
     model.assignProductDataModel(productDataModel);
     model.addDataValues([
-      DataValue.fromPlain({
+      DataValue.create({
+        value: undefined,
         dataSectionId: productDataModel.sections[2].id,
         dataFieldId: productDataModel.sections[2].dataFields[0].id,
         row: 0,
       }),
     ]);
     const { id } = await modelsService.save(model);
-    const foundModel = await modelsService.findOne(id);
+    const foundModel = await modelsService.findOneOrFail(id);
     expect(foundModel.name).toEqual(model.name);
     expect(foundModel.description).toEqual(model.description);
     expect(foundModel.productDataModelId).toEqual(productDataModel.id);
-    expect(foundModel.dataValues).toEqual([
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[0].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[0].id,
-        dataFieldId: productDataModel.sections[0].dataFields[1].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[1].id,
-        dataFieldId: productDataModel.sections[1].dataFields[0].id,
-      }),
-      DataValue.fromPlain({
-        id: expect.anything(),
-        dataSectionId: productDataModel.sections[2].id,
-        dataFieldId: productDataModel.sections[2].dataFields[0].id,
-        row: 0,
-      }),
-    ]);
+    expect(foundModel.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[1].id,
+          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[2].id,
+          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          row: 0,
+        }),
+      ]),
+    );
     expect(foundModel.createdByUserId).toEqual(user.id);
-    expect(foundModel.isOwnedBy(organization)).toBeTruthy();
+    expect(foundModel.isOwnedBy(organization.id)).toBeTruthy();
   });
 
   it('fails if requested model could not be found', async () => {
-    await expect(modelsService.findOne(randomUUID())).rejects.toThrow(
+    await expect(modelsService.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Model.name),
     );
   });
 
   it('should find all models of organization', async () => {
-    const otherOrganization = Organization.create({
-      name: 'My orga',
-      user: user,
-    });
+    const otherOrganizationId = randomUUID();
     const model1 = Model.create({
       name: 'Product A',
-      user,
-      organization: otherOrganization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     const model2 = Model.create({
       name: 'Product B',
-      user,
-      organization: otherOrganization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     const model3 = Model.create({
       name: 'Product C',
-      user,
-      organization: otherOrganization,
+      userId: user.id,
+      organizationId: otherOrganizationId,
     });
     await modelsService.save(model1);
     await modelsService.save(model2);
     await modelsService.save(model3);
 
-    const foundModels = await modelsService.findAllByOrganization(
-      otherOrganization.id,
-    );
-    expect(foundModels.map((m) => m.toPlain())).toEqual(
-      [model1, model2, model3].map((m) => m.toPlain()),
+    const foundModels =
+      await modelsService.findAllByOrganization(otherOrganizationId);
+    expect(foundModels.map((m) => m)).toEqual(
+      [model1, model2, model3].map((m) => m),
     );
   });
 
