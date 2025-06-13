@@ -24,7 +24,6 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { ItemOrgaUserMigrationService } from '../infrastructure/item-orga-user-migration.service';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ignoreIds } from '../../../test/utils';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -78,8 +77,6 @@ describe('ItemsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
-      .overrideProvider(ItemOrgaUserMigrationService)
-      .useValue({})
       .compile();
 
     modelsService = moduleRef.get(ModelsService);
