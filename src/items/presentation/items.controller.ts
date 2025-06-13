@@ -117,9 +117,15 @@ export class ItemsController {
       throw new ForbiddenException();
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
+    if (!item.productDataModelId) {
+      throw new BadRequestException(
+        'Item does not have a product data model assigned',
+      );
+    }
     const productDataModel = await this.productDataModelService.findOneOrFail(
       item.productDataModelId,
     );
+
     const validationResult = productDataModel.validate(
       item.dataValues,
       GranularityLevel.MODEL,
@@ -149,9 +155,15 @@ export class ItemsController {
     }
 
     item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
+    if (!item.productDataModelId) {
+      throw new BadRequestException(
+        'Item does not have a product data model assigned',
+      );
+    }
     const productDataModel = await this.productDataModelService.findOneOrFail(
       item.productDataModelId,
     );
+
     const validationResult = productDataModel.validate(
       item.dataValues,
       GranularityLevel.ITEM,
