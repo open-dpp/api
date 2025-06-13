@@ -6,7 +6,6 @@ import { randomUUID } from 'crypto';
 import { AasMappingService } from '../infrastructure/aas-mapping.service';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { modelToDto } from '../../models/presentation/dto/model.dto';
-import { json } from 'express';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasMappingController {

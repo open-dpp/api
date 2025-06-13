@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { PassportDoc } from '../../passport/infrastructure/passport.schema';
+import { Document } from 'mongoose';
 
 @Schema({ _id: false })
 export class AasFieldMappingDoc {
@@ -21,7 +21,7 @@ export enum AasMappingDocSchemaVersion {
 }
 
 @Schema({ collection: 'aas_mapping', timestamps: true })
-export class AasMappingDoc extends PassportDoc {
+export class AasMappingDoc extends Document {
   @Prop({ required: true })
   _id: string;
   @Prop({

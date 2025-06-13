@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 
 import { z } from 'zod';
 import { flatMap, get } from 'lodash';
-import { DataValue } from '../../passport/domain/passport';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 const AASPropertySchema = z.object({
   idShort: z.string(),

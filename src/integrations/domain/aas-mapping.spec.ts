@@ -1,7 +1,7 @@
 import { AasFieldMapping, AasMapping } from './aas-mapping';
 import { ignoreIds } from '../../../test/utils';
 import { aasTruckExample } from './truck-example';
-import { DataValue } from '../../passport/domain/passport';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('AasMapping', () => {
   it('should create field mapping', () => {

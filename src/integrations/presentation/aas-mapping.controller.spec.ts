@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
 import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
@@ -31,7 +30,6 @@ import { json } from 'express';
 describe('AasMappingController', () => {
   let app: INestApplication;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
-  let modelsService: ModelsService;
   let productDataModelService: ProductDataModelService;
   let aasMappingService: AasMappingService;
 
@@ -78,7 +76,6 @@ describe('AasMappingController', () => {
       json({ limit: '50mb' }),
     );
 
-    modelsService = moduleRef.get(ModelsService);
     productDataModelService = moduleRef.get(ProductDataModelService);
     aasMappingService = moduleRef.get(AasMappingService);
 
