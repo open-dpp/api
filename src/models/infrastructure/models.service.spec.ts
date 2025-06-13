@@ -157,7 +157,7 @@ describe('ModelsService', () => {
       }),
     ]);
     const { id } = await modelsService.save(model);
-    const foundModel = await modelsService.findOne(id);
+    const foundModel = await modelsService.findOneOrFail(id);
     expect(foundModel.name).toEqual(model.name);
     expect(foundModel.description).toEqual(model.description);
     expect(foundModel.productDataModelId).toEqual(productDataModel.id);
@@ -194,7 +194,7 @@ describe('ModelsService', () => {
   });
 
   it('fails if requested model could not be found', async () => {
-    await expect(modelsService.findOne(randomUUID())).rejects.toThrow(
+    await expect(modelsService.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Model.name),
     );
   });

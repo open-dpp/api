@@ -42,7 +42,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const model = await this.modelsService.findOne(modelId);
+    const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
@@ -72,7 +72,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const model = await this.modelsService.findOne(modelId);
+    const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
@@ -128,7 +128,7 @@ export class ItemsController {
 
     const validationResult = productDataModel.validate(
       item.dataValues,
-      GranularityLevel.MODEL,
+      GranularityLevel.ITEM,
     );
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());

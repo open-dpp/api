@@ -33,7 +33,7 @@ export class ItemOrgaUserMigrationService implements OnApplicationBootstrap {
       const modelId = itemDoc.modelId;
       if (modelId) {
         try {
-          const model = await this.modelsService.findOne(modelId);
+          const model = await this.modelsService.findOneOrFail(modelId);
           const item = Item.loadFromDb({
             id: itemDoc.id,
             uniqueProductIdentifiers:

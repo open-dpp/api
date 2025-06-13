@@ -69,7 +69,12 @@ export abstract class ProductPassport {
           dataValue.row === existingDataValue.row,
       );
       if (incomingDataValue) {
-        return { ...existingDataValue, value: incomingDataValue.value };
+        return DataValue.create({
+          value: incomingDataValue.value,
+          dataSectionId: existingDataValue.dataSectionId,
+          dataFieldId: existingDataValue.dataFieldId,
+          row: existingDataValue.row,
+        });
       }
       return existingDataValue;
     });

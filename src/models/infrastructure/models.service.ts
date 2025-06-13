@@ -86,7 +86,7 @@ export class ModelsService {
     );
   }
 
-  async findOne(id: string): Promise<Model> {
+  async findOneOrFail(id: string): Promise<Model> {
     const modelDoc = await this.modelDoc.findById(id);
     if (!modelDoc) {
       throw new NotFoundInDatabaseException(Model.name);

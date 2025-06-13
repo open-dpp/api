@@ -215,7 +215,7 @@ describe('ModelsController', () => {
       )
       .send(body);
     expect(response.status).toEqual(201);
-    const found = await modelsService.findOne(response.body.id);
+    const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
     expect(found.isOwnedBy(organization.id)).toBeTruthy();
     const foundUniqueProductIdentifiers =
@@ -548,7 +548,7 @@ describe('ModelsController', () => {
       },
     ];
     expect(response.body.dataValues).toEqual(expectedDataValues);
-    const foundModel = await modelsService.findOne(response.body.id);
+    const foundModel = await modelsService.findOneOrFail(response.body.id);
     expect(foundModel.dataValues).toEqual(expectedDataValues);
   });
 
@@ -717,7 +717,7 @@ describe('ModelsController', () => {
     ];
     expect(response.body.dataValues).toEqual(ignoreIds(expected));
 
-    const foundModel = await modelsService.findOne(response.body.id);
+    const foundModel = await modelsService.findOneOrFail(response.body.id);
 
     expect(foundModel.dataValues).toEqual(response.body.dataValues);
   });
