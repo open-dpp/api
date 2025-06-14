@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import * as request from 'supertest';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
@@ -22,20 +22,34 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { IntegrationModule } from '../integration.module';
-import { AasMappingService } from '../infrastructure/aas-mapping.service';
-import { AasFieldMapping, AasMapping } from '../domain/aas-mapping';
-import { aasTruckExample } from '../domain/truck-example';
+import { AasConnectionService } from '../infrastructure/aas-connection.service';
+import { AasFieldAssignment, AasConnection } from '../domain/aas-connection';
 import { json } from 'express';
+import { semitrailerAas } from '../domain/semitrailer-aas';
+import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
+import { Model } from '../../models/domain/model';
+import { ModelsService } from '../../models/infrastructure/models.service';
+import { ConfigService } from '@nestjs/config';
 
-describe('AasMappingController', () => {
+describe('AasConnectionController', () => {
   let app: INestApplication;
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
+  const reflector: Reflector = new Reflector();
+  let keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
+    new Map(),
+    reflector,
+  );
   let productDataModelService: ProductDataModelService;
-  let aasMappingService: AasMappingService;
+  let aasConnectionService: AasConnectionService;
+  let modelsService: ModelsService;
+  let configService: ConfigService;
 
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@test.test');
   const organizationId = randomUUID();
+
+  beforeEach(() => {
+    jest.spyOn(reflector, 'get').mockReturnValue(false);
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -77,7 +91,9 @@ describe('AasMappingController', () => {
     );
 
     productDataModelService = moduleRef.get(ProductDataModelService);
-    aasMappingService = moduleRef.get(AasMappingService);
+    aasConnectionService = moduleRef.get(AasConnectionService);
+    modelsService = moduleRef.get(ModelsService);
+    configService = moduleRef.get(ConfigService);
 
     await app.init();
   });
@@ -114,28 +130,82 @@ describe('AasMappingController', () => {
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
             },
-            granularityLevel: GranularityLevel.MODEL,
+            granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
     ],
   };
 
-  it(`/CREATE model via mapping`, async () => {
+  it(`/CREATE items via connection`, async () => {
+    jest.spyOn(reflector, 'get').mockReturnValue(true);
     const productDataModel = ProductDataModel.fromPlain(laptopModel);
     await productDataModelService.save(productDataModel);
-
-    const aasMapping = AasMapping.create({ dataModelId: productDataModel.id });
-    const fieldMapping = AasFieldMapping.create({
+    const model = Model.create({
+      organizationId,
+      userId: authContext.user.id,
+      name: 'Laptop',
+    });
+    model.assignProductDataModel(productDataModel);
+    const aasMapping = AasConnection.create({
+      dataModelId: productDataModel.id,
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+      modelId: model.id,
+    });
+    const fieldMapping = AasFieldAssignment.create({
       sectionId: sectionId1,
       dataFieldId: dataFieldId1,
       idShortParent: 'ProductCarbonFootprint_A1A3',
       idShort: 'PCFCO2eq',
     });
-    aasMapping.addFieldMapping(fieldMapping);
-    await aasMappingService.save(aasMapping);
+    aasMapping.addFieldAssignment(fieldMapping);
+    await modelsService.save(model);
+    await aasConnectionService.save(aasMapping);
+
     const response = await request(app.getHttpServer())
-      .post(`/organizations/${organizationId}/integration/aas/${aasMapping.id}`)
+      .post(
+        `/organizations/${organizationId}/integration/aas/mappings/${aasMapping.id}/items`,
+      )
+      .set('API_TOKEN', configService.get('API_TOKEN'))
+      .send(semitrailerAas);
+    expect(response.status).toEqual(201);
+    expect(response.body.dataValues).toEqual([
+      {
+        dataSectionId: sectionId1,
+        dataFieldId: dataFieldId1,
+        value: '2.6300',
+        row: 0,
+      },
+    ]);
+  });
+
+  it(`/CREATE connection`, async () => {
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    const model = Model.create({
+      organizationId,
+      userId: authContext.user.id,
+      name: 'Laptop',
+    });
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+
+    const body = {
+      dataModelId: productDataModel.id,
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+      modelId: model.id,
+      fieldAssignments: [
+        {
+          sectionId: sectionId1,
+          dataFieldId: dataFieldId1,
+          idShortParent: 'ProductCarbonFootprint_A1A3',
+          idShort: 'PCFCO2eq',
+        },
+      ],
+    };
+
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/integration/aas/mappings`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -144,16 +214,51 @@ describe('AasMappingController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send(aasTruckExample);
+      .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.dataValues).toEqual([
-      {
-        dataSectionId: sectionId1,
-        dataFieldId: dataFieldId1,
-        value: 2.63,
-        row: 0,
+    expect(response.body.dataModelId).toEqual(productDataModel.id);
+    expect(response.body.aasType).toEqual(
+      AssetAdministrationShellType.Semitrailer_Truck,
+    );
+    expect(response.body.modelId).toEqual(model.id);
+    expect(response.body.fieldAssignments).toEqual(body.fieldAssignments);
+  });
+
+  it(`/GET all properties of aas`, async () => {
+    jest.spyOn(reflector, 'get').mockReturnValue(false);
+
+    const response = await request(app.getHttpServer())
+      .get(
+        `/organizations/${organizationId}/integration/aas/${AssetAdministrationShellType.Semitrailer_Truck}/properties`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(semitrailerAas);
+    expect(response.status).toEqual(200);
+    expect(response.body).toContainEqual({
+      parentIdShort: 'Nameplate',
+      property: {
+        idShort: 'URIOfTheProduct',
+        modelType: 'Property',
+        value: '0112/2///61987#TR590#700',
+        valueType: 'xs:string',
       },
-    ]);
+    });
+    expect(response.body).toContainEqual({
+      parentIdShort: 'AddressInformation',
+      property: {
+        idShort: 'Company',
+        modelType: 'Property',
+        value: 'Proalpha GmbH',
+        valueType: 'xs:string',
+      },
+    });
   });
 
   afterAll(async () => {

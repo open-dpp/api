@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AasMappingController } from './presentation/aas-mapping.controller';
+import { AasConnectionController } from './presentation/aas-connection.controller';
 import { ModelsService } from '../models/infrastructure/models.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -13,10 +13,12 @@ import { ProductDataModelModule } from '../product-data-model/product.data.model
 import { ModelsModule } from '../models/models.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import {
-  AasMappingDoc,
-  AasMappingSchema,
-} from './infrastructure/aas-mapping.schema';
-import { AasMappingService } from './infrastructure/aas-mapping.service';
+  AasConnectionDoc,
+  AasConnectionSchema,
+} from './infrastructure/aas-connection.schema';
+import { AasConnectionService } from './infrastructure/aas-connection.service';
+import { OrganizationsModule } from '../organizations/organizations.module';
+import { ItemsService } from '../items/infrastructure/items.service';
 
 @Module({
   imports: [
@@ -31,19 +33,20 @@ import { AasMappingService } from './infrastructure/aas-mapping.service';
         schema: ModelSchema,
       },
       {
-        name: AasMappingDoc.name,
-        schema: AasMappingSchema,
+        name: AasConnectionDoc.name,
+        schema: AasConnectionSchema,
       },
     ]),
     ProductDataModelModule,
     ModelsModule,
     UniqueProductIdentifierModule,
+    OrganizationsModule,
     UsersModule,
     KeycloakResourcesModule,
     PermissionsModule,
   ],
-  controllers: [AasMappingController],
-  providers: [ModelsService, AasMappingService],
+  controllers: [AasConnectionController],
+  providers: [ModelsService, ItemsService, AasConnectionService],
   exports: [],
 })
 export class IntegrationModule {}
