@@ -320,6 +320,50 @@ describe('AasConnectionController', () => {
     });
   });
 
+  it(`/GET all connections of organization`, async () => {
+    const otherOrganizationId = randomUUID();
+    const aasConnection1 = AasConnection.create({
+      name: 'Connection Name 1',
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+      dataModelId: randomUUID(),
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+      modelId: randomUUID(),
+    });
+    const aasConnection2 = AasConnection.create({
+      name: 'Connection Name 2',
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+      dataModelId: randomUUID(),
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+      modelId: randomUUID(),
+    });
+    await aasConnectionService.save(aasConnection1);
+    await aasConnectionService.save(aasConnection2);
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/integration/aas/connections`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual([
+      {
+        id: aasConnection1.id,
+        name: 'Connection Name 1',
+      },
+      {
+        id: aasConnection2.id,
+        name: 'Connection Name 2',
+      },
+    ]);
+  });
+
   afterAll(async () => {
     await app.close();
   });

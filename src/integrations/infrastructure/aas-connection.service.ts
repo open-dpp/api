@@ -70,4 +70,16 @@ export class AasConnectionService {
     }
     return this.convertToDomain(aasMappingDoc);
   }
+
+  async findAllByOrganization(organizationId: string) {
+    const aasConnectionDocs = await this.aasConnectionDoc
+      .find({
+        ownedByOrganizationId: organizationId,
+      })
+      .sort({ name: 1 })
+      .exec();
+    return aasConnectionDocs.map((aasConnectionDoc) =>
+      this.convertToDomain(aasConnectionDoc),
+    );
+  }
 }

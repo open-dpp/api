@@ -34,6 +34,7 @@ import {
   UpdateAasConnectionDto,
   UpdateAasConnectionSchema,
 } from './dto/update-aas-connection.dto';
+import { GetAasConnectionCollectionSchema } from './dto/get-aas-connection-collection.dto';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
@@ -150,7 +151,7 @@ export class AasConnectionController {
   }
 
   @Get('/connections/:connectionId')
-  async findMapping(
+  async findConnection(
     @Param('orgaId') organizationId: string,
     @Param('connectionId') connectionId: string,
     @Request() req: AuthRequest,
@@ -159,11 +160,26 @@ export class AasConnectionController {
       organizationId,
       req.authContext,
     );
-    const aasMapping = await this.aasConnectionService.findById(connectionId);
-    if (!aasMapping.isOwnedBy(organizationId)) {
+    const aasConnection =
+      await this.aasConnectionService.findById(connectionId);
+    if (!aasConnection.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
-    return aasConnectionToDto(aasMapping);
+    return aasConnectionToDto(aasConnection);
+  }
+
+  @Get('/connections')
+  async findAllConnectionsOfOrganization(
+    @Param('orgaId') organizationId: string,
+    @Request() req: AuthRequest,
+  ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const aasConnections =
+      await this.aasConnectionService.findAllByOrganization(organizationId);
+    return GetAasConnectionCollectionSchema.parse(aasConnections);
   }
 
   @Get(':aasType/properties')
