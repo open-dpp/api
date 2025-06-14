@@ -21,6 +21,8 @@ export class AasConnectionService {
       dataModelId: aasConnectionDoc.dataModelId,
       aasType: aasConnectionDoc.aasType,
       modelId: aasConnectionDoc.modelId,
+      organizationId: aasConnectionDoc.ownedByOrganizationId,
+      userId: aasConnectionDoc.createdByUserId,
       fieldMappings: aasConnectionDoc.fieldMappings.map((fieldMapping) =>
         AasFieldAssignment.create({
           sectionId: fieldMapping.sectionId,
@@ -40,6 +42,8 @@ export class AasConnectionService {
         dataModelId: aasConnection.dataModelId,
         aasType: aasConnection.aasType,
         modelId: aasConnection.modelId,
+        ownedByOrganizationId: aasConnection.ownedByOrganizationId,
+        createdByUserId: aasConnection.createdByUserId,
         fieldMappings: aasConnection.fieldAssignments.map((fieldMapping) => ({
           dataFieldId: fieldMapping.dataFieldId,
           sectionId: fieldMapping.sectionId,

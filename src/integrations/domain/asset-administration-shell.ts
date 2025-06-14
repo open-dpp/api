@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { flatMap, get } from 'lodash';
-import { semitrailerAas } from './semitrailer-aas';
 
 export enum AssetAdministrationShellType {
   Semitrailer_Truck = 'Semitrailer_Truck',

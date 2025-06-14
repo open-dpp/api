@@ -35,25 +35,29 @@ export class AasConnectionController {
   constructor(
     private readonly modelsService: ModelsService,
     private readonly itemService: ItemsService,
-    private aasMappingService: AasConnectionService,
+    private aasConnectionService: AasConnectionService,
     private productDataModelService: ProductDataModelService,
     private configService: ConfigService,
     private permissionsService: PermissionsService,
   ) {}
 
   @Public()
-  @Post('/mappings/:mappingId/items/')
+  @Post('/connections/:connectionId/items/')
   async create(
     @Headers('API_TOKEN') apiToken: string,
     @Param('orgaId') organizationId: string,
-    @Param('mappingId') mappingId: string,
+    @Param('connectionId') connectionId: string,
     @Body() aasJson: any,
-    @Request() req: AuthRequest,
   ) {
     if (apiToken !== this.configService.get('API_TOKEN')) {
       throw new ForbiddenException('Wrong api token');
     }
-    const aasMapping = await this.aasMappingService.findById(mappingId);
+    const aasMapping = await this.aasConnectionService.findById(connectionId);
+
+    if (!aasMapping.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+
     const model = await this.modelsService.findOneOrFail(aasMapping.modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -78,7 +82,7 @@ export class AasConnectionController {
     return itemToDto(await this.itemService.save(item));
   }
 
-  @Post('/mappings')
+  @Post('/connections')
   async createMapping(
     @Param('orgaId') organizationId: string,
     @Body() body: CreateAasConnectionDto,
@@ -96,6 +100,8 @@ export class AasConnectionController {
       createAasMapping.dataModelId,
     );
     const aasConnection = AasConnection.create({
+      organizationId,
+      userId: req.authContext.user.id,
       dataModelId: productDataModel.id,
       aasType: createAasMapping.aasType,
       modelId: model.id,
@@ -103,21 +109,24 @@ export class AasConnectionController {
     for (const fieldMapping of createAasMapping.fieldAssignments) {
       aasConnection.addFieldAssignment(fieldMapping);
     }
-    await this.aasMappingService.save(aasConnection);
+    await this.aasConnectionService.save(aasConnection);
     return aasConnectionToDto(aasConnection);
   }
 
-  @Get('/mappings/:mappingId')
+  @Get('/connections/:connectionId')
   async findMapping(
     @Param('orgaId') organizationId: string,
-    @Param('mappingId') mappingId: string,
+    @Param('connectionId') connectionId: string,
     @Request() req: AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    const aasMapping = await this.aasMappingService.findById(mappingId);
+    const aasMapping = await this.aasConnectionService.findById(connectionId);
+    if (!aasMapping.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     return aasConnectionToDto(aasMapping);
   }
 

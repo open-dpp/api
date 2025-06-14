@@ -6,8 +6,15 @@ import {
   AssetAdministrationShellType,
 } from './asset-administration-shell';
 import { semitrailerAas } from './semitrailer-aas';
+import { Model } from '../../models/domain/model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { User } from '../../users/domain/user';
+import { Organization } from '../../organizations/domain/organization';
+import { randomUUID } from 'crypto';
 
 describe('AasMapping', () => {
+  const organizationId = randomUUID();
+  const userId = randomUUID();
   it('should create field mapping', () => {
     const fieldMapping = AasFieldAssignment.create({
       dataFieldId: 'internalField',
@@ -24,12 +31,17 @@ describe('AasMapping', () => {
   it('should create aas mapping and add field mappings', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
+
     const aasConnection = AasConnection.create({
+      organizationId,
+      userId,
       dataModelId,
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
     expect(aasConnection.id).toEqual(expect.any(String));
+    expect(aasConnection.isOwnedBy(organizationId)).toBeTruthy();
+    expect(aasConnection.createdByUserId).toEqual(userId);
     expect(aasConnection.dataModelId).toEqual(dataModelId);
     expect(aasConnection.modelId).toEqual(modelId);
     expect(aasConnection.fieldAssignments).toEqual([]);
@@ -43,10 +55,79 @@ describe('AasMapping', () => {
     expect(aasConnection.fieldAssignments).toEqual([fieldMapping]);
   });
 
+  it('should assign model', () => {
+    const dataModelId = 'dataModelId';
+    const modelId = 'modelId';
+    const aasConnection = AasConnection.create({
+      organizationId,
+      userId,
+      dataModelId,
+      modelId,
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+    });
+    const model = Model.create({
+      organizationId: 'organizationId',
+      userId: 'userId',
+      name: 'modelName',
+    });
+    const user = new User('userId', 'email');
+    const organization = Organization.create({
+      name: 'organizationName',
+      user,
+    });
+    const productDataModel = ProductDataModel.create({
+      organization: organization,
+      user: user,
+      name: 'data model',
+    });
+    model.assignProductDataModel(productDataModel);
+    aasConnection.assignModel(model);
+    expect(aasConnection.dataModelId).toEqual(productDataModel.id);
+    expect(aasConnection.modelId).toEqual(model.id);
+  });
+
+  it('should replace field assignments', () => {
+    const dataModelId = 'dataModelId';
+    const modelId = 'modelId';
+    const aasConnection = AasConnection.create({
+      organizationId,
+      userId,
+      dataModelId,
+      modelId,
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+    });
+    const fieldAssignment = AasFieldAssignment.create({
+      dataFieldId: 'internalField',
+      sectionId: 'internalSectionId',
+      idShortParent: 'externalFieldParent',
+      idShort: 'externalField',
+    });
+    aasConnection.addFieldAssignment(fieldAssignment);
+
+    const newFieldAssignments = [
+      AasFieldAssignment.create({
+        dataFieldId: 'internalField2',
+        sectionId: 'internalSectionId2',
+        idShortParent: 'externalFieldParent2',
+        idShort: 'externalField2',
+      }),
+      AasFieldAssignment.create({
+        dataFieldId: 'internalField3',
+        sectionId: 'internalSectionId3',
+        idShortParent: 'externalFieldParent3',
+        idShort: 'externalField3',
+      }),
+    ];
+    aasConnection.replaceFieldAssignments(newFieldAssignments);
+    expect(aasConnection.fieldAssignments).toEqual(newFieldAssignments);
+  });
+
   it('should generate data values for semi trailer', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
     const aasMapping = AasConnection.create({
+      organizationId,
+      userId,
       dataModelId,
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,

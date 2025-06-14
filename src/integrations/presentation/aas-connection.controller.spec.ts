@@ -34,7 +34,7 @@ import { ConfigService } from '@nestjs/config';
 describe('AasConnectionController', () => {
   let app: INestApplication;
   const reflector: Reflector = new Reflector();
-  let keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
+  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
     new Map(),
     reflector,
   );
@@ -148,6 +148,8 @@ describe('AasConnectionController', () => {
     });
     model.assignProductDataModel(productDataModel);
     const aasMapping = AasConnection.create({
+      organizationId,
+      userId: authContext.user.id,
       dataModelId: productDataModel.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
@@ -164,7 +166,7 @@ describe('AasConnectionController', () => {
 
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/integration/aas/mappings/${aasMapping.id}/items`,
+        `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
       .set('API_TOKEN', configService.get('API_TOKEN'))
       .send(semitrailerAas);
@@ -205,7 +207,7 @@ describe('AasConnectionController', () => {
     };
 
     const response = await request(app.getHttpServer())
-      .post(`/organizations/${organizationId}/integration/aas/mappings`)
+      .post(`/organizations/${organizationId}/integration/aas/connections`)
       .set(
         'Authorization',
         getKeycloakAuthToken(

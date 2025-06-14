@@ -56,6 +56,8 @@ describe('AasMappingService', () => {
       },
     ];
     const aasMapping = AasConnection.create({
+      organizationId,
+      userId,
       dataModelId,
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
@@ -71,6 +73,9 @@ describe('AasMappingService', () => {
       AssetAdministrationShellType.Semitrailer_Truck,
     );
     expect(foundAasMapping.fieldAssignments).toEqual(fieldMappings);
+    expect(foundAasMapping.id).toEqual(id);
+    expect(foundAasMapping.ownedByOrganizationId).toEqual(organizationId);
+    expect(foundAasMapping.createdByUserId).toEqual(userId);
   });
 
   afterAll(async () => {

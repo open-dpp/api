@@ -31,6 +31,13 @@ export class AasConnectionDoc extends Document {
     enum: AasConnectionDocSchemaVersion,
   }) // Track schema version
   _schemaVersion: AasConnectionDocSchemaVersion;
+
+  @Prop({ required: true })
+  createdByUserId: string;
+
+  @Prop({ required: true })
+  ownedByOrganizationId: string;
+
   @Prop({ type: String, required: true })
   dataModelId: string;
 

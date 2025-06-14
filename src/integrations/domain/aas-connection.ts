@@ -5,23 +5,40 @@ import {
   AssetAdministrationShell,
   AssetAdministrationShellType,
 } from './asset-administration-shell';
+import { Model } from '../../models/domain/model';
+import { ValueError } from '../../exceptions/domain.errors';
 
 export class AasConnection {
   private constructor(
     public readonly id: string,
-    public readonly dataModelId: string,
+    public ownedByOrganizationId: string,
+    public createdByUserId: string,
+    private _dataModelId: string,
     public readonly aasType: AssetAdministrationShellType,
-    public readonly modelId: string | null,
-    public readonly fieldAssignments: AasFieldAssignment[],
+    private _modelId: string | null,
+    private _fieldAssignments: AasFieldAssignment[],
   ) {}
+  get fieldAssignments() {
+    return this._fieldAssignments;
+  }
+  get dataModelId() {
+    return this._dataModelId;
+  }
+  get modelId() {
+    return this._modelId;
+  }
 
   static create(data: {
+    organizationId: string;
+    userId: string;
     dataModelId: string;
     aasType: AssetAdministrationShellType;
     modelId: string | null;
   }) {
     return new AasConnection(
       randomUUID(),
+      data.organizationId,
+      data.userId,
       data.dataModelId,
       data.aasType,
       data.modelId,
@@ -31,6 +48,8 @@ export class AasConnection {
 
   static loadFromDb(data: {
     id: string;
+    organizationId: string;
+    userId: string;
     dataModelId: string;
     aasType: AssetAdministrationShellType;
     modelId: string | null;
@@ -38,11 +57,17 @@ export class AasConnection {
   }) {
     return new AasConnection(
       data.id,
+      data.organizationId,
+      data.userId,
       data.dataModelId,
       data.aasType,
       data.modelId,
       data.fieldMappings,
     );
+  }
+
+  isOwnedBy(organizationId: string) {
+    return this.ownedByOrganizationId === organizationId;
   }
 
   generateDataValues(assetAdministrationShell: AssetAdministrationShell) {
@@ -73,6 +98,20 @@ export class AasConnection {
       default:
         return property.value;
     }
+  }
+
+  assignModel(model: Model) {
+    this._modelId = model.id;
+    if (!model.productDataModelId) {
+      throw new ValueError(
+        `Model ${model.id} does not have a product data model assigned`,
+      );
+    }
+    this._dataModelId = model.productDataModelId;
+  }
+
+  replaceFieldAssignments(fieldAssignments: AasFieldAssignment[]) {
+    this._fieldAssignments = fieldAssignments;
   }
 
   addFieldAssignment(fieldAssignment: AasFieldAssignment) {
