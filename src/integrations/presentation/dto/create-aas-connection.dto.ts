@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { AssetAdministrationShellType } from '../../domain/asset-administration-shell';
 import { AasFieldAssignmentSchema } from './aas-connection.dto';
 
-export const CreateAasMappingSchema = z.object({
+export const CreateAasConnectionSchema = z.object({
   name: z.string(),
   aasType: z.enum(AssetAdministrationShellType),
   dataModelId: z.uuid(),
@@ -10,4 +10,4 @@ export const CreateAasMappingSchema = z.object({
   fieldAssignments: AasFieldAssignmentSchema.array(),
 });
 
-export type CreateAasConnectionDto = z.infer<typeof CreateAasMappingSchema>;
+export type CreateAasConnectionDto = z.infer<typeof CreateAasConnectionSchema>;

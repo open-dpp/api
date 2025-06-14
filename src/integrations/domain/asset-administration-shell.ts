@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { flatMap, get } from 'lodash';
 
 export enum AssetAdministrationShellType {
+  Truck = 'Truck',
   Semitrailer_Truck = 'Semitrailer_Truck',
 }
 

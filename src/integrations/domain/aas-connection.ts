@@ -71,6 +71,10 @@ export class AasConnection {
     );
   }
 
+  rename(name: string) {
+    this.name = name;
+  }
+
   isOwnedBy(organizationId: string) {
     return this.ownedByOrganizationId === organizationId;
   }

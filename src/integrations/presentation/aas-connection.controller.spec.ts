@@ -229,6 +229,60 @@ describe('AasConnectionController', () => {
     expect(response.body.fieldAssignments).toEqual(body.fieldAssignments);
   });
 
+  it(`/UPDATE connection`, async () => {
+    const aasConnection = AasConnection.create({
+      name: 'Connection Name',
+      organizationId,
+      userId: authContext.user.id,
+      dataModelId: randomUUID(),
+      aasType: AssetAdministrationShellType.Semitrailer_Truck,
+      modelId: randomUUID(),
+    });
+    await aasConnectionService.save(aasConnection);
+
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    const model = Model.create({
+      organizationId,
+      userId: authContext.user.id,
+      name: 'Laptop',
+    });
+    model.assignProductDataModel(productDataModel);
+    await modelsService.save(model);
+
+    const body = {
+      name: 'Other Name',
+      modelId: model.id,
+      fieldAssignments: [
+        {
+          sectionId: sectionId1,
+          dataFieldId: dataFieldId1,
+          idShortParent: 'ProductCarbonFootprint_A1A3',
+          idShort: 'PCFCO2eq',
+        },
+      ],
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${organizationId}/integration/aas/connections/${aasConnection.id}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(200);
+    expect(response.body.name).toEqual('Other Name');
+    expect(response.body.modelId).toEqual(model.id);
+    expect(response.body.dataModelId).toEqual(productDataModel.id);
+    expect(response.body.fieldAssignments).toEqual(body.fieldAssignments);
+  });
+
   it(`/GET all properties of aas`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(false);
 

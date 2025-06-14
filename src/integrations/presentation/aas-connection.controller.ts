@@ -5,6 +5,7 @@ import {
   Get,
   Headers,
   Param,
+  Patch,
   Post,
   Request,
 } from '@nestjs/common';
@@ -26,9 +27,13 @@ import {
 import { AssetAdministrationShellFactory } from '../domain/asset-administration-shell-factory';
 import {
   CreateAasConnectionDto,
-  CreateAasMappingSchema,
+  CreateAasConnectionSchema,
 } from './dto/create-aas-connection.dto';
 import { AasConnection } from '../domain/aas-connection';
+import {
+  UpdateAasConnectionDto,
+  UpdateAasConnectionSchema,
+} from './dto/update-aas-connection.dto';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
@@ -83,12 +88,12 @@ export class AasConnectionController {
   }
 
   @Post('/connections')
-  async createMapping(
+  async createConnection(
     @Param('orgaId') organizationId: string,
     @Body() body: CreateAasConnectionDto,
     @Request() req: AuthRequest,
   ) {
-    const createAasMapping = CreateAasMappingSchema.parse(body);
+    const createAasMapping = CreateAasConnectionSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -110,6 +115,36 @@ export class AasConnectionController {
     for (const fieldMapping of createAasMapping.fieldAssignments) {
       aasConnection.addFieldAssignment(fieldMapping);
     }
+    await this.aasConnectionService.save(aasConnection);
+    return aasConnectionToDto(aasConnection);
+  }
+
+  @Patch('/connections/:connectionId')
+  async updateConnection(
+    @Param('orgaId') organizationId: string,
+    @Param('connectionId') connectionId: string,
+    @Body() body: UpdateAasConnectionDto,
+    @Request() req: AuthRequest,
+  ) {
+    const updateAasConnection = UpdateAasConnectionSchema.parse(body);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const model = await this.modelsService.findOneOrFail(
+      updateAasConnection.modelId,
+    );
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    const aasConnection =
+      await this.aasConnectionService.findById(connectionId);
+    if (!aasConnection.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    aasConnection.rename(updateAasConnection.name);
+    aasConnection.assignModel(model);
+    aasConnection.replaceFieldAssignments(updateAasConnection.fieldAssignments);
     await this.aasConnectionService.save(aasConnection);
     return aasConnectionToDto(aasConnection);
   }
