@@ -3,6 +3,7 @@ import { AssetAdministrationShellType } from '../../domain/asset-administration-
 import { AasFieldAssignmentSchema } from './aas-connection.dto';
 
 export const CreateAasMappingSchema = z.object({
+  name: z.string(),
   aasType: z.enum(AssetAdministrationShellType),
   dataModelId: z.uuid(),
   modelId: z.uuid().nullable(),

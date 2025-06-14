@@ -33,6 +33,9 @@ export class AasConnectionDoc extends Document {
   _schemaVersion: AasConnectionDocSchemaVersion;
 
   @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
   createdByUserId: string;
 
   @Prop({ required: true })
@@ -52,3 +55,5 @@ export class AasConnectionDoc extends Document {
 }
 export const AasConnectionSchema =
   SchemaFactory.createForClass(AasConnectionDoc);
+
+AasConnectionSchema.index({ ownedByOrganizationId: 1 });

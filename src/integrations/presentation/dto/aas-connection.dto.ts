@@ -10,6 +10,7 @@ export const AasFieldAssignmentSchema = z.object({
 
 export const AasConnectionSchema = z.object({
   id: z.uuid(),
+  name: z.string(),
   dataModelId: z.uuid(),
   aasType: z.enum(AssetAdministrationShellType),
   modelId: z.uuid().nullable(),
@@ -23,6 +24,7 @@ export function aasConnectionToDto(
 ): AasConnectionDto {
   return AasConnectionSchema.parse({
     id: aasMapping.id,
+    name: aasMapping.name,
     dataModelId: aasMapping.dataModelId,
     aasType: aasMapping.aasType,
     modelId: aasMapping.modelId,

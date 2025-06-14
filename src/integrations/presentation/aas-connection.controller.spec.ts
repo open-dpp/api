@@ -148,6 +148,7 @@ describe('AasConnectionController', () => {
     });
     model.assignProductDataModel(productDataModel);
     const aasMapping = AasConnection.create({
+      name: 'Connection Name',
       organizationId,
       userId: authContext.user.id,
       dataModelId: productDataModel.id,
@@ -193,6 +194,7 @@ describe('AasConnectionController', () => {
     await modelsService.save(model);
 
     const body = {
+      name: 'Connection Name',
       dataModelId: productDataModel.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
@@ -222,6 +224,7 @@ describe('AasConnectionController', () => {
     expect(response.body.aasType).toEqual(
       AssetAdministrationShellType.Semitrailer_Truck,
     );
+    expect(response.body.name).toEqual('Connection Name');
     expect(response.body.modelId).toEqual(model.id);
     expect(response.body.fieldAssignments).toEqual(body.fieldAssignments);
   });

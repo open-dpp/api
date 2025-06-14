@@ -31,8 +31,10 @@ describe('AasMapping', () => {
   it('should create aas mapping and add field mappings', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
+    const name = 'Connection Name';
 
     const aasConnection = AasConnection.create({
+      name,
       organizationId,
       userId,
       dataModelId,
@@ -40,6 +42,7 @@ describe('AasMapping', () => {
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
     expect(aasConnection.id).toEqual(expect.any(String));
+    expect(aasConnection.name).toEqual(name);
     expect(aasConnection.isOwnedBy(organizationId)).toBeTruthy();
     expect(aasConnection.createdByUserId).toEqual(userId);
     expect(aasConnection.dataModelId).toEqual(dataModelId);
@@ -59,6 +62,7 @@ describe('AasMapping', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
     const aasConnection = AasConnection.create({
+      name: 'Connection Name',
       organizationId,
       userId,
       dataModelId,
@@ -90,6 +94,7 @@ describe('AasMapping', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
     const aasConnection = AasConnection.create({
+      name: 'Connection Name',
       organizationId,
       userId,
       dataModelId,
@@ -126,6 +131,7 @@ describe('AasMapping', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
     const aasMapping = AasConnection.create({
+      name: 'Connection Name',
       organizationId,
       userId,
       dataModelId,

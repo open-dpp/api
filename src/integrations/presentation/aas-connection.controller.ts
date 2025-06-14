@@ -100,6 +100,7 @@ export class AasConnectionController {
       createAasMapping.dataModelId,
     );
     const aasConnection = AasConnection.create({
+      name: createAasMapping.name,
       organizationId,
       userId: req.authContext.user.id,
       dataModelId: productDataModel.id,

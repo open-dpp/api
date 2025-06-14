@@ -23,6 +23,7 @@ export class AasConnectionService {
       modelId: aasConnectionDoc.modelId,
       organizationId: aasConnectionDoc.ownedByOrganizationId,
       userId: aasConnectionDoc.createdByUserId,
+      name: aasConnectionDoc.name,
       fieldMappings: aasConnectionDoc.fieldMappings.map((fieldMapping) =>
         AasFieldAssignment.create({
           sectionId: fieldMapping.sectionId,
@@ -39,6 +40,7 @@ export class AasConnectionService {
       { _id: aasConnection.id },
       {
         _schemaVersion: AasConnectionDocSchemaVersion.v1_0_0,
+        name: aasConnection.name,
         dataModelId: aasConnection.dataModelId,
         aasType: aasConnection.aasType,
         modelId: aasConnection.modelId,

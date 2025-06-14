@@ -11,6 +11,7 @@ import { ValueError } from '../../exceptions/domain.errors';
 export class AasConnection {
   private constructor(
     public readonly id: string,
+    public name: string,
     public ownedByOrganizationId: string,
     public createdByUserId: string,
     private _dataModelId: string,
@@ -29,6 +30,7 @@ export class AasConnection {
   }
 
   static create(data: {
+    name: string;
     organizationId: string;
     userId: string;
     dataModelId: string;
@@ -37,6 +39,7 @@ export class AasConnection {
   }) {
     return new AasConnection(
       randomUUID(),
+      data.name,
       data.organizationId,
       data.userId,
       data.dataModelId,
@@ -48,6 +51,7 @@ export class AasConnection {
 
   static loadFromDb(data: {
     id: string;
+    name: string;
     organizationId: string;
     userId: string;
     dataModelId: string;
@@ -57,6 +61,7 @@ export class AasConnection {
   }) {
     return new AasConnection(
       data.id,
+      data.name,
       data.organizationId,
       data.userId,
       data.dataModelId,

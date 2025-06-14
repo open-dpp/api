@@ -55,7 +55,9 @@ describe('AasMappingService', () => {
         dataFieldId: 'internalField2',
       },
     ];
+    const name = 'Connection Name';
     const aasMapping = AasConnection.create({
+      name,
       organizationId,
       userId,
       dataModelId,
@@ -68,6 +70,7 @@ describe('AasMappingService', () => {
     const { id } = await aasMappingService.save(aasMapping);
     const foundAasMapping = await aasMappingService.findById(id);
     expect(foundAasMapping.dataModelId).toEqual(dataModelId);
+    expect(foundAasMapping.name).toEqual(name);
     expect(foundAasMapping.modelId).toEqual(modelId);
     expect(foundAasMapping.aasType).toEqual(
       AssetAdministrationShellType.Semitrailer_Truck,
