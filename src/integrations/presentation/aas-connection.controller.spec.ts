@@ -25,7 +25,7 @@ import { IntegrationModule } from '../integration.module';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
 import { AasFieldAssignment, AasConnection } from '../domain/aas-connection';
 import { json } from 'express';
-import { semitrailerAas } from '../domain/semitrailer-aas';
+import { semitrailerTruckAas } from '../domain/semitrailer-truck-aas';
 import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
 import { Model } from '../../models/domain/model';
 import { ModelsService } from '../../models/infrastructure/models.service';
@@ -170,7 +170,7 @@ describe('AasConnectionController', () => {
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
       .set('API_TOKEN', configService.get('API_TOKEN'))
-      .send(semitrailerAas);
+      .send(semitrailerTruckAas);
     expect(response.status).toEqual(201);
     expect(response.body.dataValues).toEqual([
       {
@@ -298,14 +298,14 @@ describe('AasConnectionController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send(semitrailerAas);
+      .send(semitrailerTruckAas);
     expect(response.status).toEqual(200);
     expect(response.body).toContainEqual({
       parentIdShort: 'Nameplate',
       property: {
         idShort: 'URIOfTheProduct',
         modelType: 'Property',
-        value: '0112/2///61987#TR590#700',
+        value: '0112/2///61987#TR590#900',
         valueType: 'xs:string',
       },
     });
