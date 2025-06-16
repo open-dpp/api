@@ -5,21 +5,21 @@ export const semitrailerAas = {
       assetInformation: {
         assetKind: 'Instance',
         assetType: 'product',
-        globalAssetId: 'Semitrailer_Truck_LA-80213092-01',
+        globalAssetId: 'Semitrailer_-10204004-0010-01',
       },
       submodels: [
         {
           keys: [
             {
               type: 'Submodel',
-              value: 'Semitrailer_Truck_LA-80213092-01_Nameplate',
+              value: 'Semitrailer_-10204004-0010-01_Nameplate',
             },
           ],
           referredSemanticId: {
             keys: [
               {
                 type: 'GlobalReference',
-                value: 'No_Reference',
+                value: 'Semitrailer_-10204004-0010-01_Nameplate',
               },
             ],
           },
@@ -29,14 +29,14 @@ export const semitrailerAas = {
           keys: [
             {
               type: 'Submodel',
-              value: 'Semitrailer_Truck_LA-80213092-01_CarbonFootprint',
+              value: 'Semitrailer_-10204004-0010-01_CarbonFootprint',
             },
           ],
           referredSemanticId: {
             keys: [
               {
                 type: 'GlobalReference',
-                value: 'No_Reference',
+                value: 'Semitrailer_-10204004-0010-01_CarbonFootprint',
               },
             ],
             type: 'ExternalReference',
@@ -55,14 +55,14 @@ export const semitrailerAas = {
           value: 'true',
         },
       ],
-      id: 'Semitrailer_Truck_LA-80213092-01',
+      id: 'Semitrailer_-10204004-0010-01',
       displayName: [
         {
-          language: 'EN',
-          text: 'de.proalpha.product.semitrailer_truck',
+          language: 'DE',
+          text: 'de.proalpha.product.semitrailer',
         },
       ],
-      idShort: 'Semitrailer_Truck',
+      idShort: 'Semitrailer',
     },
   ],
   submodels: [
@@ -73,38 +73,41 @@ export const semitrailerAas = {
         keys: [
           {
             type: 'GlobalReference',
-            value: 'https://admin-shell.io/idta/nameplate/3/0/Nameplate',
+            value: 'https:\/\/admin-shell.io\/idta\/nameplate\/3\/0\/Nameplate',
           },
         ],
         type: 'ExternalReference',
       },
       administration: {
         revision: '0',
-        templateID: 'https://admin-shell.io/IDTA',
+        templateID: 'https:\/\/admin-shell.io\/IDTA 02006-3-0',
         version: '3',
       },
-      id: 'Semitrailer_Truck_LA-80213092-01_Nameplate',
+      id: 'Semitrailer_-10204004-0010-01_Nameplate',
       description: [
         {
-          language: 'EN',
-          text: 'Information about the digital nameplate of the product',
+          language: 'DE',
+          text: 'Informationen über das Digitale Typenschild des Produktes',
         },
       ],
       idShort: 'Nameplate',
       submodelElements: [
         {
           modelType: 'Property',
-          value: '0112/2///61987#TR590#700',
+          value: '0112\/2\/\/\/61987#TR590#800',
+          valueType: 'xs:string',
           idShort: 'URIOfTheProduct',
         },
         {
           modelType: 'Property',
           value: 'Proalpha GmbH',
+          valueType: 'xs:string',
           idShort: 'ManufacturerName',
         },
         {
           modelType: 'Property',
-          value: 'Semitrailer_Truck',
+          value: 'Semitrailer',
+          valueType: 'xs:string',
           idShort: 'ManufacturerProductDesignation',
         },
         {
@@ -114,121 +117,145 @@ export const semitrailerAas = {
             {
               modelType: 'Property',
               value: 'Product Developer',
+              valueType: 'xs:string',
               idShort: 'RoleOfContactPerson',
             },
             {
               modelType: 'Property',
               value: 'Dr.',
+              valueType: 'xs:string',
               idShort: 'Title',
             },
             {
               modelType: 'Property',
               value: 'DE',
+              valueType: 'xs:string',
               idShort: 'NationalCode',
             },
             {
               modelType: 'Property',
               value: 'DE',
+              valueType: 'xs:string',
               idShort: 'Language',
             },
             {
               modelType: 'Property',
               value: 'GMT+2',
+              valueType: 'xs:string',
               idShort: 'TimeZone',
             },
             {
               modelType: 'Property',
               value: 'Weilerbach',
+              valueType: 'xs:string',
               idShort: 'CityTown',
             },
             {
               modelType: 'Property',
               value: 'Proalpha GmbH',
+              valueType: 'xs:string',
               idShort: 'Company',
             },
             {
               modelType: 'Property',
               value: 'R&D',
+              valueType: 'xs:string',
               idShort: 'Department',
             },
             {
               modelType: 'Property',
               value: 'Auf dem Immel 8',
+              valueType: 'xs:string',
               idShort: 'Street',
             },
             {
               modelType: 'Property',
               value: '67685',
+              valueType: 'xs:string',
               idShort: 'Zipcode',
             },
             {
               modelType: 'Property',
               value: '1',
+              valueType: 'xs:string',
               idShort: 'POBox',
             },
             {
               modelType: 'Property',
               value: '67685',
+              valueType: 'xs:string',
               idShort: 'ZipCodeOfPOBox',
             },
             {
               modelType: 'Property',
               value: 'Rheinland-Pfalz',
+              valueType: 'xs:string',
               idShort: 'StateCounty',
             },
             {
               modelType: 'Property',
               value: '',
+              valueType: 'xs:string',
               idShort: 'NameOfContact',
             },
             {
               modelType: 'Property',
               value: '',
+              valueType: 'xs:string',
               idShort: 'FirstName',
             },
             {
               modelType: 'Property',
               value: 'Vehicle',
+              valueType: 'xs:string',
               idShort: 'ManufacturerProductRoot',
             },
             {
               modelType: 'Property',
               value: 'Commercial Vehicle',
+              valueType: 'xs:string',
               idShort: 'ManufacturerProductFamily',
             },
             {
               modelType: 'Property',
-              value: 'Truck',
+              value: 'Semitrailer',
+              valueType: 'xs:string',
               idShort: 'ManufacturerProductType',
             },
             {
               modelType: 'Property',
               value: '2025',
+              valueType: 'xs:string',
               idShort: 'YearOfConstruction',
             },
             {
               modelType: 'Property',
               value: '2025-06-10',
+              valueType: 'xs:date',
               idShort: 'DateOfManufacture',
             },
             {
               modelType: 'Property',
-              value: 'HW2025-G123',
+              value: 'HW2025-G123-01',
+              valueType: 'xs:string',
               idShort: 'HardwareVersion',
             },
             {
               modelType: 'Property',
-              value: 'SW2025-G123',
+              value: 'SW2025-G123-01',
+              valueType: 'xs:string',
               idShort: 'SoftwareVersion',
             },
             {
               modelType: 'Property',
               value: 'DE',
+              valueType: 'xs:string',
               idShort: 'CountryOfOrigin',
             },
             {
               modelType: 'Property',
               value: '',
+              valueType: 'xs:string',
               idShort: 'CompanyLogo',
             },
           ],
@@ -243,7 +270,7 @@ export const semitrailerAas = {
           {
             type: 'GlobalReference',
             value:
-              'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9',
+              'https:\/\/admin-shell.io\/idta\/CarbonFootprint\/CarbonFootprint\/0\/9',
           },
         ],
         type: 'ModelReference',
@@ -251,14 +278,14 @@ export const semitrailerAas = {
       administration: {
         revision: '9',
         templateID:
-          'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9',
+          'https:\/\/admin-shell.io\/idta\/CarbonFootprint\/CarbonFootprint\/0\/9',
         version: '0',
       },
-      id: 'Semitrailer_Truck_LA-80213092-01_CarbonFootprint',
+      id: 'Semitrailer_-10204004-0010-01_CarbonFootprint',
       description: [
         {
-          language: 'EN',
-          text: 'Information about the carbon footprint of the product',
+          language: 'DE',
+          text: 'Informationen über den CO2-Fußabdruck des Produktes',
         },
       ],
       idShort: 'CarbonFootprint',
@@ -270,31 +297,37 @@ export const semitrailerAas = {
             {
               modelType: 'Property',
               value: 'GHG',
+              valueType: 'xs:string',
               idShort: 'PCFCalculationMethod',
             },
             {
               modelType: 'Property',
               value: '2.6300',
+              valueType: 'xs:double',
               idShort: 'PCFCO2eq',
             },
             {
               modelType: 'Property',
               value: 'Piece',
+              valueType: 'xs:string',
               idShort: 'PCFReferenceValueForCalculation',
             },
             {
               modelType: 'Property',
-              value: '1',
+              value: '1.0',
+              valueType: 'xs:double',
               idShort: 'PCFQuantityOfMeasureForCalculation',
             },
             {
               modelType: 'Property',
               value: 'A1-A3',
+              valueType: 'xs:string',
               idShort: 'PCFLifeCyclePhase',
             },
             {
               modelType: 'Property',
               value: '2025-06-11',
+              valueType: 'xs:date',
               idShort: 'PublicationDate',
             },
             {
@@ -304,36 +337,43 @@ export const semitrailerAas = {
                 {
                   modelType: 'Property',
                   value: 'Auf dem Immel',
+                  valueType: 'xs:string',
                   idShort: 'Street',
                 },
                 {
                   modelType: 'Property',
                   value: '8',
+                  valueType: 'xs:string',
                   idShort: 'HouseNumber',
                 },
                 {
                   modelType: 'Property',
                   value: '67685',
+                  valueType: 'xs:string',
                   idShort: 'ZipCode',
                 },
                 {
                   modelType: 'Property',
                   value: 'Weilerbach',
+                  valueType: 'xs:string',
                   idShort: 'CityTown',
                 },
                 {
                   modelType: 'Property',
                   value: 'Germany',
+                  valueType: 'xs:string',
                   idShort: 'Country',
                 },
                 {
                   modelType: 'Property',
                   value: '49.478269',
+                  valueType: 'xs:string',
                   idShort: 'Latitude',
                 },
                 {
                   modelType: 'Property',
                   value: '7.608461',
+                  valueType: 'xs:string',
                   idShort: 'Latitude',
                 },
               ],
@@ -341,6 +381,7 @@ export const semitrailerAas = {
             {
               modelType: 'Property',
               value: '',
+              valueType: 'xs:string',
               idShort: 'PCFFactSheet',
             },
           ],

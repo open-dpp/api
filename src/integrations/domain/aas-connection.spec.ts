@@ -1,11 +1,11 @@
-import { AasFieldAssignment, AasConnection } from './aas-connection';
+import { AasConnection, AasFieldAssignment } from './aas-connection';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
 import {
   AssetAdministrationShell,
   AssetAdministrationShellType,
 } from './asset-administration-shell';
-import { semitrailerAas } from './semitrailer-aas';
+import { semitrailerTruckAas } from './semitrailer-truck-aas';
 import { Model } from '../../models/domain/model';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { User } from '../../users/domain/user';
@@ -130,7 +130,7 @@ describe('AasMapping', () => {
   it('should generate data values for semi trailer', () => {
     const dataModelId = 'dataModelId';
     const modelId = 'modelId';
-    const aasMapping = AasConnection.create({
+    const aasConnection = AasConnection.create({
       name: 'Connection Name',
       organizationId,
       userId,
@@ -138,16 +138,16 @@ describe('AasMapping', () => {
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
-    const fieldMapping = AasFieldAssignment.create({
+    const fieldAssignment = AasFieldAssignment.create({
       dataFieldId: 'internalField',
       sectionId: 'internalSectionId',
       idShortParent: 'ProductCarbonFootprint_A1A3',
       idShort: 'PCFCO2eq',
     });
-    aasMapping.addFieldAssignment(fieldMapping);
+    aasConnection.addFieldAssignment(fieldAssignment);
 
-    const dataValues = aasMapping.generateDataValues(
-      AssetAdministrationShell.create({ content: semitrailerAas }),
+    const dataValues = aasConnection.generateDataValues(
+      AssetAdministrationShell.create({ content: semitrailerTruckAas }),
     );
     expect(dataValues).toEqual(
       ignoreIds([

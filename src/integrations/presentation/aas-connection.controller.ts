@@ -132,19 +132,24 @@ export class AasConnectionController {
       organizationId,
       req.authContext,
     );
-    const model = await this.modelsService.findOneOrFail(
-      updateAasConnection.modelId,
-    );
-    if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
+
     const aasConnection =
       await this.aasConnectionService.findById(connectionId);
     if (!aasConnection.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
     aasConnection.rename(updateAasConnection.name);
-    aasConnection.assignModel(model);
+
+    if (updateAasConnection.modelId !== null) {
+      const model = await this.modelsService.findOneOrFail(
+        updateAasConnection.modelId,
+      );
+      if (!model.isOwnedBy(organizationId)) {
+        throw new ForbiddenException();
+      }
+
+      aasConnection.assignModel(model);
+    }
     aasConnection.replaceFieldAssignments(updateAasConnection.fieldAssignments);
     await this.aasConnectionService.save(aasConnection);
     return aasConnectionToDto(aasConnection);
@@ -193,6 +198,6 @@ export class AasConnectionController {
       req.authContext,
     );
     const assetAdministrationShell = createAasForType(aasType);
-    return assetAdministrationShell.properties;
+    return assetAdministrationShell.propertiesWithParent;
   }
 }

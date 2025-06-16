@@ -80,7 +80,7 @@ export class AasConnection {
   }
 
   generateDataValues(assetAdministrationShell: AssetAdministrationShell) {
-    return assetAdministrationShell.properties
+    return assetAdministrationShell.propertiesWithParent
       .map(({ parentIdShort, property }) => {
         const field = this.fieldAssignments.find(
           (fieldMapping) =>
