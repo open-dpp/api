@@ -12,6 +12,7 @@ import { KeycloakSyncOnStartupService } from '../keycloak-sync-on-startup/keyclo
     forwardRef(() => OrganizationsModule),
     KeycloakResourcesModule,
   ],
+  controllers: [],
   providers: [UsersService, KeycloakSyncOnStartupService],
   exports: [UsersService],
 })
