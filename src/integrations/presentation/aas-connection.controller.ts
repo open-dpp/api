@@ -23,8 +23,8 @@ import { PermissionsService } from '../../permissions/permissions.service';
 import {
   AssetAdministrationShell,
   AssetAdministrationShellType,
+  createAasForType,
 } from '../domain/asset-administration-shell';
-import { AssetAdministrationShellFactory } from '../domain/asset-administration-shell-factory';
 import {
   CreateAasConnectionDto,
   CreateAasConnectionSchema,
@@ -192,8 +192,7 @@ export class AasConnectionController {
       organizationId,
       req.authContext,
     );
-    const assetAdministrationShell =
-      AssetAdministrationShellFactory.createAasForType(aasType);
+    const assetAdministrationShell = createAasForType(aasType);
     return assetAdministrationShell.properties;
   }
 }

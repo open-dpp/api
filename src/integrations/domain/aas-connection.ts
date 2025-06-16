@@ -57,7 +57,7 @@ export class AasConnection {
     dataModelId: string;
     aasType: AssetAdministrationShellType;
     modelId: string | null;
-    fieldMappings: AasFieldAssignment[];
+    fieldAssignments: AasFieldAssignment[];
   }) {
     return new AasConnection(
       data.id,
@@ -67,7 +67,7 @@ export class AasConnection {
       data.dataModelId,
       data.aasType,
       data.modelId,
-      data.fieldMappings,
+      data.fieldAssignments,
     );
   }
 

@@ -16,11 +16,17 @@ export async function bootstrap() {
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
   );
+  app.use((req, res, next) =>
+    req.path.startsWith('/organizations/') && req.path.includes('/integration')
+      ? next()
+      : json({ limit: '100kb' })(req, res, next),
+  );
+
+  // Dedicated large-payload parser
   app.use(
     '/organizations/:organizationId/integration',
     json({ limit: '50mb' }),
   );
-  app.use(json({ limit: '100kb' }));
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: '*',

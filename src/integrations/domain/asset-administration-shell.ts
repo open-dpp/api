@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { flatMap, get } from 'lodash';
+import { semitrailerAas } from './semitrailer-aas';
 
 export enum AssetAdministrationShellType {
   Truck = 'Truck',
@@ -49,4 +50,14 @@ export class AssetAdministrationShell {
       return isProperty ? [{ parentIdShort, property: el }, ...nested] : nested;
     });
   }
+}
+
+const AssetAdministrationShellData = {
+  [AssetAdministrationShellType.Semitrailer_Truck]: semitrailerAas,
+};
+
+export function createAasForType(aasType: AssetAdministrationShellType) {
+  return AssetAdministrationShell.create({
+    content: AssetAdministrationShellData[aasType],
+  });
 }

@@ -24,7 +24,7 @@ export class AasConnectionService {
       organizationId: aasConnectionDoc.ownedByOrganizationId,
       userId: aasConnectionDoc.createdByUserId,
       name: aasConnectionDoc.name,
-      fieldMappings: aasConnectionDoc.fieldMappings.map((fieldMapping) =>
+      fieldAssignments: aasConnectionDoc.fieldAssignments.map((fieldMapping) =>
         AasFieldAssignment.create({
           sectionId: fieldMapping.sectionId,
           dataFieldId: fieldMapping.dataFieldId,
@@ -46,12 +46,14 @@ export class AasConnectionService {
         modelId: aasConnection.modelId,
         ownedByOrganizationId: aasConnection.ownedByOrganizationId,
         createdByUserId: aasConnection.createdByUserId,
-        fieldMappings: aasConnection.fieldAssignments.map((fieldMapping) => ({
-          dataFieldId: fieldMapping.dataFieldId,
-          sectionId: fieldMapping.sectionId,
-          idShortParent: fieldMapping.idShortParent,
-          idShort: fieldMapping.idShort,
-        })),
+        fieldAssignments: aasConnection.fieldAssignments.map(
+          (fieldMapping) => ({
+            dataFieldId: fieldMapping.dataFieldId,
+            sectionId: fieldMapping.sectionId,
+            idShortParent: fieldMapping.idShortParent,
+            idShort: fieldMapping.idShort,
+          }),
+        ),
       },
       {
         new: true, // Return the updated document

@@ -8,7 +8,7 @@ export class AasFieldAssignmentDoc {
   sectionId: string;
   @Prop({ required: true })
   dataFieldId: string;
-  @Prop({ requiredO: true })
+  @Prop({ required: true })
   idShortParent: string;
   @Prop({ required: true })
   idShort: string;
@@ -51,7 +51,7 @@ export class AasConnectionDoc extends Document {
   modelId: string | null;
 
   @Prop({ type: [AasFieldMappingSchema], default: [] })
-  fieldMappings: AasFieldAssignmentDoc[];
+  fieldAssignments: AasFieldAssignmentDoc[];
 }
 export const AasConnectionSchema =
   SchemaFactory.createForClass(AasConnectionDoc);
