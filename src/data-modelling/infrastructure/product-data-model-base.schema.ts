@@ -73,3 +73,7 @@ export abstract class ProductDataModelBaseDoc extends Document {
   @Prop({ required: true })
   ownedByOrganizationId: string;
 }
+
+export function createCommonIndexesForProductDataModel(schema: MongooseSchema) {
+  schema.index({ ownedByOrganizationId: 1 });
+}
