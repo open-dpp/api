@@ -7,6 +7,7 @@ import { ItemsService } from '../../items/infrastructure/items.service';
 import { Model } from '../../models/domain/model';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
 import { Item } from '../../items/domain/item';
+import { uniqueProductIdentifierToDto } from './dto/unique-product-identifier-dto.schema';
 
 @Controller('unique-product-identifiers')
 export class UniqueProductIdentifierController {
@@ -19,7 +20,7 @@ export class UniqueProductIdentifierController {
 
   @Public()
   @Get(':id/view')
-  async findOne(@Param('id') id: string) {
+  async buildView(@Param('id') id: string) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOne(id);
     let model: Model;
@@ -44,5 +45,13 @@ export class UniqueProductIdentifierController {
       productDataModel: productDataModel,
       item,
     }).build();
+  }
+
+  @Public()
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const uniqueProductIdentifier =
+      await this.uniqueProductIdentifierService.findOne(id);
+    return uniqueProductIdentifierToDto(uniqueProductIdentifier);
   }
 }

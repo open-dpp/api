@@ -291,10 +291,8 @@ describe('ItemsService', () => {
     } as ItemDoc;
 
     // Create mock UPIs
-    const upi1 = new UniqueProductIdentifier();
-    upi1.linkTo(itemId);
-    const upi2 = new UniqueProductIdentifier();
-    upi2.linkTo(itemId);
+    const upi1 = UniqueProductIdentifier.create({ referenceId: itemId });
+    const upi2 = UniqueProductIdentifier.create({ referenceId: itemId });
     const upis = [upi1, upi2];
 
     // Convert to domain object

@@ -60,6 +60,10 @@ describe('UniqueProductIdentifierController', () => {
 
   let productDataModelService: ProductDataModelService;
   const reflector: Reflector = new Reflector();
+  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
+    new Map(),
+    reflector,
+  );
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), `${randomUUID()}@example.com`);
   const organizationId = randomUUID();
@@ -80,10 +84,7 @@ describe('UniqueProductIdentifierController', () => {
       providers: [
         {
           provide: APP_GUARD,
-          useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.user]]),
-            reflector,
-          ),
+          useValue: keycloakAuthTestingGuard,
         },
       ],
     }).compile();
@@ -815,6 +816,25 @@ describe('UniqueProductIdentifierController', () => {
           children: expectedNode3.children.slice(0, 1),
         },
       ],
+    });
+  });
+
+  it(`/GET unique product identifier`, async () => {
+    const productDataModel = ProductDataModel.fromPlain({ ...laptopModel });
+    await productDataModelService.save(productDataModel);
+    const item = Item.create({ organizationId, userId: authContext.user.id });
+    const { uuid } = item.createUniqueProductIdentifier('externalId');
+    await itemsService.save(item);
+
+    jest.spyOn(reflector, 'get').mockReturnValue(true);
+    const response = await request(app.getHttpServer()).get(
+      `/unique-product-identifiers/${uuid}`,
+    );
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      uuid: uuid,
+      referenceId: item.id,
     });
   });
 

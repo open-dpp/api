@@ -90,9 +90,11 @@ export abstract class ProductPassport {
     );
   }
 
-  public createUniqueProductIdentifier() {
-    const uniqueProductIdentifier = new UniqueProductIdentifier();
-    uniqueProductIdentifier.linkTo(this.id);
+  public createUniqueProductIdentifier(externalUUID?: string) {
+    const uniqueProductIdentifier = UniqueProductIdentifier.create({
+      externalUUID,
+      referenceId: this.id,
+    });
     this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
     return uniqueProductIdentifier;
   }

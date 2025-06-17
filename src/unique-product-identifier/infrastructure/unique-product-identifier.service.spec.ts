@@ -35,13 +35,16 @@ describe('UniqueProductIdentifierService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  it('should create unique product identifier', async () => {
-    const referencedId = uuid4();
-    const uniqueProductIdentifier = new UniqueProductIdentifier();
-    uniqueProductIdentifier.linkTo(referencedId);
+  it('should create unique product identifier with external id', async () => {
+    const referenceId = uuid4();
+    const externalUUID = uuid4();
+    const uniqueProductIdentifier = UniqueProductIdentifier.create({
+      referenceId,
+      externalUUID,
+    });
     const { uuid } = await service.save(uniqueProductIdentifier);
     const found = await service.findOne(uuid);
-    expect(found.referenceId).toEqual(referencedId);
+    expect(found.referenceId).toEqual(referenceId);
   });
 
   it('fails if requested unique product identifier model could not be found', async () => {
@@ -51,14 +54,16 @@ describe('UniqueProductIdentifierService', () => {
   });
 
   it('should find all unique product identifiers with given referenced id', async () => {
-    const referencedId = uuid4();
-    const uniqueProductIdentifier1 = new UniqueProductIdentifier();
-    uniqueProductIdentifier1.linkTo(referencedId);
+    const referenceId = uuid4();
+    const uniqueProductIdentifier1 = UniqueProductIdentifier.create({
+      referenceId,
+    });
     await service.save(uniqueProductIdentifier1);
-    const uniqueProductIdentifier2 = new UniqueProductIdentifier();
-    uniqueProductIdentifier2.linkTo(referencedId);
+    const uniqueProductIdentifier2 = UniqueProductIdentifier.create({
+      referenceId,
+    });
     await service.save(uniqueProductIdentifier2);
-    const found = await service.findAllByReferencedId(referencedId);
+    const found = await service.findAllByReferencedId(referenceId);
     expect(found).toContainEqual(uniqueProductIdentifier1);
     expect(found).toContainEqual(uniqueProductIdentifier2);
   });
