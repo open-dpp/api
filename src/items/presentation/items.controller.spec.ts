@@ -6,9 +6,7 @@ import { randomUUID } from 'crypto';
 import { Test } from '@nestjs/testing';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModelEntity } from '../../models/infrastructure/model.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import { UniqueProductIdentifierModule } from '../../unique-product-identifier/unique.product.identifier.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import * as request from 'supertest';
@@ -16,7 +14,6 @@ import { Model } from '../../models/domain/model';
 import { ItemsService } from '../infrastructure/items.service';
 import { ItemsModule } from '../items.module';
 import { Item } from '../domain/item';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique.product.identifier.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
@@ -26,37 +23,37 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../../product-data-model/infrastructure/product-data-model.schema';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { ignoreIds } from '../../../test/utils';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
+  let productDataModelService: ProductDataModelService;
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
 
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@test.test');
+  const organization = Organization.create({
+    name: 'orga',
+    user: authContext.user,
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([ModelEntity, UserEntity, OrganizationEntity]),
+        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
         MongooseTestingModule,
-        MongooseModule.forFeature([
-          {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
-          },
-        ]),
         ItemsModule,
-        UniqueProductIdentifierModule,
         PermissionsModule,
       ],
       providers: [
@@ -84,6 +81,7 @@ describe('ItemsController', () => {
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
+    productDataModelService = moduleRef.get(ProductDataModelService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
@@ -94,17 +92,140 @@ describe('ItemsController', () => {
     await app.init();
   });
 
+  const sectionId1 = randomUUID();
+  const sectionId2 = randomUUID();
+  const sectionId3 = randomUUID();
+  const dataFieldId1 = randomUUID();
+  const dataFieldId2 = randomUUID();
+  const dataFieldId3 = randomUUID();
+  const dataFieldId4 = randomUUID();
+  const dataFieldId5 = randomUUID();
+
+  const laptopModel = {
+    name: 'Laptop',
+    version: '1.0',
+    ownedByOrganizationId: organization.id,
+    createdByUserId: authContext.user.id,
+    sections: [
+      {
+        id: sectionId1,
+        name: 'Section name',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId1,
+            type: 'TextField',
+            name: 'Title',
+            options: { min: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: dataFieldId2,
+            type: 'TextField',
+            name: 'Title 2',
+            options: { min: 7 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        id: sectionId2,
+        name: 'Section name 2',
+        type: SectionType.GROUP,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId3,
+            type: 'TextField',
+            name: 'Title 3',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        id: sectionId3,
+        name: 'Repeating Section',
+        type: SectionType.REPEATABLE,
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            id: dataFieldId4,
+            type: 'TextField',
+            name: 'Title 4',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            id: dataFieldId5,
+            type: 'TextField',
+            name: 'Title 5',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+    ],
+  };
+
   it(`/CREATE item`, async () => {
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
     const model = Model.create({
       name: 'name',
-      organization,
-      user: authContext.user,
+      userId: authContext.user.id,
+      organizationId: organization.id,
     });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    model.assignProductDataModel(productDataModel);
+    await productDataModelService.save(productDataModel);
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -126,78 +247,337 @@ describe('ItemsController', () => {
       uniqueProductIdentifiers: [
         {
           uuid: foundUniqueProductIdentifiers[0].uuid,
-          view: foundUniqueProductIdentifiers[0].view,
           referenceId: found.id,
         },
       ],
+      dataValues: [
+        {
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId1,
+          value: undefined,
+          row: 0,
+        },
+        {
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId2,
+          value: undefined,
+          row: 0,
+        },
+        {
+          dataSectionId: sectionId2,
+          dataFieldId: dataFieldId3,
+          value: undefined,
+          row: 0,
+        },
+      ],
+      productDataModelId: model.productDataModelId,
     });
   });
 
   it(`/CREATE item fails if user is not member of organization`, async () => {
-    const otherUser = new User(randomUUID(), 'other@example.com');
-    const organization = Organization.create({
-      name: 'My orga',
-      user: otherUser,
-    });
-    await organizationsService.save(organization);
+    const otherOrganizationId = randomUUID();
 
     const model = Model.create({
       name: 'name',
-      organization,
-      user: otherUser,
+      userId: authContext.user.id,
+      organizationId: otherOrganizationId,
+    });
+    await modelsService.save(model);
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/CREATE item fails if model does not belong to organization`, async () => {
+    const otherOrganizationId = randomUUID();
+
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: otherOrganizationId,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
       );
     expect(response.status).toEqual(403);
   });
 
-  it(`/CREATE item fails if model does not belong to organization`, async () => {
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
-
+  it('add data values to item', async () => {
+    const organizationId = randomUUID();
+    const userId = randomUUID();
     const model = Model.create({
       name: 'name',
-      organization,
-      user: authContext.user,
+      userId: authContext.user.id,
+      organizationId: organization.id,
     });
-    await modelsService.save(model);
-    const otherOrganization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(otherOrganization);
+    const item = Item.create({ organizationId, userId });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    item.defineModel(model, productDataModel);
+    await itemsService.save(item);
+    const existingDataValues = item.dataValues;
+    const addedValues = [
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId4,
+        value: 'value 4',
+        row: 0,
+      },
+      {
+        dataSectionId: sectionId3,
+        dataFieldId: dataFieldId5,
+        value: 'value 5',
+        row: 0,
+      },
+    ];
     const response = await request(app.getHttpServer())
-      .post(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
+      .post(
+        `/organizations/${organizationId}/models/${model.id}/items/${item.id}/data-values`,
+      )
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
-      );
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(addedValues);
+    expect(response.status).toEqual(201);
+    const expected = [
+      ...existingDataValues,
+      ...addedValues.map((d) => DataValue.create(d)),
+    ];
+    expect(response.body.dataValues).toEqual(ignoreIds(expected));
+
+    const foundItem = await itemsService.findById(response.body.id);
+
+    expect(foundItem.dataValues).toEqual(response.body.dataValues);
+  });
+
+  it('add data values to item fails if user is not member of organization', async () => {
+    const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
+    await itemsService.save(item);
+    const addedValues = [];
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${otherOrganizationId}/models/${model.id}/items/${item.id}/data-values`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(addedValues);
+    expect(response.status).toEqual(403);
+  });
+
+  it('add data values to item fails if item does not belong to organization', async () => {
+    const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
+    await itemsService.save(item);
+    const addedValues = [];
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(addedValues);
+    expect(response.status).toEqual(403);
+  });
+
+  it('update data values of item', async () => {
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    await productDataModelService.save(productDataModel);
+    model.assignProductDataModel(productDataModel);
+    item.defineModel(model, productDataModel);
+    const dataValue1 = item.dataValues[0];
+    const dataValue2 = item.dataValues[1];
+    const dataValue3 = item.dataValues[2];
+    const updatedValues = [
+      {
+        dataFieldId: dataValue1.dataFieldId,
+        dataSectionId: dataValue1.dataSectionId,
+        value: 'value 1',
+        row: 0,
+      },
+      {
+        dataFieldId: dataValue3.dataFieldId,
+        dataSectionId: dataValue3.dataSectionId,
+        value: 'value 3',
+        row: 0,
+      },
+    ];
+    await itemsService.save(item);
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(updatedValues);
+    expect(response.status).toEqual(200);
+    const expectedDataValues = [
+      {
+        ...dataValue1,
+        value: 'value 1',
+      },
+      {
+        ...dataValue2,
+      },
+      {
+        ...dataValue3,
+        value: 'value 3',
+      },
+    ];
+    expect(response.body.dataValues).toEqual(expectedDataValues);
+    const foundItem = await itemsService.findById(response.body.id);
+    expect(foundItem.dataValues).toEqual(expectedDataValues);
+  });
+
+  it('update data values fails if user is not member of organization', async () => {
+    const otherOrganizationId = randomUUID();
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    await itemsService.save(item);
+    const updatedValues = [
+      {
+        dataFieldId: randomUUID(),
+        dataSectionId: randomUUID(),
+        value: 'value 1',
+        row: 0,
+      },
+    ];
+
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${otherOrganizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(updatedValues);
+    expect(response.status).toEqual(403);
+  });
+
+  it('update data values fails if item does not belong to organization', async () => {
+    const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+    });
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
+    await itemsService.save(item);
+    const updatedValues = [
+      {
+        dataFieldId: randomUUID(),
+        dataSectionId: randomUUID(),
+        value: 'value 1',
+        row: 0,
+      },
+    ];
+
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(updatedValues);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET item`, async () => {
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
-
     const model = Model.create({
       name: 'name',
-      organization,
-      user: authContext.user,
+      userId: authContext.user.id,
+      organizationId: organization.id,
     });
     await modelsService.save(model);
-    const item = new Item();
-    item.defineModel(model.id);
+    const item = Item.create({
+      organizationId: organization.id,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
@@ -219,28 +599,25 @@ describe('ItemsController', () => {
         {
           referenceId: item.id,
           uuid: uniqueProductId.uuid,
-          view: uniqueProductId.view,
         },
       ],
+      dataValues: [],
     });
   });
   //
   it(`/GET item fails if user is not member of organization`, async () => {
-    const otherUser = new User(randomUUID(), 'other@example.com');
-    const organization = Organization.create({
-      name: 'My orga',
-      user: otherUser,
-    });
-    await organizationsService.save(organization);
-
+    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: 'name',
-      organization,
-      user: otherUser,
+      userId: authContext.user.id,
+      organizationId: organization.id,
     });
-    await modelsService.save(model);
-    const item = new Item();
-    item.defineModel(model.id);
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+
+    item.defineModel(model);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
@@ -248,26 +625,28 @@ describe('ItemsController', () => {
       )
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
       );
     expect(response.status).toEqual(403);
   });
 
-  it(`/GET item fails if model does not belong to organization`, async () => {
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
-
+  it(`/GET item fails if item does not belong to organization`, async () => {
+    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: 'name',
-      organization,
-      user: authContext.user,
+      userId: authContext.user.id,
+      organizationId: organization.id,
     });
-    await modelsService.save(model);
-    const item = new Item();
-    item.defineModel(model.id);
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
+
     await itemsService.save(item);
     const otherOrganization = Organization.create({
       name: 'My orga',
@@ -276,42 +655,48 @@ describe('ItemsController', () => {
     await organizationsService.save(otherOrganization);
     const response = await request(app.getHttpServer())
       .get(
-        `/organizations/${otherOrganization.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
-      );
-    expect(response.status).toEqual(403);
-  });
-
-  it(`/GET all item`, async () => {
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
-    const model = Model.create({
-      name: 'name',
-      organization,
-      user: authContext.user,
-    });
-    await modelsService.save(model);
-    const item = new Item();
-    item.defineModel(model.id);
-    const uniqueProductId1 = item.createUniqueProductIdentifier();
-    await itemsService.save(item);
-    const item2 = new Item();
-    const uniqueProductId2 = item2.createUniqueProductIdentifier();
-    item2.defineModel(model.id);
-    await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
-      .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
           authContext.user.id,
           [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET all item`, async () => {
+    const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: otherOrganizationId,
+    });
+    await modelsService.save(model);
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
+    const uniqueProductId1 = item.createUniqueProductIdentifier();
+    await itemsService.save(item);
+    const item2 = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    const uniqueProductId2 = item2.createUniqueProductIdentifier();
+    item2.defineModel(model);
+    await itemsService.save(item2);
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [otherOrganizationId],
           keycloakAuthTestingGuard,
         ),
       );
@@ -323,9 +708,9 @@ describe('ItemsController', () => {
           {
             referenceId: item.id,
             uuid: uniqueProductId1.uuid,
-            view: uniqueProductId1.view,
           },
         ],
+        dataValues: [],
       },
       {
         id: item2.id,
@@ -333,69 +718,75 @@ describe('ItemsController', () => {
           {
             referenceId: item2.id,
             uuid: uniqueProductId2.uuid,
-            view: uniqueProductId2.view,
           },
         ],
+        dataValues: [],
       },
     ]);
   });
   //
   it(`/GET all item fails if user is not member of organization`, async () => {
-    const otherUser = new User(randomUUID(), 'other@example.com');
-    const organization = Organization.create({
-      name: 'My orga',
-      user: otherUser,
-    });
-    await organizationsService.save(organization);
+    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: 'name',
-      organization,
-      user: otherUser,
+      userId: authContext.user.id,
+      organizationId: otherOrganizationId,
     });
     await modelsService.save(model);
-    const item = new Item();
-    item.defineModel(model.id);
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
     await itemsService.save(item);
-    const item2 = new Item();
-    item2.defineModel(model.id);
+    const item2 = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item2.defineModel(model);
+    await itemsService.save(item2);
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/GET all item fails if model do not belong to organization`, async () => {
+    const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: otherOrganizationId,
+    });
+    await modelsService.save(model);
+    const item = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item.defineModel(model);
+    await itemsService.save(item);
+    const item2 = Item.create({
+      organizationId: otherOrganizationId,
+      userId: authContext.user.id,
+    });
+    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
-        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
-      );
-    expect(response.status).toEqual(403);
-  });
-
-  it(`/GET all item fails if model does not belong to organization`, async () => {
-    const organization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(organization);
-    const model = Model.create({
-      name: 'name',
-      organization,
-      user: authContext.user,
-    });
-    await modelsService.save(model);
-    const item = new Item();
-    item.defineModel(model.id);
-    await itemsService.save(item);
-    const item2 = new Item();
-    item2.defineModel(model.id);
-    await itemsService.save(item2);
-    const otherOrganization = Organization.create({
-      name: 'My orga',
-      user: authContext.user,
-    });
-    await organizationsService.save(otherOrganization);
-    const response = await request(app.getHttpServer())
-      .get(`/organizations/${otherOrganization.id}/models/${model.id}/items`)
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(authContext.user.id, [], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
       );
     expect(response.status).toEqual(403);
   });

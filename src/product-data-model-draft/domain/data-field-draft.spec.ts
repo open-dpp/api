@@ -1,6 +1,7 @@
 import { DataFieldDraft } from './data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('DataField', () => {
   const layout = Layout.create({
@@ -16,11 +17,13 @@ describe('DataField', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     expect(field.id).toBeDefined();
     expect(field.type).toEqual(DataFieldType.TEXT_FIELD);
     expect(field.options).toEqual({ max: 2 });
     expect(field.layout).toEqual(layout);
+    expect(field.granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
   it('is renamed', () => {
@@ -28,6 +31,7 @@ describe('DataField', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     field.rename('Memory');
     expect(field.name).toEqual('Memory');
@@ -39,6 +43,7 @@ describe('DataField', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { min: 7, regex: '/d' },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     field.mergeOptions({ max: 3, min: 9 });
     expect(field.options).toEqual({ min: 9, max: 3, regex: '/d' });
@@ -50,6 +55,7 @@ describe('DataField', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
 
     const publishedField = field.publish();

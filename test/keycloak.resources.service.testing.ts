@@ -7,6 +7,7 @@ import { AuthContext } from '../src/auth/auth-request';
 type KeycloakUser = {
   id: string;
   email: string;
+  name?: string;
 };
 
 type KeycloakGroup = {

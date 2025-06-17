@@ -9,6 +9,7 @@ import {
 import { DataFieldType } from '../../../data-modelling/domain/data-field-base';
 import { Type } from 'class-transformer';
 import { LayoutDto } from './layout.dto';
+import { GranularityLevel } from '../../../data-modelling/domain/granularity-level';
 
 export class CreateDataFieldDraftDto {
   @IsString()
@@ -22,4 +23,6 @@ export class CreateDataFieldDraftDto {
   @Type(() => LayoutDto)
   @ValidateNested()
   readonly layout: LayoutDto;
+  @IsEnum(GranularityLevel)
+  readonly granularityLevel: GranularityLevel;
 }

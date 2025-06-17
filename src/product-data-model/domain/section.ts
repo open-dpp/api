@@ -1,4 +1,3 @@
-import { DataValue } from '../../models/domain/model';
 import {
   DataField,
   dataFieldSubtypes,
@@ -10,6 +9,8 @@ import {
   DataSectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 export abstract class DataSection extends DataSectionBase {
   @Expose()
@@ -25,18 +26,25 @@ export abstract class DataSection extends DataSectionBase {
   abstract validate(
     version: string,
     values: DataValue[],
+    granularity: GranularityLevel,
   ): DataFieldValidationResult[];
 }
 
 export class RepeaterSection extends DataSection {
-  validate(version: string, values: DataValue[]): DataFieldValidationResult[] {
+  validate(
+    version: string,
+    values: DataValue[],
+    granularity: GranularityLevel,
+  ): DataFieldValidationResult[] {
     const validations = [];
     const sectionValues = groupBy(
       values.filter((v) => v.dataSectionId === this.id),
       'row',
     );
     for (const [row, dataValuesOfRow] of Object.entries(sectionValues)) {
-      for (const dataField of this.dataFields) {
+      for (const dataField of this.dataFields.filter(
+        (d) => d.granularityLevel === granularity,
+      )) {
         const dataValue = dataValuesOfRow.find(
           (v) => v.dataFieldId === dataField.id,
         );
@@ -58,10 +66,16 @@ export class RepeaterSection extends DataSection {
 }
 
 export class GroupSection extends DataSection {
-  validate(version: string, values: DataValue[]): DataFieldValidationResult[] {
+  validate(
+    version: string,
+    values: DataValue[],
+    granularity: GranularityLevel,
+  ): DataFieldValidationResult[] {
     const validations = [];
     const sectionValues = values.filter((v) => v.dataSectionId === this.id);
-    for (const dataField of this.dataFields) {
+    for (const dataField of this.dataFields.filter(
+      (d) => d.granularityLevel === granularity,
+    )) {
       const dataValue = sectionValues.find(
         (v) => v.dataFieldId === dataField.id,
       );
