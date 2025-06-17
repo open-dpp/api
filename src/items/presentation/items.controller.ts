@@ -1,13 +1,30 @@
-import { Controller, Get, Param, Post, Request } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Request,
+} from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
 import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
-import { GetItemDto } from './dto/get.item.dto';
-import { plainToInstance } from 'class-transformer';
+import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import {
+  DataValueDto,
+  DataValueDtoSchema,
+} from '../../product-passport/presentation/dto/data-value.dto';
+import { ModelsService } from '../../models/infrastructure/models.service';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -15,6 +32,8 @@ export class ItemsController {
     private readonly itemsService: ItemsService,
     private readonly permissionsService: PermissionsService,
     private readonly traceabilityEventsService: TraceabilityEventsService,
+    private readonly modelsService: ModelsService,
+    private readonly productDataModelService: ProductDataModelService,
   ) {}
 
   @Post()
@@ -27,10 +46,24 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = new Item();
-    item.defineModel(modelId);
+    const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+
+    const item = Item.create({
+      organizationId,
+      userId: req.authContext.user.id,
+    });
+
+    const productDataModel = model.productDataModelId
+      ? await this.productDataModelService.findOneOrFail(
+          model.productDataModelId,
+        )
+      : undefined;
+    item.defineModel(model, productDataModel);
     item.createUniqueProductIdentifier();
-    const itemDto = this.itemToDto(await this.itemsService.save(item));
+    const itemDto = itemToDto(await this.itemsService.save(item));
     await this.traceabilityEventsService.create(
       ItemCreatedEventData.createWithWrapper({
         itemId: item.id,
@@ -63,8 +96,12 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
+    const model = await this.modelsService.findOne(modelId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     return (await this.itemsService.findAllByModel(modelId)).map((item) =>
-      this.itemToDto(item),
+      itemToDto(item),
     );
   }
 
@@ -79,16 +116,85 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    return this.itemToDto(await this.itemsService.findById(itemId));
+    const item = await this.itemsService.findById(itemId);
+    if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
+      throw new ForbiddenException();
+    }
+    return itemToDto(item);
   }
 
-  private itemToDto(item: Item) {
-    return plainToInstance(GetItemDto, {
-      id: item.id,
-      uniqueProductIdentifiers: item.uniqueProductIdentifiers.map((u) => ({
-        uuid: u.uuid,
-        referenceId: u.referenceId,
-      })),
-    });
+  @Post(':itemId/data-values')
+  async addDataValues(
+    @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
+    @Param('itemId') itemId: string,
+    @Body() requestBody: DataValueDto[],
+    @Request() req: AuthRequest,
+  ) {
+    const addDataValues = DataValueDtoSchema.array().parse(requestBody);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const item = await this.itemsService.findById(itemId);
+    if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
+      throw new ForbiddenException();
+    }
+    item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
+    if (!item.productDataModelId) {
+      throw new BadRequestException(
+        'Item does not have a product data model assigned',
+      );
+    }
+    const productDataModel = await this.productDataModelService.findOneOrFail(
+      item.productDataModelId,
+    );
+
+    const validationResult = productDataModel.validate(
+      item.dataValues,
+      GranularityLevel.ITEM,
+    );
+    if (!validationResult.isValid) {
+      throw new BadRequestException(validationResult.toJson());
+    }
+    return itemToDto(await this.itemsService.save(item));
+  }
+
+  @Patch(':itemId/data-values')
+  async updateDataValues(
+    @Param('orgaId') organizationId: string,
+    @Param('modelId') modelId: string,
+    @Param('itemId') itemId: string,
+    @Body() requestBody: DataValueDto[],
+    @Request() req: AuthRequest,
+  ) {
+    const updateDataValues = DataValueDtoSchema.array().parse(requestBody);
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+    const item = await this.itemsService.findById(itemId);
+    if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
+      throw new ForbiddenException();
+    }
+
+    item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
+    if (!item.productDataModelId) {
+      throw new BadRequestException(
+        'Item does not have a product data model assigned',
+      );
+    }
+    const productDataModel = await this.productDataModelService.findOneOrFail(
+      item.productDataModelId,
+    );
+
+    const validationResult = productDataModel.validate(
+      item.dataValues,
+      GranularityLevel.ITEM,
+    );
+    if (!validationResult.isValid) {
+      throw new BadRequestException(validationResult.toJson());
+    }
+    return itemToDto(await this.itemsService.save(item));
   }
 }

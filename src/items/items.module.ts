@@ -13,6 +13,7 @@ import { TraceabilityEventsModule } from '../traceability-events/traceability-ev
 import { MongooseModule } from '@nestjs/mongoose';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
+import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
         schema: ModelSchema,
       },
     ]),
+    ProductDataModelModule,
     ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,

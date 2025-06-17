@@ -3,7 +3,6 @@ import { Model } from '../../models/domain/model';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
-import { Organization } from '../../organizations/domain/organization';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
@@ -13,7 +12,6 @@ import { AuthContext } from '../../auth/auth-request';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { ItemDoc, ItemSchema } from './item.schema';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -26,9 +24,17 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { ignoreIds } from '../../../test/utils';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   let mongoConnection: Connection;
   let organizationsService: OrganizationsService;
   const authContext = new AuthContext();
@@ -85,12 +91,158 @@ describe('ItemsService', () => {
       organization,
     });
 
-    const item = new Item();
-    item.defineModel(model.id);
+    const item = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+    });
+    item.defineModel(model);
     const savedItem = await itemService.save(item);
-    expect(savedItem.model).toEqual(model.id);
+    expect(savedItem.modelId).toEqual(model.id);
     const foundItem = await itemService.findById(item.id);
-    expect(foundItem.model).toEqual(model.id);
+    expect(foundItem.modelId).toEqual(model.id);
+  });
+
+  it('should create an item with product data model', async () => {
+    const item = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+    });
+    const productDataModel = ProductDataModel.fromPlain({
+      name: 'Laptop',
+      version: '1.0',
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
+      sections: [
+        {
+          name: 'Section 1',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title',
+              options: { min: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+            {
+              type: 'TextField',
+              name: 'Title 2',
+              options: { min: 7 },
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+        {
+          name: 'Section 2',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 3',
+              options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+        {
+          name: 'Section 3',
+          type: SectionType.REPEATABLE,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: 'TextField',
+              name: 'Title 4',
+              options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+      ],
+    });
+
+    item.assignProductDataModel(productDataModel);
+    item.addDataValues([
+      DataValue.create({
+        value: undefined,
+        dataSectionId: productDataModel.sections[2].id,
+        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        row: 0,
+      }),
+    ]);
+    const { id } = await itemService.save(item);
+    const foundItem = await itemService.findById(id);
+    expect(foundItem.productDataModelId).toEqual(productDataModel.id);
+    expect(foundItem.dataValues).toEqual(
+      ignoreIds([
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[0].id,
+          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[1].id,
+          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          row: 0,
+        }),
+        DataValue.create({
+          value: undefined,
+          dataSectionId: productDataModel.sections[2].id,
+          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          row: 0,
+        }),
+      ]),
+    );
   });
 
   it('should create multiple items for a model and find them by model', async () => {
@@ -108,15 +260,26 @@ describe('ItemsService', () => {
       name: 'name',
       user: userObj1,
       organization,
+      userId: userId,
+      organizationId: organizationId,
     });
-    const item1 = new Item();
-    item1.defineModel(model1.id);
-    const item2 = new Item();
-    item2.defineModel(model1.id);
+    const item1 = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+    });
+    item1.defineModel(model1);
+    const item2 = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+    });
+    item2.defineModel(model1);
     await itemService.save(item1);
     await itemService.save(item2);
-    const item3 = new Item();
-    item3.defineModel(model2.id);
+    const item3 = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+    });
+    item3.defineModel(model2);
 
     const foundItems = await itemService.findAllByModel(model1.id);
     expect(foundItems).toEqual([item1, item2]);
@@ -131,12 +294,15 @@ describe('ItemsService', () => {
     await organizationsService.save(organization);
     const model = Model.create({
       name: 'Model with UPIs',
-      user: userObj1,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
     // Create item with unique product identifiers
-    const item = new Item();
-    item.defineModel(model.id);
+    const item = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+    });
+    item.defineModel(model);
 
     // Add unique product identifiers to the item
     const upi1 = item.createUniqueProductIdentifier();
@@ -181,7 +347,7 @@ describe('ItemsService', () => {
     // Verify conversion
     expect(item).toBeInstanceOf(Item);
     expect(item.id).toBe(itemId);
-    expect(item.model).toBe(modelId);
+    expect(item.modelId).toBe(modelId);
     expect(item.uniqueProductIdentifiers).toEqual(upis);
     expect(item.uniqueProductIdentifiers).toHaveLength(2);
   });

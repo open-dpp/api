@@ -1,6 +1,7 @@
 import { Expose, instanceToPlain, Type } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { Layout } from './layout';
+import { GranularityLevel } from './granularity-level';
 
 export enum DataFieldType {
   TEXT_FIELD = 'TextField',
@@ -18,6 +19,8 @@ export abstract class DataFieldBase {
   @Expose()
   @Type(() => Layout)
   readonly layout: Layout;
+  @Expose()
+  readonly granularityLevel: GranularityLevel;
 
   get name() {
     return this._name;

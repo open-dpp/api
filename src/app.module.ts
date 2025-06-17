@@ -20,6 +20,7 @@ import { ProductDataModelDraftModule } from './product-data-model-draft/product-
 import { MongooseModule } from '@nestjs/mongoose';
 import { TraceabilityEventsModule } from './traceability-events/traceability-events.module';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
+import { IntegrationModule } from './integrations/integration.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak
     KeycloakResourcesModule,
     TraceabilityEventsModule,
     KeycloakSyncOnStartupModule,
+    IntegrationModule,
   ],
   providers: [
     {

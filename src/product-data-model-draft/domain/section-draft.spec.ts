@@ -4,6 +4,7 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('DataSectionDraft', () => {
   const layout = Layout.create({
@@ -18,21 +19,35 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = DataSectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     expect(section1.id).toBeDefined();
     expect(section1.type).toEqual(SectionType.GROUP);
     expect(section1.dataFields).toEqual([]);
     expect(section1.parentId).toBeUndefined();
     expect(section1.layout).toEqual(layout);
+    expect(section1.granularityLevel).toEqual(GranularityLevel.MODEL);
     expect(section1.subSections).toEqual([]);
     expect(section2.id).toBeDefined();
     expect(section2.type).toEqual(SectionType.REPEATABLE);
     expect(section2.layout).toEqual(layout);
+    expect(section2.granularityLevel).toEqual(GranularityLevel.MODEL);
+  });
+
+  it('fails on creation if no granularity level is set for repeater section', () => {
+    expect(() =>
+      DataSectionDraft.create({
+        name: 'Material',
+        type: SectionType.REPEATABLE,
+        layout,
+      }),
+    ).toThrow(new ValueError('Repeatable must have a granularity level'));
   });
 
   it('is renamed', () => {
@@ -40,6 +55,7 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.rename('Tracebility');
     expect(section.name).toEqual('Tracebility');
@@ -50,21 +66,44 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
     expect(section.dataFields).toEqual([dataField1, dataField2]);
+  });
+
+  it('fails to add data field if granularity level of section and data field do not match', () => {
+    const section = DataSectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      layout,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    const dataField = DataFieldDraft.create({
+      name: 'Memory',
+      type: DataFieldType.TEXT_FIELD,
+      layout,
+      granularityLevel: GranularityLevel.ITEM,
+    });
+    expect(() => section.addDataField(dataField)).toThrow(
+      new ValueError(
+        `Data field ${dataField.id} has a granularity level of ${dataField.granularityLevel} which does not match the section's granularity level of ${section.granularityLevel}`,
+      ),
+    );
   });
 
   it('should modify data field', () => {
@@ -72,17 +111,20 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
@@ -118,12 +160,14 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     expect(() =>
@@ -145,21 +189,25 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField3 = DataFieldDraft.create({
       name: 'Storage',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
@@ -173,11 +221,13 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
 
@@ -191,16 +241,19 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const childSection1 = DataSectionDraft.create({
       name: 'Sub specification 1',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const childSection2 = DataSectionDraft.create({
       name: 'Sub specification 2',
       type: SectionType.REPEATABLE,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addSubSection(childSection1);
     section.addSubSection(childSection2);
@@ -214,16 +267,19 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const childSection1 = DataSectionDraft.create({
       name: 'Sub specification 1',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const childSection2 = DataSectionDraft.create({
       name: 'Sub specification 2',
       type: SectionType.REPEATABLE,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addSubSection(childSection1);
     section.addSubSection(childSection2);
@@ -244,11 +300,13 @@ describe('DataSectionDraft', () => {
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     const subSection = DataSectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addSubSection(subSection);
     const dataField1 = DataFieldDraft.create({
@@ -256,6 +314,7 @@ describe('DataSectionDraft', () => {
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       layout,
+      granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     const publishedSection = section.publish();
@@ -266,6 +325,7 @@ describe('DataSectionDraft', () => {
       dataFields: [{ ...dataField1.publish() }],
       subSections: [subSection.id],
       layout: layout.toPlain(),
+      granularityLevel: GranularityLevel.MODEL,
     });
 
     const publishedSubSection = subSection.publish();
@@ -277,6 +337,7 @@ describe('DataSectionDraft', () => {
       subSections: [],
       parentId: section.id,
       layout: layout.toPlain(),
+      granularityLevel: GranularityLevel.MODEL,
     });
   });
 });
