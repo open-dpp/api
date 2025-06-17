@@ -18,6 +18,7 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TraceabilityEventsModule } from './traceability-events/traceability-events.module';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
 import { IntegrationModule } from './integrations/integration.module';
 
@@ -57,6 +58,7 @@ import { IntegrationModule } from './integrations/integration.module';
     PermissionsModule,
     HttpModule,
     KeycloakResourcesModule,
+    TraceabilityEventsModule,
     KeycloakSyncOnStartupModule,
     IntegrationModule,
   ],

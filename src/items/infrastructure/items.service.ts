@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model as MongooseModel } from 'mongoose';
 import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 
 @Injectable()
 export class ItemsService {
@@ -13,6 +14,7 @@ export class ItemsService {
     @InjectModel(ItemDoc.name)
     private itemDoc: MongooseModel<ItemDoc>,
     private uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly traceabilityEventsService: TraceabilityEventsService,
   ) {}
 
   convertToDomain(

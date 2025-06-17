@@ -9,6 +9,7 @@ import { OrganizationEntity } from '../organizations/infrastructure/organization
 import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
@@ -33,6 +34,7 @@ import { ProductDataModelModule } from '../product-data-model/product.data.model
     UsersModule,
     KeycloakResourcesModule,
     PermissionsModule,
+    TraceabilityEventsModule,
   ],
   controllers: [ItemsController],
   providers: [ItemsService, OrganizationsService],
