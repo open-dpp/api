@@ -56,7 +56,7 @@ describe('TraceabilityEventsService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('convertToDomain', () => {
+  describe('TraceabilityEventWrapper.loadFromDb', () => {
     it('should convert a TraceabilityEventDocument to a TraceabilityEventWrapper domain object', () => {
       // Arrange
       const id = randomUUID();
