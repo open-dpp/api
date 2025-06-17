@@ -36,7 +36,6 @@ describe('ItemsService', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
   let mongoConnection: Connection;
-  let organizationsService: OrganizationsService;
   const authContext = new AuthContext();
   authContext.user = userObj1;
 
@@ -68,8 +67,6 @@ describe('ItemsService', () => {
       ],
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);
-    organizationsService =
-      module.get<OrganizationsService>(OrganizationsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
@@ -80,15 +77,10 @@ describe('ItemsService', () => {
   });
 
   it('should create and find item for a model', async () => {
-    const organization = Organization.create({
-      name: `My Orga ${randomUUID()}`,
-      user: userObj1,
-    });
-    await organizationsService.save(organization);
     const model = Model.create({
       name: 'name',
-      user: userObj1,
-      organization,
+      userId: userId,
+      organizationId,
     });
 
     const item = Item.create({
@@ -246,20 +238,13 @@ describe('ItemsService', () => {
   });
 
   it('should create multiple items for a model and find them by model', async () => {
-    const organization = Organization.create({
-      name: `My Orga ${randomUUID()}`,
-      user: userObj1,
-    });
-    await organizationsService.save(organization);
     const model1 = Model.create({
       name: 'name',
-      user: userObj1,
-      organization,
+      userId: userId,
+      organizationId: organizationId,
     });
     const model2 = Model.create({
       name: 'name',
-      user: userObj1,
-      organization,
       userId: userId,
       organizationId: organizationId,
     });
@@ -286,12 +271,6 @@ describe('ItemsService', () => {
   });
 
   it('should save item with unique product identifiers', async () => {
-    // Create organization and model
-    const organization = Organization.create({
-      name: 'Org with UPIs',
-      user: userObj1,
-    });
-    await organizationsService.save(organization);
     const model = Model.create({
       name: 'Model with UPIs',
       userId: userId,

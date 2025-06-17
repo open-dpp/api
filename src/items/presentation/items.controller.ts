@@ -46,7 +46,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const model = await this.modelsService.findOne(modelId);
+    const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
@@ -96,7 +96,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const model = await this.modelsService.findOne(modelId);
+    const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }

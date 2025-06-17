@@ -34,8 +34,8 @@ import { DataValue } from '../../product-passport/domain/data-value';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
-  let organizationService: OrganizationsService;
   const user = new User(randomUUID(), 'test@example.com');
+  const organization = Organization.create({ name: 'Firma Y', user });
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -79,8 +79,6 @@ describe('ModelsService', () => {
       .compile();
 
     modelsService = module.get<ModelsService>(ModelsService);
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
