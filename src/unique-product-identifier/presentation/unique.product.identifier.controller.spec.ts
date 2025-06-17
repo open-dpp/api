@@ -835,6 +835,7 @@ describe('UniqueProductIdentifierController', () => {
     expect(response.body).toEqual({
       uuid: uuid,
       referenceId: item.id,
+      granularityLevel: GranularityLevel.ITEM,
     });
   });
 

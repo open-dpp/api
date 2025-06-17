@@ -7,7 +7,11 @@ import { ItemsService } from '../../items/infrastructure/items.service';
 import { Model } from '../../models/domain/model';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
 import { Item } from '../../items/domain/item';
-import { uniqueProductIdentifierToDto } from './dto/unique-product-identifier-dto.schema';
+import {
+  UniqueProductIdentifierWithGranularityDtoSchema,
+  uniqueProductIdentifierToDto,
+} from './dto/unique-product-identifier-dto.schema';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 @Controller('unique-product-identifiers')
 export class UniqueProductIdentifierController {
@@ -52,6 +56,18 @@ export class UniqueProductIdentifierController {
   async findOne(@Param('id') id: string) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOne(id);
-    return uniqueProductIdentifierToDto(uniqueProductIdentifier);
+    let granularityLevel: GranularityLevel;
+    try {
+      await this.itemService.findById(uniqueProductIdentifier.referenceId);
+      granularityLevel = GranularityLevel.ITEM;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (NotFoundException) {
+      granularityLevel = GranularityLevel.MODEL;
+    }
+
+    return UniqueProductIdentifierWithGranularityDtoSchema.parse({
+      ...uniqueProductIdentifierToDto(uniqueProductIdentifier),
+      granularityLevel,
+    });
   }
 }
