@@ -7,7 +7,6 @@ import { Organization } from '../../organizations/domain/organization';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
-import { userObj1 } from '../../../test/users-and-orgs';
 import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
@@ -224,7 +223,7 @@ describe('ModelsService', () => {
         }),
       ]),
     );
-    expect(foundModel.createdByUserId).toEqual(userObj1.id);
+    expect(foundModel.createdByUserId).toEqual(user.id);
     expect(foundModel.isOwnedBy(organization.id)).toBeTruthy();
   });
 

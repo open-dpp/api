@@ -13,6 +13,7 @@ import {
 } from './infrastructure/aas-connection.schema';
 import { AasConnectionService } from './infrastructure/aas-connection.service';
 import { ItemsService } from '../items/infrastructure/items.service';
+import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ItemsService } from '../items/infrastructure/items.service';
     ProductDataModelModule,
     UniqueProductIdentifierModule,
     PermissionsModule,
+    TraceabilityEventsModule,
   ],
   controllers: [AasConnectionController],
   providers: [ModelsService, ItemsService, AasConnectionService],
