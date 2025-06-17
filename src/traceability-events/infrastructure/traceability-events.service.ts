@@ -31,7 +31,19 @@ export class TraceabilityEventsService {
       geolocation: dppEvent.geolocation,
       type: dppEvent.type,
     });
-    return TraceabilityEventWrapper.loadFromDb<T>(newTraceabilityEvent);
+    return TraceabilityEventWrapper.loadFromDb<T>({
+      _id: newTraceabilityEvent.id,
+      createdAt: newTraceabilityEvent.createdAt,
+      updatedAt: newTraceabilityEvent.updatedAt,
+      ip: newTraceabilityEvent.ip,
+      userId: newTraceabilityEvent.userId,
+      itemId: newTraceabilityEvent.itemId,
+      chargeId: newTraceabilityEvent.chargeId,
+      organizationId: newTraceabilityEvent.organizationId,
+      geolocation: newTraceabilityEvent.geolocation,
+      type: newTraceabilityEvent.type,
+      data: newTraceabilityEvent.data as T,
+    });
   }
 
   async findById(id: string) {

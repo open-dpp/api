@@ -9,7 +9,7 @@ export class OpenDppEvent extends TraceabilityEvent {
     this.data = data;
   }
 
-  static create(data: {
+  static createWithWrapper(data: {
     userId: string;
     itemId: string;
     organizationId: string;

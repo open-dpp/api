@@ -32,7 +32,7 @@ export class ItemsController {
     item.createUniqueProductIdentifier();
     const itemDto = this.itemToDto(await this.itemsService.save(item));
     await this.traceabilityEventsService.create(
-      ItemCreatedEventData.create({
+      ItemCreatedEventData.createWithWrapper({
         itemId: item.id,
         userId: req.authContext.user.id,
         organizationId: organizationId,
@@ -41,7 +41,7 @@ export class ItemsController {
     );
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
       await this.traceabilityEventsService.create(
-        UniqueProductIdentifierCreatedEventData.create({
+        UniqueProductIdentifierCreatedEventData.createWithWrapper({
           itemId: item.id,
           userId: req.authContext.user.id,
           organizationId: organizationId,

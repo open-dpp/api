@@ -11,13 +11,13 @@ export class UniqueProductIdentifierCreatedEventData extends OpenDppEventData {
     this.uniqueProductIdentifierId = uniqueProductIdentifierId;
   }
 
-  static create(data: {
+  static createWithWrapper(data: {
     userId: string;
     itemId: string;
     organizationId: string;
     uniqueProductIdentifierId: string;
   }) {
-    return OpenDppEvent.create({
+    return OpenDppEvent.createWithWrapper({
       userId: data.userId,
       itemId: data.itemId,
       organizationId: data.organizationId,

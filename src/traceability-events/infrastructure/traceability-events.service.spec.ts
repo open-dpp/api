@@ -108,6 +108,15 @@ describe('TraceabilityEventsService', () => {
       const id = randomUUID();
       const createdAt = new Date('2023-01-01');
       const updatedAt = new Date('2023-01-02');
+      const ip = '192.168.1.1';
+      const userId = 'user123';
+      const itemId = 'article123';
+      const chargeId = 'charge123';
+      const organizationId = 'org123';
+      const geolocation = {
+        latitude: '52.5200',
+        longitude: '13.4050',
+      };
       const dppEvent = TraceabilityEventWrapper.loadFromDb({
         _id: id,
         createdAt,
@@ -115,6 +124,13 @@ describe('TraceabilityEventsService', () => {
         data: {
           type: TraceabilityEventType.OPENEPCIS,
         },
+        ip,
+        userId,
+        itemId,
+        organizationId,
+        type: TraceabilityEventType.OPENEPCIS,
+        chargeId,
+        geolocation,
       });
 
       // Act
@@ -137,6 +153,15 @@ describe('TraceabilityEventsService', () => {
       const id = randomUUID();
       const createdAt = new Date('2023-01-01');
       const updatedAt = new Date('2023-01-02');
+      const ip = '192.168.1.1';
+      const userId = 'user123';
+      const itemId = 'article123';
+      const chargeId = 'charge123';
+      const organizationId = 'org123';
+      const geolocation = {
+        latitude: '52.5200',
+        longitude: '13.4050',
+      };
       const dppEvent = TraceabilityEventWrapper.loadFromDb({
         _id: id,
         data: {
@@ -144,6 +169,13 @@ describe('TraceabilityEventsService', () => {
         },
         createdAt,
         updatedAt,
+        ip,
+        userId,
+        itemId,
+        organizationId,
+        type: TraceabilityEventType.OPENEPCIS,
+        chargeId,
+        geolocation,
       });
 
       // Act
