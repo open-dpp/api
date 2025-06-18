@@ -23,35 +23,7 @@ import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { DataValue } from '../../product-passport/domain/data-value';
-
-jest.mock('@keycloak/keycloak-admin-client', () => {
-  return {
-    __esModule: true, // Ensure Jest understands it's an ES module
-    default: jest.fn(() => ({
-      auth: jest.fn().mockResolvedValue(undefined),
-      users: {
-        find: jest.fn().mockResolvedValue([]), // Mock user retrieval returning empty array
-        findOne: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
-        create: jest.fn().mockResolvedValue({ id: 'mock-user-id' }),
-        update: jest.fn().mockResolvedValue(undefined),
-        del: jest.fn().mockResolvedValue(undefined),
-        addToGroup: jest.fn().mockResolvedValue(undefined),
-        listGroups: jest.fn().mockResolvedValue([{ id: 'mock-group-id' }]),
-      },
-      realms: {
-        find: jest
-          .fn()
-          .mockResolvedValue([{ id: 'mock-realm-id', realm: 'test-realm' }]),
-      },
-      groups: {
-        find: jest.fn().mockResolvedValue([]),
-        create: jest.fn().mockResolvedValue({ id: 'mock-group-id' }),
-        update: jest.fn().mockResolvedValue(undefined),
-        del: jest.fn().mockResolvedValue(undefined),
-      },
-    })),
-  };
-});
+import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
@@ -819,23 +791,70 @@ describe('UniqueProductIdentifierController', () => {
     });
   });
 
-  it(`/GET unique product identifier`, async () => {
+  it(`/GET reference of unique product identifier`, async () => {
     const productDataModel = ProductDataModel.fromPlain({ ...laptopModel });
     await productDataModelService.save(productDataModel);
+    const model = Model.create({
+      name: 'model',
+      userId: randomUUID(),
+      organizationId: randomUUID(),
+    });
+    model.assignProductDataModel(productDataModel);
     const item = Item.create({ organizationId, userId: authContext.user.id });
+    item.defineModel(model, productDataModel);
     const { uuid } = item.createUniqueProductIdentifier('externalId');
     await itemsService.save(item);
 
-    jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const response = await request(app.getHttpServer()).get(
-      `/unique-product-identifiers/${uuid}`,
-    );
+    const response = await request(app.getHttpServer())
+      .get(
+        `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
-      uuid: uuid,
-      referenceId: item.id,
+      id: item.id,
+      organizationId,
+      modelId: model.id,
       granularityLevel: GranularityLevel.ITEM,
+    });
+  });
+
+  it(`/GET model reference of unique product identifier`, async () => {
+    const productDataModel = ProductDataModel.fromPlain({ ...laptopModel });
+    await productDataModelService.save(productDataModel);
+    const model = Model.create({
+      name: 'model',
+      userId: randomUUID(),
+      organizationId: organizationId,
+    });
+    model.assignProductDataModel(productDataModel);
+    const { uuid } = model.createUniqueProductIdentifier();
+    await modelsService.save(model);
+    const response = await request(app.getHttpServer())
+      .get(
+        `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      id: model.id,
+      organizationId,
+      granularityLevel: GranularityLevel.MODEL,
     });
   });
 

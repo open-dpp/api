@@ -7,9 +7,10 @@ export const UniqueProductIdentifierDtoSchema = z.object({
   referenceId: z.uuid(),
 });
 
-export const UniqueProductIdentifierWithGranularityDtoSchema = z.object({
-  uuid: z.string(),
-  referenceId: z.uuid(),
+export const UniqueProductIdentifierReferenceDtoSchema = z.object({
+  id: z.uuid(),
+  organizationId: z.uuid(),
+  modelId: z.uuid().optional(),
   granularityLevel: z.enum(GranularityLevel),
 });
 
