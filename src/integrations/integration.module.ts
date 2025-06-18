@@ -14,6 +14,7 @@ import {
 import { AasConnectionService } from './infrastructure/aas-connection.service';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
+import { ItemsApplicationService } from '../items/presentation/items-application.service';
 
 @Module({
   imports: [
@@ -37,7 +38,12 @@ import { TraceabilityEventsModule } from '../traceability-events/traceability-ev
     TraceabilityEventsModule,
   ],
   controllers: [AasConnectionController],
-  providers: [ModelsService, ItemsService, AasConnectionService],
+  providers: [
+    ModelsService,
+    ItemsService,
+    ItemsApplicationService,
+    AasConnectionService,
+  ],
   exports: [],
 })
 export class IntegrationModule {}

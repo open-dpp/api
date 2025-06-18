@@ -8,7 +8,10 @@ export class TraceabilityEventsController {
 
   @Post()
   async create(@Body() body: any, @Request() req: AuthRequest) {
-    return await this.dppEventsService.create(body, req.authContext);
+    return await this.dppEventsService.create({
+      ...body,
+      userId: req.authContext.user.id,
+    });
   }
 
   @Get(':id')
