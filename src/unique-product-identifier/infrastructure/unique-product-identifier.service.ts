@@ -15,7 +15,7 @@ export class UniqueProductIdentifierService {
 
   convertToDomain(uniqueProductIdentifierDoc: UniqueProductIdentifierDoc) {
     return UniqueProductIdentifier.loadFromDb({
-      uuid: uniqueProductIdentifierDoc._id,
+      uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
     });
   }

@@ -40,31 +40,25 @@ export abstract class DataField extends DataFieldBase {
   abstract validate(version: string, value: unknown): DataFieldValidationResult;
 }
 
+function validateString(value: unknown): DataFieldValidationResult {
+  const result = z.string().optional().safeParse(value);
+  return DataFieldValidationResult.fromPlain({
+    dataFieldId: this.id,
+    dataFieldName: this.name,
+    isValid: result.success,
+    errorMessage: !result.success ? result.error.issues[0].message : undefined,
+  });
+}
+
 export class TextField extends DataField {
   validate(version: string, value: unknown): DataFieldValidationResult {
-    const result = z.string().optional().safeParse(value);
-    return DataFieldValidationResult.fromPlain({
-      dataFieldId: this.id,
-      dataFieldName: this.name,
-      isValid: result.success,
-      errorMessage: !result.success
-        ? result.error.issues[0].message
-        : undefined,
-    });
+    return validateString(value);
   }
 }
 
 export class ProductPassportLink extends DataField {
   validate(version: string, value: unknown): DataFieldValidationResult {
-    const result = z.string().optional().safeParse(value);
-    return DataFieldValidationResult.fromPlain({
-      dataFieldId: this.id,
-      dataFieldName: this.name,
-      isValid: result.success,
-      errorMessage: !result.success
-        ? result.error.issues[0].message
-        : undefined,
-    });
+    return validateString(value);
   }
 }
 
