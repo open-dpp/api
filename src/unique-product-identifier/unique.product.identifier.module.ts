@@ -10,6 +10,7 @@ import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
+import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from '../items/infrastructure/item.schema';
 import {
@@ -42,6 +43,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
     OrganizationsModule,
     PermissionsModule,
     UsersModule,
+    TraceabilityEventsModule,
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [

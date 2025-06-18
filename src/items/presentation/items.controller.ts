@@ -14,6 +14,9 @@ import { ItemsService } from '../infrastructure/items.service';
 import { Item } from '../domain/item';
 import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
+import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data';
+import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
+import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import {
@@ -28,6 +31,7 @@ export class ItemsController {
   constructor(
     private readonly itemsService: ItemsService,
     private readonly permissionsService: PermissionsService,
+    private readonly traceabilityEventsService: TraceabilityEventsService,
     private readonly modelsService: ModelsService,
     private readonly productDataModelService: ProductDataModelService,
   ) {}
@@ -59,7 +63,27 @@ export class ItemsController {
       : undefined;
     item.defineModel(model, productDataModel);
     item.createUniqueProductIdentifier();
-    return itemToDto(await this.itemsService.save(item));
+    const itemDto = itemToDto(await this.itemsService.save(item));
+    await this.traceabilityEventsService.create(
+      ItemCreatedEventData.createWithWrapper({
+        itemId: item.id,
+        userId: req.authContext.user.id,
+        organizationId: organizationId,
+      }),
+      req.authContext,
+    );
+    for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
+      await this.traceabilityEventsService.create(
+        UniqueProductIdentifierCreatedEventData.createWithWrapper({
+          itemId: item.id,
+          userId: req.authContext.user.id,
+          organizationId: organizationId,
+          uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
+        }),
+        req.authContext,
+      );
+    }
+    return itemDto;
   }
 
   @Get()

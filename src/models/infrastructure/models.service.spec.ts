@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
 import { Model } from '../domain/model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
+import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
+import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -13,6 +15,15 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { User } from '../../users/domain/user';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UsersService } from '../../users/infrastructure/users.service';
 import { ModelDoc, ModelSchema } from './model.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
@@ -40,9 +51,32 @@ describe('ModelsService', () => {
             schema: ModelSchema,
           },
         ]),
+        TypeOrmTestingModule,
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
-      providers: [ModelsService, UniqueProductIdentifierService],
-    }).compile();
+      providers: [
+        ModelsService,
+        UniqueProductIdentifierService,
+        OrganizationsService,
+        UsersService,
+        KeycloakResourcesService,
+        {
+          provide: TraceabilityEventsService,
+          useValue: {
+            save: jest
+              .fn()
+              .mockImplementation(
+                (event: TraceabilityEventWrapper<TraceabilityEvent>) =>
+                  Promise.resolve(event),
+              ),
+          },
+        },
+      ],
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useClass(KeycloakResourcesServiceTesting)
+      .compile();
+
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
