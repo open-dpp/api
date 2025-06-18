@@ -77,4 +77,13 @@ describe('AssetAdministrationShell', () => {
       parentIdShort: 'Nameplate',
     });
   });
+
+  it('should be create from semitrailer truck', () => {
+    const semitrailerTruck = createAasForType(
+      AssetAdministrationShellType.Semitrailer_Truck,
+    );
+    expect(semitrailerTruck.globalAssetId).toEqual(
+      'Semitrailer_Truck_-10204004-0010-02',
+    );
+  });
 });

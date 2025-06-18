@@ -24,10 +24,23 @@ export const AASPropertyWithParentSchema = z.object({
   property: AASPropertySchema,
 });
 
+export const AssetAdministrationShellsSchema = z.object({
+  assetAdministrationShells: z
+    .object({
+      assetInformation: z.object({
+        assetKind: z.string(),
+        assetType: z.string(),
+        globalAssetId: z.string(),
+      }),
+    })
+    .array(),
+});
+
 export type AASPropertyWithParent = z.infer<typeof AASPropertyWithParentSchema>;
 
 export class AssetAdministrationShell {
   private constructor(
+    public readonly globalAssetId: string,
     public readonly propertiesWithParent: AASPropertyWithParent[],
   ) {}
 
@@ -40,7 +53,9 @@ export class AssetAdministrationShell {
     );
     const allProperties =
       AASPropertyWithParentSchema.array().parse(collectedProperties);
-    return new AssetAdministrationShell(allProperties);
+    const globalAssetId = AssetAdministrationShellsSchema.parse(data.content)
+      .assetAdministrationShells[0].assetInformation.globalAssetId;
+    return new AssetAdministrationShell(globalAssetId, allProperties);
   }
 
   private static parseElement(el: any) {
