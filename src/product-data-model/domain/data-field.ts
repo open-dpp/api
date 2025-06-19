@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { Expose, plainToInstance } from 'class-transformer';
-import { DataFieldBase } from '../../data-modelling/domain/data-field-base';
-import { DataFieldType } from './data-field-type';
+import {
+  DataFieldBase,
+  DataFieldType,
+} from '../../data-modelling/domain/data-field-base';
 
 export class DataFieldValidationResult {
   @Expose()
