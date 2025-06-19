@@ -71,7 +71,7 @@ describe('ItemsService', () => {
   });
 
   it('fails if requested item could not be found', async () => {
-    await expect(itemService.findById(randomUUID())).rejects.toThrow(
+    await expect(itemService.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Item.name),
     );
   });
@@ -90,7 +90,7 @@ describe('ItemsService', () => {
     item.defineModel(model);
     const savedItem = await itemService.save(item);
     expect(savedItem.modelId).toEqual(model.id);
-    const foundItem = await itemService.findById(item.id);
+    const foundItem = await itemService.findOneOrFail(item.id);
     expect(foundItem.modelId).toEqual(model.id);
   });
 
@@ -205,7 +205,7 @@ describe('ItemsService', () => {
       }),
     ]);
     const { id } = await itemService.save(item);
-    const foundItem = await itemService.findById(id);
+    const foundItem = await itemService.findOneOrFail(id);
     expect(foundItem.productDataModelId).toEqual(productDataModel.id);
     expect(foundItem.dataValues).toEqual(
       ignoreIds([
@@ -300,7 +300,7 @@ describe('ItemsService', () => {
     expect(savedItem.uniqueProductIdentifiers[1].referenceId).toBe(item.id);
 
     // Retrieve the item and verify UPIs are still there
-    const foundItem = await itemService.findById(item.id);
+    const foundItem = await itemService.findOneOrFail(item.id);
     expect(foundItem.uniqueProductIdentifiers).toHaveLength(2);
   });
 

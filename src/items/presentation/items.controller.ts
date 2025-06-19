@@ -81,7 +81,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = await this.itemsService.findById(itemId);
+    const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
@@ -101,7 +101,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = await this.itemsService.findById(itemId);
+    const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
@@ -138,7 +138,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = await this.itemsService.findById(itemId);
+    const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }

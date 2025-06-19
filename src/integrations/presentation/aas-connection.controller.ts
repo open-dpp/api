@@ -73,7 +73,7 @@ export class AasConnectionController {
       organizationId,
       aasConnection.modelId,
       connectionId,
-      'externalId',
+      `${organizationId}_${assetAdministrationShell.globalAssetId}`,
     );
 
     const dataValues = aasConnection.generateDataValues(

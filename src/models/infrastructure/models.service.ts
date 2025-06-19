@@ -87,9 +87,17 @@ export class ModelsService {
   }
 
   async findOneOrFail(id: string): Promise<Model> {
+    const model = await this.findOne(id);
+    if (!model) {
+      throw new NotFoundInDatabaseException(Model.name);
+    }
+    return model;
+  }
+
+  async findOne(id: string): Promise<Model | undefined> {
     const modelDoc = await this.modelDoc.findById(id);
     if (!modelDoc) {
-      throw new NotFoundInDatabaseException(Model.name);
+      return undefined;
     }
     return this.convertToDomain(
       modelDoc,
