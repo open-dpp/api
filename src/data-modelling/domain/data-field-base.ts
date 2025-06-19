@@ -6,13 +6,12 @@ import { GranularityLevel } from './granularity-level';
 export enum DataFieldType {
   TEXT_FIELD = 'TextField',
   PRODUCT_PASSPORT_LINK = 'ProductPassportLink',
+  NUMERIC_FIELD = 'NumericField',
 }
 
 export abstract class DataFieldBase {
   @Expose()
   readonly id: string = randomUUID();
-  @Expose({ name: 'name' })
-  protected _name: string;
   @Expose()
   readonly type: DataFieldType;
   @Expose()
@@ -23,9 +22,13 @@ export abstract class DataFieldBase {
   @Expose()
   readonly granularityLevel: GranularityLevel;
 
+  @Expose({ name: 'name' })
+  protected _name: string;
+
   get name() {
     return this._name;
   }
+
   toPlain() {
     return instanceToPlain(this);
   }
