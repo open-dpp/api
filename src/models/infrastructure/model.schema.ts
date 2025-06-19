@@ -1,5 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { PassportDoc } from '../../product-passport/infrastructure/product-passport.schema';
+import {
+  createCommonIndexesForPassportDoc,
+  PassportDoc,
+} from '../../product-passport/infrastructure/product-passport.schema';
 
 export enum ModelDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -20,3 +23,5 @@ export class ModelDoc extends PassportDoc {
   description?: string;
 }
 export const ModelSchema = SchemaFactory.createForClass(ModelDoc);
+
+createCommonIndexesForPassportDoc(ModelSchema);

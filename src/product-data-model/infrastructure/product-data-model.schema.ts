@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { VisibilityLevel } from '../domain/product.data.model';
-import { ProductDataModelBaseDoc } from '../../data-modelling/infrastructure/product-data-model-base.schema';
+import {
+  createCommonIndexesForProductDataModel,
+  ProductDataModelBaseDoc,
+} from '../../data-modelling/infrastructure/product-data-model-base.schema';
 
 export enum ProductDataModelDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -23,3 +26,5 @@ export class ProductDataModelDoc extends ProductDataModelBaseDoc {
 }
 export const ProductDataModelSchema =
   SchemaFactory.createForClass(ProductDataModelDoc);
+
+createCommonIndexesForProductDataModel(ProductDataModelSchema);

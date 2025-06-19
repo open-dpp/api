@@ -1,5 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ProductDataModelBaseDoc } from '../../data-modelling/infrastructure/product-data-model-base.schema';
+import {
+  createCommonIndexesForProductDataModel,
+  ProductDataModelBaseDoc,
+} from '../../data-modelling/infrastructure/product-data-model-base.schema';
 
 @Schema({ _id: false }) // No separate _id for embedded documents
 class PublicationDoc {
@@ -31,3 +34,5 @@ export class ProductDataModelDraftDoc extends ProductDataModelBaseDoc {
 export const ProductDataModelDraftSchema = SchemaFactory.createForClass(
   ProductDataModelDraftDoc,
 );
+
+createCommonIndexesForProductDataModel(ProductDataModelDraftSchema);

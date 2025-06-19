@@ -1,5 +1,5 @@
 import { Prop } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema } from 'mongoose';
 import { DataValueDoc, DataValueSchema } from './data-value.schema';
 
 export abstract class PassportDoc extends Document {
@@ -23,4 +23,8 @@ export abstract class PassportDoc extends Document {
 
   @Prop()
   updatedAt?: Date;
+}
+
+export function createCommonIndexesForPassportDoc(schema: Schema) {
+  schema.index({ ownedByOrganizationId: 1 });
 }
