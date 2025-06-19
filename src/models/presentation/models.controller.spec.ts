@@ -26,6 +26,7 @@ import { modelToDto } from './dto/model.dto';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { uniqueProductIdentifierToDto } from '../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -226,7 +227,9 @@ describe('ModelsController', () => {
     }
     const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
     expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
-      [...foundUniqueProductIdentifiers].map((u) => u.toPlain()).sort(sortFn),
+      [...foundUniqueProductIdentifiers]
+        .map((u) => uniqueProductIdentifierToDto(u))
+        .sort(sortFn),
     );
   });
 

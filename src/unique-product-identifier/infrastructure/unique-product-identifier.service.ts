@@ -14,11 +14,10 @@ export class UniqueProductIdentifierService {
   ) {}
 
   convertToDomain(uniqueProductIdentifierDoc: UniqueProductIdentifierDoc) {
-    const uniqueProductIdentifier = UniqueProductIdentifier.fromPlain({
-      uuid: uniqueProductIdentifierDoc._id,
+    return UniqueProductIdentifier.loadFromDb({
+      uuid: uniqueProductIdentifierDoc._id.toString(),
+      referenceId: uniqueProductIdentifierDoc.referenceId,
     });
-    uniqueProductIdentifier.linkTo(uniqueProductIdentifierDoc.referenceId);
-    return uniqueProductIdentifier;
   }
 
   async save(uniqueProductIdentifier: UniqueProductIdentifier) {

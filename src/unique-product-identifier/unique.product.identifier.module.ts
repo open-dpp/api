@@ -18,6 +18,7 @@ import {
   UniqueProductIdentifierSchema,
 } from './infrastructure/unique-product-identifier.schema';
 import { UniqueProductIdentifierService } from './infrastructure/unique-product-identifier.service';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { UniqueProductIdentifierService } from './infrastructure/unique-product-
       },
     ]),
     OrganizationsModule,
+    PermissionsModule,
     UsersModule,
     TraceabilityEventsModule,
   ],
