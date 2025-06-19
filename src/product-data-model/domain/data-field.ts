@@ -66,7 +66,22 @@ export class ProductPassportLink extends DataField {
   }
 }
 
+export class NumericField extends DataField {
+  validate(version: string, value: unknown): DataFieldValidationResult {
+    const result = z.number().optional().safeParse(value);
+    return DataFieldValidationResult.fromPlain({
+      dataFieldId: this.id,
+      dataFieldName: this.name,
+      isValid: result.success,
+      errorMessage: !result.success
+        ? result.error.issues[0].message
+        : undefined,
+    });
+  }
+}
+
 export const dataFieldSubtypes = [
   { value: TextField, name: DataFieldType.TEXT_FIELD },
   { value: ProductPassportLink, name: DataFieldType.PRODUCT_PASSPORT_LINK },
+  { value: NumericField, name: DataFieldType.NUMERIC_FIELD },
 ];
