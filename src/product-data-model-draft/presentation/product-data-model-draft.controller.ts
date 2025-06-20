@@ -156,6 +156,7 @@ export class ProductDataModelDraftController {
     await this.productDataModelService.save(publishedProductDataModel);
     const draft = await this.productDataModelDraftService.save(
       foundProductDataModelDraft,
+      publishedProductDataModel.version,
     );
 
     return draft.toPlain();
