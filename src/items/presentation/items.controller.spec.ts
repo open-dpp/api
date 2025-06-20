@@ -238,7 +238,7 @@ describe('ItemsController', () => {
         ),
       );
     expect(response.status).toEqual(201);
-    const found = await itemsService.findById(response.body.id);
+    const found = await itemsService.findOneOrFail(response.body.id);
     const foundUniqueProductIdentifiers =
       await uniqueProductIdentifierService.findAllByReferencedId(found.id);
     expect(foundUniqueProductIdentifiers).toHaveLength(1);
@@ -367,7 +367,7 @@ describe('ItemsController', () => {
     ];
     expect(response.body.dataValues).toEqual(ignoreIds(expected));
 
-    const foundItem = await itemsService.findById(response.body.id);
+    const foundItem = await itemsService.findOneOrFail(response.body.id);
 
     expect(foundItem.dataValues).toEqual(response.body.dataValues);
   });
@@ -492,7 +492,7 @@ describe('ItemsController', () => {
       },
     ];
     expect(response.body.dataValues).toEqual(expectedDataValues);
-    const foundItem = await itemsService.findById(response.body.id);
+    const foundItem = await itemsService.findOneOrFail(response.body.id);
     expect(foundItem.dataValues).toEqual(expectedDataValues);
   });
 

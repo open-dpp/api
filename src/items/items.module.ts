@@ -14,6 +14,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
 import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { ItemsApplicationService } from './presentation/items-application.service';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { ProductDataModelModule } from '../product-data-model/product.data.model
     TraceabilityEventsModule,
   ],
   controllers: [ItemsController],
-  providers: [ItemsService, OrganizationsService],
+  providers: [ItemsService, ItemsApplicationService, OrganizationsService],
   exports: [ItemsService],
 })
 export class ItemsModule {}

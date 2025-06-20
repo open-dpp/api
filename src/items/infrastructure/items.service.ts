@@ -6,7 +6,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model as MongooseModel } from 'mongoose';
 import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 
 @Injectable()
 export class ItemsService {
@@ -14,7 +13,6 @@ export class ItemsService {
     @InjectModel(ItemDoc.name)
     private itemDoc: MongooseModel<ItemDoc>,
     private uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly traceabilityEventsService: TraceabilityEventsService,
   ) {}
 
   convertToDomain(
@@ -67,10 +65,18 @@ export class ItemsService {
     return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
   }
 
-  async findById(id: string) {
+  async findOneOrFail(id: string): Promise<Item> {
+    const item = await this.findOne(id);
+    if (!item) {
+      throw new NotFoundInDatabaseException(Item.name);
+    }
+    return item;
+  }
+
+  async findOne(id: string): Promise<Item | undefined> {
     const itemDoc = await this.itemDoc.findById(id);
     if (!itemDoc) {
-      throw new NotFoundInDatabaseException(Item.name);
+      return undefined;
     }
     return this.convertToDomain(
       itemDoc,

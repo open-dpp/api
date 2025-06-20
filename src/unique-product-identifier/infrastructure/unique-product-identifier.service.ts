@@ -41,9 +41,17 @@ export class UniqueProductIdentifierService {
     const uniqueProductIdentifierDoc =
       await this.uniqueProductIdentifierDoc.findById(uuid);
     if (!uniqueProductIdentifierDoc) {
-      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name);
+      return undefined;
     }
     return this.convertToDomain(uniqueProductIdentifierDoc);
+  }
+
+  async findOneOrFail(uuid: string) {
+    const uniqueProductIdentifier = await this.findOne(uuid);
+    if (!uniqueProductIdentifier) {
+      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name);
+    }
+    return uniqueProductIdentifier;
   }
 
   async findAllByReferencedId(referenceId: string) {

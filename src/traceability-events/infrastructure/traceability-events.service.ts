@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 import { TraceabilityEventDocument } from './traceability-event.document';
 import { TraceabilityEventWrapper } from '../domain/traceability-event-wrapper';
 import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
-import { AuthContext } from '../../auth/auth-request';
 import { TraceabilityEvent } from '../domain/traceability-event';
 
 @Injectable()
@@ -16,7 +15,6 @@ export class TraceabilityEventsService {
 
   async create<T extends TraceabilityEvent>(
     dppEvent: TraceabilityEventWrapper<T>,
-    authContext?: AuthContext,
   ) {
     const newTraceabilityEvent = await this.traceabilityEventDocument.create({
       _id: dppEvent.id,
@@ -24,7 +22,7 @@ export class TraceabilityEventsService {
       updatedAt: new Date(), // Always set updatedAt to current time when creating a new event
       ip: dppEvent.ip,
       data: dppEvent.data,
-      userId: authContext ? authContext.user.id : dppEvent.userId,
+      userId: dppEvent.userId,
       itemId: dppEvent.itemId,
       chargeId: dppEvent.chargeId,
       organizationId: dppEvent.organizationId,

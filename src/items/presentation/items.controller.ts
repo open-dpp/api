@@ -11,12 +11,8 @@ import {
 } from '@nestjs/common';
 import { AuthRequest } from '../../auth/auth-request';
 import { ItemsService } from '../infrastructure/items.service';
-import { Item } from '../domain/item';
 import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
-import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data';
-import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
-import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import {
@@ -25,13 +21,14 @@ import {
 } from '../../product-passport/presentation/dto/data-value.dto';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { ItemsApplicationService } from './items-application.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
   constructor(
     private readonly itemsService: ItemsService,
     private readonly permissionsService: PermissionsService,
-    private readonly traceabilityEventsService: TraceabilityEventsService,
+    private readonly itemsApplicationService: ItemsApplicationService,
     private readonly modelsService: ModelsService,
     private readonly productDataModelService: ProductDataModelService,
   ) {}
@@ -46,44 +43,12 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const model = await this.modelsService.findOneOrFail(modelId);
-    if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    const item = Item.create({
+    const item = await this.itemsApplicationService.createItem(
       organizationId,
-      userId: req.authContext.user.id,
-    });
-
-    const productDataModel = model.productDataModelId
-      ? await this.productDataModelService.findOneOrFail(
-          model.productDataModelId,
-        )
-      : undefined;
-    item.defineModel(model, productDataModel);
-    item.createUniqueProductIdentifier();
-    const itemDto = itemToDto(await this.itemsService.save(item));
-    await this.traceabilityEventsService.create(
-      ItemCreatedEventData.createWithWrapper({
-        itemId: item.id,
-        userId: req.authContext.user.id,
-        organizationId: organizationId,
-      }),
-      req.authContext,
+      modelId,
+      req.authContext.user.id,
     );
-    for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
-      await this.traceabilityEventsService.create(
-        UniqueProductIdentifierCreatedEventData.createWithWrapper({
-          itemId: item.id,
-          userId: req.authContext.user.id,
-          organizationId: organizationId,
-          uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
-        }),
-        req.authContext,
-      );
-    }
-    return itemDto;
+    return itemToDto(await this.itemsService.save(item));
   }
 
   @Get()
@@ -116,7 +81,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = await this.itemsService.findById(itemId);
+    const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
@@ -136,7 +101,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = await this.itemsService.findById(itemId);
+    const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }
@@ -173,7 +138,7 @@ export class ItemsController {
       organizationId,
       req.authContext,
     );
-    const item = await this.itemsService.findById(itemId);
+    const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
     }

@@ -23,13 +23,15 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { IntegrationModule } from '../integration.module';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
-import { AasFieldAssignment, AasConnection } from '../domain/aas-connection';
+import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
 import { json } from 'express';
 import { semitrailerTruckAas } from '../domain/semitrailer-truck-aas';
 import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
 import { Model } from '../../models/domain/model';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { ConfigService } from '@nestjs/config';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { ItemsService } from '../../items/infrastructure/items.service';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -41,6 +43,8 @@ describe('AasConnectionController', () => {
   let productDataModelService: ProductDataModelService;
   let aasConnectionService: AasConnectionService;
   let modelsService: ModelsService;
+  let itemsSevice: ItemsService;
+  let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let configService: ConfigService;
 
   const authContext = new AuthContext();
@@ -93,6 +97,10 @@ describe('AasConnectionController', () => {
     productDataModelService = moduleRef.get(ProductDataModelService);
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
+    itemsSevice = moduleRef.get(ItemsService);
+    uniqueProductIdentifierService = moduleRef.get(
+      UniqueProductIdentifierService,
+    );
     configService = moduleRef.get(ConfigService);
 
     await app.init();
@@ -165,12 +173,25 @@ describe('AasConnectionController', () => {
     await modelsService.save(model);
     await aasConnectionService.save(aasMapping);
 
+    const globalAssetId = `Semitrailer_Truck_-10204004-0010-02_${randomUUID()}`;
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
       .set('API_TOKEN', configService.get('API_TOKEN'))
-      .send(semitrailerTruckAas);
+      .send({
+        ...semitrailerTruckAas,
+        assetAdministrationShells: [
+          {
+            ...semitrailerTruckAas.assetAdministrationShells[0],
+            assetInformation: {
+              assetKind: 'Instance',
+              assetType: 'product',
+              globalAssetId: globalAssetId,
+            },
+          },
+        ],
+      });
     expect(response.status).toEqual(201);
     expect(response.body.dataValues).toEqual([
       {
@@ -180,6 +201,13 @@ describe('AasConnectionController', () => {
         row: 0,
       },
     ]);
+    const foundUniqueProductIdentifier =
+      await uniqueProductIdentifierService.findOneOrFail(globalAssetId);
+    const item = await itemsSevice.findOneOrFail(
+      foundUniqueProductIdentifier.referenceId,
+    );
+    expect(item.modelId).toEqual(model.id);
+    expect(item.productDataModelId).toEqual(productDataModel.id);
   });
 
   it(`/CREATE connection`, async () => {
