@@ -23,7 +23,7 @@ export class UniqueProductIdentifierController {
   @Get('unique-product-identifiers/:id/view')
   async buildView(@Param('id') id: string) {
     const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOne(id);
+      await this.uniqueProductIdentifierService.findOneOrFail(id);
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,
     );
@@ -51,7 +51,7 @@ export class UniqueProductIdentifierController {
       req.authContext,
     );
     const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOne(id);
+      await this.uniqueProductIdentifierService.findOneOrFail(id);
 
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,

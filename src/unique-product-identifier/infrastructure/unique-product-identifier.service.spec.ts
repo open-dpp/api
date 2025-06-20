@@ -48,12 +48,12 @@ describe('UniqueProductIdentifierService', () => {
       externalUUID,
     });
     const { uuid } = await service.save(uniqueProductIdentifier);
-    const found = await service.findOne(uuid);
+    const found = await service.findOneOrFail(uuid);
     expect(found.referenceId).toEqual(referenceId);
   });
 
   it('fails if requested unique product identifier model could not be found', async () => {
-    await expect(service.findOne(randomUUID())).rejects.toThrow(
+    await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(UniqueProductIdentifier.name),
     );
   });

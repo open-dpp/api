@@ -176,12 +176,25 @@ describe('AasConnectionController', () => {
     await modelsService.save(model);
     await aasConnectionService.save(aasMapping);
 
+    const globalAssetId = `Semitrailer_Truck_-10204004-0010-02_${randomUUID()}`;
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
       .set('API_TOKEN', configService.get('API_TOKEN'))
-      .send(semitrailerTruckAas);
+      .send({
+        ...semitrailerTruckAas,
+        assetAdministrationShells: [
+          ...semitrailerTruckAas.assetAdministrationShells,
+          {
+            assetInformation: {
+              assetKind: 'Instance',
+              assetType: 'product',
+              globalAssetId: globalAssetId,
+            },
+          },
+        ],
+      });
     expect(response.status).toEqual(201);
     expect(response.body.dataValues).toEqual([
       {
@@ -192,13 +205,7 @@ describe('AasConnectionController', () => {
       },
     ]);
     const foundUniqueProductIdentifier =
-      await uniqueProductIdentifierService.findOne(
-        `${organizationId}_${
-          AssetAdministrationShell.create({
-            content: semitrailerTruckAas,
-          }).globalAssetId
-        }`,
-      );
+      await uniqueProductIdentifierService.findOneOrFail(globalAssetId);
     const item = await itemsSevice.findOneOrFail(
       foundUniqueProductIdentifier.referenceId,
     );

@@ -35,6 +35,7 @@ import {
 } from './dto/update-aas-connection.dto';
 import { GetAasConnectionCollectionSchema } from './dto/get-aas-connection-collection.dto';
 import { ItemsApplicationService } from '../../items/presentation/items-application.service';
+import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
@@ -46,11 +47,12 @@ export class AasConnectionController {
     private productDataModelService: ProductDataModelService,
     private configService: ConfigService,
     private permissionsService: PermissionsService,
+    private uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {}
 
   @Public()
   @Post('/connections/:connectionId/items/')
-  async create(
+  async upsertItem(
     @Headers('API_TOKEN') apiToken: string,
     @Param('orgaId') organizationId: string,
     @Param('connectionId') connectionId: string,
@@ -69,12 +71,21 @@ export class AasConnectionController {
       content: aasJson,
     });
 
-    const item = await this.itemsApplicationService.createItem(
-      organizationId,
-      aasConnection.modelId,
-      connectionId,
-      `${organizationId}_${assetAdministrationShell.globalAssetId}`,
-    );
+    const uniqueProductIdentifier =
+      await this.uniqueProductIdentifierService.findOne(
+        assetAdministrationShell.globalAssetId,
+      );
+
+    const item = uniqueProductIdentifier
+      ? await this.itemService.findOneOrFail(
+          uniqueProductIdentifier.referenceId,
+        )
+      : await this.itemsApplicationService.createItem(
+          organizationId,
+          aasConnection.modelId,
+          connectionId,
+          assetAdministrationShell.globalAssetId,
+        );
 
     const dataValues = aasConnection.generateDataValues(
       assetAdministrationShell,
