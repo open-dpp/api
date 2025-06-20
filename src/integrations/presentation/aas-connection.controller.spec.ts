@@ -26,10 +26,7 @@ import { AasConnectionService } from '../infrastructure/aas-connection.service';
 import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
 import { json } from 'express';
 import { semitrailerTruckAas } from '../domain/semitrailer-truck-aas';
-import {
-  AssetAdministrationShell,
-  AssetAdministrationShellType,
-} from '../domain/asset-administration-shell';
+import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
 import { Model } from '../../models/domain/model';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { ConfigService } from '@nestjs/config';
@@ -185,8 +182,8 @@ describe('AasConnectionController', () => {
       .send({
         ...semitrailerTruckAas,
         assetAdministrationShells: [
-          ...semitrailerTruckAas.assetAdministrationShells,
           {
+            ...semitrailerTruckAas.assetAdministrationShells[0],
             assetInformation: {
               assetKind: 'Instance',
               assetType: 'product',
