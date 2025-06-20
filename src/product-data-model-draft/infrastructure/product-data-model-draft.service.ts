@@ -19,12 +19,13 @@ export class ProductDataModelDraftService {
 
   async save(
     productDataModel: ProductDataModelDraft,
+    newVersion?: string,
   ): Promise<ProductDataModelDraft> {
     const draftDoc = await this.productDataModelDraftDoc.findOneAndUpdate(
       { _id: productDataModel.id },
       {
         name: productDataModel.name,
-        version: productDataModel.version,
+        version: newVersion || productDataModel.version,
         _schemaVersion: ProductDataModelDraftDocSchemaVersion.v1_0_1,
         publications: productDataModel.publications,
         sections: productDataModel.sections.map((s) => ({
