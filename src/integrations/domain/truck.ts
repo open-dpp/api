@@ -459,7 +459,7 @@ export const truckAas = {
             {
               modelType: 'Entity',
               entityType: 'SelfManagedEntity',
-              globalAssetID: 'Semitrailer_-10204004-0010-01',
+              globalAssetID: 'Semitrailer',
               statements: [
                 {
                   modelType: 'Property',
@@ -484,7 +484,7 @@ export const truckAas = {
             {
               modelType: 'Entity',
               entityType: 'SelfManagedEntity',
-              globalAssetID: 'Semitrailer_Truck_-10204004-0010-02',
+              globalAssetID: 'Semitrailer_Truck',
               statements: [
                 {
                   modelType: 'Property',

@@ -23,10 +23,7 @@ describe('AssetAdministrationShell', () => {
     });
 
     expect(
-      truck.findPropertyByIdShorts(
-        'Semitrailer_-10204004-0010-01',
-        'GlobalAssetId',
-      ),
+      truck.findPropertyByIdShorts('Semitrailer', 'GlobalAssetId'),
     ).toEqual({
       property: {
         idShort: 'GlobalAssetId',
@@ -34,7 +31,7 @@ describe('AssetAdministrationShell', () => {
         modelType: 'Property',
         value: 'Semitrailer_-10204004-0010-01',
       },
-      parentIdShort: 'Semitrailer_-10204004-0010-01',
+      parentIdShort: 'Semitrailer',
     });
   });
 
