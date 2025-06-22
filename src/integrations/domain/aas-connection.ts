@@ -7,6 +7,9 @@ import {
 } from './asset-administration-shell';
 import { Model } from '../../models/domain/model';
 import { ValueError } from '../../exceptions/domain.errors';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { z } from 'zod/v4';
 
 export class AasConnection {
   private constructor(
@@ -79,7 +82,10 @@ export class AasConnection {
     return this.ownedByOrganizationId === organizationId;
   }
 
-  generateDataValues(assetAdministrationShell: AssetAdministrationShell) {
+  generateDataValues(
+    assetAdministrationShell: AssetAdministrationShell,
+    productDataModel: ProductDataModel,
+  ) {
     return assetAdministrationShell.propertiesWithParent
       .map(({ parentIdShort, property }) => {
         const field = this.fieldAssignments.find(
@@ -87,23 +93,32 @@ export class AasConnection {
             fieldMapping.idShort === property.idShort &&
             fieldMapping.idShortParent === parentIdShort,
         );
+
         if (field) {
-          return DataValue.create({
-            dataSectionId: field.sectionId,
-            dataFieldId: field.dataFieldId,
-            value: this.parseValue(property),
-            row: 0, // TODO: Replace hard coded row id
-          });
+          const dataFieldOfProductDataModel = productDataModel
+            .findSectionById(field.sectionId)
+            ?.dataFields.find((d) => d.id === field.dataFieldId);
+          if (dataFieldOfProductDataModel) {
+            return DataValue.create({
+              dataSectionId: field.sectionId,
+              dataFieldId: field.dataFieldId,
+              value: this.parseValue(
+                property,
+                dataFieldOfProductDataModel.type,
+              ),
+              row: 0, // TODO: Replace hard coded row id
+            });
+          }
         }
         return undefined;
       })
       .filter((value) => value !== undefined);
   }
 
-  private parseValue(property: AasProperty) {
-    switch (property.valueType) {
-      // case 'xs:double':
-      //   return z.number().parse(Number(property.value));
+  private parseValue(property: AasProperty, dataFieldType: DataFieldType) {
+    switch (dataFieldType) {
+      case DataFieldType.NUMERIC_FIELD:
+        return z.number().parse(Number(property.value));
       default:
         return property.value;
     }

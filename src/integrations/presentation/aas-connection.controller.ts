@@ -36,12 +36,14 @@ import {
 import { GetAasConnectionCollectionSchema } from './dto/get-aas-connection-collection.dto';
 import { ItemsApplicationService } from '../../items/presentation/items-application.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
   constructor(
     private readonly modelsService: ModelsService,
     private readonly itemService: ItemsService,
+    private readonly organizationService: OrganizationsService,
     private readonly itemsApplicationService: ItemsApplicationService,
     private aasConnectionService: AasConnectionService,
     private productDataModelService: ProductDataModelService,
@@ -76,6 +78,9 @@ export class AasConnectionController {
         assetAdministrationShell.globalAssetId,
       );
 
+    const organization =
+      await this.organizationService.findOneOrFail(organizationId);
+
     const item = uniqueProductIdentifier
       ? await this.itemService.findOneOrFail(
           uniqueProductIdentifier.referenceId,
@@ -83,12 +88,17 @@ export class AasConnectionController {
       : await this.itemsApplicationService.createItem(
           organizationId,
           aasConnection.modelId,
-          connectionId,
+          organization.createdByUserId,
           assetAdministrationShell.globalAssetId,
         );
 
+    const productDataModel = await this.productDataModelService.findOneOrFail(
+      aasConnection.dataModelId,
+    );
+
     const dataValues = aasConnection.generateDataValues(
       assetAdministrationShell,
+      productDataModel,
     );
     item.modifyDataValues(dataValues);
     return itemToDto(await this.itemService.save(item));
