@@ -15,6 +15,7 @@ import { AasConnectionService } from './infrastructure/aas-connection.service';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ItemsApplicationService } from '../items/presentation/items-application.service';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ItemsApplicationService } from '../items/presentation/items-application
         schema: AasConnectionSchema,
       },
     ]),
+    OrganizationsModule,
     ProductDataModelModule,
     UniqueProductIdentifierModule,
     PermissionsModule,

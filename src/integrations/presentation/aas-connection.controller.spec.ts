@@ -32,6 +32,7 @@ import { ModelsService } from '../../models/infrastructure/models.service';
 import { ConfigService } from '@nestjs/config';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
+import { Organization } from '../../organizations/domain/organization';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -98,6 +99,16 @@ describe('AasConnectionController', () => {
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
     itemsSevice = moduleRef.get(ItemsService);
+    const organizationService = moduleRef.get(OrganizationsService);
+    await organizationService.save(
+      Organization.fromPlain({
+        id: organizationId,
+        name: 'orga name',
+        members: [authContext.user],
+        createdByUserId: authContext.user.id,
+        ownedByUserId: authContext.user.id,
+      }),
+    );
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );

@@ -11,6 +11,8 @@ import { ProductDataModel } from '../../product-data-model/domain/product.data.m
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
 import { randomUUID } from 'crypto';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 describe('AasMapping', () => {
   const organizationId = randomUUID();
@@ -138,23 +140,122 @@ describe('AasMapping', () => {
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
-    const fieldAssignment = AasFieldAssignment.create({
-      dataFieldId: 'internalField',
-      sectionId: 'internalSectionId',
+
+    const sectionId1 = randomUUID();
+    const sectionId2 = randomUUID();
+    const dataFieldId1 = randomUUID();
+    const dataFieldId2 = randomUUID();
+    const dataFieldId3 = randomUUID();
+
+    const laptopModel = {
+      name: 'Laptop',
+      version: '1.0',
+      ownedByOrganizationId: randomUUID(),
+      createdByUserId: randomUUID(),
+      sections: [
+        {
+          id: sectionId1,
+          name: 'Section name',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 2 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 2 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              id: dataFieldId1,
+              type: 'TextField',
+              name: 'Title',
+              options: { min: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 2 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+            {
+              id: dataFieldId2,
+              type: 'TextField',
+              name: 'Title 2',
+              options: { min: 7 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 2 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+        {
+          id: sectionId2,
+          name: 'Section name 2',
+          type: SectionType.GROUP,
+          layout: {
+            cols: { sm: 2 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 2 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          dataFields: [
+            {
+              id: dataFieldId3,
+              type: 'NumericField',
+              name: 'Title 3',
+              options: { min: 8 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 2 },
+                rowStart: { sm: 1 },
+                rowSpan: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.ITEM,
+            },
+          ],
+        },
+      ],
+    };
+
+    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+
+    const fieldAssignment1 = AasFieldAssignment.create({
+      dataFieldId: dataFieldId3,
+      sectionId: sectionId2,
       idShortParent: 'ProductCarbonFootprint_A1A3',
       idShort: 'PCFCO2eq',
     });
-    aasConnection.addFieldAssignment(fieldAssignment);
+    const fieldAssignment2 = AasFieldAssignment.create({
+      dataFieldId: dataFieldId2,
+      sectionId: sectionId1,
+      idShortParent: 'ProductCarbonFootprint_A1A3',
+      idShort: 'PCFCalculationMethod',
+    });
+    aasConnection.addFieldAssignment(fieldAssignment1);
+    aasConnection.addFieldAssignment(fieldAssignment2);
 
     const dataValues = aasConnection.generateDataValues(
       AssetAdministrationShell.create({ content: semitrailerTruckAas }),
+      productDataModel,
     );
     expect(dataValues).toEqual(
       ignoreIds([
         DataValue.create({
-          dataSectionId: 'internalSectionId',
-          dataFieldId: 'internalField',
-          value: '2.6300',
+          dataSectionId: sectionId1,
+          dataFieldId: dataFieldId2,
+          value: 'GHG',
+          row: 0,
+        }),
+        DataValue.create({
+          dataSectionId: sectionId2,
+          dataFieldId: dataFieldId3,
+          value: 2.63,
           row: 0,
         }),
       ]),

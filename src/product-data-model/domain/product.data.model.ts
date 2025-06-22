@@ -122,11 +122,15 @@ export class ProductDataModel {
   }
 
   findSectionByIdOrFail(id: string): DataSection {
-    const section = this.sections.find((s) => s.id === id);
+    const section = this.findSectionById(id);
     if (!section) {
       throw new Error(`Section with id ${id} not found`);
     }
     return section;
+  }
+
+  findSectionById(id: string): DataSection | undefined {
+    return this.sections.find((s) => s.id === id);
   }
 
   validate(
