@@ -1,226 +1,241 @@
-import { ProductDataModel, VisibilityLevel } from './product.data.model';
-import { SectionType } from '../../data-modelling/domain/section-base';
+import {
+  ProductDataModel,
+  ProductDataModelDbProps,
+  VisibilityLevel,
+} from './product.data.model';
 import { randomUUID } from 'crypto';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
-import { DataFieldValidationResult } from './data-field';
+import { DataFieldValidationResult, TextField } from './data-field';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { GroupSection, RepeaterSection } from './section';
+import { Layout } from '../../data-modelling/domain/layout';
 
 describe('ProductDataModel', () => {
-  it('is created from plain', () => {
-    const plain = {
-      name: 'Laptop',
-      version: '1.0',
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
-      visibility: VisibilityLevel.PUBLIC,
-      sections: [
-        {
-          type: SectionType.GROUP,
-          name: 'Umwelt',
-          dataFields: [
-            {
-              type: 'TextField',
-              name: 'Title',
-              options: { max: 2 },
-            },
-            {
-              type: 'TextField',
-              name: 'Title 2',
-              options: { min: 2 },
-            },
-          ],
-          subSections: [],
-          parentId: undefined,
-        },
-        {
-          name: 'Material',
-          type: SectionType.REPEATABLE,
-          dataFields: [
-            {
-              type: 'TextField',
-              name: 'rep field 1',
-              options: {},
-            },
-            {
-              type: 'TextField',
-              name: 'rep field 2',
-              options: {},
-            },
-          ],
-          subSections: [],
-          parentId: undefined,
-        },
-      ],
-    };
-
-    const productDataModel = ProductDataModel.fromPlain(plain);
-    expect(productDataModel.version).toEqual(plain.version);
-    expect(productDataModel.name).toEqual(plain.name);
-    expect(productDataModel.sections).toHaveLength(2);
-    for (const [index, section] of plain.sections.entries()) {
-      const currentSection = productDataModel.sections[index];
-      expect(currentSection.dataFields).toHaveLength(section.dataFields.length);
-      expect(currentSection.type).toEqual(section.type);
-      expect(currentSection.name).toEqual(section.name);
-
-      for (const [dataFieldIndex, dataField] of section.dataFields.entries()) {
-        const currentField = currentSection.dataFields[dataFieldIndex];
-        expect(currentField.type).toEqual(dataField.type);
-        expect(currentField.name).toEqual(dataField.name);
-        expect(currentField.options).toEqual(dataField.options);
-      }
-    }
-
-    expect(productDataModel.toPlain()).toEqual({
-      ...plain,
-      id: expect.any(String),
-      sections: plain.sections.map((s) => ({
-        id: expect.any(String),
-        ...s,
-        dataFields: s.dataFields.map((f) => ({ id: expect.any(String), ...f })),
-      })),
-    });
-  });
-
-  const laptopModel = {
+  const laptopModel: ProductDataModelDbProps = {
     id: 'product-1',
     name: 'Laptop',
+    createdByUserId: randomUUID(),
+    ownedByOrganizationId: randomUUID(),
+    visibility: VisibilityLevel.PRIVATE,
     version: '1.0',
     sections: [
-      {
+      GroupSection.loadFromDb({
         id: 'section-1',
         name: 'Section 1',
-        type: SectionType.GROUP,
+        parentId: undefined,
+        subSections: [],
+        layout: Layout.create({
+          cols: { sm: 4 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          colStart: { sm: 1 },
+          rowStart: { sm: 1 },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: 'field-1',
-            type: 'TextField',
             name: 'Title',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 1 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 2 },
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-2',
-            type: 'TextField',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 2 },
+              rowStart: { sm: 1 },
+            }),
             name: 'Title 2',
             options: { min: 7 },
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-1-item',
-            type: 'TextField',
             name: 'Title Field 1 at item level',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 3 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 2 },
             granularityLevel: GranularityLevel.ITEM,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-2-item',
-            type: 'TextField',
             name: 'Title Field 2 at item level',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 4 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 7 },
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
-      },
-      {
+      }),
+      RepeaterSection.loadFromDb({
         id: 'section-2',
         name: 'Section 2',
-        type: SectionType.REPEATABLE,
+        parentId: undefined,
+        layout: Layout.create({
+          cols: { sm: 4 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          colStart: { sm: 1 },
+          rowStart: { sm: 1 },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: 'field-3',
-            type: 'TextField',
             name: 'Title 3',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 1 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-4',
-            type: 'TextField',
             name: 'Title 4',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 2 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-3-item',
-            type: 'TextField',
             name: 'Title Field 3 at item level',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 3 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.ITEM,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-4-item',
-            type: 'TextField',
             name: 'Title Field 4 at item level',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 4 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
         subSections: ['section-4'],
         granularityLevel: GranularityLevel.MODEL,
-      },
-      {
+      }),
+      GroupSection.loadFromDb({
         id: 'section-3',
         name: 'Section 3',
-        type: SectionType.GROUP,
+        parentId: undefined,
+        subSections: [],
+        layout: Layout.create({
+          cols: { sm: 2 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          colStart: { sm: 1 },
+          rowStart: { sm: 1 },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: 'field-5',
-            type: 'TextField',
             name: 'Title 5',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 1 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'field-5-item',
-            type: 'TextField',
             name: 'Title Field 5 at item level',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 2 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
-      },
-      {
+      }),
+      GroupSection.loadFromDb({
         parentId: 'section-2',
         id: 'section-4',
         name: 'Section 4',
-        type: SectionType.GROUP,
+        subSections: [],
+        layout: Layout.create({
+          cols: { sm: 2 },
+          colSpan: { sm: 1 },
+          rowSpan: { sm: 1 },
+          colStart: { sm: 1 },
+          rowStart: { sm: 1 },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: 'field-6',
-            type: 'TextField',
             name: 'Title 6',
+            layout: Layout.create({
+              colSpan: { sm: 1 },
+              rowSpan: { sm: 1 },
+              colStart: { sm: 1 },
+              rowStart: { sm: 1 },
+            }),
             options: { min: 8 },
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
-      },
+      }),
     ],
   };
 
   it('is published', () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'Orga', user });
-    const otherOrganization = Organization.create({ name: 'Orga', user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
+    const otherOrganizationId = randomUUID();
     const dataModel = ProductDataModel.create({
       name: 'laptop',
-      user,
-      organization,
+      userId,
+      organizationId,
       visibility: VisibilityLevel.PRIVATE,
     });
-    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
-    expect(dataModel.isOwnedBy(otherOrganization)).toBeFalsy();
+    expect(dataModel.isOwnedBy(organizationId)).toBeTruthy();
+    expect(dataModel.isOwnedBy(otherOrganizationId)).toBeFalsy();
     dataModel.publish();
-    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
+    expect(dataModel.isOwnedBy(organizationId)).toBeTruthy();
     expect(dataModel.isPublic()).toBeTruthy();
     expect(dataModel.visibility).toEqual(VisibilityLevel.PUBLIC);
   });
 
   it('should create data values at model level', () => {
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     const dataValues = productDataModel.createInitialDataValues(
       GranularityLevel.MODEL,
     );
@@ -249,7 +264,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should create data values at item level', () => {
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     const dataValues = productDataModel.createInitialDataValues(
       GranularityLevel.ITEM,
     );
@@ -278,7 +293,7 @@ describe('ProductDataModel', () => {
   });
   //
   it('should validate values successfully', () => {
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
 
     const dataValues = [
       DataValue.create({
@@ -325,32 +340,32 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-1',
         dataFieldName: 'Title',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-2',
         dataFieldName: 'Title 2',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-3',
         dataFieldName: 'Title 3',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-4',
         dataFieldName: 'Title 4',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-6',
         dataFieldName: 'Title 6',
         isValid: true,
@@ -359,7 +374,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should validate values successfully if there are no data values for repeatable section', () => {
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
 
     const dataValues = [
       DataValue.create({
@@ -394,22 +409,22 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-1',
         dataFieldName: 'Title',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-2',
         dataFieldName: 'Title 2',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-6',
         dataFieldName: 'Title 6',
         isValid: true,
@@ -418,7 +433,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should fail validation caused by missing field and wrong type', () => {
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     const dataValues = [
       DataValue.create({
         value: 'value 1',
@@ -452,36 +467,36 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeFalsy();
     expect(validationOutput.validationResults).toEqual([
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-1',
         dataFieldName: 'Title',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-2',
         dataFieldName: 'Title 2',
         isValid: false,
         errorMessage: 'Value for data field is missing',
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-3',
         dataFieldName: 'Title 3',
         isValid: false,
         row: 0,
         errorMessage: 'Value for data field is missing',
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-4',
         dataFieldName: 'Title 4',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
         isValid: false,
-        errorMessage: 'Expected string, received object',
+        errorMessage: 'Invalid input: expected string, received object',
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-6',
         dataFieldName: 'Title 6',
         isValid: true,

@@ -25,11 +25,19 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { UsersService } from '../../users/infrastructure/users.service';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { SectionType } from '../../data-modelling/domain/section-base';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { Layout } from '../../data-modelling/domain/layout';
+import {
+  GroupSection,
+  RepeaterSection,
+} from '../../product-data-model/domain/section';
+import { TextField } from '../../product-data-model/domain/data-field';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -99,99 +107,103 @@ describe('ItemsService', () => {
       userId: userId,
       organizationId: organizationId,
     });
-    const productDataModel = ProductDataModel.fromPlain({
+    const productDataModel = ProductDataModel.loadFromDb({
+      id: randomUUID(),
       name: 'Laptop',
       version: '1.0',
+      visibility: VisibilityLevel.PRIVATE,
       ownedByOrganizationId: organizationId,
       createdByUserId: userId,
       sections: [
-        {
+        GroupSection.loadFromDb({
+          id: randomUUID(),
+          parentId: undefined,
+          subSections: [],
           name: 'Section 1',
-          type: SectionType.GROUP,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
-              type: 'TextField',
+            TextField.create({
               name: 'Title',
               options: { min: 2 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
-            {
-              type: 'TextField',
+            }),
+            TextField.create({
               name: 'Title 2',
               options: { min: 7 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 2 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
+            }),
           ],
-        },
-        {
+        }),
+        GroupSection.loadFromDb({
+          id: randomUUID(),
           name: 'Section 2',
-          type: SectionType.GROUP,
-          layout: {
+          parentId: undefined,
+          subSections: [],
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
-              type: 'TextField',
+            TextField.create({
               name: 'Title 3',
               options: { min: 8 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
+            }),
           ],
-        },
-        {
+        }),
+        RepeaterSection.loadFromDb({
+          id: randomUUID(),
+          parentId: undefined,
+          subSections: [],
           name: 'Section 3',
-          type: SectionType.REPEATABLE,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
-              type: 'TextField',
+            TextField.create({
               name: 'Title 4',
               options: { min: 8 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
+            }),
           ],
-        },
+        }),
       ],
     });
 

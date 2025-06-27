@@ -1,5 +1,3 @@
-import { Expose, instanceToPlain, Type } from 'class-transformer';
-import { randomUUID } from 'crypto';
 import { Layout } from './layout';
 import { GranularityLevel } from './granularity-level';
 
@@ -10,26 +8,16 @@ export enum DataFieldType {
 }
 
 export abstract class DataFieldBase {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly type: DataFieldType;
-  @Expose()
-  readonly options: Record<string, unknown> = {};
-  @Expose()
-  @Type(() => Layout)
-  readonly layout: Layout;
-  @Expose()
-  readonly granularityLevel: GranularityLevel;
-
-  @Expose({ name: 'name' })
-  protected _name: string;
+  public constructor(
+    public readonly id: string,
+    protected _name: string,
+    public readonly type: DataFieldType,
+    public readonly options: Record<string, unknown> = {},
+    public readonly layout: Layout,
+    public readonly granularityLevel: GranularityLevel,
+  ) {}
 
   get name() {
     return this._name;
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
   }
 }

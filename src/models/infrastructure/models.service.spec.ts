@@ -2,9 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
 import { Model } from '../domain/model';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { Organization } from '../../organizations/domain/organization';
-import { SectionType } from '../../data-modelling/domain/section-base';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
 import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
@@ -30,6 +32,12 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import {
+  GroupSection,
+  RepeaterSection,
+} from '../../product-data-model/domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import { TextField } from '../../product-data-model/domain/data-field';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -87,97 +95,103 @@ describe('ModelsService', () => {
       userId: user.id,
       organizationId: organization.id,
     });
-    const productDataModel = ProductDataModel.fromPlain({
+    const productDataModel = ProductDataModel.loadFromDb({
+      id: randomUUID(),
+      createdByUserId: randomUUID(),
+      ownedByOrganizationId: organization.id,
+      visibility: VisibilityLevel.PRIVATE,
       name: 'Laptop',
       version: '1.0',
       sections: [
-        {
+        GroupSection.loadFromDb({
+          id: randomUUID(),
+          parentId: undefined,
+          subSections: [],
           name: 'Section 1',
-          type: SectionType.GROUP,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
-              type: 'TextField',
+            TextField.create({
               name: 'Title',
               options: { min: 2 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.MODEL,
-            },
-            {
-              type: 'TextField',
+            }),
+            TextField.create({
               name: 'Title 2',
               options: { min: 7 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 2 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.MODEL,
-            },
+            }),
           ],
-        },
-        {
+        }),
+        GroupSection.loadFromDb({
+          id: randomUUID(),
+          parentId: undefined,
+          subSections: [],
           name: 'Section 2',
-          type: SectionType.GROUP,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
-              type: 'TextField',
+            TextField.create({
               name: 'Title 3',
               options: { min: 8 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.MODEL,
-            },
+            }),
           ],
-        },
-        {
+        }),
+        RepeaterSection.loadFromDb({
+          id: randomUUID(),
+          parentId: undefined,
+          subSections: [],
           name: 'Section 3',
-          type: SectionType.REPEATABLE,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
-              type: 'TextField',
+            TextField.create({
               name: 'Title 4',
               options: { min: 8 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.MODEL,
-            },
+            }),
           ],
-        },
+        }),
       ],
     });
 

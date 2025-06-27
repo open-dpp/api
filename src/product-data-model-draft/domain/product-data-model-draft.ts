@@ -1,10 +1,4 @@
 import { randomUUID } from 'crypto';
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Type,
-} from 'class-transformer';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
@@ -12,7 +6,6 @@ import {
   ProductDataModel,
   VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
-import { omit } from 'lodash';
 import * as semver from 'semver';
 import { LayoutProps } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -22,42 +15,45 @@ export type Publication = {
   version: string;
 };
 
+export type ProductDataModelDraftDbProps = {
+  id: string;
+  name: string;
+  version: string;
+  publications: Publication[];
+  organizationId: string;
+  userId: string;
+  sections: DataSectionDraft[];
+};
+
 export class ProductDataModelDraft {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose({ name: 'name' })
-  private _name: string;
-  @Expose()
-  readonly version: string;
+  private constructor(
+    public readonly id: string,
+    private _name: string,
+    public readonly version: string,
+    private readonly _publications: Publication[],
+    private _ownedByOrganizationId: string | undefined,
+    private _createdByUserId: string | undefined,
+    private _sections: DataSectionDraft[],
+  ) {}
 
-  @Expose({ name: 'publications' })
-  readonly _publications: Publication[] = [];
-
-  @Expose({ name: 'ownedByOrganizationId' })
-  private _ownedByOrganizationId: string | undefined;
-
-  @Expose({ name: 'createdByUserId' })
-  private _createdByUserId: string | undefined;
-
-  @Type(() => DataSectionDraft)
-  @Expose({ name: 'sections' })
-  private _sections: DataSectionDraft[] = [];
-
-  get sections() {
-    return this._sections;
-  }
-
-  static create(plain: {
+  static create(data: {
     name: string;
     userId: string;
     organizationId: string;
   }) {
-    return ProductDataModelDraft.fromPlain({
-      ...plain,
-      version: '1.0.0',
-      ownedByOrganizationId: plain.organizationId,
-      createdByUserId: plain.userId,
-    });
+    return new ProductDataModelDraft(
+      randomUUID(),
+      data.name,
+      '1.0.0',
+      [],
+      data.organizationId,
+      data.userId,
+      [],
+    );
+  }
+
+  get sections() {
+    return this._sections;
   }
 
   public isOwnedBy(organizationId: string) {
@@ -80,11 +76,16 @@ export class ProductDataModelDraft {
     return this._ownedByOrganizationId;
   }
 
-  static fromPlain(plain: unknown): ProductDataModelDraft {
-    return plainToInstance(ProductDataModelDraft, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  static loadFromDb(data: ProductDataModelDraftDbProps): ProductDataModelDraft {
+    return new ProductDataModelDraft(
+      data.id,
+      data.name,
+      data.version,
+      data.publications,
+      data.organizationId,
+      data.userId,
+      data.sections,
+    );
   }
 
   rename(newName: string) {
@@ -186,13 +187,6 @@ export class ProductDataModelDraft {
     createdByUserId: string,
     visibility: VisibilityLevel,
   ): ProductDataModel {
-    const plain = omit(this.toPlain(), [
-      'id',
-      'version',
-      'sections',
-      'createdByUserId',
-    ]);
-
     const lastPublished = this.publications.slice(-1);
 
     const versionToPublish =
@@ -200,18 +194,16 @@ export class ProductDataModelDraft {
         ? semver.inc(lastPublished[0].version, 'major')
         : '1.0.0';
 
-    const published = ProductDataModel.fromPlain({
-      ...plain,
+    const published = ProductDataModel.loadFromDb({
+      id: randomUUID(),
+      name: this.name,
       version: versionToPublish,
       createdByUserId: createdByUserId,
+      ownedByOrganizationId: this.ownedByOrganizationId,
       visibility,
       sections: this.sections.map((s) => s.publish()),
     });
     this.publications.push({ id: published.id, version: published.version });
     return published;
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
   }
 }

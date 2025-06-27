@@ -1,15 +1,7 @@
 import { randomUUID } from 'crypto';
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Type,
-} from 'class-transformer';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
-import { DataSection, sectionSubTypes } from './section';
+import { DataSection } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 
@@ -45,52 +37,62 @@ export enum VisibilityLevel {
   PRIVATE = 'Private',
 }
 
+export type ProductDataModelDbProps = {
+  id: string;
+  name: string;
+  version: string;
+  createdByUserId: string;
+  ownedByOrganizationId: string;
+  visibility: VisibilityLevel;
+  sections: DataSection[];
+};
+
 export class ProductDataModel {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose()
-  readonly name: string;
-  @Expose()
-  readonly version: string;
-  @Expose({ name: 'createdByUserId' })
-  private _createdByUserId: string;
-
-  @Expose({ name: 'ownedByOrganizationId' })
-  private _ownedByOrganizationId: string;
-
-  @Expose({ name: 'visibility' })
-  private _visibility: VisibilityLevel = VisibilityLevel.PRIVATE;
-
-  @Expose()
-  @Type(() => DataSection, {
-    discriminator: {
-      property: 'type',
-      subTypes: sectionSubTypes,
-    },
-    keepDiscriminatorProperty: true,
-  })
-  readonly sections: DataSection[] = [];
+  private constructor(
+    public readonly id: string,
+    public readonly name: string,
+    public readonly version: string,
+    private _createdByUserId: string,
+    private _ownedByOrganizationId: string,
+    private _visibility: VisibilityLevel,
+    public readonly sections: DataSection[],
+  ) {}
 
   static create(plain: {
     name: string;
-    user: User;
-    organization: Organization;
+    userId: string;
+    organizationId: string;
     visibility?: VisibilityLevel;
   }) {
-    return ProductDataModel.fromPlain({
-      ...plain,
-      version: '1.0.0',
-      ownedByOrganizationId: plain.organization.id,
-      createdByUserId: plain.user.id,
-    });
+    return new ProductDataModel(
+      randomUUID(),
+      plain.name,
+      '1.0.0',
+      plain.userId,
+      plain.organizationId,
+      plain.visibility || VisibilityLevel.PRIVATE,
+      [],
+    );
+  }
+
+  static loadFromDb(data: ProductDataModelDbProps) {
+    return new ProductDataModel(
+      data.id,
+      data.name,
+      data.version,
+      data.createdByUserId,
+      data.ownedByOrganizationId,
+      data.visibility,
+      data.sections,
+    );
   }
 
   publish() {
     this._visibility = VisibilityLevel.PUBLIC;
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this.ownedByOrganizationId === organization.id;
+  public isOwnedBy(organizationId: string) {
+    return this.ownedByOrganizationId === organizationId;
   }
 
   public isPublic() {
@@ -107,18 +109,6 @@ export class ProductDataModel {
 
   public get ownedByOrganizationId() {
     return this._ownedByOrganizationId;
-  }
-
-  // TODO: Partial seems not to work with data field id not set. Even type-fest deep partial is not enough
-  static fromPlain(plain: unknown): ProductDataModel {
-    return plainToInstance(ProductDataModel, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
   }
 
   findSectionByIdOrFail(id: string): DataSection {

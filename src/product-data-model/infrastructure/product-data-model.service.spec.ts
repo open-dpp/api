@@ -2,13 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductDataModelService } from './product-data-model.service';
 import {
   ProductDataModel,
+  ProductDataModelDbProps,
   VisibilityLevel,
 } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -17,11 +15,14 @@ import {
   ProductDataModelSchema,
 } from './product-data-model.schema';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { GroupSection, RepeaterSection } from '../domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import { TextField } from '../domain/data-field';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -41,79 +42,76 @@ describe('ProductDataModelService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  const laptopModelPlain = {
+  const laptopModelPlain: ProductDataModelDbProps = {
+    id: randomUUID(),
     name: 'Laptop',
     version: 'v2',
     visibility: VisibilityLevel.PUBLIC,
-    ownedByOrganizationId: organization.id,
-    createdByUserId: user.id,
+    ownedByOrganizationId: organizationId,
+    createdByUserId: userId,
     sections: [
-      {
+      GroupSection.loadFromDb({
         id: 's1',
+        parentId: undefined,
         name: 'Environment',
         granularityLevel: GranularityLevel.MODEL,
-        type: SectionType.GROUP,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 3 },
           colStart: { sm: 1 },
           colSpan: { sm: 7 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.create({
             name: 'Serial number',
-            type: 'TextField',
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.create({
             name: 'Processor',
-            type: 'TextField',
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
         subSections: ['s1.1'],
-      },
-      {
+      }),
+      GroupSection.loadFromDb({
         id: 's1.1',
         parentId: 's1',
         name: 'CO2',
         granularityLevel: GranularityLevel.MODEL,
-        type: SectionType.GROUP,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 1 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.create({
             name: 'Consumption',
-            type: 'TextField',
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
         subSections: [],
-      },
+      }),
     ],
   };
 
@@ -124,7 +122,7 @@ describe('ProductDataModelService', () => {
   });
 
   it('should create product data model', async () => {
-    const productDataModel = ProductDataModel.fromPlain({
+    const productDataModel = ProductDataModel.loadFromDb({
       ...laptopModelPlain,
     });
 
@@ -135,44 +133,46 @@ describe('ProductDataModelService', () => {
 
   it('sets correct default granularity level', async () => {
     const laptopModel = {
+      id: randomUUID(),
+      visibility: VisibilityLevel.PRIVATE,
       name: 'Laptop',
       version: 'v2',
       sections: [
-        {
+        GroupSection.loadFromDb({
           id: 's1',
           name: 'Environment',
-          type: SectionType.GROUP,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 7 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [],
           parentId: undefined,
           subSections: [],
-        },
-        {
+          granularityLevel: undefined,
+        }),
+        RepeaterSection.loadFromDb({
           id: 's2',
           name: 'Materials',
-          type: SectionType.REPEATABLE,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 7 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [],
           parentId: undefined,
           subSections: [],
-        },
+          granularityLevel: GranularityLevel.MODEL,
+        }),
       ],
       publications: [],
     };
 
-    const productDataModelDraft = ProductDataModel.fromPlain({
+    const productDataModelDraft = ProductDataModel.loadFromDb({
       ...laptopModel,
       ownedByOrganizationId: randomUUID(),
       createdByUserId: randomUUID(),
@@ -184,7 +184,7 @@ describe('ProductDataModelService', () => {
   });
 
   it('should return product data models by name', async () => {
-    const productDataModel = ProductDataModel.fromPlain({
+    const productDataModel = ProductDataModel.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
@@ -201,31 +201,29 @@ describe('ProductDataModelService', () => {
   });
 
   it('should return all product data models belonging to organization and which are public', async () => {
-    const laptopModel = ProductDataModel.fromPlain({
+    const laptopModel = ProductDataModel.loadFromDb({
       ...laptopModelPlain,
       visibility: VisibilityLevel.PRIVATE,
     });
-    const phoneModel = ProductDataModel.fromPlain({
+    const phoneModel = ProductDataModel.loadFromDb({
       ...laptopModelPlain,
+      id: randomUUID(),
       name: 'phone',
       visibility: VisibilityLevel.PRIVATE,
     });
-    const otherUser = new User(randomUUID(), 'test@example.com');
-    const otherOrganization = Organization.create({
-      name: 'Firma Y',
-      user: otherUser,
-    });
+    const otherUserId = randomUUID();
+    const otherOrganizationId = randomUUID();
     const publicModel = ProductDataModel.create({
       name: 'publicModel',
-      user: otherUser,
-      organization: otherOrganization,
+      userId,
+      organizationId,
       visibility: VisibilityLevel.PUBLIC,
     });
 
     const privateModel = ProductDataModel.create({
       name: 'privateModel',
-      user: otherUser,
-      organization: otherOrganization,
+      userId: otherUserId,
+      organizationId: otherOrganizationId,
       visibility: VisibilityLevel.PRIVATE,
     });
     await service.save(laptopModel);
@@ -234,7 +232,7 @@ describe('ProductDataModelService', () => {
     await service.save(privateModel);
 
     const foundAll =
-      await service.findAllAccessibleByOrganization(organization);
+      await service.findAllAccessibleByOrganization(organizationId);
 
     expect(foundAll).toContainEqual({
       id: laptopModel.id,

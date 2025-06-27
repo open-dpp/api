@@ -24,12 +24,21 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  ProductDataModelDbProps,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { ignoreIds } from '../../../test/utils';
-import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { DataValue } from '../../product-passport/domain/data-value';
+import {
+  GroupSection,
+  RepeaterSection,
+} from '../../product-data-model/domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import { TextField } from '../../product-data-model/domain/data-field';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -101,119 +110,119 @@ describe('ItemsController', () => {
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
-  const laptopModel = {
+  const laptopModel: ProductDataModelDbProps = {
+    id: randomUUID(),
     name: 'Laptop',
     version: '1.0',
+    visibility: VisibilityLevel.PRIVATE,
     ownedByOrganizationId: organization.id,
     createdByUserId: authContext.user.id,
     sections: [
-      {
+      GroupSection.loadFromDb({
         id: sectionId1,
         name: 'Section name',
-        type: SectionType.GROUP,
-        layout: {
+        parentId: undefined,
+        subSections: [],
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId1,
-            type: 'TextField',
             name: 'Title',
             options: { min: 2 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.ITEM,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: dataFieldId2,
-            type: 'TextField',
             name: 'Title 2',
             options: { min: 7 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
-      },
-      {
+      }),
+      GroupSection.loadFromDb({
         id: sectionId2,
         name: 'Section name 2',
-        type: SectionType.GROUP,
-        layout: {
+        parentId: undefined,
+        subSections: [],
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId3,
-            type: 'TextField',
             name: 'Title 3',
             options: { min: 8 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
-      },
-      {
+      }),
+      RepeaterSection.loadFromDb({
         id: sectionId3,
         name: 'Repeating Section',
-        type: SectionType.REPEATABLE,
-        layout: {
+        parentId: undefined,
+        subSections: [],
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId4,
-            type: 'TextField',
             name: 'Title 4',
             options: { min: 8 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.ITEM,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: dataFieldId5,
-            type: 'TextField',
             name: 'Title 5',
             options: { min: 8 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
-      },
+      }),
     ],
   };
 
@@ -223,7 +232,7 @@ describe('ItemsController', () => {
       userId: authContext.user.id,
       organizationId: organization.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     model.assignProductDataModel(productDataModel);
     await productDataModelService.save(productDataModel);
     await modelsService.save(model);
@@ -327,7 +336,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
     });
     const item = Item.create({ organizationId, userId });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     item.defineModel(model, productDataModel);
@@ -442,7 +451,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     item.defineModel(model, productDataModel);

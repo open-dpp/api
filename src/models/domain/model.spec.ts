@@ -1,7 +1,5 @@
 import { Model } from './model';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { Organization } from '../../organizations/domain/organization';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
@@ -324,26 +322,26 @@ describe('Model', () => {
     });
 
     it('should throw error if model already has a product data model', () => {
-      const user = new User(userId, 'test@example.com');
-      const organization = Organization.create({ name: 'orga', user });
+      const userId = randomUUID();
+      const organizationId = randomUUID();
       const model = Model.create({
         name: 'Test Model',
         userId,
-        organizationId: organization.id,
+        organizationId,
       });
 
       const productDataModel1 = ProductDataModel.create({
         name: 'existing-pdm',
-        user,
-        organization,
+        userId,
+        organizationId,
       });
 
       model.assignProductDataModel(productDataModel1);
 
       const productDataModel2 = ProductDataModel.create({
         name: 'other-pdm',
-        user,
-        organization,
+        userId,
+        organizationId,
       });
 
       // Try to assign a second product data model

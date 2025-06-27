@@ -1,35 +1,71 @@
-import { Expose, plainToInstance, Type } from 'class-transformer';
 import { DataFieldDraft } from './data-field-draft';
 import {
   DataSectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
-import { omit } from 'lodash';
 import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { randomUUID } from 'crypto';
+import {
+  DataSection,
+  findSectionClassByTypeOrFail,
+} from '../../product-data-model/domain/section';
 
 export class DataSectionDraft extends DataSectionBase {
-  @Expose()
-  @Type(() => DataFieldDraft)
-  readonly dataFields: DataFieldDraft[];
+  private constructor(
+    public readonly id: string,
+    protected _name: string,
+    public readonly type: SectionType,
+    public readonly layout: Layout,
+    protected _subSections: string[],
+    protected _parentId: string | undefined,
+    public granularityLevel: GranularityLevel | undefined,
+    public readonly dataFields: DataFieldDraft[],
+  ) {
+    super(id, _name, type, layout, _subSections, _parentId, granularityLevel);
+  }
 
-  static create(plain: {
+  static create(data: {
     name: string;
     type: SectionType;
     layout: Layout;
     granularityLevel?: GranularityLevel;
   }) {
-    if (plain.type === SectionType.REPEATABLE && !plain.granularityLevel) {
+    if (data.type === SectionType.REPEATABLE && !data.granularityLevel) {
       throw new ValueError(`Repeatable must have a granularity level`);
     }
-    return plainToInstance(
-      DataSectionDraft,
-      { ...plain, dataFields: [] },
-      {
-        excludeExtraneousValues: true,
-        exposeDefaultValues: true,
-      },
+    return new DataSectionDraft(
+      randomUUID(),
+      data.name,
+      data.type,
+      data.layout,
+      [],
+      undefined,
+      data.granularityLevel,
+      [],
+    );
+  }
+
+  static loadFromDb(data: {
+    id: string;
+    name: string;
+    type: SectionType;
+    layout: Layout;
+    subSections: string[];
+    parentId: string | undefined;
+    dataFields: DataFieldDraft[];
+    granularityLevel?: GranularityLevel;
+  }) {
+    return new DataSectionDraft(
+      data.id,
+      data.name,
+      data.type,
+      data.layout,
+      data.subSections,
+      data.parentId,
+      data.granularityLevel,
+      data.dataFields,
     );
   }
 
@@ -104,11 +140,16 @@ export class DataSectionDraft extends DataSectionBase {
     this.dataFields.splice(foundIndex, 1);
   }
 
-  publish() {
-    const plain = omit(this.toPlain(), ['dataFields']);
-    return {
-      ...plain,
+  publish(): DataSection {
+    const SectionClass = findSectionClassByTypeOrFail(this.type);
+    return SectionClass.loadFromDb({
+      id: this.id,
+      name: this.name,
+      parentId: this.parentId,
+      subSections: this.subSections,
+      layout: this.layout,
       dataFields: this.dataFields.map((d) => d.publish()),
-    };
+      granularityLevel: this.granularityLevel,
+    });
   }
 }

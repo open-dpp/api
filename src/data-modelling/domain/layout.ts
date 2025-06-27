@@ -1,8 +1,7 @@
-import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
 import { ValueError } from '../../exceptions/domain.errors';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
-const ResponsiveConfigSchema = z.object({
+export const ResponsiveConfigSchema = z.object({
   xs: z.number().int().min(1).max(12).optional(),
   sm: z.number().int().min(1).max(12),
   md: z.number().int().min(1).max(12).optional(),
@@ -27,26 +26,23 @@ export type LayoutProps = {
 };
 
 export class Layout {
-  @Expose()
-  cols?: ResponsiveConfig;
-  @Expose()
-  public colStart: ResponsiveConfig;
-  @Expose()
-  public colSpan: ResponsiveConfig;
-  @Expose()
-  public rowStart: ResponsiveConfig;
-  @Expose()
-  public rowSpan: ResponsiveConfig;
-  static create(plain: LayoutProps) {
-    Layout.validateLayoutProps(plain);
-    return Layout.fromPlain(plain);
-  }
+  private constructor(
+    public colStart: ResponsiveConfig,
+    public colSpan: ResponsiveConfig,
+    public rowStart: ResponsiveConfig,
+    public rowSpan: ResponsiveConfig,
+    public cols?: ResponsiveConfig,
+  ) {}
 
-  static fromPlain(plain: unknown) {
-    return plainToInstance(Layout, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  static create(data: LayoutProps) {
+    Layout.validateLayoutProps(data);
+    return new Layout(
+      data.colStart,
+      data.colSpan,
+      data.rowStart,
+      data.rowSpan,
+      data.cols,
+    );
   }
 
   static validateLayoutProps(plain: Partial<LayoutProps>) {
@@ -62,10 +58,6 @@ export class Layout {
     if (plain.rowSpan) {
       validateResponseConfig(plain.rowSpan, 'rowSpan');
     }
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
   }
 
   modify(plain: Partial<LayoutProps>) {

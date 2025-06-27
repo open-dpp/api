@@ -7,12 +7,19 @@ import {
 } from './asset-administration-shell';
 import { semitrailerTruckAas } from './semitrailer-truck-aas';
 import { Model } from '../../models/domain/model';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
+import {
+  ProductDataModel,
+  ProductDataModelDbProps,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
-import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { GroupSection } from '../../product-data-model/domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import {
+  NumericField,
+  TextField,
+} from '../../product-data-model/domain/data-field';
 
 describe('AasMapping', () => {
   const organizationId = randomUUID();
@@ -76,14 +83,9 @@ describe('AasMapping', () => {
       userId: 'userId',
       name: 'modelName',
     });
-    const user = new User('userId', 'email');
-    const organization = Organization.create({
-      name: 'organizationName',
-      user,
-    });
     const productDataModel = ProductDataModel.create({
-      organization: organization,
-      user: user,
+      organizationId,
+      userId,
       name: 'data model',
     });
     model.assignProductDataModel(productDataModel);
@@ -147,83 +149,84 @@ describe('AasMapping', () => {
     const dataFieldId2 = randomUUID();
     const dataFieldId3 = randomUUID();
 
-    const laptopModel = {
+    const laptopModel: ProductDataModelDbProps = {
+      id: randomUUID(),
       name: 'Laptop',
+      visibility: VisibilityLevel.PRIVATE,
       version: '1.0',
       ownedByOrganizationId: randomUUID(),
       createdByUserId: randomUUID(),
       sections: [
-        {
+        GroupSection.loadFromDb({
           id: sectionId1,
           name: 'Section name',
-          type: SectionType.GROUP,
-          layout: {
+          parentId: undefined,
+          subSections: [],
+          layout: Layout.create({
             cols: { sm: 2 },
             colStart: { sm: 1 },
             colSpan: { sm: 2 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
+            TextField.loadFromDb({
               id: dataFieldId1,
-              type: 'TextField',
               name: 'Title',
               options: { min: 2 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 2 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
-            {
+            }),
+            TextField.loadFromDb({
               id: dataFieldId2,
-              type: 'TextField',
               name: 'Title 2',
               options: { min: 7 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 2 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
+            }),
           ],
-        },
-        {
+        }),
+        GroupSection.loadFromDb({
           id: sectionId2,
           name: 'Section name 2',
-          type: SectionType.GROUP,
-          layout: {
+          parentId: undefined,
+          subSections: [],
+          layout: Layout.create({
             cols: { sm: 2 },
             colStart: { sm: 1 },
             colSpan: { sm: 2 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [
-            {
+            NumericField.loadFromDb({
               id: dataFieldId3,
-              type: 'NumericField',
               name: 'Title 3',
               options: { min: 8 },
-              layout: {
+              layout: Layout.create({
                 colStart: { sm: 1 },
                 colSpan: { sm: 2 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              },
+              }),
               granularityLevel: GranularityLevel.ITEM,
-            },
+            }),
           ],
-        },
+        }),
       ],
     };
 
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
 
     const fieldAssignment1 = AasFieldAssignment.create({
       dataFieldId: dataFieldId3,

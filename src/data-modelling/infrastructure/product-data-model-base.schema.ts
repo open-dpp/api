@@ -6,7 +6,7 @@ import { LayoutDoc, LayoutSchema } from './layout.schema';
 import { GranularityLevel } from '../domain/granularity-level';
 
 @Schema()
-class DataFieldDoc {
+export class DataFieldDoc {
   @Prop({ required: true })
   _id: string;
   @Prop({ required: true })
@@ -27,7 +27,7 @@ class DataFieldDoc {
 const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
 
 @Schema()
-class SectionDoc {
+export class SectionDoc {
   @Prop({ required: true })
   _id: string;
 
@@ -45,7 +45,7 @@ class SectionDoc {
   @Prop({ default: [] })
   subSections: string[];
   @Prop({ required: true, type: LayoutSchema })
-  layout: LayoutDoc[];
+  layout: LayoutDoc;
 
   @Prop({
     enum: GranularityLevel,
