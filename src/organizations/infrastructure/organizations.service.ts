@@ -135,9 +135,11 @@ export class OrganizationsService {
       );
       org.members.push({ id: userToInvite.id, email: userToInvite.email });
       await this.organizationRepository.save(org);
+      queryRunner.commitTransaction();
     } catch (err) {
       console.log('Error:', err);
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }
