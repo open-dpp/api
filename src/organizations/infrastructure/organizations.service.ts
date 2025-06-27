@@ -128,13 +128,13 @@ export class OrganizationsService {
       throw new BadRequestException();
     }
     try {
-      org.members.push({ id: userToInvite.id, email: userToInvite.email });
-      await this.organizationRepository.save(org);
       await this.keycloakResourcesService.inviteUserToGroup(
         authContext,
-        'organization-' + organizationId,
+        organizationId,
         userToInvite.id,
       );
+      org.members.push({ id: userToInvite.id, email: userToInvite.email });
+      await this.organizationRepository.save(org);
     } catch (err) {
       console.log('Error:', err);
       await queryRunner.rollbackTransaction();
