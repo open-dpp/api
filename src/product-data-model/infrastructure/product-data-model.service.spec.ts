@@ -7,8 +7,6 @@ import {
 } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -23,8 +21,8 @@ import { TextField } from '../domain/data-field';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
+  const userId = randomUUID();
+  const organizationId = randomUUID();
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -49,8 +47,8 @@ describe('ProductDataModelService', () => {
     name: 'Laptop',
     version: 'v2',
     visibility: VisibilityLevel.PUBLIC,
-    ownedByOrganizationId: organization.id,
-    createdByUserId: user.id,
+    ownedByOrganizationId: organizationId,
+    createdByUserId: userId,
     sections: [
       GroupSection.loadFromDb({
         id: 's1',
@@ -213,22 +211,19 @@ describe('ProductDataModelService', () => {
       name: 'phone',
       visibility: VisibilityLevel.PRIVATE,
     });
-    const otherUser = new User(randomUUID(), 'test@example.com');
-    const otherOrganization = Organization.create({
-      name: 'Firma Y',
-      user: otherUser,
-    });
+    const otherUserId = randomUUID();
+    const otherOrganizationId = randomUUID();
     const publicModel = ProductDataModel.create({
       name: 'publicModel',
-      user: otherUser,
-      organization: otherOrganization,
+      userId,
+      organizationId,
       visibility: VisibilityLevel.PUBLIC,
     });
 
     const privateModel = ProductDataModel.create({
       name: 'privateModel',
-      user: otherUser,
-      organization: otherOrganization,
+      userId: otherUserId,
+      organizationId: otherOrganizationId,
       visibility: VisibilityLevel.PRIVATE,
     });
     await service.save(laptopModel);
@@ -237,7 +232,7 @@ describe('ProductDataModelService', () => {
     await service.save(privateModel);
 
     const foundAll =
-      await service.findAllAccessibleByOrganization(organization);
+      await service.findAllAccessibleByOrganization(organizationId);
 
     expect(foundAll).toContainEqual({
       id: laptopModel.id,

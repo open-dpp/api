@@ -4,7 +4,6 @@ import {
   VisibilityLevel,
 } from '../domain/product.data.model';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { Organization } from '../../organizations/domain/organization';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -129,12 +128,12 @@ export class ProductDataModelService {
     }));
   }
 
-  async findAllAccessibleByOrganization(organization: Organization) {
+  async findAllAccessibleByOrganization(organizationId: string) {
     const foundDataModelDocs = await this.productDataModelDoc
       .find(
         {
           $or: [
-            { ownedByOrganizationId: organization.id },
+            { ownedByOrganizationId: organizationId },
             { visibility: VisibilityLevel.PUBLIC },
           ],
         },

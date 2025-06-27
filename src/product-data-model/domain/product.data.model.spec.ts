@@ -4,8 +4,6 @@ import {
   VisibilityLevel,
 } from './product.data.model';
 import { randomUUID } from 'crypto';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult, TextField } from './data-field';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -219,19 +217,19 @@ describe('ProductDataModel', () => {
   };
 
   it('is published', () => {
-    const user = new User(randomUUID(), 'test@example.com');
-    const organization = Organization.create({ name: 'Orga', user });
-    const otherOrganization = Organization.create({ name: 'Orga', user });
+    const userId = randomUUID();
+    const organizationId = randomUUID();
+    const otherOrganizationId = randomUUID();
     const dataModel = ProductDataModel.create({
       name: 'laptop',
-      user,
-      organization,
+      userId,
+      organizationId,
       visibility: VisibilityLevel.PRIVATE,
     });
-    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
-    expect(dataModel.isOwnedBy(otherOrganization)).toBeFalsy();
+    expect(dataModel.isOwnedBy(organizationId)).toBeTruthy();
+    expect(dataModel.isOwnedBy(otherOrganizationId)).toBeFalsy();
     dataModel.publish();
-    expect(dataModel.isOwnedBy(organization)).toBeTruthy();
+    expect(dataModel.isOwnedBy(organizationId)).toBeTruthy();
     expect(dataModel.isPublic()).toBeTruthy();
     expect(dataModel.visibility).toEqual(VisibilityLevel.PUBLIC);
   });

@@ -1,8 +1,5 @@
 import { randomUUID } from 'crypto';
-import { instanceToPlain } from 'class-transformer';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { DataFieldValidationResult } from './data-field';
 import { DataSection } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -63,16 +60,16 @@ export class ProductDataModel {
 
   static create(plain: {
     name: string;
-    user: User;
-    organization: Organization;
+    userId: string;
+    organizationId: string;
     visibility?: VisibilityLevel;
   }) {
     return new ProductDataModel(
       randomUUID(),
       plain.name,
       '1.0.0',
-      plain.user.id,
-      plain.organization.id,
+      plain.userId,
+      plain.organizationId,
       plain.visibility || VisibilityLevel.PRIVATE,
       [],
     );
@@ -94,8 +91,8 @@ export class ProductDataModel {
     this._visibility = VisibilityLevel.PUBLIC;
   }
 
-  public isOwnedBy(organization: Organization) {
-    return this.ownedByOrganizationId === organization.id;
+  public isOwnedBy(organizationId: string) {
+    return this.ownedByOrganizationId === organizationId;
   }
 
   public isPublic() {
@@ -112,10 +109,6 @@ export class ProductDataModel {
 
   public get ownedByOrganizationId() {
     return this._ownedByOrganizationId;
-  }
-
-  toPlain() {
-    return instanceToPlain(this);
   }
 
   findSectionByIdOrFail(id: string): DataSection {

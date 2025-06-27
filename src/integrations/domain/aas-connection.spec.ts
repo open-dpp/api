@@ -12,8 +12,6 @@ import {
   ProductDataModelDbProps,
   VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
-import { User } from '../../users/domain/user';
-import { Organization } from '../../organizations/domain/organization';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { GroupSection } from '../../product-data-model/domain/section';
@@ -85,14 +83,9 @@ describe('AasMapping', () => {
       userId: 'userId',
       name: 'modelName',
     });
-    const user = new User('userId', 'email');
-    const organization = Organization.create({
-      name: 'organizationName',
-      user,
-    });
     const productDataModel = ProductDataModel.create({
-      organization: organization,
-      user: user,
+      organizationId,
+      userId,
       name: 'data model',
     });
     model.assignProductDataModel(productDataModel);

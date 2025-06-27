@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ProductDataModelController } from './presentation/product.data.model.controller';
 import { ProductDataModelService } from './infrastructure/product-data-model.service';
-import { OrganizationsModule } from '../organizations/organizations.module';
-import { UsersModule } from '../users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductDataModelDoc,
   ProductDataModelSchema,
 } from './infrastructure/product-data-model.schema';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -17,8 +16,7 @@ import {
         schema: ProductDataModelSchema,
       },
     ]),
-    OrganizationsModule,
-    UsersModule,
+    PermissionsModule,
   ],
   controllers: [ProductDataModelController],
   providers: [ProductDataModelService],
