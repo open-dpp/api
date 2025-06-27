@@ -12,9 +12,9 @@ import { ProductDataModelService } from '../infrastructure/product-data-model.se
 import { ProductDataModelModule } from '../product.data.model.module';
 import {
   ProductDataModel,
+  ProductDataModelDbProps,
   VisibilityLevel,
 } from '../domain/product.data.model';
-import { SectionType } from '../../data-modelling/domain/section-base';
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
@@ -30,6 +30,9 @@ import {
 } from '../infrastructure/product-data-model.schema';
 import { Connection } from 'mongoose';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { GroupSection } from '../domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import { TextField } from '../domain/data-field';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;
@@ -86,53 +89,53 @@ describe('ProductsDataModelController', () => {
     await app.init();
   });
 
-  const laptopPlain = {
+  const laptopPlain: ProductDataModelDbProps = {
+    id: randomUUID(),
     version: '1.0',
     name: 'Laptop',
     visibility: VisibilityLevel.PRIVATE,
     ownedByOrganizationId: organization.id,
     createdByUserId: authContext.user.id,
     sections: [
-      {
+      GroupSection.loadFromDb({
         id: 's1',
+        parentId: undefined,
+        subSections: [],
         name: 'Section 1',
-        type: SectionType.GROUP,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 3 },
           colStart: { sm: 1 },
           colSpan: { sm: 3 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 3 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: 'f11',
-            type: 'TextField',
             name: 'Title',
             options: { min: 2 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: 'f12',
-            type: 'TextField',
             name: 'Title 2',
             options: { min: 2 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 2 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
-      },
+      }),
     ],
   };
 
@@ -146,7 +149,7 @@ describe('ProductsDataModelController', () => {
   const userHasNotThePermissionsTxt = `fails if user has not the permissions`;
 
   it(`/GET product data model`, async () => {
-    const productDataModel = ProductDataModel.fromPlain({ ...laptopPlain });
+    const productDataModel = ProductDataModel.loadFromDb({ ...laptopPlain });
 
     await service.save(productDataModel);
     const response = await request(app.getHttpServer())
@@ -191,13 +194,16 @@ describe('ProductsDataModelController', () => {
   });
 
   it(`/GET all product data models which belong to the organization or which are public`, async () => {
-    const laptopModel = ProductDataModel.fromPlain({ ...laptopPlain });
-    const phoneModel = ProductDataModel.fromPlain({
-      ...laptopPlain,
-      name: 'phone',
-    });
     const otherUser = new User(randomUUID(), 'test@example.com');
     const otherOrganization = await createOrganization(otherUser);
+    const laptopModel = ProductDataModel.loadFromDb({
+      ...laptopPlain,
+    });
+    const phoneModel = ProductDataModel.loadFromDb({
+      ...laptopPlain,
+      id: randomUUID(),
+      name: 'phone',
+    });
     const publicModel = ProductDataModel.create({
       name: 'publicModel',
       user: otherUser,

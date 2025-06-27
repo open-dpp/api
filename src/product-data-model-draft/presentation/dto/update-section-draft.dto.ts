@@ -1,12 +1,9 @@
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { SectionLayout } from './layout.dto';
+import { z } from 'zod/v4';
+import { SectionLayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
-export class UpdateSectionDraftDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly name: string;
-  @Type(() => SectionLayout)
-  @ValidateNested()
-  readonly layout: SectionLayout;
-}
+export const UpdateSectionDraftDtoSchema = z.object({
+  name: z.string().nonempty(),
+  layout: SectionLayoutDtoSchema,
+});
+
+export type UpdateSectionDraftDto = z.infer<typeof UpdateSectionDraftDtoSchema>;

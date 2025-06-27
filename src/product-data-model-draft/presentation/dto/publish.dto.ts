@@ -1,7 +1,8 @@
-import { IsEnum } from 'class-validator';
 import { VisibilityLevel } from '../../../product-data-model/domain/product.data.model';
+import { z } from 'zod/v4';
 
-export class PublishDto {
-  @IsEnum(VisibilityLevel)
-  readonly visibility: VisibilityLevel;
-}
+export const PublishDtoSchema = z.object({
+  visibility: z.enum(VisibilityLevel),
+});
+
+export type PublishDto = z.infer<typeof PublishDtoSchema>;

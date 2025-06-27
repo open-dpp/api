@@ -1,9 +1,12 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { Expose, plainToInstance } from 'class-transformer';
 import {
   DataFieldBase,
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
+import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { randomUUID } from 'crypto';
 
 export class DataFieldValidationResult {
   @Expose()
@@ -36,7 +39,49 @@ export class DataFieldValidationResult {
   }
 }
 
+type DataFieldProps = {
+  name: string;
+  options?: Record<string, unknown>;
+  layout: Layout;
+  granularityLevel: GranularityLevel;
+};
+
+type DataFieldDbProps = DataFieldProps & {
+  id: string;
+};
+
 export abstract class DataField extends DataFieldBase {
+  protected static createInstance<T extends DataFieldBase>(
+    Ctor: new (...args: any[]) => T,
+    data: DataFieldProps,
+    type: DataFieldType,
+  ): T {
+    return new Ctor(
+      randomUUID(),
+      data.name,
+      type,
+      data.options ?? {},
+      data.layout,
+      data.granularityLevel,
+    );
+  }
+
+  // Add static factory method for loadFromDb
+  protected static loadFromDbInstance<T extends DataFieldBase>(
+    Ctor: new (...args: any[]) => T,
+    data: DataFieldDbProps,
+    type: DataFieldType,
+  ): T {
+    return new Ctor(
+      data.id,
+      data.name,
+      type,
+      data.options,
+      data.layout,
+      data.granularityLevel,
+    );
+  }
+
   abstract validate(version: string, value: unknown): DataFieldValidationResult;
 }
 
@@ -55,18 +100,59 @@ function validateString(
 }
 
 export class TextField extends DataField {
+  static create(data: DataFieldProps) {
+    return DataField.createInstance(TextField, data, DataFieldType.TEXT_FIELD);
+  }
+
+  static loadFromDb(data: DataFieldDbProps) {
+    return DataField.loadFromDbInstance(
+      TextField,
+      data,
+      DataFieldType.TEXT_FIELD,
+    );
+  }
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
   }
 }
 
 export class ProductPassportLink extends DataField {
+  static create(data: DataFieldProps) {
+    return DataField.createInstance(
+      ProductPassportLink,
+      data,
+      DataFieldType.PRODUCT_PASSPORT_LINK,
+    );
+  }
+
+  static loadFromDb(data: DataFieldDbProps) {
+    return DataField.loadFromDbInstance(
+      ProductPassportLink,
+      data,
+      DataFieldType.PRODUCT_PASSPORT_LINK,
+    );
+  }
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
   }
 }
 
 export class NumericField extends DataField {
+  static create(data: DataFieldProps) {
+    return DataField.createInstance(
+      NumericField,
+      data,
+      DataFieldType.NUMERIC_FIELD,
+    );
+  }
+
+  static loadFromDb(data: DataFieldDbProps) {
+    return DataField.loadFromDbInstance(
+      NumericField,
+      data,
+      DataFieldType.NUMERIC_FIELD,
+    );
+  }
   validate(version: string, value: unknown): DataFieldValidationResult {
     const result = z.number().optional().safeParse(value);
     return DataFieldValidationResult.fromPlain({
@@ -80,8 +166,16 @@ export class NumericField extends DataField {
   }
 }
 
-export const dataFieldSubtypes = [
+const dataFieldSubtypes = [
   { value: TextField, name: DataFieldType.TEXT_FIELD },
   { value: ProductPassportLink, name: DataFieldType.PRODUCT_PASSPORT_LINK },
   { value: NumericField, name: DataFieldType.NUMERIC_FIELD },
 ];
+
+export function findDataFieldClassByTypeOrFail(type: DataFieldType) {
+  const foundDataFieldType = dataFieldSubtypes.find((st) => st.name === type);
+  if (!foundDataFieldType) {
+    throw new Error(`Data field type ${type} is not supported`);
+  }
+  return foundDataFieldType.value;
+}

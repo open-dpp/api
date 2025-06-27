@@ -10,7 +10,11 @@ import { AuthContext } from '../../auth/auth-request';
 import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import {
+  ProductDataModel,
+  ProductDataModelDbProps,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
@@ -18,7 +22,6 @@ import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resource
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsModule } from '../../organizations/organizations.module';
 import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
-import { SectionType } from '../../data-modelling/domain/section-base';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
@@ -27,6 +30,12 @@ import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { uniqueProductIdentifierToDto } from '../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
+import {
+  GroupSection,
+  RepeaterSection,
+} from '../../product-data-model/domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import { TextField } from '../../product-data-model/domain/data-field';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -88,117 +97,119 @@ describe('ModelsController', () => {
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
-  const laptopModel = {
+  const laptopModel: ProductDataModelDbProps = {
+    id: randomUUID(),
+    createdByUserId: randomUUID(),
+    ownedByOrganizationId: randomUUID(),
+    visibility: VisibilityLevel.PRIVATE,
     name: 'Laptop',
     version: '1.0',
     sections: [
-      {
+      GroupSection.loadFromDb({
         id: sectionId1,
+        parentId: undefined,
+        subSections: [],
         name: 'Section name',
-        type: SectionType.GROUP,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId1,
-            type: 'TextField',
             name: 'Title',
             options: { min: 2 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: dataFieldId2,
-            type: 'TextField',
             name: 'Title 2',
             options: { min: 7 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
-      },
-      {
+      }),
+      GroupSection.loadFromDb({
         id: sectionId2,
+        parentId: undefined,
+        subSections: [],
         name: 'Section name 2',
-        type: SectionType.GROUP,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId3,
-            type: 'TextField',
             name: 'Title 3',
             options: { min: 8 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
-      },
-      {
+      }),
+      RepeaterSection.loadFromDb({
         id: sectionId3,
+        parentId: undefined,
+        subSections: [],
         name: 'Repeating Section',
-        type: SectionType.REPEATABLE,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId4,
-            type: 'TextField',
             name: 'Title 4',
             options: { min: 8 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          TextField.loadFromDb({
             id: dataFieldId5,
-            type: 'TextField',
             name: 'Title 5',
             options: { min: 8 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
-      },
+      }),
     ],
   };
 
@@ -382,7 +393,7 @@ describe('ModelsController', () => {
     });
     await modelsService.save(model);
 
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
@@ -445,7 +456,7 @@ describe('ModelsController', () => {
     });
     await modelsService.save(model);
 
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
@@ -475,7 +486,7 @@ describe('ModelsController', () => {
     });
     await modelsService.save(model);
 
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
@@ -501,7 +512,7 @@ describe('ModelsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -562,7 +573,7 @@ describe('ModelsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -599,7 +610,7 @@ describe('ModelsController', () => {
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -633,7 +644,7 @@ describe('ModelsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -669,7 +680,7 @@ describe('ModelsController', () => {
       errors: [
         {
           id: dataFieldId1,
-          message: 'Expected string, received object',
+          message: 'Invalid input: expected string, received object',
           name: 'Title',
         },
       ],
@@ -683,7 +694,7 @@ describe('ModelsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -732,7 +743,7 @@ describe('ModelsController', () => {
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -761,7 +772,7 @@ describe('ModelsController', () => {
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
@@ -782,7 +793,7 @@ describe('ModelsController', () => {
 
   //
   // it('add data values to model fails due to validation errors', async () => {
-  //   const model = Model.fromPlain({ name: 'My name', description: 'My desc' });
+  //   const model = Model.loadFromDb({ name: 'My name', description: 'My desc' });
   //   model.assignOwner(authContext.user);
   //   const productDataModel = ProductDataModel.fromPlain(laptopModel);
   //   await productDataModelService.save(productDataModel);

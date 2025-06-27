@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ProductDataModelController } from './presentation/product.data.model.controller';
 import { ProductDataModelService } from './infrastructure/product-data-model.service';
-import { ProductDataModelImportService } from './infrastructure/product-data-model-import.service';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { UsersModule } from '../users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -22,7 +21,7 @@ import {
     UsersModule,
   ],
   controllers: [ProductDataModelController],
-  providers: [ProductDataModelService, ProductDataModelImportService],
+  providers: [ProductDataModelService],
   exports: [ProductDataModelService],
 })
 export class ProductDataModelModule {}

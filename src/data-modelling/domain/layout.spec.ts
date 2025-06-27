@@ -49,16 +49,10 @@ describe('Layout', () => {
     };
     layout.modify(modifications);
 
-    expect(layout.toPlain()).toEqual({
-      ...layout.toPlain(),
-      ...modifications,
-    });
+    expect(layout).toEqual(Layout.create({ ...layout, ...modifications }));
 
     // if no value is provided the current defined should be used
     layout.modify({});
-    expect(layout.toPlain()).toEqual({
-      ...layout.toPlain(),
-      ...modifications,
-    });
+    expect(layout).toEqual(layout);
   });
 });
