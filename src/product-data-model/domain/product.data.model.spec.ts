@@ -340,32 +340,32 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-1',
         dataFieldName: 'Title',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-2',
         dataFieldName: 'Title 2',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-3',
         dataFieldName: 'Title 3',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-4',
         dataFieldName: 'Title 4',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-6',
         dataFieldName: 'Title 6',
         isValid: true,
@@ -409,22 +409,22 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-1',
         dataFieldName: 'Title',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-2',
         dataFieldName: 'Title 2',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-6',
         dataFieldName: 'Title 6',
         isValid: true,
@@ -467,36 +467,36 @@ describe('ProductDataModel', () => {
 
     expect(validationOutput.isValid).toBeFalsy();
     expect(validationOutput.validationResults).toEqual([
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-1',
         dataFieldName: 'Title',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-2',
         dataFieldName: 'Title 2',
         isValid: false,
         errorMessage: 'Value for data field is missing',
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-3',
         dataFieldName: 'Title 3',
         isValid: false,
         row: 0,
         errorMessage: 'Value for data field is missing',
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-4',
         dataFieldName: 'Title 4',
         isValid: true,
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-5',
         dataFieldName: 'Title 5',
         isValid: false,
         errorMessage: 'Invalid input: expected string, received object',
       }),
-      DataFieldValidationResult.fromPlain({
+      DataFieldValidationResult.create({
         dataFieldId: 'field-6',
         dataFieldName: 'Title 6',
         isValid: true,

@@ -791,45 +791,6 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(403);
   });
 
-  //
-  // it('add data values to model fails due to validation errors', async () => {
-  //   const model = Model.loadFromDb({ name: 'My name', description: 'My desc' });
-  //   model.assignOwner(authContext.user);
-  //   const productDataModel = ProductDataModel.fromPlain(laptopModel);
-  //   await productDataModelService.save(productDataModel);
-  //   model.assignProductDataModel(productDataModel);
-  //   await modelsService.save(model);
-  //   const addedValues = [
-  //     {
-  //       dataSectionId: sectionId3,
-  //       dataFieldId: dataFieldId4,
-  //       value: { invalid: 'field' },
-  //       row: 0,
-  //     },
-  //     {
-  //       dataSectionId: sectionId3,
-  //       dataFieldId: dataFieldId5,
-  //       value: 'value 5',
-  //       row: 0,
-  //     },
-  //   ];
-  //   const response = await request(app.getHttpServer())
-  //     .post(`/models/${model.id}/data-values`)
-  //     .set('Authorization', 'Bearer token1')
-  //     .send(addedValues);
-  //   expect(response.status).toEqual(400);
-  //   expect(response.body).toEqual({
-  //     errors: [
-  //       {
-  //         id: dataFieldId4,
-  //         message: 'Expected string, received object',
-  //         name: 'Title 4',
-  //       },
-  //     ],
-  //     isValid: false,
-  //   });
-  // });
-
   afterAll(async () => {
     await app.close();
   });

@@ -1,5 +1,4 @@
 import { z } from 'zod/v4';
-import { Expose, plainToInstance } from 'class-transformer';
 import {
   DataFieldBase,
   DataFieldType,
@@ -9,24 +8,28 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { randomUUID } from 'crypto';
 
 export class DataFieldValidationResult {
-  @Expose()
-  readonly dataFieldId: string;
-  @Expose()
-  readonly dataFieldName: string;
-  @Expose()
-  readonly isValid: boolean;
-  @Expose()
-  readonly row?: number;
-  @Expose()
-  readonly errorMessage?: string;
+  private constructor(
+    public readonly dataFieldId: string,
+    public readonly dataFieldName: string,
+    public readonly isValid: boolean,
+    public readonly row?: number,
+    public readonly errorMessage?: string,
+  ) {}
 
-  static fromPlain(
-    plain: Partial<DataFieldValidationResult>,
-  ): DataFieldValidationResult {
-    return plainToInstance(DataFieldValidationResult, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  static create(data: {
+    dataFieldId: string;
+    dataFieldName: string;
+    isValid: boolean;
+    row?: number;
+    errorMessage?: string;
+  }): DataFieldValidationResult {
+    return new DataFieldValidationResult(
+      data.dataFieldId,
+      data.dataFieldName,
+      data.isValid,
+      data.row,
+      data.errorMessage,
+    );
   }
 
   toJson() {
@@ -91,7 +94,7 @@ function validateString(
   value: unknown,
 ): DataFieldValidationResult {
   const result = z.string().optional().safeParse(value);
-  return DataFieldValidationResult.fromPlain({
+  return DataFieldValidationResult.create({
     dataFieldId: id,
     dataFieldName: name,
     isValid: result.success,
@@ -155,7 +158,7 @@ export class NumericField extends DataField {
   }
   validate(version: string, value: unknown): DataFieldValidationResult {
     const result = z.number().optional().safeParse(value);
-    return DataFieldValidationResult.fromPlain({
+    return DataFieldValidationResult.create({
       dataFieldId: this.id,
       dataFieldName: this.name,
       isValid: result.success,

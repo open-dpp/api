@@ -116,7 +116,7 @@ export class RepeaterSection extends DataSection {
         validations.push(
           dataValue
             ? dataField.validate(version, dataValue.value)
-            : DataFieldValidationResult.fromPlain({
+            : DataFieldValidationResult.create({
                 dataFieldId: dataField.id,
                 dataFieldName: dataField.name,
                 isValid: false,
@@ -158,7 +158,7 @@ export class GroupSection extends DataSection {
       validations.push(
         dataValue
           ? dataField.validate(version, dataValue.value)
-          : DataFieldValidationResult.fromPlain({
+          : DataFieldValidationResult.create({
               dataFieldId: dataField.id,
               dataFieldName: dataField.name,
               isValid: false,
