@@ -128,18 +128,19 @@ export class OrganizationsService {
       throw new BadRequestException();
     }
     try {
-      await this.keycloakResourcesService.inviteUserToGroup(
-        authContext,
-        organizationId,
-        userToInvite.id,
-      );
       org.members.push({ id: userToInvite.id, email: userToInvite.email });
-      await this.organizationRepository.save(org);
-      queryRunner.commitTransaction();
-    } catch (err) {
-      console.log('Error:', err);
-      await queryRunner.rollbackTransaction();
-      throw err;
+      try {
+        await queryRunner.manager.save(OrganizationEntity, org);
+        await this.keycloakResourcesService.inviteUserToGroup(
+          authContext,
+          organizationId,
+          userToInvite.id,
+        );
+        await queryRunner.commitTransaction();
+      } catch (err) {
+        console.log('Error:', err);
+        await queryRunner.rollbackTransaction();
+      }
     } finally {
       await queryRunner.release();
     }
