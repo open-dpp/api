@@ -8,6 +8,7 @@ import {
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -31,6 +32,15 @@ export async function bootstrap() {
   app.enableCors({
     origin: '*',
   });
+
+  const config = new DocumentBuilder()
+    .setTitle('open-dpp')
+    .setDescription('API specification for open-dpp')
+    .setVersion('1.0')
+    .addTag('open-dpp')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
 
   await app.listen(3000, '0.0.0.0');
 }
