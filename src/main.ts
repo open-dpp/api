@@ -9,6 +9,7 @@ import {
 import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ItemsModule } from './items/items.module';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -39,7 +40,10 @@ export async function bootstrap() {
     .setVersion('1.0')
     .addTag('open-dpp')
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config, {
+      include: [ItemsModule],
+    });
   SwaggerModule.setup('api', app, documentFactory);
 
   await app.listen(3000, '0.0.0.0');
