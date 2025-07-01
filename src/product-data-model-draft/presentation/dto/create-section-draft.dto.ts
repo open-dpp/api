@@ -1,29 +1,14 @@
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator';
 import { SectionType } from '../../../data-modelling/domain/section-base';
-import { Type } from 'class-transformer';
-import { SectionLayout } from './layout.dto';
 import { GranularityLevel } from '../../../data-modelling/domain/granularity-level';
+import { z } from 'zod/v4';
+import { SectionLayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
-export class CreateSectionDraftDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly name: string;
-  @IsEnum(SectionType)
-  readonly type: SectionType;
-  @IsString()
-  @IsOptional()
-  readonly parentSectionId?: string;
-  @Type(() => SectionLayout)
-  @ValidateNested()
-  readonly layout: SectionLayout;
-  @ValidateIf((o) => o.type === SectionType.REPEATABLE)
-  @IsEnum(GranularityLevel)
-  readonly granularityLevel?: GranularityLevel;
-}
+export const CreateSectionDraftDtoSchema = z.object({
+  name: z.string().min(1),
+  type: z.enum(SectionType),
+  parentSectionId: z.string().optional(),
+  layout: SectionLayoutDtoSchema,
+  granularityLevel: z.enum(GranularityLevel).optional(),
+});
+
+export type CreateSectionDraftDto = z.infer<typeof CreateSectionDraftDtoSchema>;

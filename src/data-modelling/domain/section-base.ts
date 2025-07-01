@@ -1,5 +1,3 @@
-import { Expose, instanceToPlain, Type } from 'class-transformer';
-import { randomUUID } from 'crypto';
 import { Layout } from './layout';
 import { GranularityLevel } from './granularity-level';
 
@@ -9,24 +7,15 @@ export enum SectionType {
 }
 
 export abstract class DataSectionBase {
-  @Expose()
-  readonly id: string = randomUUID();
-  @Expose({ name: 'name' })
-  protected _name: string;
-  @Expose()
-  readonly type: SectionType;
-
-  @Expose()
-  @Type(() => Layout)
-  readonly layout: Layout;
-
-  @Expose({ name: 'subSections' })
-  protected _subSections: string[] = [];
-  @Expose({ name: 'parentId' })
-  protected _parentId?: string;
-
-  @Expose()
-  granularityLevel?: GranularityLevel;
+  protected constructor(
+    public readonly id: string,
+    protected _name: string,
+    public readonly type: SectionType,
+    public readonly layout: Layout,
+    protected _subSections: string[],
+    protected _parentId?: string,
+    public granularityLevel?: GranularityLevel,
+  ) {}
 
   public setGranularityLevel(level: GranularityLevel): void {
     this.granularityLevel = level;
@@ -42,8 +31,5 @@ export abstract class DataSectionBase {
 
   get parentId() {
     return this._parentId;
-  }
-  toPlain() {
-    return instanceToPlain(this);
   }
 }

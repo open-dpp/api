@@ -14,18 +14,38 @@ import { AuthRequest } from '../../auth/auth-request';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import { CreateProductDataModelDraftDto } from './dto/create-product-data-model-draft.dto';
-import { CreateSectionDraftDto } from './dto/create-section-draft.dto';
-import { CreateDataFieldDraftDto } from './dto/create-data-field-draft.dto';
-import { UpdateProductDataModelDraftDto } from './dto/update-product-data-model-draft.dto';
-import { PublishDto } from './dto/publish.dto';
-import { UpdateDataFieldDraftDto } from './dto/update-data-field-draft.dto';
-import { UpdateSectionDraftDto } from './dto/update-section-draft.dto';
+import {
+  CreateProductDataModelDraftDto,
+  CreateProductDataModelDraftDtoSchema,
+} from './dto/create-product-data-model-draft.dto';
+import {
+  CreateSectionDraftDto,
+  CreateSectionDraftDtoSchema,
+} from './dto/create-section-draft.dto';
+import {
+  CreateDataFieldDraftDto,
+  CreateDataFieldDraftSchema,
+} from './dto/create-data-field-draft.dto';
+import {
+  UpdateProductDataModelDraftDto,
+  UpdateProductDataModelDraftDtoSchema,
+} from './dto/update-product-data-model-draft.dto';
+import { PublishDto, PublishDtoSchema } from './dto/publish.dto';
+import {
+  UpdateDataFieldDraftDto,
+  UpdateDataFieldDraftDtoSchema,
+} from './dto/update-data-field-draft.dto';
+
 import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
 import { omit } from 'lodash';
 import { PermissionsService } from '../../permissions/permissions.service';
 
 import { Layout } from '../../data-modelling/domain/layout';
+import {
+  UpdateSectionDraftDto,
+  UpdateSectionDraftDtoSchema,
+} from './dto/update-section-draft.dto';
+import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
@@ -39,21 +59,23 @@ export class ProductDataModelDraftController {
   async create(
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
-    @Body() createProductDataModelDraftDto: CreateProductDataModelDraftDto,
+    @Body() body: CreateProductDataModelDraftDto,
   ) {
+    const createProductDataModelDraftDto =
+      CreateProductDataModelDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    return (
+    return productDataModelDraftToDto(
       await this.productDataModelDraftService.save(
         ProductDataModelDraft.create({
           ...createProductDataModelDraftDto,
           organizationId,
           userId: req.authContext.user.id,
         }),
-      )
-    ).toPlain();
+      ),
+    );
   }
 
   @Get(':draftId')
@@ -71,7 +93,7 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    return foundProductDataModelDraft.toPlain();
+    return productDataModelDraftToDto(foundProductDataModelDraft);
   }
 
   @Patch(':draftId')
@@ -79,8 +101,10 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() modifyProductDataModelDraftDto: UpdateProductDataModelDraftDto,
+    @Body() body: UpdateProductDataModelDraftDto,
   ) {
+    const modifyProductDataModelDraftDto =
+      UpdateProductDataModelDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -93,7 +117,7 @@ export class ProductDataModelDraftController {
     foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
     await this.productDataModelDraftService.save(foundProductDataModelDraft);
 
-    return foundProductDataModelDraft.toPlain();
+    return productDataModelDraftToDto(foundProductDataModelDraft);
   }
 
   @Post(':draftId/sections')
@@ -101,8 +125,9 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() createSectionDraftDto: CreateSectionDraftDto,
+    @Body() body: CreateSectionDraftDto,
   ) {
+    const createSectionDraftDto = CreateSectionDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -115,7 +140,7 @@ export class ProductDataModelDraftController {
 
     const section = DataSectionDraft.create({
       ...omit(createSectionDraftDto, ['parentSectionId', 'layout']),
-      layout: Layout.fromPlain(createSectionDraftDto.layout),
+      layout: Layout.create(createSectionDraftDto.layout),
     });
 
     if (createSectionDraftDto.parentSectionId) {
@@ -126,9 +151,9 @@ export class ProductDataModelDraftController {
     } else {
       foundProductDataModelDraft.addSection(section);
     }
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return productDataModelDraftToDto(
+      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+    );
   }
 
   @Post(':draftId/publish')
@@ -136,8 +161,9 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() publishDto: PublishDto,
+    @Body() body: PublishDto,
   ) {
+    const publishDto = PublishDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -159,7 +185,7 @@ export class ProductDataModelDraftController {
       publishedProductDataModel.version,
     );
 
-    return draft.toPlain();
+    return productDataModelDraftToDto(draft);
   }
 
   @Post(':draftId/sections/:sectionId/data-fields')
@@ -169,8 +195,9 @@ export class ProductDataModelDraftController {
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
     @Body()
-    createDataFieldDraftDto: CreateDataFieldDraftDto,
+    body: CreateDataFieldDraftDto,
   ) {
+    const createDataFieldDraftDto = CreateDataFieldDraftSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -183,14 +210,14 @@ export class ProductDataModelDraftController {
 
     const dataField = DataFieldDraft.create({
       ...omit(createDataFieldDraftDto, ['layout']),
-      layout: Layout.fromPlain(createDataFieldDraftDto.layout),
+      layout: Layout.create(createDataFieldDraftDto.layout),
     });
 
     foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return productDataModelDraftToDto(
+      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+    );
   }
 
   @Delete(':draftId/sections/:sectionId')
@@ -211,9 +238,9 @@ export class ProductDataModelDraftController {
 
     foundProductDataModelDraft.deleteSection(sectionId);
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return productDataModelDraftToDto(
+      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+    );
   }
 
   @Patch(':draftId/sections/:sectionId')
@@ -221,10 +248,10 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
-    @Body()
-    modifySectionDraftDto: UpdateSectionDraftDto,
+    @Body() body: UpdateSectionDraftDto,
     @Request() req: AuthRequest,
   ) {
+    const modifySectionDraftDto = UpdateSectionDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -240,9 +267,9 @@ export class ProductDataModelDraftController {
       omit(modifySectionDraftDto),
     );
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return productDataModelDraftToDto(
+      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+    );
   }
 
   @Patch(':draftId/sections/:sectionId/data-fields/:fieldId')
@@ -251,10 +278,10 @@ export class ProductDataModelDraftController {
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
     @Param('fieldId') fieldId: string,
-    @Body()
-    modifyDataFieldDraftDto: UpdateDataFieldDraftDto,
+    @Body() body: UpdateDataFieldDraftDto,
     @Request() req: AuthRequest,
   ) {
+    const modifyDataFieldDraftDto = UpdateDataFieldDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -271,9 +298,9 @@ export class ProductDataModelDraftController {
       omit(modifyDataFieldDraftDto, 'view'),
     );
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return productDataModelDraftToDto(
+      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+    );
   }
 
   @Delete(':draftId/sections/:sectionId/data-fields/:fieldId')
@@ -296,9 +323,9 @@ export class ProductDataModelDraftController {
 
     foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
 
-    return (
-      await this.productDataModelDraftService.save(foundProductDataModelDraft)
-    ).toPlain();
+    return productDataModelDraftToDto(
+      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+    );
   }
 
   @Get()
