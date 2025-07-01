@@ -1,7 +1,9 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { z } from 'zod/v4';
 
-export class CreateProductDataModelDraftDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly name: string;
-}
+export const CreateProductDataModelDraftDtoSchema = z.object({
+  name: z.string().min(1),
+});
+
+export type CreateProductDataModelDraftDto = z.infer<
+  typeof CreateProductDataModelDraftDtoSchema
+>;

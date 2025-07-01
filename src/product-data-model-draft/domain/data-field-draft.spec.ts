@@ -2,6 +2,7 @@ import { DataFieldDraft } from './data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { TextField } from '../../product-data-model/domain/data-field';
 
 describe('DataField', () => {
   const layout = Layout.create({
@@ -59,8 +60,14 @@ describe('DataField', () => {
     });
 
     const publishedField = field.publish();
-    expect(publishedField).toEqual({
-      ...field.toPlain(),
-    });
+    expect(publishedField).toEqual(
+      TextField.loadFromDb({
+        name: field.name,
+        layout: field.layout,
+        granularityLevel: field.granularityLevel,
+        id: field.id,
+        options: field.options,
+      }),
+    );
   });
 });

@@ -31,6 +31,8 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
+import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -42,6 +44,7 @@ describe('ProductsDataModelDraftController', () => {
   const organizationId = randomUUID();
   const otherOrganizationId = randomUUID();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
+  const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -107,7 +110,7 @@ describe('ProductsDataModelDraftController', () => {
     const found = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(found.toPlain());
+    expect(response.body).toEqual(productDataModelDraftToDto(found));
   });
 
   it(`/CREATE product data model draft ${userNotMemberTxt}`, async () => {
@@ -150,7 +153,10 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual({ ...laptopDraft.toPlain(), ...body });
+    expect(response.body).toEqual({
+      ...productDataModelDraftToDto(laptopDraft),
+      ...body,
+    });
   });
 
   it(`/PATCH product data model draft ${userNotMemberTxt}`, async () => {
@@ -159,6 +165,9 @@ describe('ProductsDataModelDraftController', () => {
       organizationId: otherOrganizationId,
       userId: randomUUID(),
     });
+
+    await productDataModelDraftService.save(laptopDraft);
+    const body = { name: 'My final laptop draft' };
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${laptopDraft.id}`,
@@ -171,7 +180,7 @@ describe('ProductsDataModelDraftController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send({});
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -182,6 +191,7 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
+    const body = { name: 'My final laptop draft' };
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
@@ -194,7 +204,7 @@ describe('ProductsDataModelDraftController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send({});
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -208,7 +218,7 @@ describe('ProductsDataModelDraftController', () => {
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
+      layout: Layout.create({ ...layoutWithoutCols, cols: { sm: 2 } }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -254,6 +264,7 @@ describe('ProductsDataModelDraftController', () => {
       organizationId,
       userId,
     });
+    const body = { visibility: VisibilityLevel.PUBLIC };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${laptopDraft}/publish`,
@@ -265,7 +276,8 @@ describe('ProductsDataModelDraftController', () => {
           [organizationId],
           keycloakAuthTestingGuard,
         ),
-      );
+      )
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -276,7 +288,7 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-
+    const body = { visibility: VisibilityLevel.PUBLIC };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/publish`,
@@ -288,7 +300,8 @@ describe('ProductsDataModelDraftController', () => {
           [organizationId, otherOrganizationId],
           keycloakAuthTestingGuard,
         ),
-      );
+      )
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -372,6 +385,7 @@ describe('ProductsDataModelDraftController', () => {
       {
         name: 'Technical Specs',
         type: SectionType.GROUP,
+        granularityLevel: GranularityLevel.MODEL,
         id: expect.any(String),
         dataFields: [],
         subSections: [],
@@ -382,13 +396,12 @@ describe('ProductsDataModelDraftController', () => {
           rowSpan: { sm: 3 },
           cols: { sm: 3 },
         },
-        granularityLevel: GranularityLevel.MODEL,
       },
     ]);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(foundDraft.toPlain());
+    expect(response.body).toEqual(productDataModelDraftToDto(foundDraft));
   });
 
   const layoutWithoutCols = {
@@ -444,7 +457,7 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(201);
     // expect draft data
     const expectedSectionsBody = [
-      { ...section.toPlain(), subSections: [expect.any(String)] },
+      { ...sectionToDto(section), subSections: [expect.any(String)] },
       {
         name: 'Dimensions',
         type: SectionType.GROUP,
@@ -466,11 +479,25 @@ describe('ProductsDataModelDraftController', () => {
     const found = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body.sections).toEqual(found.toPlain().sections);
+    expect(response.body.sections).toEqual(
+      productDataModelDraftToDto(found).sections,
+    );
   });
 
   it(`/CREATE section draft ${userNotMemberTxt}`, async () => {
-    const body = { name: 'Technical Specs', type: SectionType.GROUP };
+    const body = {
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      parentSectionId: undefined,
+      layout: {
+        cols: { sm: 3 },
+        colStart: { sm: 2 },
+        colSpan: { lg: 1, sm: 1 },
+        rowStart: { lg: 1, sm: 1 },
+        rowSpan: { lg: 1, sm: 1 },
+      },
+      granularityLevel: GranularityLevel.MODEL,
+    };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections`,
@@ -494,7 +521,19 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-
+    const body = {
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      parentSectionId: undefined,
+      layout: {
+        cols: { sm: 3 },
+        colStart: { sm: 2 },
+        colSpan: { lg: 1, sm: 1 },
+        rowStart: { lg: 1, sm: 1 },
+        rowSpan: { lg: 1, sm: 1 },
+      },
+      granularityLevel: GranularityLevel.MODEL,
+    };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections`,
@@ -507,7 +546,7 @@ describe('ProductsDataModelDraftController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send({});
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -543,7 +582,7 @@ describe('ProductsDataModelDraftController', () => {
     const found = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(found.toPlain());
+    expect(response.body).toEqual(productDataModelDraftToDto(found));
   });
 
   it(`/GET draft ${userNotMemberTxt}`, async () => {
@@ -601,7 +640,7 @@ describe('ProductsDataModelDraftController', () => {
     laptopDraft.addSection(section);
 
     await productDataModelDraftService.save(laptopDraft);
-    const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
+
     const body = {
       name: 'Technical Specs',
       layout: {
@@ -629,14 +668,24 @@ describe('ProductsDataModelDraftController', () => {
     const found = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(found.findSectionOrFail(section.id).toPlain()).toEqual({
-      ...section.toPlain(),
+    expect(sectionToDto(found.findSectionOrFail(section.id))).toEqual({
+      ...sectionToDto(section),
       name: body.name,
       layout: body.layout,
     });
   });
 
   it(`/PATCH section draft ${userNotMemberTxt}`, async () => {
+    const body = {
+      name: 'Technical Specs',
+      layout: {
+        cols: newConfig,
+        rowSpan: newConfig,
+        rowStart: newConfig,
+        colStart: newConfig,
+        colSpan: newConfig,
+      },
+    };
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/${randomUUID()}`,
@@ -648,7 +697,8 @@ describe('ProductsDataModelDraftController', () => {
           [organizationId],
           keycloakAuthTestingGuard,
         ),
-      );
+      )
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -659,7 +709,16 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-
+    const body = {
+      name: 'Technical Specs',
+      layout: {
+        cols: newConfig,
+        rowSpan: newConfig,
+        rowStart: newConfig,
+        colStart: newConfig,
+        colSpan: newConfig,
+      },
+    };
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
@@ -671,7 +730,8 @@ describe('ProductsDataModelDraftController', () => {
           [organizationId, otherOrganizationId],
           keycloakAuthTestingGuard,
         ),
-      );
+      )
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -801,11 +861,19 @@ describe('ProductsDataModelDraftController', () => {
     const foundDraft = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(foundDraft.toPlain());
+    expect(response.body).toEqual(productDataModelDraftToDto(foundDraft));
   });
 
   it(`/CREATE data field draft ${userNotMemberTxt}`, async () => {
-    const body = { name: 'Processor', type: SectionType.GROUP };
+    const body = {
+      name: 'Processor',
+      type: DataFieldType.TEXT_FIELD,
+      options: { min: 2 },
+      layout: {
+        ...layoutWithoutCols,
+      },
+      granularityLevel: GranularityLevel.MODEL,
+    };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
@@ -829,7 +897,15 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-
+    const body = {
+      name: 'Processor',
+      type: DataFieldType.TEXT_FIELD,
+      options: { min: 2 },
+      layout: {
+        ...layoutWithoutCols,
+      },
+      granularityLevel: GranularityLevel.MODEL,
+    };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
@@ -842,7 +918,7 @@ describe('ProductsDataModelDraftController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send({});
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -909,7 +985,16 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH data field draft ${userNotMemberTxt}`, async () => {
-    const body = { name: 'Memory', options: { max: 8 } };
+    const body = {
+      name: 'Memory',
+      options: { max: 8 },
+      layout: {
+        rowSpan: newConfig,
+        rowStart: newConfig,
+        colStart: newConfig,
+        colSpan: newConfig,
+      },
+    };
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
@@ -933,7 +1018,16 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-
+    const body = {
+      name: 'Memory',
+      options: { max: 8 },
+      layout: {
+        rowSpan: newConfig,
+        rowStart: newConfig,
+        colStart: newConfig,
+        colSpan: newConfig,
+      },
+    };
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
@@ -946,7 +1040,7 @@ describe('ProductsDataModelDraftController', () => {
           keycloakAuthTestingGuard,
         ),
       )
-      .send({});
+      .send(body);
     expect(response.status).toEqual(403);
   });
 
@@ -992,7 +1086,7 @@ describe('ProductsDataModelDraftController', () => {
     const found = await productDataModelDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(found.toPlain());
+    expect(response.body).toEqual(productDataModelDraftToDto(found));
   });
 
   it(`/DELETE data field ${userNotMemberTxt}`, async () => {

@@ -5,6 +5,7 @@ import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { GroupSection } from '../../product-data-model/domain/section';
 
 describe('DataSectionDraft', () => {
   const layout = Layout.create({
@@ -138,20 +139,22 @@ describe('DataSectionDraft', () => {
         rowSpan: { sm: 8 },
       },
     });
-    expect(section.toPlain().dataFields).toEqual([
-      {
-        ...dataField1.toPlain(),
+    expect(section.dataFields).toEqual([
+      DataFieldDraft.loadFromDb({
+        id: dataField1.id,
+        type: dataField1.type,
+        granularityLevel: dataField1.granularityLevel,
         name: 'newName',
         options: { min: 3, max: 2 },
-        layout: {
+        layout: Layout.create({
           cols: { sm: 1 },
           colStart: { sm: 2 },
           colSpan: { sm: 7 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 8 },
-        },
-      },
-      dataField2.toPlain(),
+        }),
+      }),
+      dataField2,
     ]);
   });
 
@@ -318,26 +321,29 @@ describe('DataSectionDraft', () => {
     });
     section.addDataField(dataField1);
     const publishedSection = section.publish();
-    expect(publishedSection).toEqual({
-      id: section.id,
-      name: 'Technical specification',
-      type: SectionType.GROUP,
-      dataFields: [{ ...dataField1.publish() }],
-      subSections: [subSection.id],
-      layout: layout.toPlain(),
-      granularityLevel: GranularityLevel.MODEL,
-    });
+    expect(publishedSection).toEqual(
+      GroupSection.loadFromDb({
+        id: section.id,
+        parentId: undefined,
+        name: 'Technical specification',
+        dataFields: [dataField1.publish()],
+        subSections: [subSection.id],
+        layout: layout,
+        granularityLevel: GranularityLevel.MODEL,
+      }),
+    );
 
     const publishedSubSection = subSection.publish();
-    expect(publishedSubSection).toEqual({
-      id: subSection.id,
-      name: 'Dimensions',
-      type: SectionType.GROUP,
-      dataFields: [],
-      subSections: [],
-      parentId: section.id,
-      layout: layout.toPlain(),
-      granularityLevel: GranularityLevel.MODEL,
-    });
+    expect(publishedSubSection).toEqual(
+      GroupSection.loadFromDb({
+        id: subSection.id,
+        name: 'Dimensions',
+        dataFields: [],
+        subSections: [],
+        parentId: section.id,
+        layout: layout,
+        granularityLevel: GranularityLevel.MODEL,
+      }),
+    );
   });
 });

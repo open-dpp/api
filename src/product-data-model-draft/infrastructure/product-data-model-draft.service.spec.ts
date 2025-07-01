@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { ProductDataModelDraft } from '../domain/product-data-model-draft';
+import {
+  ProductDataModelDraft,
+  ProductDataModelDraftDbProps,
+} from '../domain/product-data-model-draft';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ProductDataModelDraftService } from './product-data-model-draft.service';
@@ -40,108 +43,112 @@ describe('ProductDataModelDraftMongoService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  const laptopModelPlain = {
+  const laptopModelPlain: ProductDataModelDraftDbProps = {
+    id: randomUUID(),
+    organizationId: randomUUID(),
+    userId: randomUUID(),
     name: 'Laptop',
     version: 'v2',
-
     sections: [
-      {
+      DataSectionDraft.loadFromDb({
         id: 's1',
         name: 'Environment',
         type: SectionType.GROUP,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 3 },
           colStart: { sm: 1 },
           colSpan: { sm: 7 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          DataFieldDraft.create({
             name: 'Serial number',
-            type: 'TextField',
-            layout: {
+            type: DataFieldType.TEXT_FIELD,
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
-          {
+          }),
+          DataFieldDraft.create({
             name: 'Processor',
-            type: 'TextField',
-            layout: {
+            type: DataFieldType.TEXT_FIELD,
+            layout: Layout.create({
               colStart: { sm: 2 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
         parentId: undefined,
         subSections: ['s1.1', 's1.2'],
         granularityLevel: GranularityLevel.MODEL,
-      },
-      {
+      }),
+      DataSectionDraft.loadFromDb({
         parentId: 's1',
         id: 's1.1',
         name: 'CO2',
         type: SectionType.GROUP,
         subSections: ['s1.1.1'],
         dataFields: [],
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         granularityLevel: GranularityLevel.MODEL,
-      },
-      {
+      }),
+      DataSectionDraft.loadFromDb({
         parentId: 's1.1',
         id: 's1.1.1',
         name: 'CO2 Scope 1',
+        subSections: [],
         type: SectionType.REPEATABLE,
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          DataFieldDraft.create({
             name: 'Emissions',
-            type: 'TextField',
-            layout: {
+            type: DataFieldType.TEXT_FIELD,
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.MODEL,
-          },
+          }),
         ],
         granularityLevel: GranularityLevel.MODEL,
-      },
-      {
+      }),
+      DataSectionDraft.loadFromDb({
         parentId: 's1',
         id: 's1.2',
         name: 'Electricity',
         type: SectionType.GROUP,
+        subSections: [],
         dataFields: [],
-        layout: {
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         granularityLevel: GranularityLevel.MODEL,
-      },
+      }),
     ],
     publications: [
       {
@@ -156,10 +163,8 @@ describe('ProductDataModelDraftMongoService', () => {
   };
 
   it('saves draft', async () => {
-    const productDataModelDraft = ProductDataModelDraft.fromPlain({
+    const productDataModelDraft = ProductDataModelDraft.loadFromDb({
       ...laptopModelPlain,
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
     });
     const { id } = await service.save(productDataModelDraft);
     const found = await service.findOneOrFail(id);
@@ -171,57 +176,68 @@ describe('ProductDataModelDraftMongoService', () => {
       new NotFoundInDatabaseException(ProductDataModelDraft.name),
     );
   });
-  const layout = Layout.create({
-    cols: { sm: 3 },
+
+  const commonLayout = {
     colStart: { sm: 1 },
     colSpan: { sm: 7 },
     rowStart: { sm: 1 },
     rowSpan: { sm: 1 },
+  };
+
+  const layoutDataField = Layout.create({
+    ...commonLayout,
+  });
+  const layout = Layout.create({
+    cols: { sm: 3 },
+    ...commonLayout,
   });
 
   it('sets correct default granularity level', async () => {
-    const laptopModel = {
+    const laptopModel: ProductDataModelDraftDbProps = {
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      userId: randomUUID(),
       name: 'Laptop',
       version: 'v2',
       sections: [
-        {
+        DataSectionDraft.loadFromDb({
           id: 's1',
-          name: 'Environment',
           type: SectionType.GROUP,
-          layout: {
+          name: 'Environment',
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 7 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [],
           parentId: undefined,
           subSections: [],
-        },
-        {
+        }),
+        DataSectionDraft.loadFromDb({
           id: 's2',
           name: 'Materials',
           type: SectionType.REPEATABLE,
-          layout: {
+          layout: Layout.create({
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 7 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          },
+          }),
           dataFields: [],
           parentId: undefined,
           subSections: [],
-        },
+        }),
       ],
       publications: [],
     };
 
-    const productDataModelDraft = ProductDataModelDraft.fromPlain({
+    const productDataModelDraft = ProductDataModelDraft.loadFromDb({
       ...laptopModel,
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
+      organizationId: randomUUID(),
+      userId: randomUUID(),
     });
     const { id } = await service.save(productDataModelDraft);
     const found = await service.findOneOrFail(id);
@@ -294,13 +310,13 @@ describe('ProductDataModelDraftMongoService', () => {
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout,
+      layout: layoutDataField,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
-      layout,
+      layout: layoutDataField,
       granularityLevel: GranularityLevel.MODEL,
     });
 

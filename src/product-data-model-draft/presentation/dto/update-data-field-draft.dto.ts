@@ -1,21 +1,12 @@
-import {
-  IsNotEmpty,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { LayoutDto } from './layout.dto';
+import { z } from 'zod/v4';
+import { LayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
-export class UpdateDataFieldDraftDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly name: string;
-  @IsObject()
-  @IsOptional()
-  options?: Record<string, unknown>;
-  @Type(() => LayoutDto)
-  @ValidateNested()
-  readonly layout: LayoutDto;
-}
+export const UpdateDataFieldDraftDtoSchema = z.object({
+  name: z.string().min(1),
+  options: z.record(z.string(), z.unknown()).optional(),
+  layout: LayoutDtoSchema,
+});
+
+export type UpdateDataFieldDraftDto = z.infer<
+  typeof UpdateDataFieldDraftDtoSchema
+>;

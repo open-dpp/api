@@ -17,8 +17,11 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
-import { SectionType } from '../../data-modelling/domain/section-base';
+import {
+  ProductDataModel,
+  ProductDataModelDbProps,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { IntegrationModule } from '../integration.module';
@@ -33,6 +36,9 @@ import { ConfigService } from '@nestjs/config';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Organization } from '../../organizations/domain/organization';
+import { GroupSection } from '../../product-data-model/domain/section';
+import { Layout } from '../../data-modelling/domain/layout';
+import { TextField } from '../../product-data-model/domain/data-field';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -120,45 +126,47 @@ describe('AasConnectionController', () => {
   const sectionId1 = randomUUID();
   const dataFieldId1 = randomUUID();
 
-  const laptopModel = {
+  const laptopModel: ProductDataModelDbProps = {
+    id: randomUUID(),
+    visibility: VisibilityLevel.PRIVATE,
     name: 'Laptop',
     version: '1.0',
     ownedByOrganizationId: organizationId,
     createdByUserId: authContext.user.id,
     sections: [
-      {
+      GroupSection.loadFromDb({
         id: sectionId1,
         name: 'Carbon Footprint',
-        type: SectionType.GROUP,
-        layout: {
+        parentId: undefined,
+        subSections: [],
+        layout: Layout.create({
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        },
+        }),
         dataFields: [
-          {
+          TextField.loadFromDb({
             id: dataFieldId1,
-            type: 'TextField',
             name: 'PCFCalculationMethod',
             options: { min: 2 },
-            layout: {
+            layout: Layout.create({
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            },
+            }),
             granularityLevel: GranularityLevel.ITEM,
-          },
+          }),
         ],
-      },
+      }),
     ],
   };
 
   it(`/CREATE items via connection`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       organizationId,
@@ -222,7 +230,7 @@ describe('AasConnectionController', () => {
   });
 
   it(`/CREATE connection`, async () => {
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       organizationId,
@@ -279,7 +287,7 @@ describe('AasConnectionController', () => {
     });
     await aasConnectionService.save(aasConnection);
 
-    const productDataModel = ProductDataModel.fromPlain(laptopModel);
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       organizationId,
