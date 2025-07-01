@@ -10,8 +10,8 @@ import {
 
 const ProductDataModelDtoSchema = z.object({
   id: z.uuid(),
-  name: z.string().nonempty(),
-  version: z.string().nonempty(),
+  name: z.string().min(1),
+  version: z.string().min(1),
   sections: SectionBaseDtoSchema.array(),
   visibility: z.enum(VisibilityLevel),
   createdByUserId: z.uuid(),

@@ -8,7 +8,7 @@ import { DataSection } from '../../../product-data-model/domain/section';
 
 export const SectionBaseDtoSchema = z.object({
   id: z.uuid(),
-  name: z.string().nonempty(),
+  name: z.string().min(1),
   type: z.enum(SectionType),
   parentId: z.string().optional(),
   subSections: z.string().array(),

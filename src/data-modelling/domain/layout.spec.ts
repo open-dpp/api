@@ -49,7 +49,15 @@ describe('Layout', () => {
     };
     layout.modify(modifications);
 
-    expect(layout).toEqual(Layout.create({ ...layout, ...modifications }));
+    expect(layout).toEqual(
+      Layout.create({
+        colStart: modifications.colStart ?? layout.colStart,
+        colSpan: modifications.colSpan ?? layout.colSpan,
+        rowStart: modifications.rowStart ?? layout.rowStart,
+        rowSpan: modifications.rowSpan ?? layout.rowSpan,
+        cols: modifications.cols ?? layout.cols,
+      }),
+    );
 
     // if no value is provided the current defined should be used
     layout.modify({});

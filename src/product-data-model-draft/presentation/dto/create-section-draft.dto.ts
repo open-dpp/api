@@ -4,7 +4,7 @@ import { z } from 'zod/v4';
 import { SectionLayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
 export const CreateSectionDraftDtoSchema = z.object({
-  name: z.string().nonempty(),
+  name: z.string().min(1),
   type: z.enum(SectionType),
   parentSectionId: z.string().optional(),
   layout: SectionLayoutDtoSchema,

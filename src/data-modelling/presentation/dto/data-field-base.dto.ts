@@ -5,7 +5,7 @@ import { GranularityLevel } from '../../domain/granularity-level';
 
 export const DataFieldBaseSchema = z.object({
   id: z.uuid(),
-  name: z.string().nonempty(),
+  name: z.string().min(1),
   type: z.enum(DataFieldType),
   options: z.record(z.string(), z.unknown()).optional(),
   layout: LayoutDtoSchema,

@@ -16,7 +16,7 @@ export const SectionLayoutDtoSchema = LayoutDtoSchema.extend({
 
 export type SectionLayoutDto = z.infer<typeof SectionLayoutDtoSchema>;
 
-export function layoutToDto(layout: Layout): LayoutDto {
+export function layoutToDto(layout: Layout): LayoutDto | SectionLayoutDto {
   const shared = {
     colStart: layout.colStart,
     colSpan: layout.colSpan,

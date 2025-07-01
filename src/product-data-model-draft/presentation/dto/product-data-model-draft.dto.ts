@@ -12,8 +12,8 @@ const PublicationDtoSchema = z.object({
 
 const ProductDataModelDraftDtoSchema = z.object({
   id: z.uuid(),
-  name: z.string().nonempty(),
-  version: z.string().nonempty(),
+  name: z.string().min(1),
+  version: z.string().min(1),
   publications: PublicationDtoSchema.array(),
   sections: SectionBaseDtoSchema.array(),
   createdByUserId: z.uuid(),

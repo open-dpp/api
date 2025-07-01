@@ -6,6 +6,7 @@ import {
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
+import { NotSupportedError } from '../../exceptions/domain.errors';
 
 export class DataFieldValidationResult {
   private constructor(
@@ -178,7 +179,7 @@ const dataFieldSubtypes = [
 export function findDataFieldClassByTypeOrFail(type: DataFieldType) {
   const foundDataFieldType = dataFieldSubtypes.find((st) => st.name === type);
   if (!foundDataFieldType) {
-    throw new Error(`Data field type ${type} is not supported`);
+    throw new NotSupportedError(`Data field type ${type} is not supported`);
   }
   return foundDataFieldType.value;
 }
