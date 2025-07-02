@@ -26,6 +26,7 @@ describe('Bootstrap', () => {
 
     // Setup mock app
     mockApp = {
+      getHttpAdapter: jest.fn(),
       useGlobalFilters: jest.fn().mockReturnThis(),
       enableCors: jest.fn().mockReturnThis(),
       useGlobalPipes: jest.fn(),
