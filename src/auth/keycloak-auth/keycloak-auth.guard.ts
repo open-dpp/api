@@ -37,31 +37,14 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const headerAuthorization = request.headers.authorization;
     const headerApiKey = request.headers['api_token'];
-    let accessToken: string | null = null;
+    let accessToken: string;
 
-    if (!headerAuthorization) {
-      if (headerApiKey) {
-        const response = await firstValueFrom(
-          this.httpService.get(
-            `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/open-dpp/api-key/auth?apiKey=${headerApiKey}`,
-          ),
-        );
-        if (response.status === 200) {
-          accessToken = response.data.jwt;
-        } else {
-          throw new UnauthorizedException('API Key invalid');
-        }
-      } else {
-        throw new UnauthorizedException('Authorization missing');
-      }
+    if (headerAuthorization) {
+      accessToken = await this.readTokenFromJwt(headerAuthorization);
+    } else if (headerApiKey) {
+      accessToken = await this.readTokenFromApiKeyOrFail(headerApiKey);
     } else {
-      const parts = headerAuthorization.split(' ');
-      if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        throw new UnauthorizedException(
-          'Authorization: Bearer <token> header invalid',
-        );
-      }
-      accessToken = parts[1];
+      throw new UnauthorizedException('Authorization missing');
     }
 
     const authContext = new AuthContext();
@@ -97,6 +80,31 @@ export class KeycloakAuthGuard implements CanActivate {
     });
     request.authContext = authContext;
     return true;
+  }
+
+  private async readTokenFromApiKeyOrFail(
+    headerApiKey: string,
+  ): Promise<string> {
+    const response = await firstValueFrom(
+      this.httpService.get(
+        `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/open-dpp/api-key/auth?apiKey=${headerApiKey}`,
+      ),
+    );
+    if (response.status === 200) {
+      return response.data.jwt;
+    } else {
+      throw new UnauthorizedException('API Key invalid');
+    }
+  }
+
+  private async readTokenFromJwt(jwt: string): Promise<string> {
+    const parts = jwt.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      throw new UnauthorizedException(
+        'Authorization: Bearer <token> header invalid',
+      );
+    }
+    return parts[1];
   }
 
   private formatPublicKey(publicKey: string): string {
