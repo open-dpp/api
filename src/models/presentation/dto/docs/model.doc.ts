@@ -12,6 +12,11 @@ export const createModelDocumentation = {
   required: ['name'],
 };
 
+export const updateModelDocumentation = {
+  ...createModelDocumentation,
+  required: [],
+};
+
 export const modelDocumentation = {
   type: 'object',
   properties: {
@@ -27,4 +32,12 @@ export const modelDocumentation = {
     owner: { type: 'string', format: 'uuid' },
   },
   required: ['name'],
+};
+
+export const productDataModelParamDocumentation = {
+  name: 'productDataModelId',
+  description: 'The id of the product data model.',
+  required: true,
+  type: 'string',
+  format: 'uuid',
 };

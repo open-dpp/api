@@ -179,7 +179,7 @@ export class ItemsController {
   }
 
   @ApiOperation({
-    summary: 'Modify data values to item',
+    summary: 'Modify data values of item',
     description: 'Modify data values of item.',
   })
   @ApiParam(orgaParamDocumentation)
