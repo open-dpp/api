@@ -13,6 +13,8 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { JwtService } from '@nestjs/jwt';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -21,6 +23,7 @@ export class KeycloakAuthGuard implements CanActivate {
     private configService: ConfigService,
     private readonly usersService: UsersService,
     private jwtService: JwtService,
+    private readonly httpService: HttpService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -33,24 +36,38 @@ export class KeycloakAuthGuard implements CanActivate {
       return isPublic;
     }
 
-    const header = request.headers.authorization;
+    const headerAuthorization = request.headers.authorization;
+    const headerApiKey = request.headers['api_token'];
+    let accessToken: string | null = null;
 
-    if (!header) {
-      throw new HttpException(
-        'Authorization: Bearer <token> header missing',
-        HttpStatus.UNAUTHORIZED,
-      );
+    if (!headerAuthorization) {
+      if (headerApiKey) {
+        const response = await firstValueFrom(
+          this.httpService.get(
+            `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/open-dpp/api-key/auth?apiKey=${headerApiKey}`,
+          ),
+        );
+        if (response.status === 200) {
+          accessToken = response.data.jwt;
+        } else {
+          throw new HttpException('API Key invalid', HttpStatus.UNAUTHORIZED);
+        }
+      } else {
+        throw new HttpException(
+          'Authorization missing',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+    } else {
+      const parts = headerAuthorization.split(' ');
+      if (parts.length !== 2 || parts[0] !== 'Bearer') {
+        throw new HttpException(
+          'Authorization: Bearer <token> header invalid',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      accessToken = parts[1];
     }
-
-    const parts = header.split(' ');
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      throw new HttpException(
-        'Authorization: Bearer <token> header invalid',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    const accessToken = parts[1];
 
     const authContext = new AuthContext();
     authContext.permissions = [];
