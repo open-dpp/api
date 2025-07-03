@@ -33,11 +33,3 @@ export const modelDocumentation = {
   },
   required: ['name'],
 };
-
-export const productDataModelParamDocumentation = {
-  name: 'productDataModelId',
-  description: 'The id of the product data model.',
-  required: true,
-  type: 'string',
-  format: 'uuid',
-};

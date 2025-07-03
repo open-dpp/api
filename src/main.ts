@@ -11,6 +11,7 @@ import { json } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ItemsModule } from './items/items.module';
 import { ModelsModule } from './models/models.module';
+import { ProductDataModelModule } from './product-data-model/product.data.model.module';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -43,7 +44,7 @@ export async function bootstrap() {
     .build();
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, {
-      include: [ItemsModule, ModelsModule],
+      include: [ItemsModule, ModelsModule, ProductDataModelModule],
     });
   SwaggerModule.setup('api', app, documentFactory);
 

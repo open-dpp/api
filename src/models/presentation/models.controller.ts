@@ -28,7 +28,6 @@ import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
   createModelDocumentation,
   modelDocumentation,
-  productDataModelParamDocumentation,
   updateModelDocumentation,
 } from './dto/docs/model.doc';
 import {
@@ -36,6 +35,7 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 import { modelParamDocumentation } from '../../items/presentation/dto/docs/item.doc';
+import { productDataModelParamDocumentation } from '../../product-data-model/presentation/dto/product-data-model.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
