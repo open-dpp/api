@@ -1,9 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
-  HttpException,
-  HttpStatus,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -50,20 +49,16 @@ export class KeycloakAuthGuard implements CanActivate {
         if (response.status === 200) {
           accessToken = response.data.jwt;
         } else {
-          throw new HttpException('API Key invalid', HttpStatus.UNAUTHORIZED);
+          throw new UnauthorizedException('API Key invalid');
         }
       } else {
-        throw new HttpException(
-          'Authorization missing',
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Authorization missing');
       }
     } else {
       const parts = headerAuthorization.split(' ');
       if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        throw new HttpException(
+        throw new UnauthorizedException(
           'Authorization: Bearer <token> header invalid',
-          HttpStatus.UNAUTHORIZED,
         );
       }
       accessToken = parts[1];
@@ -72,12 +67,20 @@ export class KeycloakAuthGuard implements CanActivate {
     const authContext = new AuthContext();
     authContext.permissions = [];
 
-    const payload = await this.jwtService.verifyAsync(accessToken, {
-      algorithms: ['RS256'],
-      publicKey: this.formatPublicKey(
-        this.configService.get('KEYCLOAK_JWT_PUBLIC_KEY'),
-      ),
-    });
+    let payload: KeycloakUserInToken & { memberships: string[] | undefined };
+
+    try {
+      payload = await this.jwtService.verifyAsync(accessToken, {
+        algorithms: ['RS256'],
+        publicKey: this.formatPublicKey(
+          this.configService.get('KEYCLOAK_JWT_PUBLIC_KEY'),
+        ),
+      });
+    } catch {
+      throw new UnauthorizedException(
+        'Invalid token. Check if it is maybe expired.',
+      );
+    }
     const user: KeycloakUserInToken = payload;
     authContext.keycloakUser = user;
     await this.usersService.create(user, true);
