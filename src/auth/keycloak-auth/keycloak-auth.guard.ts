@@ -1,9 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
-  HttpException,
-  HttpStatus,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +12,8 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { JwtService } from '@nestjs/jwt';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -21,6 +22,7 @@ export class KeycloakAuthGuard implements CanActivate {
     private configService: ConfigService,
     private readonly usersService: UsersService,
     private jwtService: JwtService,
+    private readonly httpService: HttpService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -33,34 +35,35 @@ export class KeycloakAuthGuard implements CanActivate {
       return isPublic;
     }
 
-    const header = request.headers.authorization;
+    const headerAuthorization = request.headers.authorization;
+    const headerApiKey = request.headers['api_token'];
+    let accessToken: string;
 
-    if (!header) {
-      throw new HttpException(
-        'Authorization: Bearer <token> header missing',
-        HttpStatus.UNAUTHORIZED,
-      );
+    if (headerAuthorization) {
+      accessToken = await this.readTokenFromJwt(headerAuthorization);
+    } else if (headerApiKey) {
+      accessToken = await this.readTokenFromApiKeyOrFail(headerApiKey);
+    } else {
+      throw new UnauthorizedException('Authorization missing');
     }
-
-    const parts = header.split(' ');
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      throw new HttpException(
-        'Authorization: Bearer <token> header invalid',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    const accessToken = parts[1];
 
     const authContext = new AuthContext();
     authContext.permissions = [];
 
-    const payload = await this.jwtService.verifyAsync(accessToken, {
-      algorithms: ['RS256'],
-      publicKey: this.formatPublicKey(
-        this.configService.get('KEYCLOAK_JWT_PUBLIC_KEY'),
-      ),
-    });
+    let payload: KeycloakUserInToken & { memberships: string[] | undefined };
+
+    try {
+      payload = await this.jwtService.verifyAsync(accessToken, {
+        algorithms: ['RS256'],
+        publicKey: this.formatPublicKey(
+          this.configService.get('KEYCLOAK_JWT_PUBLIC_KEY'),
+        ),
+      });
+    } catch {
+      throw new UnauthorizedException(
+        'Invalid token. Check if it is maybe expired.',
+      );
+    }
     const user: KeycloakUserInToken = payload;
     authContext.keycloakUser = user;
     await this.usersService.create(user, true);
@@ -77,6 +80,31 @@ export class KeycloakAuthGuard implements CanActivate {
     });
     request.authContext = authContext;
     return true;
+  }
+
+  private async readTokenFromApiKeyOrFail(
+    headerApiKey: string,
+  ): Promise<string> {
+    const response = await firstValueFrom(
+      this.httpService.get(
+        `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/open-dpp/api-key/auth?apiKey=${headerApiKey}`,
+      ),
+    );
+    if (response.status === 200) {
+      return response.data.jwt;
+    } else {
+      throw new UnauthorizedException('API Key invalid');
+    }
+  }
+
+  private async readTokenFromJwt(jwt: string): Promise<string> {
+    const parts = jwt.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      throw new UnauthorizedException(
+        'Authorization: Bearer <token> header invalid',
+      );
+    }
+    return parts[1];
   }
 
   private formatPublicKey(publicKey: string): string {
