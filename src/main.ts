@@ -10,6 +10,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ItemsModule } from './items/items.module';
+import { ModelsModule } from './models/models.module';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -42,7 +43,7 @@ export async function bootstrap() {
     .build();
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, {
-      include: [ItemsModule],
+      include: [ItemsModule, ModelsModule],
     });
   SwaggerModule.setup('api', app, documentFactory);
 

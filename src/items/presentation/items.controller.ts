@@ -22,20 +22,16 @@ import {
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { ItemsApplicationService } from './items-application.service';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  dataValueDocumentation,
   itemDocumentation,
   itemParamDocumentation,
   modelParamDocumentation,
-  orgaParamDocumentation,
 } from './dto/docs/item.doc';
+import {
+  dataValueDocumentation,
+  orgaParamDocumentation,
+} from '../../product-passport/presentation/dto/docs/product-passport.doc';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -47,8 +43,6 @@ export class ItemsController {
     private readonly productDataModelService: ProductDataModelService,
   ) {}
 
-  @Post()
-  @ApiTags('Items')
   @ApiOperation({
     summary: 'Create a new item',
     description:
@@ -59,6 +53,7 @@ export class ItemsController {
   @ApiResponse({
     schema: itemDocumentation,
   })
+  @Post()
   async create(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
@@ -76,11 +71,8 @@ export class ItemsController {
     return itemToDto(await this.itemsService.save(item));
   }
 
-  @Get()
-  @Get(':itemId')
-  @ApiTags('Items')
   @ApiOperation({
-    summary: 'Find all items of model',
+    summary: 'Find items of model',
     description: 'Find all item which belong to the specified model.',
   })
   @ApiParam(orgaParamDocumentation)
@@ -88,6 +80,7 @@ export class ItemsController {
   @ApiResponse({
     schema: { type: 'array', items: { ...itemDocumentation } },
   })
+  @Get()
   async getAll(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
@@ -106,8 +99,6 @@ export class ItemsController {
     );
   }
 
-  @Get(':itemId')
-  @ApiTags('Items')
   @ApiOperation({
     summary: 'Find item by id',
     description: 'Find and return the item with the requested id.',
@@ -118,6 +109,7 @@ export class ItemsController {
   @ApiResponse({
     schema: itemDocumentation,
   })
+  @Get(':itemId')
   async get(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
@@ -135,8 +127,6 @@ export class ItemsController {
     return itemToDto(item);
   }
 
-  @Post(':itemId/data-values')
-  @ApiTags('Items')
   @ApiOperation({
     summary: 'Add data values to item',
     description:
@@ -151,6 +141,7 @@ export class ItemsController {
   @ApiResponse({
     schema: itemDocumentation,
   })
+  @Post(':itemId/data-values')
   async addDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
@@ -187,6 +178,19 @@ export class ItemsController {
     return itemToDto(await this.itemsService.save(item));
   }
 
+  @ApiOperation({
+    summary: 'Modify data values to item',
+    description: 'Modify data values of item.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(itemParamDocumentation)
+  @ApiBody({
+    schema: { type: 'array', items: { ...dataValueDocumentation } },
+  })
+  @ApiResponse({
+    schema: itemDocumentation,
+  })
   @Patch(':itemId/data-values')
   async updateDataValues(
     @Param('orgaId') organizationId: string,

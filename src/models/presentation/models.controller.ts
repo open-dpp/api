@@ -24,6 +24,12 @@ import {
   DataValueDtoSchema,
 } from '../../product-passport/presentation/dto/data-value.dto';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  createModelDocumentation,
+  modelDocumentation,
+} from './dto/docs/model.doc';
+import { orgaParamDocumentation } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -33,6 +39,17 @@ export class ModelsController {
     private readonly permissionsService: PermissionsService,
   ) {}
 
+  @ApiOperation({
+    summary: 'Create model',
+    description: 'Create a model',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiBody({
+    schema: createModelDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
