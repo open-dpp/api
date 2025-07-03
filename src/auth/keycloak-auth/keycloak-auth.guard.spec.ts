@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { User } from '../../users/domain/user';
+import { HttpModule } from '@nestjs/axios';
 
 describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;
@@ -25,6 +26,7 @@ describe('KeycloakAuthGuard', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [HttpModule],
       providers: [
         KeycloakAuthGuard,
         {
@@ -95,10 +97,7 @@ describe('KeycloakAuthGuard', () => {
       jest.spyOn(reflector, 'get').mockReturnValue(false);
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        new HttpException(
-          'Authorization: Bearer <token> header missing',
-          HttpStatus.UNAUTHORIZED,
-        ),
+        new HttpException('Authorization missing', HttpStatus.UNAUTHORIZED),
       );
     });
 
