@@ -3,11 +3,17 @@ import { KeycloakAuthGuard } from './keycloak-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { User } from '../../users/domain/user';
+import { HttpModule } from '@nestjs/axios';
 
 describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;
@@ -25,6 +31,7 @@ describe('KeycloakAuthGuard', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [HttpModule],
       providers: [
         KeycloakAuthGuard,
         {
@@ -95,10 +102,7 @@ describe('KeycloakAuthGuard', () => {
       jest.spyOn(reflector, 'get').mockReturnValue(false);
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        new HttpException(
-          'Authorization: Bearer <token> header missing',
-          HttpStatus.UNAUTHORIZED,
-        ),
+        new HttpException('Authorization missing', HttpStatus.UNAUTHORIZED),
       );
     });
 
@@ -107,9 +111,8 @@ describe('KeycloakAuthGuard', () => {
       mockRequest.headers.authorization = 'InvalidFormat';
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        new HttpException(
+        new UnauthorizedException(
           'Authorization: Bearer <token> header invalid',
-          HttpStatus.UNAUTHORIZED,
         ),
       );
     });
