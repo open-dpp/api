@@ -10,7 +10,7 @@ import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
   productDataModelDocumentation,
   productDataModelGetAllDocumentation,
-} from './dto/docs/product-data-model.doc';
+} from '../../open-api-docs/product-data-model.doc';
 
 @Controller('product-data-models')
 export class ProductDataModelController {

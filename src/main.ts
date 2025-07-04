@@ -8,13 +8,13 @@ import {
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ItemsModule } from './items/items.module';
-import { ModelsModule } from './models/models.module';
-import { ProductDataModelModule } from './product-data-model/product.data.model.module';
+import { buildOpenApiDocumentation } from './open-api-docs';
+import { ConfigService } from '@nestjs/config';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
@@ -35,27 +35,9 @@ export async function bootstrap() {
   app.enableCors({
     origin: '*',
   });
-
-  const config = new DocumentBuilder()
-    .setTitle('open-dpp')
-    .setDescription('API specification for open-dpp')
-    .setVersion('1.0')
-    .addTag('open-dpp')
-    .addSecurity('api_token', {
-      type: 'apiKey',
-      in: 'header',
-      name: 'api_token',
-      description: 'API key authentication',
-    })
-    .addServer('http://localhost:3000', 'Local') // Add server URL and description
-    .addServer('https://api.cloud.open-dpp.de', 'Production')
-    .addSecurityRequirements('api_token')
-    .build();
-  const documentFactory = () =>
-    SwaggerModule.createDocument(app, config, {
-      include: [ItemsModule, ModelsModule, ProductDataModelModule],
-    });
-  SwaggerModule.setup('api', app, documentFactory);
+  if (configService.get<string>('BUILD_OPEN_API_DOCUMENTATION') === 'true') {
+    buildOpenApiDocumentation(app);
+  }
 
   await app.listen(3000, '0.0.0.0');
 }

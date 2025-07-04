@@ -1,7 +1,7 @@
 import {
   dataValueDocumentation,
   uniqueProductIdentifierDocumentation,
-} from '../../../../product-passport/presentation/dto/docs/product-passport.doc';
+} from '../product-passport/presentation/dto/docs/product-passport.doc';
 
 export const createModelDocumentation = {
   type: 'object',
