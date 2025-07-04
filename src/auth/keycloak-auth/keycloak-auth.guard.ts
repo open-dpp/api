@@ -92,7 +92,7 @@ export class KeycloakAuthGuard implements CanActivate {
     try {
       const url = new URL('/realms/open-dpp/api-key/auth', baseUrl);
       return url.toString();
-    } catch (error) {
+    } catch {
       throw new Error('Invalid KEYCLOAK_NETWORK_URL configuration');
     }
   }
