@@ -8,9 +8,13 @@ import {
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
+import { buildOpenApiDocumentation } from './open-api-docs';
+import { ConfigService } from '@nestjs/config';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
@@ -31,6 +35,9 @@ export async function bootstrap() {
   app.enableCors({
     origin: '*',
   });
+  if (configService.get<string>('BUILD_OPEN_API_DOCUMENTATION') === 'true') {
+    buildOpenApiDocumentation(app);
+  }
 
   await app.listen(3000, '0.0.0.0');
 }

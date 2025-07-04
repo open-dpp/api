@@ -22,6 +22,16 @@ import {
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { ItemsApplicationService } from './items-application.service';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  itemDocumentation,
+  itemParamDocumentation,
+  modelParamDocumentation,
+} from '../../open-api-docs/item.doc';
+import {
+  dataValueDocumentation,
+  orgaParamDocumentation,
+} from '../../product-passport/presentation/dto/docs/product-passport.doc';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -33,6 +43,16 @@ export class ItemsController {
     private readonly productDataModelService: ProductDataModelService,
   ) {}
 
+  @ApiOperation({
+    summary: 'Create a new item',
+    description:
+      'Creates a new item for the specified model. It uses the product data model of the model.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiResponse({
+    schema: itemDocumentation,
+  })
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
@@ -51,6 +71,15 @@ export class ItemsController {
     return itemToDto(await this.itemsService.save(item));
   }
 
+  @ApiOperation({
+    summary: 'Find items of model',
+    description: 'Find all item which belong to the specified model.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiResponse({
+    schema: { type: 'array', items: { ...itemDocumentation } },
+  })
   @Get()
   async getAll(
     @Param('orgaId') organizationId: string,
@@ -70,11 +99,21 @@ export class ItemsController {
     );
   }
 
-  @Get(':id')
+  @ApiOperation({
+    summary: 'Find item by id',
+    description: 'Find and return the item with the requested id.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(itemParamDocumentation)
+  @ApiResponse({
+    schema: itemDocumentation,
+  })
+  @Get(':itemId')
   async get(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Param('id') itemId: string,
+    @Param('itemId') itemId: string,
     @Request() req: AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
@@ -88,6 +127,20 @@ export class ItemsController {
     return itemToDto(item);
   }
 
+  @ApiOperation({
+    summary: 'Add data values to item',
+    description:
+      'Add data values to item. This method is used in the context of a repeater where a user can add new data rows resulting in data values.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(itemParamDocumentation)
+  @ApiBody({
+    schema: { type: 'array', items: { ...dataValueDocumentation } },
+  })
+  @ApiResponse({
+    schema: itemDocumentation,
+  })
   @Post(':itemId/data-values')
   async addDataValues(
     @Param('orgaId') organizationId: string,
@@ -125,6 +178,19 @@ export class ItemsController {
     return itemToDto(await this.itemsService.save(item));
   }
 
+  @ApiOperation({
+    summary: 'Modify data values of item',
+    description: 'Modify data values of item.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(itemParamDocumentation)
+  @ApiBody({
+    schema: { type: 'array', items: { ...dataValueDocumentation } },
+  })
+  @ApiResponse({
+    schema: itemDocumentation,
+  })
   @Patch(':itemId/data-values')
   async updateDataValues(
     @Param('orgaId') organizationId: string,

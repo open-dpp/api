@@ -24,8 +24,12 @@ describe('Bootstrap', () => {
     // Reset mocks
     jest.clearAllMocks();
 
+    const configServiceMock = {
+      get: jest.fn().mockReturnValue('false'),
+    };
     // Setup mock app
     mockApp = {
+      get: jest.fn().mockReturnValue(configServiceMock),
       useGlobalFilters: jest.fn().mockReturnThis(),
       enableCors: jest.fn().mockReturnThis(),
       useGlobalPipes: jest.fn(),

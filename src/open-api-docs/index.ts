@@ -1,0 +1,27 @@
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ItemsModule } from '../items/items.module';
+import { ModelsModule } from '../models/models.module';
+import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+
+export function buildOpenApiDocumentation(app) {
+  const config = new DocumentBuilder()
+    .setTitle('open-dpp')
+    .setDescription('API specification for open-dpp')
+    .setVersion('1.0')
+    .addTag('open-dpp')
+    .addSecurity('api_token', {
+      type: 'apiKey',
+      in: 'header',
+      name: 'api_token',
+      description: 'API key authentication',
+    })
+    .addServer('http://localhost:3000', 'Local') // Add server URL and description
+    .addServer('https://api.cloud.open-dpp.de', 'Production')
+    .addSecurityRequirements('api_token')
+    .build();
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config, {
+      include: [ItemsModule, ModelsModule, ProductDataModelModule],
+    });
+  SwaggerModule.setup('api', app, documentFactory);
+}

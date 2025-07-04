@@ -24,6 +24,18 @@ import {
   DataValueDtoSchema,
 } from '../../product-passport/presentation/dto/data-value.dto';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  createModelDocumentation,
+  modelDocumentation,
+  updateModelDocumentation,
+} from '../../open-api-docs/model.doc';
+import {
+  dataValueDocumentation,
+  orgaParamDocumentation,
+} from '../../product-passport/presentation/dto/docs/product-passport.doc';
+import { modelParamDocumentation } from '../../open-api-docs/item.doc';
+import { productDataModelParamDocumentation } from '../../product-data-model/presentation/dto/product-data-model.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -33,6 +45,17 @@ export class ModelsController {
     private readonly permissionsService: PermissionsService,
   ) {}
 
+  @ApiOperation({
+    summary: 'Create model',
+    description: 'Create a model',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiBody({
+    schema: createModelDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
@@ -54,6 +77,14 @@ export class ModelsController {
     return modelToDto(await this.modelsService.save(model));
   }
 
+  @ApiOperation({
+    summary: 'Find models of organization',
+    description: 'Find all models which belong to the provided organization.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiResponse({
+    schema: { type: 'array', items: modelDocumentation },
+  })
   @Get()
   async findAll(
     @Param('orgaId') organizationId: string,
@@ -68,6 +99,15 @@ export class ModelsController {
     );
   }
 
+  @ApiOperation({
+    summary: 'Find model by id',
+    description: 'Find model by id.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Get(':modelId')
   async findOne(
     @Param('orgaId') organizationId: string,
@@ -85,6 +125,18 @@ export class ModelsController {
     return modelToDto(model);
   }
 
+  @ApiOperation({
+    summary: 'Update model',
+    description: "Update model's name and description.",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiBody({
+    schema: updateModelDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Patch(':modelId')
   async update(
     @Param('orgaId') organizationId: string,
@@ -112,6 +164,16 @@ export class ModelsController {
     return modelToDto(await this.modelsService.save(model));
   }
 
+  @ApiOperation({
+    summary: 'Assign product data model',
+    description: 'Assign product data model to model.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(productDataModelParamDocumentation)
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Post(':modelId/product-data-models/:productDataModelId')
   async assignProductDataModelToModel(
     @Param('orgaId') organizationId: string,
@@ -123,9 +185,12 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    // TODO: Check if user has permission to access product data model
     const productDataModel =
       await this.productDataModelService.findOneOrFail(productDataModelId);
+    if (!productDataModel.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+
     const model = await this.modelsService.findOneOrFail(modelId);
 
     if (!model.isOwnedBy(organizationId)) {
@@ -136,6 +201,18 @@ export class ModelsController {
     return modelToDto(await this.modelsService.save(model));
   }
 
+  @ApiOperation({
+    summary: 'Modify data values of model',
+    description: 'Modify data values of model.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiBody({
+    schema: { type: 'array', items: { ...dataValueDocumentation } },
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Patch(':modelId/data-values')
   async updateDataValues(
     @Param('orgaId') organizationId: string,
@@ -167,6 +244,19 @@ export class ModelsController {
     return modelToDto(await this.modelsService.save(model));
   }
 
+  @ApiOperation({
+    summary: 'Add data values to model',
+    description:
+      'Add data values to model. This method is used in the context of a repeater where a user can add new data rows resulting in data values.',
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiBody({
+    schema: { type: 'array', items: { ...dataValueDocumentation } },
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
   @Post(':modelId/data-values')
   async addDataValues(
     @Param('orgaId') organizationId: string,
