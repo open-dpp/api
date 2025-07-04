@@ -14,6 +14,7 @@ import { IS_PUBLIC } from '../public/public.decorator';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -82,13 +83,26 @@ export class KeycloakAuthGuard implements CanActivate {
     return true;
   }
 
+  private getAuthUrl() {
+    const baseUrl = this.configService.get('KEYCLOAK_NETWORK_URL');
+    if (!baseUrl) {
+      throw new Error('KEYCLOAK_NETWORK_URL configuration is missing');
+    }
+
+    try {
+      const url = new URL('/realms/open-dpp/api-key/auth', baseUrl);
+      return url.toString();
+    } catch {
+      throw new Error('Invalid KEYCLOAK_NETWORK_URL configuration');
+    }
+  }
+
   private async readTokenFromApiKeyOrFail(
     headerApiKey: string,
   ): Promise<string> {
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/open-dpp/api-key/auth?apiKey=${headerApiKey}`,
-      ),
+    const authUrl = this.getAuthUrl();
+    const response = await firstValueFrom<AxiosResponse<{ jwt: string }>>(
+      this.httpService.get(`${authUrl}?apiKey=${headerApiKey}`),
     );
     if (response.status === 200) {
       return response.data.jwt;
