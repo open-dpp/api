@@ -82,7 +82,6 @@ export class ModelsController {
     description: 'Find all models which belong to the provided organization.',
   })
   @ApiParam(orgaParamDocumentation)
-  @ApiParam(modelParamDocumentation)
   @ApiResponse({
     schema: { type: 'array', items: modelDocumentation },
   })
