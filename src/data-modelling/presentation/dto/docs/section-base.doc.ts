@@ -7,7 +7,7 @@ export const sectionBaseDocumentation = {
   type: 'object',
   properties: {
     id: { type: 'string', format: 'uuid' },
-    name: { type: 'string', format: 'uuid' },
+    name: { type: 'string' },
     type: {
       type: 'string',
       enum: Object.values(SectionType),
