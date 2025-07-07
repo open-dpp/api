@@ -2,8 +2,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ItemsModule } from '../items/items.module';
 import { ModelsModule } from '../models/models.module';
 import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { INestApplication } from '@nestjs/common';
 
-export function buildOpenApiDocumentation(app) {
+export function buildOpenApiDocumentation(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('open-dpp')
     .setDescription('API specification for open-dpp')
