@@ -27,7 +27,7 @@ import {
   itemDocumentation,
   itemParamDocumentation,
   modelParamDocumentation,
-} from './dto/docs/item.doc';
+} from '../../open-api-docs/item.doc';
 import {
   dataValueDocumentation,
   orgaParamDocumentation,

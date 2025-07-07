@@ -1,5 +1,5 @@
-import { sectionBaseDocumentation } from '../../../../data-modelling/presentation/dto/docs/section-base.doc';
-import { VisibilityLevel } from '../../../domain/product.data.model';
+import { sectionBaseDocumentation } from '../data-modelling/presentation/dto/docs/section-base.doc';
+import { VisibilityLevel } from '../product-data-model/domain/product.data.model';
 
 export const productDataModelDocumentation = {
   type: 'object',

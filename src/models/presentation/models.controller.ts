@@ -29,12 +29,12 @@ import {
   createModelDocumentation,
   modelDocumentation,
   updateModelDocumentation,
-} from './dto/docs/model.doc';
+} from '../../open-api-docs/model.doc';
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
-import { modelParamDocumentation } from '../../items/presentation/dto/docs/item.doc';
+import { modelParamDocumentation } from '../../open-api-docs/item.doc';
 import { productDataModelParamDocumentation } from '../../product-data-model/presentation/dto/product-data-model.dto';
 
 @Controller('/organizations/:orgaId/models')
@@ -82,7 +82,6 @@ export class ModelsController {
     description: 'Find all models which belong to the provided organization.',
   })
   @ApiParam(orgaParamDocumentation)
-  @ApiParam(modelParamDocumentation)
   @ApiResponse({
     schema: { type: 'array', items: modelDocumentation },
   })

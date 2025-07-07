@@ -1,8 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
-  HttpException,
-  HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthContext } from '../src/auth/auth-request';
 import { User } from '../src/users/domain/user';
@@ -30,17 +29,15 @@ export class KeycloakAuthTestingGuard implements CanActivate {
 
     const header = request.headers.authorization;
     if (!header) {
-      throw new HttpException(
+      throw new UnauthorizedException(
         'Authorization: Bearer <token> header missing',
-        HttpStatus.UNAUTHORIZED,
       );
     }
 
     const parts = header.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      throw new HttpException(
+      throw new UnauthorizedException(
         'Authorization: Bearer <token> header invalid',
-        HttpStatus.UNAUTHORIZED,
       );
     }
 

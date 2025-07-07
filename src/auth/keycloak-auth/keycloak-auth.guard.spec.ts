@@ -3,7 +3,12 @@ import { KeycloakAuthGuard } from './keycloak-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
@@ -106,9 +111,8 @@ describe('KeycloakAuthGuard', () => {
       mockRequest.headers.authorization = 'InvalidFormat';
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        new HttpException(
+        new UnauthorizedException(
           'Authorization: Bearer <token> header invalid',
-          HttpStatus.UNAUTHORIZED,
         ),
       );
     });
