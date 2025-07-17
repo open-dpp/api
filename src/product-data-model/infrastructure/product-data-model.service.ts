@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import {
   ProductDataModel,
+  serialize,
   VisibilityLevel,
 } from '../domain/product.data.model';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelDocSchemaVersion,
-} from './product-data-model.schema';
+import { ProductDataModelDoc } from './product-data-model.schema';
 import {
   DataFieldDoc,
   SectionDoc,
@@ -79,33 +77,10 @@ export class ProductDataModelService {
   }
 
   async save(productDataModel: ProductDataModel) {
+    const { _id, ...rest } = serialize(productDataModel);
     const dataModelDoc = await this.productDataModelDoc.findOneAndUpdate(
-      { _id: productDataModel.id },
-      {
-        name: productDataModel.name,
-        version: productDataModel.version,
-        visibility: productDataModel.visibility,
-        _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
-        sections: productDataModel.sections.map((s) => ({
-          _id: s.id,
-          name: s.name,
-          type: s.type,
-          granularityLevel: s.granularityLevel,
-          dataFields: s.dataFields.map((d) => ({
-            _id: d.id,
-            name: d.name,
-            type: d.type,
-            options: d.options,
-            layout: d.layout,
-            granularityLevel: d.granularityLevel,
-          })),
-          layout: s.layout,
-          subSections: s.subSections,
-          parentId: s.parentId,
-        })),
-        createdByUserId: productDataModel.createdByUserId,
-        ownedByOrganizationId: productDataModel.ownedByOrganizationId,
-      },
+      { _id },
+      rest,
       {
         new: true, // Return the updated document
         upsert: true, // Create a new document if none found

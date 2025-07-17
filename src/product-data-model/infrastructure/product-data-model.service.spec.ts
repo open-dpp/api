@@ -18,15 +18,17 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { GroupSection, RepeaterSection } from '../domain/section';
 import { Layout } from '../../data-modelling/domain/layout';
 import { TextField } from '../domain/data-field';
+import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
   const userId = randomUUID();
   const organizationId = randomUUID();
   let mongoConnection: Connection;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -35,6 +37,7 @@ describe('ProductDataModelService', () => {
             schema: ProductDataModelSchema,
           },
         ]),
+        KeycloakResourcesModule,
       ],
       providers: [ProductDataModelService],
     }).compile();
@@ -258,5 +261,6 @@ describe('ProductDataModelService', () => {
 
   afterAll(async () => {
     await mongoConnection.close();
+    await module.close();
   });
 });

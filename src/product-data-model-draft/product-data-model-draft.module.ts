@@ -12,6 +12,7 @@ import {
   ProductDataModelSchema,
 } from '../product-data-model/infrastructure/product-data-model.schema';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
         schema: ProductDataModelSchema,
       },
     ]),
+    MarketplaceModule,
     PermissionsModule,
   ],
   controllers: [ProductDataModelDraftController],

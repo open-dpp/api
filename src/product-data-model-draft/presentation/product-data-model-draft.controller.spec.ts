@@ -1,4 +1,4 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { APP_GUARD } from '@nestjs/core';
@@ -33,6 +33,9 @@ import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
+import { mockCreatePassportTemplateInMarketplace } from '../../../jest.setup';
+import { Organization } from '../../organizations/domain/organization';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -45,9 +48,11 @@ describe('ProductsDataModelDraftController', () => {
   const otherOrganizationId = randomUUID();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
+  let module: TestingModule;
+  let organizationService: OrganizationsService;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -77,14 +82,17 @@ describe('ProductsDataModelDraftController', () => {
       )
       .compile();
 
-    app = moduleRef.createNestApplication();
+    app = module.createNestApplication();
 
-    productDataModelService = moduleRef.get<ProductDataModelService>(
+    productDataModelService = module.get<ProductDataModelService>(
       ProductDataModelService,
     );
-    productDataModelDraftService = moduleRef.get<ProductDataModelDraftService>(
+    productDataModelDraftService = module.get<ProductDataModelDraftService>(
       ProductDataModelDraftService,
     );
+
+    organizationService =
+      module.get<OrganizationsService>(OrganizationsService);
 
     await app.init();
   });
@@ -231,7 +239,19 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
     await productDataModelDraftService.save(laptopDraft);
+
+    await organizationService.save(
+      Organization.fromPlain({
+        id: organizationId,
+        name: 'orga name',
+        members: [new User(userId, `${userId}@example.com`)],
+        createdByUserId: userId,
+        ownedByUserId: userId,
+      }),
+    );
+
     const body = { visibility: VisibilityLevel.PUBLIC };
+
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/publish`,
@@ -256,6 +276,7 @@ describe('ProductsDataModelDraftController', () => {
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
+    expect(mockCreatePassportTemplateInMarketplace).toHaveBeenCalledTimes(1);
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {
@@ -1129,6 +1150,7 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   afterAll(async () => {
+    await module.close();
     await app.close();
   });
 });

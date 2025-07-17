@@ -46,6 +46,9 @@ import {
   UpdateSectionDraftDtoSchema,
 } from './dto/update-section-draft.dto';
 import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
+import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
+import { Sector } from '@open-dpp/api-client';
+import { MarketplaceService } from '../../marketplace/marketplace.service';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
 export class ProductDataModelDraftController {
@@ -53,6 +56,7 @@ export class ProductDataModelDraftController {
     private readonly permissionsService: PermissionsService,
     private readonly productDataModelService: ProductDataModelService,
     private readonly productDataModelDraftService: ProductDataModelDraftService,
+    private readonly marketplaceService: MarketplaceService,
   ) {}
 
   @Post()
@@ -184,6 +188,13 @@ export class ProductDataModelDraftController {
       foundProductDataModelDraft,
       publishedProductDataModel.version,
     );
+
+    if (publishDto.visibility === VisibilityLevel.PUBLIC) {
+      await this.marketplaceService.uploadToMarketplace(
+        publishedProductDataModel,
+        [Sector.BATTERY],
+      );
+    }
 
     return productDataModelDraftToDto(draft);
   }

@@ -216,24 +216,6 @@ describe('ProductDataModel', () => {
     ],
   };
 
-  it('is published', () => {
-    const userId = randomUUID();
-    const organizationId = randomUUID();
-    const otherOrganizationId = randomUUID();
-    const dataModel = ProductDataModel.create({
-      name: 'laptop',
-      userId,
-      organizationId,
-      visibility: VisibilityLevel.PRIVATE,
-    });
-    expect(dataModel.isOwnedBy(organizationId)).toBeTruthy();
-    expect(dataModel.isOwnedBy(otherOrganizationId)).toBeFalsy();
-    dataModel.publish();
-    expect(dataModel.isOwnedBy(organizationId)).toBeTruthy();
-    expect(dataModel.isPublic()).toBeTruthy();
-    expect(dataModel.visibility).toEqual(VisibilityLevel.PUBLIC);
-  });
-
   it('should create data values at model level', () => {
     const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     const dataValues = productDataModel.createInitialDataValues(

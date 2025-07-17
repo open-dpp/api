@@ -7,6 +7,7 @@ import {
   ProductDataModelSchema,
 } from './infrastructure/product-data-model.schema';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
         schema: ProductDataModelSchema,
       },
     ]),
+    KeycloakResourcesModule,
     PermissionsModule,
   ],
   controllers: [ProductDataModelController],
