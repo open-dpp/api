@@ -15,10 +15,7 @@ import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import {
-  serializeProductDataModel,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductDataModelDraftDoc,
@@ -36,10 +33,11 @@ import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
-import { mockCreatePassportTemplateInMarketplace } from '../../../jest.setup';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Sector } from '@open-dpp/api-client';
+import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
+import { MarketplaceService } from '../../marketplace/marketplace.service';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -54,6 +52,7 @@ describe('ProductsDataModelDraftController', () => {
   const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
   let module: TestingModule;
   let organizationService: OrganizationsService;
+  let marketplaceServiceTesting: MarketplaceService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -84,6 +83,8 @@ describe('ProductsDataModelDraftController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
+      .overrideProvider(MarketplaceService)
+      .useClass(MarketplaceServiceTesting)
       .compile();
 
     app = module.createNestApplication();
@@ -94,6 +95,8 @@ describe('ProductsDataModelDraftController', () => {
     productDataModelDraftService = module.get<ProductDataModelDraftService>(
       ProductDataModelDraftService,
     );
+    marketplaceServiceTesting =
+      module.get<MarketplaceService>(MarketplaceService);
 
     organizationService =
       module.get<OrganizationsService>(OrganizationsService);
@@ -260,6 +263,10 @@ describe('ProductsDataModelDraftController', () => {
       visibility: VisibilityLevel.PUBLIC,
       sectors,
     };
+    const spyUpload = jest.spyOn(
+      marketplaceServiceTesting,
+      'uploadToMarketplace',
+    );
 
     const response = await request(app.getHttpServer())
       .post(
@@ -285,14 +292,8 @@ describe('ProductsDataModelDraftController', () => {
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
-    expect(mockCreatePassportTemplateInMarketplace).toHaveBeenCalledWith({
-      description: 'Vorlage laptop',
-      name: 'laptop',
-      organizationName: 'orga name',
-      sectors,
-      templateData: serializeProductDataModel(foundModel),
-      version: foundModel.version,
-    });
+
+    expect(spyUpload).toHaveBeenCalledWith(foundModel, sectors);
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {

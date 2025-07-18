@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductDataModelService } from './product-data-model.service';
 import {
   ProductDataModel,
-  ProductDataModelDbProps,
   VisibilityLevel,
 } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
@@ -17,8 +16,8 @@ import {
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { GroupSection, RepeaterSection } from '../domain/section';
 import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../domain/data-field';
 import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
+import { productDataModelDbPropsFactory } from './product-data-model.factory';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -45,78 +44,10 @@ describe('ProductDataModelService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  const laptopModelPlain: ProductDataModelDbProps = {
-    id: randomUUID(),
-    name: 'Laptop',
-    version: 'v2',
-    visibility: VisibilityLevel.PUBLIC,
+  const laptopModelPlain = productDataModelDbPropsFactory.build({
     ownedByOrganizationId: organizationId,
     createdByUserId: userId,
-    sections: [
-      GroupSection.loadFromDb({
-        id: 's1',
-        parentId: undefined,
-        name: 'Environment',
-        granularityLevel: GranularityLevel.MODEL,
-        layout: Layout.create({
-          cols: { sm: 3 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 7 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.create({
-            name: 'Serial number',
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.create({
-            name: 'Processor',
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-        subSections: ['s1.1'],
-      }),
-      GroupSection.loadFromDb({
-        id: 's1.1',
-        parentId: 's1',
-        name: 'CO2',
-        granularityLevel: GranularityLevel.MODEL,
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.create({
-            name: 'Consumption',
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-        subSections: [],
-      }),
-    ],
-  };
+  });
 
   it('fails if requested product data model could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(

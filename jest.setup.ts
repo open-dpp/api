@@ -33,19 +33,3 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
     })),
   };
 });
-
-export const mockCreatePassportTemplateInMarketplace = jest.fn();
-export const mockSetActiveOrganizationId = jest.fn();
-
-jest.mock('@open-dpp/api-client', () => ({
-  MarketplaceApiClient: jest.fn().mockImplementation(() => ({
-    setActiveOrganizationId: mockSetActiveOrganizationId,
-    passportTemplates: {
-      create: mockCreatePassportTemplateInMarketplace,
-    },
-  })),
-  Sector: {
-    BATTERY: 'Battery',
-    TEXTILE: 'Textile',
-  },
-}));

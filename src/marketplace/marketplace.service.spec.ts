@@ -23,10 +23,22 @@ import { UsersService } from '../users/infrastructure/users.service';
 import { MarketplaceService } from './marketplace.service';
 import { DataSource } from 'typeorm';
 import { Sector } from '@open-dpp/api-client';
-import {
-  mockCreatePassportTemplateInMarketplace,
-  mockSetActiveOrganizationId,
-} from '../../jest.setup';
+
+export const mockCreatePassportTemplateInMarketplace = jest.fn();
+export const mockSetActiveOrganizationId = jest.fn();
+
+jest.mock('@open-dpp/api-client', () => ({
+  MarketplaceApiClient: jest.fn().mockImplementation(() => ({
+    setActiveOrganizationId: mockSetActiveOrganizationId,
+    passportTemplates: {
+      create: mockCreatePassportTemplateInMarketplace,
+    },
+  })),
+  Sector: {
+    BATTERY: 'Battery',
+    TEXTILE: 'Textile',
+  },
+}));
 
 describe('MarketplaceService', () => {
   let service: MarketplaceService;
