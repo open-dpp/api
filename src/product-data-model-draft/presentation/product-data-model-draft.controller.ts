@@ -183,12 +183,11 @@ export class ProductDataModelDraftController {
     );
 
     if (publishDto.visibility === VisibilityLevel.PUBLIC) {
-      const marketplaceResponse =
-        await this.marketplaceService.uploadToMarketplace(
-          publishedProductDataModel,
-          publishDto.sectors,
-          req.authContext.token,
-        );
+      const marketplaceResponse = await this.marketplaceService.upload(
+        publishedProductDataModel,
+        publishDto.sectors,
+        req.authContext.token,
+      );
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,
       );

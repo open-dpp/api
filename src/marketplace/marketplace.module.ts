@@ -7,11 +7,22 @@ import { UserEntity } from '../users/infrastructure/user.entity';
 import { MarketplaceService } from './marketplace.service';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { UsersService } from '../users/infrastructure/users.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  ProductDataModelDoc,
+  ProductDataModelSchema,
+} from '../product-data-model/infrastructure/product-data-model.schema';
 
 @Module({
   imports: [
     TypeOrmTestingModule,
     TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+    MongooseModule.forFeature([
+      {
+        name: ProductDataModelDoc.name,
+        schema: ProductDataModelSchema,
+      },
+    ]),
     KeycloakResourcesModule,
   ],
   controllers: [],

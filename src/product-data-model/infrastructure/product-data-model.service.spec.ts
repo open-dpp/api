@@ -17,7 +17,7 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { GroupSection, RepeaterSection } from '../domain/section';
 import { Layout } from '../../data-modelling/domain/layout';
 import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
-import { productDataModelDbPropsFactory } from './product-data-model.factory';
+import { productDataModelDbPropsFactory } from '../fixtures/product-data-model.factory';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;

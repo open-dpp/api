@@ -5,11 +5,15 @@ import {
 } from '@open-dpp/api-client';
 import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
-import {
-  ProductDataModel,
-  serializeProductDataModel,
-} from '../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../product-data-model/domain/product.data.model';
 import { Injectable } from '@nestjs/common';
+import {
+  deserializeProductDataModel,
+  serializeProductDataModel,
+} from '../product-data-model/domain/serialization';
+import { ProductDataModelDoc } from '../product-data-model/infrastructure/product-data-model.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class MarketplaceService {
@@ -18,6 +22,8 @@ export class MarketplaceService {
   constructor(
     configService: ConfigService,
     private organizationService: OrganizationsService,
+    @InjectModel(ProductDataModelDoc.name)
+    private productDataModelDoc: Model<ProductDataModelDoc>,
   ) {
     const baseURL = configService.get<string>('MARKETPLACE_URL');
     if (!baseURL) {
@@ -25,7 +31,7 @@ export class MarketplaceService {
     }
     this.marketplaceClient = new MarketplaceApiClient({ baseURL });
   }
-  async uploadToMarketplace(
+  async upload(
     productDataModel: ProductDataModel,
     sectors: Sector[],
     token: string,
@@ -45,5 +51,20 @@ export class MarketplaceService {
       templateData,
     });
     return response.data;
+  }
+
+  async download(templateId: string): Promise<ProductDataModel> {
+    const response =
+      await this.marketplaceClient.passportTemplates.getById(templateId);
+    const productDataModelDoc = new this.productDataModelDoc(
+      response.data.templateData,
+    );
+    await productDataModelDoc.validate();
+
+    const productDataModel = deserializeProductDataModel(
+      productDataModelDoc.toObject(),
+    );
+    productDataModel.assignMarketplaceResource(response.data.id);
+    return productDataModel;
   }
 }

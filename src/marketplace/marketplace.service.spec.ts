@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductDataModel } from '../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
-import { ProductDataModelDocSchemaVersion } from '../product-data-model/infrastructure/product-data-model.schema';
+import {
+  ProductDataModelDoc,
+  ProductDataModelDocSchemaVersion,
+  ProductDataModelSchema,
+} from '../product-data-model/infrastructure/product-data-model.schema';
 import { PassportTemplateCreateDto } from '../../../open-dpp-api-client/src';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { Organization } from '../organizations/domain/organization';
@@ -15,9 +19,13 @@ import { UsersService } from '../users/infrastructure/users.service';
 import { MarketplaceService } from './marketplace.service';
 import { DataSource } from 'typeorm';
 import { Sector } from '@open-dpp/api-client';
-import { productDataModelDbPropsFactory } from '../product-data-model/infrastructure/product-data-model.factory';
+import { productDataModelDbPropsFactory } from '../product-data-model/fixtures/product-data-model.factory';
+import { passportTemplateDtoFactory } from './fixtures/passport.template.factory';
+import { MongooseTestingModule } from '../../test/mongo.testing.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 export const mockCreatePassportTemplateInMarketplace = jest.fn();
+export const mockGetPassportTemplateInMarketplace = jest.fn();
 export const mockSetActiveOrganizationId = jest.fn();
 export const mockSetApiKey = jest.fn();
 
@@ -28,6 +36,7 @@ jest.mock('@open-dpp/api-client', () => ({
     setApiKey: mockSetApiKey,
     passportTemplates: {
       create: mockCreatePassportTemplateInMarketplace,
+      getById: mockGetPassportTemplateInMarketplace,
     },
   })),
 }));
@@ -45,6 +54,13 @@ describe('MarketplaceService', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ProductDataModelDoc.name,
+            schema: ProductDataModelSchema,
+          },
+        ]),
         KeycloakResourcesModule,
       ],
       providers: [MarketplaceService, OrganizationsService, UsersService],
@@ -79,7 +95,7 @@ describe('MarketplaceService', () => {
       data: { id: randomUUID() },
     });
     const token = randomUUID();
-    await service.uploadToMarketplace(productDataModel, sectors, token);
+    await service.upload(productDataModel, sectors, token);
     expect(mockSetActiveOrganizationId).toBeCalledWith(organizationId);
     expect(mockSetApiKey).toHaveBeenCalledWith(token);
     const expected: PassportTemplateCreateDto = {
@@ -117,6 +133,33 @@ describe('MarketplaceService', () => {
       },
     };
     expect(mockCreatePassportTemplateInMarketplace).toBeCalledWith(expected);
+  });
+
+  it('should download product data model from marketplace', async () => {
+    const passportTemplateDto = passportTemplateDtoFactory.build({});
+    mockGetPassportTemplateInMarketplace.mockResolvedValue({
+      data: passportTemplateDto,
+    });
+    const productDataModel = await service.download(passportTemplateDto.id);
+    expect(mockGetPassportTemplateInMarketplace).toBeCalledWith(
+      passportTemplateDto.id,
+    );
+    expect(productDataModel).toBeInstanceOf(ProductDataModel);
+    expect(productDataModel.marketplaceResourceId).toEqual(
+      passportTemplateDto.id,
+    );
+    expect(productDataModel.name).toEqual(
+      passportTemplateDto.templateData.name,
+    );
+    expect(productDataModel.version).toEqual(
+      passportTemplateDto.templateData.version,
+    );
+    expect(productDataModel.ownedByOrganizationId).toEqual(
+      passportTemplateDto.templateData.ownedByOrganizationId,
+    );
+    expect(productDataModel.createdByUserId).toEqual(
+      passportTemplateDto.templateData.createdByUserId,
+    );
   });
 
   afterEach(() => {

@@ -263,10 +263,7 @@ describe('ProductsDataModelDraftController', () => {
       visibility: VisibilityLevel.PUBLIC,
       sectors,
     };
-    const spyUpload = jest.spyOn(
-      marketplaceServiceTesting,
-      'uploadToMarketplace',
-    );
+    const spyUpload = jest.spyOn(marketplaceServiceTesting, 'upload');
 
     const token = getKeycloakAuthToken(
       userId,

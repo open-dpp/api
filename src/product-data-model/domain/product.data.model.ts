@@ -4,7 +4,6 @@ import { DataFieldValidationResult } from './data-field';
 import { DataSection } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { ProductDataModelDocSchemaVersion } from '../infrastructure/product-data-model.schema';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -170,34 +169,4 @@ export class ProductDataModel {
       )
       .flat();
   }
-}
-
-export function serializeProductDataModel(productDataModel: ProductDataModel) {
-  return {
-    _id: productDataModel.id,
-    name: productDataModel.name,
-    version: productDataModel.version,
-    visibility: productDataModel.visibility,
-    _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
-    sections: productDataModel.sections.map((s) => ({
-      _id: s.id,
-      name: s.name,
-      type: s.type,
-      granularityLevel: s.granularityLevel,
-      dataFields: s.dataFields.map((d) => ({
-        _id: d.id,
-        name: d.name,
-        type: d.type,
-        options: d.options,
-        layout: d.layout,
-        granularityLevel: d.granularityLevel,
-      })),
-      layout: s.layout,
-      subSections: s.subSections,
-      parentId: s.parentId,
-    })),
-    createdByUserId: productDataModel.createdByUserId,
-    ownedByOrganizationId: productDataModel.ownedByOrganizationId,
-    marketplaceResourceId: productDataModel.marketplaceResourceId,
-  };
 }
