@@ -16,6 +16,7 @@ const ProductDataModelDtoSchema = z.object({
   visibility: z.enum(VisibilityLevel),
   createdByUserId: z.uuid(),
   ownedByOrganizationId: z.uuid(),
+  marketplaceResourceId: z.string().nullable(),
 });
 
 export type ProductDataModelDto = z.infer<typeof ProductDataModelDtoSchema>;
@@ -31,6 +32,7 @@ export function productDataModelToDto(
     sections: productDataModel.sections.map((section) => sectionToDto(section)),
     createdByUserId: productDataModel.createdByUserId,
     ownedByOrganizationId: productDataModel.ownedByOrganizationId,
+    marketplaceResourceId: productDataModel.marketplaceResourceId,
   });
 }
 

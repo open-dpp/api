@@ -32,6 +32,10 @@ export const productDataModelDocumentation = {
       type: 'string',
       format: 'uuid',
     },
+    marketplaceResourceId: {
+      type: 'string',
+      format: 'uuid',
+    },
   },
   required: [
     'id',
