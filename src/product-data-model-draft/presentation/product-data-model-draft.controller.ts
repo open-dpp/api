@@ -182,19 +182,23 @@ export class ProductDataModelDraftController {
       publishDto.visibility,
     );
 
+    if (publishDto.visibility === VisibilityLevel.PUBLIC) {
+      const marketplaceResponse =
+        await this.marketplaceService.uploadToMarketplace(
+          publishedProductDataModel,
+          publishDto.sectors,
+          req.authContext.token,
+        );
+      publishedProductDataModel.assignMarketplaceResource(
+        marketplaceResponse.id,
+      );
+    }
+
     await this.productDataModelService.save(publishedProductDataModel);
     const draft = await this.productDataModelDraftService.save(
       foundProductDataModelDraft,
       publishedProductDataModel.version,
     );
-
-    if (publishDto.visibility === VisibilityLevel.PUBLIC) {
-      await this.marketplaceService.uploadToMarketplace(
-        publishedProductDataModel,
-        publishDto.sectors,
-        req.authContext.token,
-      );
-    }
 
     return productDataModelDraftToDto(draft);
   }

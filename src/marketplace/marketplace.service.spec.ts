@@ -75,6 +75,9 @@ describe('MarketplaceService', () => {
       name: `${randomUUID()}-data-model`,
     });
     const sectors = [Sector.BATTERY];
+    mockCreatePassportTemplateInMarketplace.mockResolvedValue({
+      data: { id: randomUUID() },
+    });
     const token = randomUUID();
     await service.uploadToMarketplace(productDataModel, sectors, token);
     expect(mockSetActiveOrganizationId).toBeCalledWith(organizationId);

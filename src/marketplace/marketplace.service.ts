@@ -1,4 +1,8 @@
-import { MarketplaceApiClient, Sector } from '@open-dpp/api-client';
+import {
+  MarketplaceApiClient,
+  PassportTemplateDto,
+  Sector,
+} from '@open-dpp/api-client';
 import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import {
@@ -25,14 +29,14 @@ export class MarketplaceService {
     productDataModel: ProductDataModel,
     sectors: Sector[],
     token: string,
-  ) {
+  ): Promise<PassportTemplateDto> {
     const templateData = serializeProductDataModel(productDataModel);
     const organization = await this.organizationService.findOneOrFail(
       productDataModel.ownedByOrganizationId,
     );
     this.marketplaceClient.setActiveOrganizationId(organization.id);
     this.marketplaceClient.setApiKey(token);
-    return await this.marketplaceClient.passportTemplates.create({
+    const response = await this.marketplaceClient.passportTemplates.create({
       version: productDataModel.version,
       name: productDataModel.name,
       description: `Vorlage ${productDataModel.name}`,
@@ -40,5 +44,6 @@ export class MarketplaceService {
       organizationName: organization.name,
       templateData,
     });
+    return response.data;
   }
 }

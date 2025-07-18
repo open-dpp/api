@@ -291,6 +291,9 @@ describe('ProductsDataModelDraftController', () => {
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
+    expect(foundModel.marketplaceResourceId).toEqual(
+      `templateFor${foundModel.id}`,
+    );
 
     expect(spyUpload).toHaveBeenCalledWith(
       foundModel,
