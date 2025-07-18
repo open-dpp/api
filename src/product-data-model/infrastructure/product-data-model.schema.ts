@@ -34,3 +34,4 @@ export const ProductDataModelSchema =
   SchemaFactory.createForClass(ProductDataModelDoc);
 
 createCommonIndexesForProductDataModel(ProductDataModelSchema);
+ProductDataModelSchema.index({ marketplaceResourceId: 1 });
