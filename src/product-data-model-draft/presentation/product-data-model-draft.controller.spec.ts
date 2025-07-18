@@ -268,18 +268,17 @@ describe('ProductsDataModelDraftController', () => {
       'uploadToMarketplace',
     );
 
+    const token = getKeycloakAuthToken(
+      userId,
+      [organizationId],
+      keycloakAuthTestingGuard,
+    );
+
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/publish`,
       )
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set('Authorization', token)
       .send(body);
     expect(response.status).toEqual(201);
     const foundDraft = await productDataModelDraftService.findOneOrFail(
@@ -293,7 +292,11 @@ describe('ProductsDataModelDraftController', () => {
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
 
-    expect(spyUpload).toHaveBeenCalledWith(foundModel, sectors);
+    expect(spyUpload).toHaveBeenCalledWith(
+      foundModel,
+      sectors,
+      token.substring(7),
+    );
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {

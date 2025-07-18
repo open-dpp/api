@@ -26,10 +26,12 @@ import { Sector } from '@open-dpp/api-client';
 
 export const mockCreatePassportTemplateInMarketplace = jest.fn();
 export const mockSetActiveOrganizationId = jest.fn();
+export const mockSetApiKey = jest.fn();
 
 jest.mock('@open-dpp/api-client', () => ({
   MarketplaceApiClient: jest.fn().mockImplementation(() => ({
     setActiveOrganizationId: mockSetActiveOrganizationId,
+    setApiKey: mockSetApiKey,
     passportTemplates: {
       create: mockCreatePassportTemplateInMarketplace,
     },
@@ -151,8 +153,10 @@ describe('MarketplaceService', () => {
       name: `${randomUUID()}-data-model`,
     });
     const sectors = [Sector.BATTERY];
-    await service.uploadToMarketplace(productDataModel, sectors);
+    const token = randomUUID();
+    await service.uploadToMarketplace(productDataModel, sectors, token);
     expect(mockSetActiveOrganizationId).toBeCalledWith(organizationId);
+    expect(mockSetApiKey).toHaveBeenCalledWith(token);
     const expected: PassportTemplateCreateDto = {
       version: productDataModel.version,
       name: productDataModel.name,

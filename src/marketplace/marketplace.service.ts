@@ -24,12 +24,14 @@ export class MarketplaceService {
   async uploadToMarketplace(
     productDataModel: ProductDataModel,
     sectors: Sector[],
+    token: string,
   ) {
     const templateData = serializeProductDataModel(productDataModel);
     const organization = await this.organizationService.findOneOrFail(
       productDataModel.ownedByOrganizationId,
     );
     this.marketplaceClient.setActiveOrganizationId(organization.id);
+    this.marketplaceClient.setApiKey(token);
     return await this.marketplaceClient.passportTemplates.create({
       version: productDataModel.version,
       name: productDataModel.name,

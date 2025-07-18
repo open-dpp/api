@@ -192,6 +192,7 @@ export class ProductDataModelDraftController {
       await this.marketplaceService.uploadToMarketplace(
         publishedProductDataModel,
         publishDto.sectors,
+        req.authContext.token,
       );
     }
 
