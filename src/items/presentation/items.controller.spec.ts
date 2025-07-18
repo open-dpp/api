@@ -112,6 +112,7 @@ describe('ItemsController', () => {
 
   const laptopModel: ProductDataModelDbProps = {
     id: randomUUID(),
+    marketplaceResourceId: null,
     name: 'Laptop',
     version: '1.0',
     visibility: VisibilityLevel.PRIVATE,

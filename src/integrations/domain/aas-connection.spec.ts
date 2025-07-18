@@ -151,6 +151,7 @@ describe('AasMapping', () => {
 
     const laptopModel: ProductDataModelDbProps = {
       id: randomUUID(),
+      marketplaceResourceId: null,
       name: 'Laptop',
       visibility: VisibilityLevel.PRIVATE,
       version: '1.0',

@@ -73,6 +73,7 @@ describe('ProductsDataModelController', () => {
   });
 
   const laptopPlain: ProductDataModelDbProps = {
+    marketplaceResourceId: null,
     id: randomUUID(),
     version: '1.0',
     name: 'Laptop',

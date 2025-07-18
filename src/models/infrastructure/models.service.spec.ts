@@ -97,6 +97,7 @@ describe('ModelsService', () => {
     });
     const productDataModel = ProductDataModel.loadFromDb({
       id: randomUUID(),
+      marketplaceResourceId: null,
       createdByUserId: randomUUID(),
       ownedByOrganizationId: organization.id,
       visibility: VisibilityLevel.PRIVATE,

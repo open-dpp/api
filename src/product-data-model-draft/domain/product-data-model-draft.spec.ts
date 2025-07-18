@@ -174,6 +174,7 @@ describe('ProductDataModelDraft', () => {
     );
 
     const expected: ProductDataModelDbProps = {
+      marketplaceResourceId: null,
       name: productDataModelDraft.name,
       id: expect.any(String),
       version: '1.0.0',

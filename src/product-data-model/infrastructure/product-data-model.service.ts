@@ -67,6 +67,7 @@ export class ProductDataModelService {
     const plain = productDataModelDoc.toObject();
     return ProductDataModel.loadFromDb({
       id: plain._id,
+      marketplaceResourceId: plain.marketplaceResourceId,
       name: plain.name,
       version: plain.version,
       createdByUserId: plain.createdByUserId,

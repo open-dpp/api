@@ -23,6 +23,12 @@ export class ProductDataModelDoc extends ProductDataModelBaseDoc {
     enum: VisibilityLevel,
   })
   visibility: VisibilityLevel;
+
+  @Prop({
+    required: false,
+    default: null,
+  })
+  marketplaceResourceId: string;
 }
 export const ProductDataModelSchema =
   SchemaFactory.createForClass(ProductDataModelDoc);

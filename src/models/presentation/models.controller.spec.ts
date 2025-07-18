@@ -99,6 +99,7 @@ describe('ModelsController', () => {
 
   const laptopModel: ProductDataModelDbProps = {
     id: randomUUID(),
+    marketplaceResourceId: null,
     createdByUserId: randomUUID(),
     ownedByOrganizationId: organization.id,
     visibility: VisibilityLevel.PRIVATE,

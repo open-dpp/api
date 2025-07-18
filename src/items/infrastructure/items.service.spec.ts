@@ -108,6 +108,7 @@ describe('ItemsService', () => {
       organizationId: organizationId,
     });
     const productDataModel = ProductDataModel.loadFromDb({
+      marketplaceResourceId: null,
       id: randomUUID(),
       name: 'Laptop',
       version: '1.0',

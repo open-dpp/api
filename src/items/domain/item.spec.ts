@@ -22,6 +22,7 @@ describe('Item', () => {
 
   const laptopModel: ProductDataModelDbProps = {
     id: randomUUID(),
+    marketplaceResourceId: null,
     visibility: VisibilityLevel.PRIVATE,
     name: 'Laptop',
     version: '1.0',

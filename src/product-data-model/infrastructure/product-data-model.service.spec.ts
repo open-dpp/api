@@ -104,6 +104,7 @@ describe('ProductDataModelService', () => {
         }),
       ],
       publications: [],
+      marketplaceResourceId: null,
     };
 
     const productDataModelDraft = ProductDataModel.loadFromDb({

@@ -78,4 +78,5 @@ export const productDataModelDbPropsFactory =
         subSections: [],
       }),
     ],
+    marketplaceResourceId: randomUUID(),
   }));

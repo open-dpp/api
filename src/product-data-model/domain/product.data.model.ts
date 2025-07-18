@@ -46,6 +46,7 @@ export type ProductDataModelDbProps = {
   ownedByOrganizationId: string;
   visibility: VisibilityLevel;
   sections: DataSection[];
+  marketplaceResourceId: string | null;
 };
 
 export class ProductDataModel {
@@ -57,6 +58,7 @@ export class ProductDataModel {
     private _ownedByOrganizationId: string,
     private _visibility: VisibilityLevel,
     public readonly sections: DataSection[],
+    public marketplaceResourceId: string | null,
   ) {}
 
   static create(plain: {
@@ -73,6 +75,7 @@ export class ProductDataModel {
       plain.organizationId,
       plain.visibility || VisibilityLevel.PRIVATE,
       [],
+      null,
     );
   }
 
@@ -85,10 +88,9 @@ export class ProductDataModel {
       data.ownedByOrganizationId,
       data.visibility,
       data.sections,
+      data.marketplaceResourceId,
     );
   }
-
-  publish() {}
 
   public isOwnedBy(organizationId: string) {
     return this.ownedByOrganizationId === organizationId;
@@ -120,6 +122,10 @@ export class ProductDataModel {
 
   findSectionById(id: string): DataSection | undefined {
     return this.sections.find((s) => s.id === id);
+  }
+
+  assignMarketplaceResource(marketplaceResourceId: string) {
+    this.marketplaceResourceId = marketplaceResourceId;
   }
 
   validate(
@@ -192,5 +198,6 @@ export function serializeProductDataModel(productDataModel: ProductDataModel) {
     })),
     createdByUserId: productDataModel.createdByUserId,
     ownedByOrganizationId: productDataModel.ownedByOrganizationId,
+    marketplaceResourceId: productDataModel.marketplaceResourceId,
   };
 }

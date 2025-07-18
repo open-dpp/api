@@ -214,6 +214,7 @@ describe('ProductDataModel', () => {
         ],
       }),
     ],
+    marketplaceResourceId: null,
   };
 
   it('should create data values at model level', () => {
@@ -484,5 +485,11 @@ describe('ProductDataModel', () => {
         isValid: true,
       }),
     ]);
+  });
+
+  it('should create data values at model level', () => {
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    productDataModel.assignMarketplaceResource('m1');
+    expect(productDataModel.marketplaceResourceId).toEqual('m1');
   });
 });

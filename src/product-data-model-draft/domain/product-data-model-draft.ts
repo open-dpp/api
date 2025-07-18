@@ -196,6 +196,7 @@ export class ProductDataModelDraft {
 
     const published = ProductDataModel.loadFromDb({
       id: randomUUID(),
+      marketplaceResourceId: null,
       name: this.name,
       version: versionToPublish,
       createdByUserId: createdByUserId,
