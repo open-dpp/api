@@ -166,7 +166,7 @@ export class ProductDataModel {
   }
 }
 
-export function serialize(productDataModel: ProductDataModel) {
+export function serializeProductDataModel(productDataModel: ProductDataModel) {
   return {
     _id: productDataModel.id,
     name: productDataModel.name,

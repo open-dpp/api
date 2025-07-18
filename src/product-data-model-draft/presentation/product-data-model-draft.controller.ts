@@ -47,7 +47,6 @@ import {
 } from './dto/update-section-draft.dto';
 import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
 import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
-import { Sector } from '@open-dpp/api-client';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
@@ -192,7 +191,7 @@ export class ProductDataModelDraftController {
     if (publishDto.visibility === VisibilityLevel.PUBLIC) {
       await this.marketplaceService.uploadToMarketplace(
         publishedProductDataModel,
-        [Sector.BATTERY],
+        publishDto.sectors,
       );
     }
 

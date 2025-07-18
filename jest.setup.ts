@@ -45,6 +45,7 @@ jest.mock('@open-dpp/api-client', () => ({
     },
   })),
   Sector: {
-    BATTERY: 'BATTERY',
+    BATTERY: 'Battery',
+    TEXTILE: 'Textile',
   },
 }));

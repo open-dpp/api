@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   ProductDataModel,
-  serialize,
+  serializeProductDataModel,
   VisibilityLevel,
 } from '../domain/product.data.model';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
@@ -77,7 +77,7 @@ export class ProductDataModelService {
   }
 
   async save(productDataModel: ProductDataModel) {
-    const { _id, ...rest } = serialize(productDataModel);
+    const { _id, ...rest } = serializeProductDataModel(productDataModel);
     const dataModelDoc = await this.productDataModelDoc.findOneAndUpdate(
       { _id },
       rest,

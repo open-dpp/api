@@ -15,7 +15,10 @@ import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
+import {
+  serializeProductDataModel,
+  VisibilityLevel,
+} from '../../product-data-model/domain/product.data.model';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductDataModelDraftDoc,
@@ -36,6 +39,7 @@ import { sectionToDto } from '../../data-modelling/presentation/dto/section-base
 import { mockCreatePassportTemplateInMarketplace } from '../../../jest.setup';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { Sector } from '@open-dpp/api-client';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -250,7 +254,12 @@ describe('ProductsDataModelDraftController', () => {
       }),
     );
 
-    const body = { visibility: VisibilityLevel.PUBLIC };
+    const sectors = [Sector.BATTERY, Sector.TEXTILE];
+
+    const body = {
+      visibility: VisibilityLevel.PUBLIC,
+      sectors,
+    };
 
     const response = await request(app.getHttpServer())
       .post(
@@ -276,7 +285,14 @@ describe('ProductsDataModelDraftController', () => {
       foundDraft.publications[0].id,
     );
     expect(foundModel.id).toEqual(foundDraft.publications[0].id);
-    expect(mockCreatePassportTemplateInMarketplace).toHaveBeenCalledTimes(1);
+    expect(mockCreatePassportTemplateInMarketplace).toHaveBeenCalledWith({
+      description: 'Vorlage laptop',
+      name: 'laptop',
+      organizationName: 'orga name',
+      sectors,
+      templateData: serializeProductDataModel(foundModel),
+      version: foundModel.version,
+    });
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {
@@ -285,7 +301,10 @@ describe('ProductsDataModelDraftController', () => {
       organizationId,
       userId,
     });
-    const body = { visibility: VisibilityLevel.PUBLIC };
+    const body = {
+      visibility: VisibilityLevel.PUBLIC,
+      sectors: [Sector.TEXTILE],
+    };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${laptopDraft}/publish`,
@@ -309,7 +328,10 @@ describe('ProductsDataModelDraftController', () => {
       userId,
     });
     await productDataModelDraftService.save(laptopDraft);
-    const body = { visibility: VisibilityLevel.PUBLIC };
+    const body = {
+      visibility: VisibilityLevel.PUBLIC,
+      sectors: [Sector.TEXTILE],
+    };
     const response = await request(app.getHttpServer())
       .post(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/publish`,

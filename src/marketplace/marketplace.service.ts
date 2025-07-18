@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import {
   ProductDataModel,
-  serialize,
+  serializeProductDataModel,
 } from '../product-data-model/domain/product.data.model';
 import { Injectable } from '@nestjs/common';
 
@@ -25,7 +25,7 @@ export class MarketplaceService {
     productDataModel: ProductDataModel,
     sectors: Sector[],
   ) {
-    const templateData = serialize(productDataModel);
+    const templateData = serializeProductDataModel(productDataModel);
     const organization = await this.organizationService.findOneOrFail(
       productDataModel.ownedByOrganizationId,
     );
