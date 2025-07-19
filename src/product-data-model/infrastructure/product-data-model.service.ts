@@ -51,6 +51,19 @@ export class ProductDataModelService {
     }));
   }
 
+  async findByMarketplaceResource(
+    organizationId: string,
+    marketplaceResourceId: string,
+  ) {
+    const foundDataModelDoc = await this.productDataModelDoc
+      .findOne({
+        ownedByOrganizationId: organizationId,
+        marketplaceResourceId,
+      })
+      .exec();
+    return this.convertToDomain(foundDataModelDoc);
+  }
+
   async findAllAccessibleByOrganization(organizationId: string) {
     const foundDataModelDocs = await this.productDataModelDoc
       .find(

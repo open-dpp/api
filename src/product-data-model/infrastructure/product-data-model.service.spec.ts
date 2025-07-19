@@ -65,6 +65,35 @@ describe('ProductDataModelService', () => {
     expect(found).toEqual(productDataModel);
   });
 
+  it('finds product data model by marketplaceResourceId', async () => {
+    const laptop = ProductDataModel.loadFromDb(laptopModelPlain);
+    const marketplaceResourceId = randomUUID();
+    laptop.assignMarketplaceResource(marketplaceResourceId);
+    await service.save(laptop);
+
+    const otherOrganizationId = randomUUID();
+    const laptopOtherOrganization = ProductDataModel.loadFromDb(
+      productDataModelDbPropsFactory.build({
+        ownedByOrganizationId: otherOrganizationId,
+        createdByUserId: randomUUID(),
+      }),
+    );
+    laptopOtherOrganization.assignMarketplaceResource(marketplaceResourceId);
+    await service.save(laptopOtherOrganization);
+
+    let found = await service.findByMarketplaceResource(
+      organizationId,
+      marketplaceResourceId,
+    );
+    expect(found).toEqual(laptop);
+
+    found = await service.findByMarketplaceResource(
+      otherOrganizationId,
+      marketplaceResourceId,
+    );
+    expect(found).toEqual(laptopOtherOrganization);
+  });
+
   it('sets correct default granularity level', async () => {
     const laptopModel = {
       id: randomUUID(),
