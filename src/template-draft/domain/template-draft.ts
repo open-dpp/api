@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft, DataSectionDraftDbProps } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import * as semver from 'semver';
 import { LayoutProps } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -194,7 +194,7 @@ export class TemplateDraft {
     this.sections.push(section);
   }
 
-  publish(createdByUserId: string): ProductDataModel {
+  publish(createdByUserId: string): Template {
     const lastPublished = this.publications.slice(-1);
 
     const versionToPublish =
@@ -202,7 +202,7 @@ export class TemplateDraft {
         ? semver.inc(lastPublished[0].version, 'major')
         : '1.0.0';
 
-    const published = ProductDataModel.loadFromDb({
+    const published = Template.loadFromDb({
       id: randomUUID(),
       marketplaceResourceId: null,
       name: this.name,

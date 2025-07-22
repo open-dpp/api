@@ -1,9 +1,9 @@
 import { Model } from './model';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { templateCreatePropsFactory } from '../../product-data-model/fixtures/template.factory';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 
 describe('Model', () => {
   const userId = randomUUID();
@@ -312,7 +312,7 @@ describe('Model', () => {
             row: 0,
           }),
         ]),
-      } as unknown as ProductDataModel;
+      } as unknown as Template;
 
       // Assign the product data model
       model.assignProductDataModel(productDataModel);
@@ -331,7 +331,7 @@ describe('Model', () => {
         organizationId,
       });
 
-      const productDataModel1 = ProductDataModel.create(
+      const productDataModel1 = Template.create(
         templateCreatePropsFactory.build({
           userId,
           organizationId,
@@ -340,7 +340,7 @@ describe('Model', () => {
 
       model.assignProductDataModel(productDataModel1);
 
-      const productDataModel2 = ProductDataModel.create(
+      const productDataModel2 = Template.create(
         templateCreatePropsFactory.build({
           name: 'Test Model 2',
           userId,

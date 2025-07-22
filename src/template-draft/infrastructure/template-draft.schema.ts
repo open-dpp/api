@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   createCommonIndexesForProductDataModel,
-  ProductDataModelBaseDoc,
+  TemplateBaseDoc,
 } from '../../data-modelling/infrastructure/product-data-model-base.schema';
 
 @Schema({ _id: false }) // No separate _id for embedded documents
@@ -22,7 +22,7 @@ export enum TemplateDraftDocSchemaVersion {
 }
 
 @Schema({ collection: 'product_data_model_drafts' })
-export class TemplateDraftDoc extends ProductDataModelBaseDoc {
+export class TemplateDraftDoc extends TemplateBaseDoc {
   @Prop({
     default: TemplateDraftDocSchemaVersion.v1_0_2,
     enum: TemplateDraftDocSchemaVersion,

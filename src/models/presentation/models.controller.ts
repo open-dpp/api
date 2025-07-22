@@ -14,7 +14,7 @@ import { CreateModelDto, CreateModelDtoSchema } from './dto/create-model.dto';
 import { UpdateModelDto, UpdateModelDtoSchema } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
 import { Model } from '../domain/model';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 
 import { modelToDto } from './dto/model.dto';
@@ -35,13 +35,13 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { productDataModelParamDocumentation } from '../../product-data-model/presentation/dto/product-data-model.dto';
+import { templateParamDocumentation } from '../../templates/presentation/dto/template.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
   constructor(
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly templateService: TemplateService,
     private readonly permissionsService: PermissionsService,
   ) {}
 
@@ -170,11 +170,11 @@ export class ModelsController {
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
-  @ApiParam(productDataModelParamDocumentation)
+  @ApiParam(templateParamDocumentation)
   @ApiResponse({
     schema: modelDocumentation,
   })
-  @Post(':modelId/product-data-models/:productDataModelId')
+  @Post(':modelId/templates/:productDataModelId')
   async assignProductDataModelToModel(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
@@ -186,7 +186,7 @@ export class ModelsController {
       req.authContext,
     );
     const productDataModel =
-      await this.productDataModelService.findOneOrFail(productDataModelId);
+      await this.templateService.findOneOrFail(productDataModelId);
     if (!productDataModel.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
@@ -231,7 +231,7 @@ export class ModelsController {
     }
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.productDataModelService.findOneOrFail(
+    const productDataModel = await this.templateService.findOneOrFail(
       model.productDataModelId,
     );
     const validationResult = productDataModel.validate(
@@ -274,7 +274,7 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.productDataModelService.findOneOrFail(
+    const productDataModel = await this.templateService.findOneOrFail(
       model.productDataModelId,
     );
     const validationResult = productDataModel.validate(

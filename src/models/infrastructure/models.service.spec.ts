@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
 import { Model } from '../domain/model';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { Organization } from '../../organizations/domain/organization';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
@@ -28,7 +28,7 @@ import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { laptopFactory } from '../../product-data-model/fixtures/laptop.factory';
+import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
@@ -86,7 +86,7 @@ describe('ModelsService', () => {
       userId: user.id,
       organizationId: organization.id,
     });
-    const productDataModel = ProductDataModel.loadFromDb(
+    const productDataModel = Template.loadFromDb(
       laptopFactory
         .addSections()
         .build({ organizationId: organization.id, userId: user.id }),

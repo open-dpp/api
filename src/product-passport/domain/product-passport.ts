@@ -1,4 +1,4 @@
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { DataValue } from './data-value';
@@ -80,7 +80,7 @@ export abstract class ProductPassport {
     });
   }
 
-  public assignProductDataModel(productDataModel: ProductDataModel) {
+  public assignProductDataModel(productDataModel: Template) {
     if (this.productDataModelId !== undefined) {
       throw Error('This model is already connected to a product data model');
     }

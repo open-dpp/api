@@ -14,7 +14,7 @@ import { ItemsService } from '../infrastructure/items.service';
 import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import {
   DataValueDto,
   DataValueDtoSchema,
@@ -40,7 +40,7 @@ export class ItemsController {
     private readonly permissionsService: PermissionsService,
     private readonly itemsApplicationService: ItemsApplicationService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly productDataModelService: TemplateService,
   ) {}
 
   @ApiOperation({

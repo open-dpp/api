@@ -1,25 +1,25 @@
 import {
-  ProductDataModelDoc,
-  ProductDataModelDocSchemaVersion,
-} from '../infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateDocSchemaVersion,
+} from '../infrastructure/template.schema';
 import {
   DataFieldDoc,
   SectionDoc,
 } from '../../data-modelling/infrastructure/product-data-model-base.schema';
 import { DataSectionDbProps } from './section';
 import { DataFieldDbProps } from './data-field';
-import { ProductDataModel } from './product.data.model';
+import { Template } from './template';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
-export function serializeProductDataModel(productDataModel: ProductDataModel) {
+export function serializeProductDataModel(productDataModel: Template) {
   return {
     _id: productDataModel.id,
     name: productDataModel.name,
     description: productDataModel.description,
     sectors: productDataModel.sectors,
     version: productDataModel.version,
-    _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
+    _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
     sections: productDataModel.sections.map((s) => ({
       _id: s.id,
       name: s.name,
@@ -43,7 +43,7 @@ export function serializeProductDataModel(productDataModel: ProductDataModel) {
   };
 }
 
-export function deserializeProductDataModel(plain: ProductDataModelDoc) {
+export function deserializeProductDataModel(plain: TemplateDoc) {
   const tmp = {
     id: plain._id,
     marketplaceResourceId: plain.marketplaceResourceId,
@@ -55,7 +55,7 @@ export function deserializeProductDataModel(plain: ProductDataModelDoc) {
     organizationId: plain.ownedByOrganizationId,
     sections: plain.sections.map((s: SectionDoc) => createSection(s)),
   };
-  return ProductDataModel.loadFromDb(tmp);
+  return Template.loadFromDb(tmp);
 }
 
 function createSection(sectionDoc: SectionDoc): DataSectionDbProps {

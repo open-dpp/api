@@ -13,10 +13,10 @@ import {
 } from '../../data-modelling/fixtures/layout.factory';
 import { sectionDbPropsFactory } from './section.factory';
 import { Factory } from 'fishery';
-import { ProductDataModelDbProps } from '../domain/product.data.model';
+import { TemplateDbProps } from '../domain/template';
 import { randomUUID } from 'crypto';
 
-export class LaptopFactory extends Factory<ProductDataModelDbProps> {
+export class LaptopFactory extends Factory<TemplateDbProps> {
   static ids = {
     techSpecs: {
       id: randomUUID(),

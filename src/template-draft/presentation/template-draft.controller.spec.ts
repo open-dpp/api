@@ -14,7 +14,7 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   TemplateDraftDoc,
@@ -23,9 +23,9 @@ import {
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { TemplateDraftService } from '../infrastructure/template-draft.service';
 import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../../product-data-model/infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateSchema,
+} from '../../templates/infrastructure/template.schema';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 import { Layout } from '../../data-modelling/domain/layout';
@@ -47,7 +47,7 @@ describe('TemplateDraftController', () => {
   let app: INestApplication;
   const authContext = new AuthContext();
   let templateDraftService: TemplateDraftService;
-  let productDataModelService: ProductDataModelService;
+  let productDataModelService: TemplateService;
   authContext.user = new User(randomUUID(), 'test@test.test');
   const userId = authContext.user.id;
   const organizationId = randomUUID();
@@ -68,8 +68,8 @@ describe('TemplateDraftController', () => {
             schema: TemplateDraftSchema,
           },
           {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
           },
         ]),
         TemplateDraftModule,
@@ -93,9 +93,7 @@ describe('TemplateDraftController', () => {
 
     app = module.createNestApplication();
 
-    productDataModelService = module.get<ProductDataModelService>(
-      ProductDataModelService,
-    );
+    productDataModelService = module.get<TemplateService>(TemplateService);
     templateDraftService =
       module.get<TemplateDraftService>(TemplateDraftService);
     marketplaceServiceTesting =

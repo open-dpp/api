@@ -24,13 +24,10 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { Layout } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -41,7 +38,7 @@ describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
-  let productDataModelService: ProductDataModelService;
+  let productDataModelService: TemplateService;
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
@@ -87,7 +84,7 @@ describe('ItemsController', () => {
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
-    productDataModelService = moduleRef.get(ProductDataModelService);
+    productDataModelService = moduleRef.get(TemplateService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
@@ -107,7 +104,7 @@ describe('ItemsController', () => {
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = {
+  const laptopModel: TemplateDbProps = {
     id: randomUUID(),
     marketplaceResourceId: null,
     name: 'Laptop',
@@ -239,7 +236,7 @@ describe('ItemsController', () => {
       userId: authContext.user.id,
       organizationId: organization.id,
     });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     model.assignProductDataModel(productDataModel);
     await productDataModelService.save(productDataModel);
     await modelsService.save(model);
@@ -343,7 +340,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
     });
     const item = Item.create({ organizationId, userId });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     item.defineModel(model, productDataModel);
@@ -458,7 +455,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
       userId: authContext.user.id,
     });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     item.defineModel(model, productDataModel);

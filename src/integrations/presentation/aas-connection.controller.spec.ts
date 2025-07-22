@@ -17,12 +17,9 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { IntegrationModule } from '../integration.module';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
 import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
@@ -35,9 +32,9 @@ import { ConfigService } from '@nestjs/config';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Organization } from '../../organizations/domain/organization';
-import { laptopFactory } from '../../product-data-model/fixtures/laptop.factory';
-import { sectionDbPropsFactory } from '../../product-data-model/fixtures/section.factory';
-import { dataFieldDbPropsFactory } from '../../product-data-model/fixtures/data-field.factory';
+import { laptopFactory } from '../../templates/fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
+import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -46,7 +43,7 @@ describe('AasConnectionController', () => {
     new Map(),
     reflector,
   );
-  let productDataModelService: ProductDataModelService;
+  let productDataModelService: TemplateService;
   let aasConnectionService: AasConnectionService;
   let modelsService: ModelsService;
   let itemsSevice: ItemsService;
@@ -100,7 +97,7 @@ describe('AasConnectionController', () => {
       json({ limit: '50mb' }),
     );
 
-    productDataModelService = moduleRef.get(ProductDataModelService);
+    productDataModelService = moduleRef.get(TemplateService);
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
     itemsSevice = moduleRef.get(ItemsService);
@@ -125,7 +122,7 @@ describe('AasConnectionController', () => {
   const sectionId1 = randomUUID();
   const dataFieldId1 = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = laptopFactory.build({
+  const laptopModel: TemplateDbProps = laptopFactory.build({
     organizationId,
     userId: authContext.user.id,
     sections: [
@@ -145,7 +142,7 @@ describe('AasConnectionController', () => {
 
   it(`/CREATE items via connection`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       organizationId,
@@ -209,7 +206,7 @@ describe('AasConnectionController', () => {
   });
 
   it(`/CREATE connection`, async () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       organizationId,
@@ -266,7 +263,7 @@ describe('AasConnectionController', () => {
     });
     await aasConnectionService.save(aasConnection);
 
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       organizationId,

@@ -1,7 +1,4 @@
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from './product.data.model';
+import { Template, TemplateDbProps } from './template';
 import { DataFieldValidationResult } from './data-field';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -9,12 +6,10 @@ import { DataValue } from '../../product-passport/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 
 describe('ProductDataModel', () => {
-  const laptopModel: ProductDataModelDbProps = laptopFactory
-    .addSections()
-    .build();
+  const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
 
   it('should create data values at model level', () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     const dataValues = productDataModel.createInitialDataValues(
       GranularityLevel.MODEL,
     );
@@ -43,7 +38,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should create data values at item level', () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     const dataValues = productDataModel.createInitialDataValues(
       GranularityLevel.ITEM,
     );
@@ -72,7 +67,7 @@ describe('ProductDataModel', () => {
   });
   //
   it('should validate values successfully', () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
 
     const dataValues = [
       DataValue.create({
@@ -164,7 +159,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should validate values successfully if there are no data values for repeatable section', () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
 
     const dataValues = [
       DataValue.create({
@@ -212,7 +207,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should fail validation caused by missing field and wrong type', () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     const dataValues = [
       DataValue.create({
         value: 'Intel 7',
@@ -301,7 +296,7 @@ describe('ProductDataModel', () => {
   });
 
   it('should create data values at model level', () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     productDataModel.assignMarketplaceResource('m1');
     expect(productDataModel.marketplaceResourceId).toEqual('m1');
   });

@@ -7,7 +7,7 @@ import {
 } from './asset-administration-shell';
 import { Model } from '../../models/domain/model';
 import { ValueError } from '../../exceptions/domain.errors';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { z } from 'zod/v4';
 
@@ -84,7 +84,7 @@ export class AasConnection {
 
   generateDataValues(
     assetAdministrationShell: AssetAdministrationShell,
-    productDataModel: ProductDataModel,
+    productDataModel: Template,
   ) {
     return assetAdministrationShell.propertiesWithParent
       .map(({ parentIdShort, property }) => {

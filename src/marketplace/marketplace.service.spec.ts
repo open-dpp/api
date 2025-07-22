@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductDataModel } from '../product-data-model/domain/product.data.model';
+import { Template } from '../templates/domain/template';
 import { randomUUID } from 'crypto';
 import {
-  ProductDataModelDoc,
-  ProductDataModelDocSchemaVersion,
-  ProductDataModelSchema,
-} from '../product-data-model/infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateDocSchemaVersion,
+  TemplateSchema,
+} from '../templates/infrastructure/template.schema';
 import { PassportTemplateCreateDto } from '../../../open-dpp-api-client/src';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { Organization } from '../organizations/domain/organization';
@@ -21,7 +21,7 @@ import { DataSource } from 'typeorm';
 import { passportTemplateDtoFactory } from './fixtures/passport.template.factory';
 import { MongooseTestingModule } from '../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { laptopFactory } from '../product-data-model/fixtures/laptop.factory';
+import { laptopFactory } from '../templates/fixtures/laptop.factory';
 
 export const mockCreatePassportTemplateInMarketplace = jest.fn();
 export const mockGetPassportTemplateInMarketplace = jest.fn();
@@ -56,8 +56,8 @@ describe('MarketplaceService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
           },
         ]),
         KeycloakResourcesModule,
@@ -85,7 +85,7 @@ describe('MarketplaceService', () => {
         ownedByUserId: userId,
       }),
     );
-    const productDataModel = ProductDataModel.loadFromDb({
+    const productDataModel = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
@@ -108,7 +108,7 @@ describe('MarketplaceService', () => {
         description: productDataModel.description,
         sectors: productDataModel.sectors,
         version: productDataModel.version,
-        _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
+        _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
         sections: productDataModel.sections.map((s) => ({
           _id: s.id,
           name: s.name,
@@ -143,7 +143,7 @@ describe('MarketplaceService', () => {
     expect(mockGetPassportTemplateInMarketplace).toBeCalledWith(
       passportTemplateDto.id,
     );
-    expect(productDataModel).toBeInstanceOf(ProductDataModel);
+    expect(productDataModel).toBeInstanceOf(Template);
     expect(productDataModel.marketplaceResourceId).toEqual(
       passportTemplateDto.id,
     );

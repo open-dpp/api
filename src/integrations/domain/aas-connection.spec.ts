@@ -7,16 +7,13 @@ import {
 } from './asset-administration-shell';
 import { semitrailerTruckAas } from './semitrailer-truck-aas';
 import { Model } from '../../models/domain/model';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { laptopFactory } from '../../product-data-model/fixtures/laptop.factory';
-import { sectionDbPropsFactory } from '../../product-data-model/fixtures/section.factory';
-import { dataFieldDbPropsFactory } from '../../product-data-model/fixtures/data-field.factory';
-import { templateCreatePropsFactory } from '../../product-data-model/fixtures/template.factory';
+import { laptopFactory } from '../../templates/fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
+import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 
 describe('AasMapping', () => {
@@ -81,7 +78,7 @@ describe('AasMapping', () => {
       userId: 'userId',
       name: 'modelName',
     });
-    const productDataModel = ProductDataModel.create(
+    const productDataModel = Template.create(
       templateCreatePropsFactory.build({
         organizationId,
         userId,
@@ -148,7 +145,7 @@ describe('AasMapping', () => {
     const dataFieldId2 = randomUUID();
     const dataFieldId3 = randomUUID();
 
-    const laptopModel: ProductDataModelDbProps = laptopFactory.build({
+    const laptopModel: TemplateDbProps = laptopFactory.build({
       sections: [
         sectionDbPropsFactory.build({
           id: sectionId1,
@@ -176,7 +173,7 @@ describe('AasMapping', () => {
       ],
     });
 
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
 
     const fieldAssignment1 = AasFieldAssignment.create({
       dataFieldId: dataFieldId3,

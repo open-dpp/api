@@ -37,7 +37,7 @@ export class ValidationResult {
   }
 }
 
-export type ProductDataModelCreateProps = {
+export type TemplateCreateProps = {
   name: string;
   description: string;
   sectors: Sector[];
@@ -45,14 +45,14 @@ export type ProductDataModelCreateProps = {
   organizationId: string;
 };
 
-export type ProductDataModelDbProps = ProductDataModelCreateProps & {
+export type TemplateDbProps = TemplateCreateProps & {
   id: string;
   version: string;
   sections: DataSectionDbProps[];
   marketplaceResourceId: string | null;
 };
 
-export class ProductDataModel {
+export class Template {
   private constructor(
     public readonly id: string,
     public readonly name: string,
@@ -72,7 +72,7 @@ export class ProductDataModel {
     userId: string;
     organizationId: string;
   }) {
-    return new ProductDataModel(
+    return new Template(
       randomUUID(),
       plain.name,
       plain.description,
@@ -85,8 +85,8 @@ export class ProductDataModel {
     );
   }
 
-  static loadFromDb(data: ProductDataModelDbProps) {
-    return new ProductDataModel(
+  static loadFromDb(data: TemplateDbProps) {
+    return new Template(
       data.id,
       data.name,
       data.description,

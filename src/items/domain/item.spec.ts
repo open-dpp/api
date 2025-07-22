@@ -1,22 +1,19 @@
 import { Item } from './item';
 import { randomUUID } from 'crypto';
 import { ignoreIds } from '../../../test/utils';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
 import { DataValue } from '../../product-passport/domain/data-value';
 import {
   LaptopFactory,
   laptopFactory,
-} from '../../product-data-model/fixtures/laptop.factory';
+} from '../../templates/fixtures/laptop.factory';
 
 describe('Item', () => {
   const organizationId = randomUUID();
   const userId = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = laptopFactory
+  const laptopModel: TemplateDbProps = laptopFactory
     .addSections()
     .build({ organizationId, userId });
 
@@ -27,7 +24,7 @@ describe('Item', () => {
       userId: userId,
       organizationId: organizationId,
     });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     model.assignProductDataModel(productDataModel);
 
     item.defineModel(model, productDataModel);

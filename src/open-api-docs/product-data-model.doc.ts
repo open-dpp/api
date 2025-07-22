@@ -1,6 +1,6 @@
 import { sectionBaseDocumentation } from '../data-modelling/presentation/dto/docs/section-base.doc';
 
-export const productDataModelDocumentation = {
+export const templateDocumentation = {
   type: 'object',
   properties: {
     id: {
@@ -43,7 +43,7 @@ export const productDataModelDocumentation = {
   ],
 };
 
-export const productDataModelGetAllDocumentation = {
+export const templateGetAllDocumentation = {
   type: 'object',
   properties: {
     id: {

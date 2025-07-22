@@ -4,13 +4,13 @@ import {
 } from '@open-dpp/api-client';
 import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
-import { ProductDataModel } from '../product-data-model/domain/product.data.model';
+import { Template } from '../templates/domain/template';
 import { Injectable } from '@nestjs/common';
 import {
   deserializeProductDataModel,
   serializeProductDataModel,
-} from '../product-data-model/domain/serialization';
-import { ProductDataModelDoc } from '../product-data-model/infrastructure/product-data-model.schema';
+} from '../templates/domain/serialization';
+import { TemplateDoc } from '../templates/infrastructure/template.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
@@ -21,8 +21,8 @@ export class MarketplaceService {
   constructor(
     configService: ConfigService,
     private organizationService: OrganizationsService,
-    @InjectModel(ProductDataModelDoc.name)
-    private productDataModelDoc: Model<ProductDataModelDoc>,
+    @InjectModel(TemplateDoc.name)
+    private productDataModelDoc: Model<TemplateDoc>,
   ) {
     const baseURL = configService.get<string>('MARKETPLACE_URL');
     if (!baseURL) {
@@ -31,7 +31,7 @@ export class MarketplaceService {
     this.marketplaceClient = new MarketplaceApiClient({ baseURL });
   }
   async upload(
-    productDataModel: ProductDataModel,
+    productDataModel: Template,
     token: string,
   ): Promise<PassportTemplateDto> {
     const templateData = serializeProductDataModel(productDataModel);
@@ -51,7 +51,7 @@ export class MarketplaceService {
     return response.data;
   }
 
-  async download(templateId: string): Promise<ProductDataModel> {
+  async download(templateId: string): Promise<Template> {
     const response =
       await this.marketplaceClient.passportTemplates.getById(templateId);
     const productDataModelDoc = new this.productDataModelDoc(

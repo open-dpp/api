@@ -6,7 +6,7 @@ import { merge } from 'lodash';
 import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
-import { DataFieldDbProps } from '../../product-data-model/domain/data-field';
+import { DataFieldDbProps } from '../../templates/domain/data-field';
 
 export type DataFieldDraftCreateProps = {
   name: string;

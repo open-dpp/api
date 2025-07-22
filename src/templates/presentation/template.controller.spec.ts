@@ -6,29 +6,23 @@ import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.test
 import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModelService } from '../infrastructure/product-data-model.service';
-import { ProductDataModelModule } from '../product.data.model.module';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../domain/product.data.model';
+import { TemplateService } from '../infrastructure/template.service';
+import { TemplateModule } from '../template.module';
+import { Template, TemplateDbProps } from '../domain/template';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../infrastructure/product-data-model.schema';
+import { TemplateDoc, TemplateSchema } from '../infrastructure/template.schema';
 import { Connection } from 'mongoose';
-import { productDataModelToDto } from './dto/product-data-model.dto';
+import { templateToDto } from './dto/template.dto';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { templateCreatePropsFactory } from '../fixtures/template.factory';
 import { laptopFactory } from '../fixtures/laptop.factory';
 
-describe('ProductsDataModelController', () => {
+describe('TemplateController', () => {
   let app: INestApplication;
-  let service: ProductDataModelService;
+  let service: TemplateService;
   let mongoConnection: Connection;
 
   const authContext = new AuthContext();
@@ -41,11 +35,11 @@ describe('ProductsDataModelController', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
           },
         ]),
-        ProductDataModelModule,
+        TemplateModule,
       ],
       providers: [
         {
@@ -62,25 +56,25 @@ describe('ProductsDataModelController', () => {
       )
       .compile();
 
-    service = moduleRef.get<ProductDataModelService>(ProductDataModelService);
+    service = moduleRef.get<TemplateService>(TemplateService);
     mongoConnection = moduleRef.get<Connection>(getConnectionToken());
     app = moduleRef.createNestApplication();
 
     await app.init();
   });
 
-  const laptopPlain: ProductDataModelDbProps = laptopFactory
+  const laptopPlain: TemplateDbProps = laptopFactory
     .addSections()
     .build({ organizationId });
 
   const userHasNotThePermissionsTxt = `fails if user has not the permissions`;
 
-  it(`/GET product data model`, async () => {
-    const productDataModel = ProductDataModel.loadFromDb({ ...laptopPlain });
+  it(`/GET template`, async () => {
+    const template = Template.loadFromDb({ ...laptopPlain });
 
-    await service.save(productDataModel);
+    await service.save(template);
     const response = await request(app.getHttpServer())
-      .get(`/product-data-models/${productDataModel.id}`)
+      .get(`/organizations/${organizationId}/templates/${template.id}`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -91,19 +85,19 @@ describe('ProductsDataModelController', () => {
       )
       .send();
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual(productDataModelToDto(productDataModel));
+    expect(response.body).toEqual(templateToDto(template));
   });
 
-  it(`/GET product data model ${userHasNotThePermissionsTxt}`, async () => {
+  it(`/GET template ${userHasNotThePermissionsTxt}`, async () => {
     const otherOrganizationId = randomUUID();
-    const productDataModel = ProductDataModel.create(
+    const template = Template.create(
       templateCreatePropsFactory.build({
         organizationId: otherOrganizationId,
       }),
     );
-    await service.save(productDataModel);
+    await service.save(template);
     const response = await request(app.getHttpServer())
-      .get(`/product-data-models/${productDataModel.id}`)
+      .get(`/organizations/${otherOrganizationId}/templates/${template.id}`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -116,28 +110,28 @@ describe('ProductsDataModelController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/GET all product data models which belong to the organization`, async () => {
+  it(`/GET all templates which belong to the organization`, async () => {
     const otherOrganizationId = randomUUID();
-    const laptopModel = ProductDataModel.loadFromDb({
+    const laptopTemplate = Template.loadFromDb({
       ...laptopPlain,
     });
-    const phoneModel = ProductDataModel.loadFromDb({
+    const phoneTemplate = Template.loadFromDb({
       ...laptopPlain,
       id: randomUUID(),
       name: 'phone',
     });
-    const notAccessibleModel = ProductDataModel.create(
+    const notAccessibleTemplate = Template.create(
       templateCreatePropsFactory.build({
         name: 'privateModel',
         organizationId: otherOrganizationId,
       }),
     );
 
-    await service.save(laptopModel);
-    await service.save(phoneModel);
-    await service.save(notAccessibleModel);
+    await service.save(laptopTemplate);
+    await service.save(phoneTemplate);
+    await service.save(notAccessibleTemplate);
     const response = await request(app.getHttpServer())
-      .get(`/product-data-models?organization=${organizationId}`)
+      .get(`/organizations/${organizationId}/templates`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -149,26 +143,26 @@ describe('ProductsDataModelController', () => {
     expect(response.status).toEqual(200);
 
     expect(response.body).toContainEqual({
-      id: laptopModel.id,
-      name: laptopModel.name,
-      version: laptopModel.version,
+      id: laptopTemplate.id,
+      name: laptopTemplate.name,
+      version: laptopTemplate.version,
     });
     expect(response.body).toContainEqual({
-      id: phoneModel.id,
-      name: phoneModel.name,
-      version: phoneModel.version,
+      id: phoneTemplate.id,
+      name: phoneTemplate.name,
+      version: phoneTemplate.version,
     });
     expect(response.body).not.toContainEqual({
-      id: notAccessibleModel.id,
-      name: notAccessibleModel.name,
-      version: notAccessibleModel.version,
+      id: notAccessibleTemplate.id,
+      name: notAccessibleTemplate.name,
+      version: notAccessibleTemplate.version,
     });
   });
 
-  it(`/GET all product data models which belong to the organization or which are public ${userHasNotThePermissionsTxt}`, async () => {
+  it(`/GET all templates which belong to the organization ${userHasNotThePermissionsTxt}`, async () => {
     const otherOrganizationId = randomUUID();
     const response = await request(app.getHttpServer())
-      .get(`/product-data-models?organization=${otherOrganizationId}`)
+      .get(`/organizations/${otherOrganizationId}/templates`)
       .set(
         'Authorization',
         getKeycloakAuthToken(

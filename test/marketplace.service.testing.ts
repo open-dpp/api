@@ -1,12 +1,12 @@
-import { ProductDataModel } from '../src/product-data-model/domain/product.data.model';
+import { Template } from '../src/templates/domain/template';
 import { Sector } from '@open-dpp/api-client';
-import { laptopFactory } from '../src/product-data-model/fixtures/laptop.factory';
+import { laptopFactory } from '../src/templates/fixtures/laptop.factory';
 
 export class MarketplaceServiceTesting {
   constructor() {}
 
   async upload(
-    productDataModel: ProductDataModel,
+    productDataModel: Template,
     sectors: Sector[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: string,
@@ -15,7 +15,7 @@ export class MarketplaceServiceTesting {
   }
 
   async download(templateId: string) {
-    return ProductDataModel.loadFromDb(
+    return Template.loadFromDb(
       laptopFactory.build({ marketplaceResourceId: templateId }),
     );
   }

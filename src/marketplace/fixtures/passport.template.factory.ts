@@ -8,7 +8,7 @@ import {
   Sector,
   VisibilityLevel,
 } from '@open-dpp/api-client';
-import { ProductDataModelDocSchemaVersion } from '../../product-data-model/infrastructure/product-data-model.schema';
+import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
 
 export const nowDate = new Date('2025-01-01T12:00:00Z');
 
@@ -39,7 +39,7 @@ export const templateDataFactory = Factory.define<Record<string, unknown>>(
     name: 'Sample Product',
     version: '1.0.0',
     visibility: VisibilityLevel.PUBLIC,
-    _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
+    _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
     sections: [
       {
         _id: 'section-1',

@@ -2,7 +2,7 @@ import { Controller, Get, Param, Request } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { Public } from '../../auth/public/public.decorator';
 import { View } from '../domain/view';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
 import { UniqueProductIdentifierReferenceDtoSchema } from './dto/unique-product-identifier-dto.schema';
@@ -14,7 +14,7 @@ export class UniqueProductIdentifierController {
   constructor(
     private readonly modelsService: ModelsService,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly productDataModelService: TemplateService,
     private readonly itemService: ItemsService,
     private readonly permissionsService: PermissionsService,
   ) {}

@@ -4,7 +4,7 @@ import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp
 import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
 import { ItemsService } from '../infrastructure/items.service';
 import { ModelsService } from '../../models/infrastructure/models.service';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class ItemsApplicationService {
   constructor(
     private readonly itemsService: ItemsService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly productDataModelService: TemplateService,
     private readonly traceabilityEventsService: TraceabilityEventsService,
   ) {}
 

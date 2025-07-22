@@ -25,7 +25,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { UsersService } from '../../users/infrastructure/users.service';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
@@ -102,7 +102,7 @@ describe('ItemsService', () => {
       userId: userId,
       organizationId: organizationId,
     });
-    const productDataModel = ProductDataModel.loadFromDb({
+    const productDataModel = Template.loadFromDb({
       marketplaceResourceId: null,
       id: randomUUID(),
       name: 'Laptop',

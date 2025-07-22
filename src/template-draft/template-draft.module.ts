@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TemplateDraftController } from './presentation/template-draft.controller';
-import { ProductDataModelService } from '../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../templates/infrastructure/template.service';
 import { TemplateDraftService } from './infrastructure/template-draft.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
@@ -8,9 +8,9 @@ import {
   TemplateDraftSchema,
 } from './infrastructure/template-draft.schema';
 import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../product-data-model/infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateSchema,
+} from '../templates/infrastructure/template.schema';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
 
@@ -22,15 +22,15 @@ import { MarketplaceModule } from '../marketplace/marketplace.module';
         schema: TemplateDraftSchema,
       },
       {
-        name: ProductDataModelDoc.name,
-        schema: ProductDataModelSchema,
+        name: TemplateDoc.name,
+        schema: TemplateSchema,
       },
     ]),
     MarketplaceModule,
     PermissionsModule,
   ],
   controllers: [TemplateDraftController],
-  providers: [ProductDataModelService, TemplateDraftService],
+  providers: [TemplateService, TemplateDraftService],
   exports: [TemplateDraftService],
 })
 export class TemplateDraftModule {}

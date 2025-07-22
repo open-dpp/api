@@ -13,7 +13,7 @@ import { TemplateDraft } from '../domain/template-draft';
 import { AuthRequest } from '../../auth/auth-request';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import {
   CreateTemplateDraftDto,
   CreateTemplateDraftDtoSchema,
@@ -56,7 +56,7 @@ import { MarketplaceService } from '../../marketplace/marketplace.service';
 export class TemplateDraftController {
   constructor(
     private readonly permissionsService: PermissionsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly productDataModelService: TemplateService,
     private readonly productDataModelDraftService: TemplateDraftService,
     private readonly marketplaceService: MarketplaceService,
   ) {}

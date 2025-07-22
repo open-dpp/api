@@ -55,7 +55,7 @@ export class SectionDoc {
 }
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 
-export abstract class ProductDataModelBaseDoc extends Document {
+export abstract class TemplateBaseDoc extends Document {
   @Prop({ required: true })
   _id: string;
 

@@ -1,15 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductDataModelService } from './product-data-model.service';
-import { ProductDataModel } from '../domain/product.data.model';
+import { TemplateService } from './template.service';
+import { Template } from '../domain/template';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from './product-data-model.schema';
+import { TemplateDoc, TemplateSchema } from './template.schema';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
 import { templateCreatePropsFactory } from '../fixtures/template.factory';
@@ -18,7 +15,7 @@ import { sectionDbPropsFactory } from '../fixtures/section.factory';
 import { SectionType } from '../../data-modelling/domain/section-base';
 
 describe('ProductDataModelService', () => {
-  let service: ProductDataModelService;
+  let service: TemplateService;
   const userId = randomUUID();
   const organizationId = randomUUID();
   let mongoConnection: Connection;
@@ -30,15 +27,15 @@ describe('ProductDataModelService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: ProductDataModelDoc.name,
-            schema: ProductDataModelSchema,
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
           },
         ]),
         KeycloakResourcesModule,
       ],
-      providers: [ProductDataModelService],
+      providers: [TemplateService],
     }).compile();
-    service = module.get<ProductDataModelService>(ProductDataModelService);
+    service = module.get<TemplateService>(TemplateService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
@@ -49,12 +46,12 @@ describe('ProductDataModelService', () => {
 
   it('fails if requested product data model could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
-      new NotFoundInDatabaseException(ProductDataModel.name),
+      new NotFoundInDatabaseException(Template.name),
     );
   });
 
   it('should create product data model', async () => {
-    const productDataModel = ProductDataModel.loadFromDb({
+    const productDataModel = Template.loadFromDb({
       ...laptopModelPlain,
     });
 
@@ -64,13 +61,13 @@ describe('ProductDataModelService', () => {
   });
 
   it('finds product data model by marketplaceResourceId', async () => {
-    const laptop = ProductDataModel.loadFromDb(laptopModelPlain);
+    const laptop = Template.loadFromDb(laptopModelPlain);
     const marketplaceResourceId = randomUUID();
     laptop.assignMarketplaceResource(marketplaceResourceId);
     await service.save(laptop);
 
     const otherOrganizationId = randomUUID();
-    const laptopOtherOrganization = ProductDataModel.loadFromDb(
+    const laptopOtherOrganization = Template.loadFromDb(
       laptopFactory.build({
         organizationId: otherOrganizationId,
         userId: randomUUID(),
@@ -107,7 +104,7 @@ describe('ProductDataModelService', () => {
       ],
     });
 
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel);
     const { id } = await service.save(productDataModel);
     const found = await service.findOneOrFail(id);
     expect(found.sections[0].granularityLevel).toBeUndefined();
@@ -115,7 +112,7 @@ describe('ProductDataModelService', () => {
   });
 
   it('should return product data models by name', async () => {
-    const productDataModel = ProductDataModel.loadFromDb({
+    const productDataModel = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
@@ -132,16 +129,16 @@ describe('ProductDataModelService', () => {
   });
 
   it('should return all product data models belonging to organization', async () => {
-    const laptopModel = ProductDataModel.loadFromDb({
+    const laptopModel = Template.loadFromDb({
       ...laptopModelPlain,
     });
-    const phoneModel = ProductDataModel.loadFromDb({
+    const phoneModel = Template.loadFromDb({
       ...laptopModelPlain,
       id: randomUUID(),
       name: 'phone',
     });
     const otherOrganizationId = randomUUID();
-    const privateModel = ProductDataModel.create(
+    const privateModel = Template.create(
       templateCreatePropsFactory.build({
         name: 'privateModel',
         organizationId: otherOrganizationId,
@@ -151,8 +148,7 @@ describe('ProductDataModelService', () => {
     await service.save(phoneModel);
     await service.save(privateModel);
 
-    const foundAll =
-      await service.findAllAccessibleByOrganization(organizationId);
+    const foundAll = await service.findAllByOrganization(organizationId);
 
     expect(foundAll).toContainEqual({
       id: laptopModel.id,

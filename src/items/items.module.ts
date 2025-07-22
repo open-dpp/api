@@ -13,7 +13,7 @@ import { TraceabilityEventsModule } from '../traceability-events/traceability-ev
 import { MongooseModule } from '@nestjs/mongoose';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
-import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { TemplateModule } from '../templates/template.module';
 import { ItemsApplicationService } from './presentation/items-application.service';
 
 @Module({
@@ -29,7 +29,7 @@ import { ItemsApplicationService } from './presentation/items-application.servic
         schema: ModelSchema,
       },
     ]),
-    ProductDataModelModule,
+    TemplateModule,
     ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,

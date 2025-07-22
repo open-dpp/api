@@ -4,8 +4,8 @@ import { AuthContext } from '../../auth/auth-request';
 
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
+import { TemplateService } from '../../templates/infrastructure/template.service';
+import { TemplateModule } from '../../templates/template.module';
 import { INestApplication } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { APP_GUARD, Reflector } from '@nestjs/core';
@@ -16,10 +16,7 @@ import { Model } from '../../models/domain/model';
 import * as request from 'supertest';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -36,7 +33,7 @@ describe('UniqueProductIdentifierController', () => {
   let modelsService: ModelsService;
   let itemsService: ItemsService;
 
-  let productDataModelService: ProductDataModelService;
+  let productDataModelService: TemplateService;
   const reflector: Reflector = new Reflector();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
     new Map(),
@@ -57,7 +54,7 @@ describe('UniqueProductIdentifierController', () => {
         TypeOrmModule.forFeature([UserEntity]),
         MongooseTestingModule,
         UniqueProductIdentifierModule,
-        ProductDataModelModule,
+        TemplateModule,
       ],
       providers: [
         {
@@ -69,9 +66,7 @@ describe('UniqueProductIdentifierController', () => {
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
-    productDataModelService = moduleRef.get<ProductDataModelService>(
-      ProductDataModelService,
-    );
+    productDataModelService = moduleRef.get<TemplateService>(TemplateService);
 
     app = moduleRef.createNestApplication();
 
@@ -97,7 +92,7 @@ describe('UniqueProductIdentifierController', () => {
   const dataFieldIdForItem4 = randomUUID();
   const dataFieldIdForItem5 = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = {
+  const laptopModel: TemplateDbProps = {
     id: randomUUID(),
     marketplaceResourceId: null,
     description: 'My laptop',
@@ -325,7 +320,7 @@ describe('UniqueProductIdentifierController', () => {
   };
 
   it(`/GET public view for unique product identifier`, async () => {
-    const productDataModel = ProductDataModel.loadFromDb({ ...laptopModel });
+    const productDataModel = Template.loadFromDb({ ...laptopModel });
     await productDataModelService.save(productDataModel);
 
     const model = Model.loadFromDb({
@@ -805,7 +800,7 @@ describe('UniqueProductIdentifierController', () => {
   });
 
   it(`/GET reference of unique product identifier`, async () => {
-    const productDataModel = ProductDataModel.loadFromDb({ ...laptopModel });
+    const productDataModel = Template.loadFromDb({ ...laptopModel });
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       name: 'model',
@@ -841,7 +836,7 @@ describe('UniqueProductIdentifierController', () => {
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
-    const productDataModel = ProductDataModel.loadFromDb({ ...laptopModel });
+    const productDataModel = Template.loadFromDb({ ...laptopModel });
     await productDataModelService.save(productDataModel);
     const model = Model.create({
       name: 'model',

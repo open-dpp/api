@@ -9,9 +9,9 @@ import { OrganizationsService } from '../organizations/infrastructure/organizati
 import { UsersService } from '../users/infrastructure/users.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../product-data-model/infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateSchema,
+} from '../templates/infrastructure/template.schema';
 
 @Module({
   imports: [
@@ -19,8 +19,8 @@ import {
     TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
     MongooseModule.forFeature([
       {
-        name: ProductDataModelDoc.name,
-        schema: ProductDataModelSchema,
+        name: TemplateDoc.name,
+        schema: TemplateSchema,
       },
     ]),
     KeycloakResourcesModule,

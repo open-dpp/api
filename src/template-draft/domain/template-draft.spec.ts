@@ -5,10 +5,7 @@ import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { randomUUID } from 'crypto';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
@@ -45,7 +42,7 @@ describe('ProductDataModelDraft', () => {
     const publishedProductDataModel =
       productDataModelDraft.publish(otherUserId);
 
-    const expected: ProductDataModelDbProps = {
+    const expected: TemplateDbProps = {
       id: expect.any(String),
       marketplaceResourceId: null,
       name: productDataModelDraft.name,
@@ -186,9 +183,7 @@ describe('ProductDataModelDraft', () => {
         },
       ],
     };
-    expect(publishedProductDataModel).toEqual(
-      ProductDataModel.loadFromDb(expected),
-    );
+    expect(publishedProductDataModel).toEqual(Template.loadFromDb(expected));
     expect(publishedProductDataModel.id).not.toEqual(productDataModelDraft.id);
     expect(productDataModelDraft.publications).toEqual([
       {

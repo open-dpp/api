@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { ProductDataModel } from '../domain/product.data.model';
+import { Template } from '../domain/template';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ProductDataModelDoc } from './product-data-model.schema';
+import { TemplateDoc } from './template.schema';
 import {
   deserializeProductDataModel,
   serializeProductDataModel,
 } from '../domain/serialization';
 
 @Injectable()
-export class ProductDataModelService {
+export class TemplateService {
   constructor(
-    @InjectModel(ProductDataModelDoc.name)
-    private productDataModelDoc: Model<ProductDataModelDoc>,
+    @InjectModel(TemplateDoc.name)
+    private productDataModelDoc: Model<TemplateDoc>,
   ) {}
 
-  convertToDomain(productDataModelDoc: ProductDataModelDoc): ProductDataModel {
+  convertToDomain(productDataModelDoc: TemplateDoc): Template {
     const plain = productDataModelDoc.toObject();
     return deserializeProductDataModel(plain);
   }
 
-  async save(productDataModel: ProductDataModel) {
+  async save(productDataModel: Template) {
     const { _id, ...rest } = serializeProductDataModel(productDataModel);
     const dataModelDoc = await this.productDataModelDoc.findOneAndUpdate(
       { _id },
@@ -61,7 +61,7 @@ export class ProductDataModelService {
     return this.convertToDomain(foundDataModelDoc);
   }
 
-  async findAllAccessibleByOrganization(organizationId: string) {
+  async findAllByOrganization(organizationId: string) {
     const foundDataModelDocs = await this.productDataModelDoc
       .find(
         {
@@ -81,7 +81,7 @@ export class ProductDataModelService {
   async findOneOrFail(id: string) {
     const productEntity = await this.productDataModelDoc.findById(id);
     if (!productEntity) {
-      throw new NotFoundInDatabaseException(ProductDataModel.name);
+      throw new NotFoundInDatabaseException(Template.name);
     }
     return this.convertToDomain(productEntity);
   }

@@ -7,7 +7,7 @@ import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
-import { DataSectionDbProps } from '../../product-data-model/domain/section';
+import { DataSectionDbProps } from '../../templates/domain/section';
 
 export type DataSectionDraftCreateProps = {
   name: string;

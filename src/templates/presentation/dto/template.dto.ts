@@ -3,10 +3,10 @@ import {
   SectionBaseDtoSchema,
   sectionToDto,
 } from '../../../data-modelling/presentation/dto/section-base.dto';
-import { ProductDataModel } from '../../domain/product.data.model';
+import { Template } from '../../domain/template';
 import { Sector } from '@open-dpp/api-client';
 
-const ProductDataModelDtoSchema = z.object({
+const TemplateDtoSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
   description: z.string(),
@@ -18,12 +18,10 @@ const ProductDataModelDtoSchema = z.object({
   marketplaceResourceId: z.string().nullable(),
 });
 
-export type ProductDataModelDto = z.infer<typeof ProductDataModelDtoSchema>;
+export type TemplateDto = z.infer<typeof TemplateDtoSchema>;
 
-export function productDataModelToDto(
-  productDataModel: ProductDataModel,
-): ProductDataModelDto {
-  return ProductDataModelDtoSchema.parse({
+export function templateToDto(productDataModel: Template): TemplateDto {
+  return TemplateDtoSchema.parse({
     id: productDataModel.id,
     name: productDataModel.name,
     description: productDataModel.description,
@@ -36,9 +34,9 @@ export function productDataModelToDto(
   });
 }
 
-export const productDataModelParamDocumentation = {
-  name: 'productDataModelId',
-  description: 'The id of the product data model.',
+export const templateParamDocumentation = {
+  name: 'templateId',
+  description: 'The id of the template.',
   required: true,
   type: 'string',
   format: 'uuid',
