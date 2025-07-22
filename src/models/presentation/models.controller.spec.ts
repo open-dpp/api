@@ -85,8 +85,6 @@ describe('ModelsController', () => {
   });
 
   const sectionId3 = randomUUID();
-  const dataFieldId1 = randomUUID();
-
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
@@ -529,19 +527,17 @@ describe('ModelsController', () => {
     await productDataModelService.save(productDataModel);
     model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
-    const dataValue1 = model.dataValues[0];
-    const dataValue3 = model.dataValues[2];
     const updatedValues = [
       {
-        dataFieldId: dataValue1.dataFieldId,
-        dataSectionId: dataValue1.dataSectionId,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
         value: { wrongValue: 'value 1' },
         row: 0,
       },
       {
-        dataFieldId: dataValue3.dataFieldId,
-        dataSectionId: dataValue3.dataSectionId,
-        value: 'value 3',
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
+        dataSectionId: LaptopFactory.ids.environment.id,
+        value: 888,
         row: 0,
       },
     ];
@@ -560,9 +556,9 @@ describe('ModelsController', () => {
     expect(response.body).toEqual({
       errors: [
         {
-          id: dataFieldId1,
+          id: LaptopFactory.ids.techSpecs.fields.processor,
           message: 'Invalid input: expected string, received object',
-          name: 'Title',
+          name: 'Processor',
         },
       ],
       isValid: false,

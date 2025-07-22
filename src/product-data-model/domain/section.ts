@@ -81,30 +81,6 @@ export abstract class DataSection extends DataSectionBase {
     );
   }
 
-  abstract validate(
-    version: string,
-    values: DataValue[],
-    granularity: GranularityLevel,
-  ): DataFieldValidationResult[];
-}
-
-export class RepeaterSection extends DataSection {
-  static create(data: DataSectionProps) {
-    return DataSection.createInstance(
-      RepeaterSection,
-      data,
-      SectionType.REPEATABLE,
-    );
-  }
-
-  static loadFromDb(data: DataSectionDbProps) {
-    return DataSection.loadFromDbInstance(
-      RepeaterSection,
-      data,
-      SectionType.REPEATABLE,
-    );
-  }
-
   validate(
     version: string,
     values: DataValue[],
@@ -139,6 +115,24 @@ export class RepeaterSection extends DataSection {
   }
 }
 
+export class RepeaterSection extends DataSection {
+  static create(data: DataSectionProps) {
+    return DataSection.createInstance(
+      RepeaterSection,
+      data,
+      SectionType.REPEATABLE,
+    );
+  }
+
+  static loadFromDb(data: DataSectionDbProps) {
+    return DataSection.loadFromDbInstance(
+      RepeaterSection,
+      data,
+      SectionType.REPEATABLE,
+    );
+  }
+}
+
 export class GroupSection extends DataSection {
   static create(data: DataSectionProps) {
     return DataSection.createInstance(GroupSection, data, SectionType.GROUP);
@@ -150,32 +144,6 @@ export class GroupSection extends DataSection {
       data,
       SectionType.GROUP,
     );
-  }
-  validate(
-    version: string,
-    values: DataValue[],
-    granularity: GranularityLevel,
-  ): DataFieldValidationResult[] {
-    const validations = [];
-    const sectionValues = values.filter((v) => v.dataSectionId === this.id);
-    for (const dataField of this.dataFields.filter(
-      (d) => d.granularityLevel === granularity,
-    )) {
-      const dataValue = sectionValues.find(
-        (v) => v.dataFieldId === dataField.id,
-      );
-      validations.push(
-        dataValue
-          ? dataField.validate(version, dataValue.value)
-          : DataFieldValidationResult.create({
-              dataFieldId: dataField.id,
-              dataFieldName: dataField.name,
-              isValid: false,
-              errorMessage: `Value for data field is missing`,
-            }),
-      );
-    }
-    return validations;
   }
 }
 

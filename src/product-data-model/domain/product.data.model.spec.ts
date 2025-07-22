@@ -221,9 +221,9 @@ describe('ProductDataModel', () => {
         row: 0,
       }),
       DataValue.create({
-        value: 'Mem 4 GB',
-        dataSectionId: LaptopFactory.ids.techSpecs.id,
-        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
+        value: 34,
+        dataSectionId: LaptopFactory.ids.environment.id,
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
         row: 0,
       }),
       DataValue.create({
@@ -266,13 +266,14 @@ describe('ProductDataModel', () => {
       DataFieldValidationResult.create({
         dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
         dataFieldName: 'Memory',
-        isValid: true,
+        errorMessage: 'Value for data field is missing',
+        isValid: false,
+        row: 0,
       }),
       DataFieldValidationResult.create({
         dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
         dataFieldName: 'Water consumption',
-        errorMessage: 'Value for data field is missing',
-        isValid: false,
+        isValid: true,
       }),
       DataFieldValidationResult.create({
         dataFieldId: LaptopFactory.ids.material.fields.materialType,
