@@ -4,6 +4,7 @@ import {
   sectionToDto,
 } from '../../../data-modelling/presentation/dto/section-base.dto';
 import { ProductDataModelDraft } from '../../domain/product-data-model-draft';
+import { Sector } from '@open-dpp/api-client';
 
 const PublicationDtoSchema = z.object({
   id: z.string(),
@@ -13,6 +14,8 @@ const PublicationDtoSchema = z.object({
 const ProductDataModelDraftDtoSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
+  description: z.string(),
+  sectors: z.enum(Sector).array(),
   version: z.string().min(1),
   publications: PublicationDtoSchema.array(),
   sections: SectionBaseDtoSchema.array(),
@@ -30,6 +33,8 @@ export function productDataModelDraftToDto(
   return ProductDataModelDraftDtoSchema.parse({
     id: productDataModelDraft.id,
     name: productDataModelDraft.name,
+    description: productDataModelDraft.description,
+    sectors: productDataModelDraft.sectors,
     version: productDataModelDraft.version,
     publications: productDataModelDraft.publications.map((publication) =>
       PublicationDtoSchema.parse({

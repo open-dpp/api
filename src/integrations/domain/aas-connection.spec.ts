@@ -10,16 +10,14 @@ import { Model } from '../../models/domain/model';
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { GroupSection } from '../../product-data-model/domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import {
-  NumericField,
-  TextField,
-} from '../../product-data-model/domain/data-field';
+import { laptopFactory } from '../../product-data-model/fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../../product-data-model/fixtures/section.factory';
+import { dataFieldDbPropsFactory } from '../../product-data-model/fixtures/data-field.factory';
+import { templateCreatePropsFactory } from '../../product-data-model/fixtures/template.factory';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 
 describe('AasMapping', () => {
   const organizationId = randomUUID();
@@ -83,11 +81,12 @@ describe('AasMapping', () => {
       userId: 'userId',
       name: 'modelName',
     });
-    const productDataModel = ProductDataModel.create({
-      organizationId,
-      userId,
-      name: 'data model',
-    });
+    const productDataModel = ProductDataModel.create(
+      templateCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
     model.assignProductDataModel(productDataModel);
     aasConnection.assignModel(model);
     expect(aasConnection.dataModelId).toEqual(productDataModel.id);
@@ -149,83 +148,33 @@ describe('AasMapping', () => {
     const dataFieldId2 = randomUUID();
     const dataFieldId3 = randomUUID();
 
-    const laptopModel: ProductDataModelDbProps = {
-      id: randomUUID(),
-      marketplaceResourceId: null,
-      name: 'Laptop',
-      visibility: VisibilityLevel.PRIVATE,
-      version: '1.0',
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
+    const laptopModel: ProductDataModelDbProps = laptopFactory.build({
       sections: [
-        GroupSection.loadFromDb({
+        sectionDbPropsFactory.build({
           id: sectionId1,
-          name: 'Section name',
-          parentId: undefined,
-          subSections: [],
-          layout: Layout.create({
-            cols: { sm: 2 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 2 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           dataFields: [
-            TextField.loadFromDb({
+            dataFieldDbPropsFactory.build({
               id: dataFieldId1,
-              name: 'Title',
-              options: { min: 2 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 2 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
               granularityLevel: GranularityLevel.ITEM,
             }),
-            TextField.loadFromDb({
+            dataFieldDbPropsFactory.build({
               id: dataFieldId2,
-              name: 'Title 2',
-              options: { min: 7 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 2 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
               granularityLevel: GranularityLevel.ITEM,
             }),
           ],
         }),
-        GroupSection.loadFromDb({
+        sectionDbPropsFactory.build({
           id: sectionId2,
-          name: 'Section name 2',
-          parentId: undefined,
-          subSections: [],
-          layout: Layout.create({
-            cols: { sm: 2 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 2 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           dataFields: [
-            NumericField.loadFromDb({
+            dataFieldDbPropsFactory.build({
               id: dataFieldId3,
-              name: 'Title 3',
-              options: { min: 8 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 2 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
+              type: DataFieldType.NUMERIC_FIELD,
               granularityLevel: GranularityLevel.ITEM,
             }),
           ],
         }),
       ],
-    };
+    });
 
     const productDataModel = ProductDataModel.loadFromDb(laptopModel);
 

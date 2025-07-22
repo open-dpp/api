@@ -15,7 +15,6 @@ import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
-import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductDataModelDraftDoc,
@@ -38,6 +37,11 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { Sector } from '@open-dpp/api-client';
 import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
+import {
+  productDataModelDraftCreateDtoFactory,
+  productDataModelDraftCreatePropsFactory,
+} from '../fixtures/product-data-model-draft.factory';
+import { VisibilityLevel } from './dto/publish.dto';
 
 describe('ProductsDataModelDraftController', () => {
   let app: INestApplication;
@@ -108,7 +112,7 @@ describe('ProductsDataModelDraftController', () => {
   const draftDoesNotBelongToOrga = `fails if draft does not belong to organization`;
 
   it(`/CREATE product data model draft`, async () => {
-    const body = { name: 'My first draft' };
+    const body = productDataModelDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organizationId}/product-data-model-drafts`)
       .set(
@@ -129,7 +133,7 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE product data model draft ${userNotMemberTxt}`, async () => {
-    const body = { name: 'My first draft' };
+    const body = productDataModelDraftCreateDtoFactory.build();
 
     const response = await request(app.getHttpServer())
       .post(`/organizations/${otherOrganizationId}/product-data-model-drafts`)
@@ -146,14 +150,15 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH product data model draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     await productDataModelDraftService.save(laptopDraft);
-    const body = { name: 'My final laptop draft' };
+    const body = productDataModelDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
@@ -175,14 +180,15 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH product data model draft ${userNotMemberTxt}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId: randomUUID(),
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
 
     await productDataModelDraftService.save(laptopDraft);
-    const body = { name: 'My final laptop draft' };
+    const body = productDataModelDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${otherOrganizationId}/product-data-model-drafts/${laptopDraft.id}`,
@@ -200,13 +206,14 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH product data model draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
-    const body = { name: 'My final laptop draft' };
+    const body = productDataModelDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
@@ -224,11 +231,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PUBLISH product data model draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
@@ -261,7 +269,6 @@ describe('ProductsDataModelDraftController', () => {
 
     const body = {
       visibility: VisibilityLevel.PUBLIC,
-      sectors,
     };
     const spyUpload = jest.spyOn(marketplaceServiceTesting, 'upload');
 
@@ -292,19 +299,16 @@ describe('ProductsDataModelDraftController', () => {
       `templateFor${foundModel.id}`,
     );
 
-    expect(spyUpload).toHaveBeenCalledWith(
-      foundModel,
-      sectors,
-      token.substring(7),
-    );
+    expect(spyUpload).toHaveBeenCalledWith(foundModel, token.substring(7));
   });
 
   it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
     const body = {
       visibility: VisibilityLevel.PUBLIC,
       sectors: [Sector.TEXTILE],
@@ -326,11 +330,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PUBLISH product data model draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     const body = {
       visibility: VisibilityLevel.PUBLIC,
@@ -354,16 +359,18 @@ describe('ProductsDataModelDraftController', () => {
 
   it(`/GET product data model drafts of organization`, async () => {
     const myOrgaId = randomUUID();
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: myOrgaId,
-      userId,
-    });
-    const phoneDraft = ProductDataModelDraft.create({
-      name: 'phone',
-      organizationId: myOrgaId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: myOrgaId,
+        userId,
+      }),
+    );
+    const phoneDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: myOrgaId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     await productDataModelDraftService.save(phoneDraft);
     const response = await request(app.getHttpServer())
@@ -395,11 +402,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     const body = {
       name: 'Technical Specs',
@@ -459,11 +467,12 @@ describe('ProductsDataModelDraftController', () => {
   };
 
   it(`/CREATE sub section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     const section = DataSectionDraft.create({
       name: 'Technical specification',
@@ -562,11 +571,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE section draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     const body = {
       name: 'Dimensions',
@@ -598,11 +608,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/GET draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     const section = DataSectionDraft.create({
       name: 'Tecs',
@@ -649,11 +660,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/GET draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
 
     const response = await request(app.getHttpServer())
@@ -672,11 +684,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     const section = DataSectionDraft.create({
       name: 'Tecs',
@@ -750,11 +763,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH section draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     const body = {
       name: 'Technical Specs',
@@ -783,11 +797,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     const section = DataSectionDraft.create({
       name: 'Tecs',
@@ -833,11 +848,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE section draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
 
     const response = await request(app.getHttpServer())
@@ -856,11 +872,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE data field draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
@@ -938,11 +955,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE data field draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     const body = {
       name: 'Processor',
@@ -970,11 +988,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH data field draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
@@ -1059,11 +1078,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH data field draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
     const body = {
       name: 'Memory',
@@ -1092,11 +1112,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE data field draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
 
     const section = DataSectionDraft.create({
       name: 'Technical Specs',
@@ -1153,11 +1174,12 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE data field ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create({
-      name: 'laptop',
-      organizationId: otherOrganizationId,
-      userId,
-    });
+    const laptopDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
     await productDataModelDraftService.save(laptopDraft);
 
     const response = await request(app.getHttpServer())

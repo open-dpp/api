@@ -33,7 +33,6 @@ export class MarketplaceService {
   }
   async upload(
     productDataModel: ProductDataModel,
-    sectors: Sector[],
     token: string,
   ): Promise<PassportTemplateDto> {
     const templateData = serializeProductDataModel(productDataModel);
@@ -45,8 +44,8 @@ export class MarketplaceService {
     const response = await this.marketplaceClient.passportTemplates.create({
       version: productDataModel.version,
       name: productDataModel.name,
-      description: `Vorlage ${productDataModel.name}`,
-      sectors: sectors,
+      description: productDataModel.description,
+      sectors: productDataModel.sectors,
       organizationName: organization.name,
       templateData,
     });

@@ -3,7 +3,7 @@ import {
   DataFieldBase,
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
-import { Layout } from '../../data-modelling/domain/layout';
+import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
@@ -46,12 +46,13 @@ export class DataFieldValidationResult {
 type DataFieldProps = {
   name: string;
   options?: Record<string, unknown>;
-  layout: Layout;
+  layout: LayoutProps;
   granularityLevel: GranularityLevel;
 };
 
-type DataFieldDbProps = DataFieldProps & {
+export type DataFieldDbProps = DataFieldProps & {
   id: string;
+  type: DataFieldType;
 };
 
 export abstract class DataField extends DataFieldBase {
@@ -65,7 +66,7 @@ export abstract class DataField extends DataFieldBase {
       data.name,
       type,
       data.options ?? {},
-      data.layout,
+      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -74,14 +75,13 @@ export abstract class DataField extends DataFieldBase {
   protected static loadFromDbInstance<T extends DataFieldBase>(
     Ctor: new (...args: any[]) => T,
     data: DataFieldDbProps,
-    type: DataFieldType,
   ): T {
     return new Ctor(
       data.id,
       data.name,
-      type,
+      data.type,
       data.options,
-      data.layout,
+      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -109,11 +109,10 @@ export class TextField extends DataField {
   }
 
   static loadFromDb(data: DataFieldDbProps) {
-    return DataField.loadFromDbInstance(
-      TextField,
-      data,
-      DataFieldType.TEXT_FIELD,
-    );
+    return DataField.loadFromDbInstance(TextField, {
+      ...data,
+      type: DataFieldType.TEXT_FIELD,
+    });
   }
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
@@ -130,11 +129,10 @@ export class ProductPassportLink extends DataField {
   }
 
   static loadFromDb(data: DataFieldDbProps) {
-    return DataField.loadFromDbInstance(
-      ProductPassportLink,
-      data,
-      DataFieldType.PRODUCT_PASSPORT_LINK,
-    );
+    return DataField.loadFromDbInstance(ProductPassportLink, {
+      ...data,
+      type: DataFieldType.PRODUCT_PASSPORT_LINK,
+    });
   }
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
@@ -151,11 +149,10 @@ export class NumericField extends DataField {
   }
 
   static loadFromDb(data: DataFieldDbProps) {
-    return DataField.loadFromDbInstance(
-      NumericField,
-      data,
-      DataFieldType.NUMERIC_FIELD,
-    );
+    return DataField.loadFromDbInstance(NumericField, {
+      ...data,
+      type: DataFieldType.NUMERIC_FIELD,
+    });
   }
   validate(version: string, value: unknown): DataFieldValidationResult {
     const result = z.number().optional().safeParse(value);

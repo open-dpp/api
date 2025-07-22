@@ -1,221 +1,17 @@
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from './product.data.model';
-import { randomUUID } from 'crypto';
-import { DataFieldValidationResult, TextField } from './data-field';
+import { DataFieldValidationResult } from './data-field';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { GroupSection, RepeaterSection } from './section';
-import { Layout } from '../../data-modelling/domain/layout';
+import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 
 describe('ProductDataModel', () => {
-  const laptopModel: ProductDataModelDbProps = {
-    id: 'product-1',
-    name: 'Laptop',
-    createdByUserId: randomUUID(),
-    ownedByOrganizationId: randomUUID(),
-    visibility: VisibilityLevel.PRIVATE,
-    version: '1.0',
-    sections: [
-      GroupSection.loadFromDb({
-        id: 'section-1',
-        name: 'Section 1',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 4 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          colStart: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: 'field-1',
-            name: 'Title',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 2 },
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: 'field-2',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 2 },
-              rowStart: { sm: 1 },
-            }),
-            name: 'Title 2',
-            options: { min: 7 },
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: 'field-1-item',
-            name: 'Title Field 1 at item level',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 3 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 2 },
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
-            id: 'field-2-item',
-            name: 'Title Field 2 at item level',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 4 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 7 },
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-      }),
-      RepeaterSection.loadFromDb({
-        id: 'section-2',
-        name: 'Section 2',
-        parentId: undefined,
-        layout: Layout.create({
-          cols: { sm: 4 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          colStart: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: 'field-3',
-            name: 'Title 3',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: 'field-4',
-            name: 'Title 4',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 2 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: 'field-3-item',
-            name: 'Title Field 3 at item level',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 3 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
-            id: 'field-4-item',
-            name: 'Title Field 4 at item level',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 4 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-        subSections: ['section-4'],
-        granularityLevel: GranularityLevel.MODEL,
-      }),
-      GroupSection.loadFromDb({
-        id: 'section-3',
-        name: 'Section 3',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          colStart: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: 'field-5',
-            name: 'Title 5',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: 'field-5-item',
-            name: 'Title Field 5 at item level',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 2 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-      }),
-      GroupSection.loadFromDb({
-        parentId: 'section-2',
-        id: 'section-4',
-        name: 'Section 4',
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          colStart: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: 'field-6',
-            name: 'Title 6',
-            layout: Layout.create({
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              colStart: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            options: { min: 8 },
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-      }),
-    ],
-    marketplaceResourceId: null,
-  };
+  const laptopModel: ProductDataModelDbProps = laptopFactory
+    .addSections()
+    .build();
 
   it('should create data values at model level', () => {
     const productDataModel = ProductDataModel.loadFromDb(laptopModel);
@@ -225,20 +21,20 @@ describe('ProductDataModel', () => {
     expect(dataValues).toEqual(
       ignoreIds([
         DataValue.create({
-          dataSectionId: 'section-1',
-          dataFieldId: 'field-1',
+          dataSectionId: LaptopFactory.ids.techSpecs.id,
+          dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
           value: undefined,
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'section-1',
-          dataFieldId: 'field-2',
+          dataSectionId: LaptopFactory.ids.techSpecs.id,
+          dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
           value: undefined,
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'section-3',
-          dataFieldId: 'field-5',
+          dataSectionId: LaptopFactory.ids.environment.id,
+          dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
           value: undefined,
           row: 0,
         }),
@@ -254,20 +50,20 @@ describe('ProductDataModel', () => {
     expect(dataValues).toEqual(
       ignoreIds([
         DataValue.create({
-          dataSectionId: 'section-1',
-          dataFieldId: 'field-1-item',
+          dataSectionId: LaptopFactory.ids.techSpecs.id,
+          dataFieldId: LaptopFactory.ids.techSpecs.fields.serialNumber,
           value: undefined,
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'section-1',
-          dataFieldId: 'field-2-item',
+          dataSectionId: LaptopFactory.ids.techSpecs.id,
+          dataFieldId: LaptopFactory.ids.techSpecs.fields.batteryStatus,
           value: undefined,
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'section-3',
-          dataFieldId: 'field-5-item',
+          dataSectionId: LaptopFactory.ids.environment.id,
+          dataFieldId: LaptopFactory.ids.environment.fields.energyConsumption,
           value: undefined,
           row: 0,
         }),
@@ -280,39 +76,45 @@ describe('ProductDataModel', () => {
 
     const dataValues = [
       DataValue.create({
-        value: 'value 1',
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-1',
+        value: 'Intel 7',
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 2',
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-2',
+        value: 'Mem 4 GB',
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 3',
-        dataSectionId: 'section-2',
-        dataFieldId: 'field-3',
+        value: 5,
+        dataSectionId: LaptopFactory.ids.environment.id,
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 4',
-        dataSectionId: 'section-2',
-        dataFieldId: 'field-4',
+        value: 'Lithium',
+        dataSectionId: LaptopFactory.ids.material.id,
+        dataFieldId: LaptopFactory.ids.material.fields.materialType,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 5',
-        dataSectionId: 'section-3',
-        dataFieldId: 'field-5',
+        value: 4,
+        dataSectionId: LaptopFactory.ids.material.id,
+        dataFieldId: LaptopFactory.ids.material.fields.mass,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 6',
-        dataSectionId: 'section-4',
-        dataFieldId: 'field-6',
+        value: 'GHG protocol',
+        dataSectionId: LaptopFactory.ids.materialCo2.id,
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod,
+        row: 0,
+      }),
+      DataValue.create({
+        value: 9,
+        dataSectionId: LaptopFactory.ids.materialCo2.id,
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2Emissions,
         row: 0,
       }),
     ];
@@ -324,33 +126,38 @@ describe('ProductDataModel', () => {
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
       DataFieldValidationResult.create({
-        dataFieldId: 'field-1',
-        dataFieldName: 'Title',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
+        dataFieldName: 'Processor',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-2',
-        dataFieldName: 'Title 2',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
+        dataFieldName: 'Memory',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-3',
-        dataFieldName: 'Title 3',
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
+        dataFieldName: 'Water consumption',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-4',
-        dataFieldName: 'Title 4',
+        dataFieldId: LaptopFactory.ids.material.fields.materialType,
+        dataFieldName: 'Material type',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-5',
-        dataFieldName: 'Title 5',
+        dataFieldId: LaptopFactory.ids.material.fields.mass,
+        dataFieldName: 'Mass',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-6',
-        dataFieldName: 'Title 6',
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod,
+        dataFieldName: 'Co2 calculation method',
+        isValid: true,
+      }),
+      DataFieldValidationResult.create({
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2Emissions,
+        dataFieldName: 'Co2 emissions',
         isValid: true,
       }),
     ]);
@@ -361,27 +168,21 @@ describe('ProductDataModel', () => {
 
     const dataValues = [
       DataValue.create({
-        value: 'value 1',
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-1',
+        value: 'Intel 7',
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 2',
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-2',
+        value: 'Mem 4 GB',
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 5',
-        dataSectionId: 'section-3',
-        dataFieldId: 'field-5',
-        row: 0,
-      }),
-      DataValue.create({
-        value: 'value 6',
-        dataSectionId: 'section-4',
-        dataFieldId: 'field-6',
+        value: 5,
+        dataSectionId: LaptopFactory.ids.environment.id,
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
         row: 0,
       }),
     ];
@@ -393,23 +194,18 @@ describe('ProductDataModel', () => {
     expect(validationOutput.isValid).toBeTruthy();
     expect(validationOutput.validationResults).toEqual([
       DataFieldValidationResult.create({
-        dataFieldId: 'field-1',
-        dataFieldName: 'Title',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
+        dataFieldName: 'Processor',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-2',
-        dataFieldName: 'Title 2',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
+        dataFieldName: 'Memory',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-5',
-        dataFieldName: 'Title 5',
-        isValid: true,
-      }),
-      DataFieldValidationResult.create({
-        dataFieldId: 'field-6',
-        dataFieldName: 'Title 6',
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
+        dataFieldName: 'Water consumption',
         isValid: true,
       }),
     ]);
@@ -419,27 +215,39 @@ describe('ProductDataModel', () => {
     const productDataModel = ProductDataModel.loadFromDb(laptopModel);
     const dataValues = [
       DataValue.create({
-        value: 'value 1',
-        dataSectionId: 'section-1',
-        dataFieldId: 'field-1',
+        value: 'Intel 7',
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 4',
-        dataSectionId: 'section-2',
-        dataFieldId: 'field-4',
+        value: 'Mem 4 GB',
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
         row: 0,
       }),
       DataValue.create({
-        value: { wrongType: 'crazyMan' },
-        dataSectionId: 'section-3',
-        dataFieldId: 'field-5',
+        value: 'Lithium',
+        dataSectionId: LaptopFactory.ids.material.id,
+        dataFieldId: LaptopFactory.ids.material.fields.materialType,
         row: 0,
       }),
       DataValue.create({
-        value: 'value 6',
-        dataSectionId: 'section-4',
-        dataFieldId: 'field-6',
+        value: 'wrong value',
+        dataSectionId: LaptopFactory.ids.material.id,
+        dataFieldId: LaptopFactory.ids.material.fields.mass,
+        row: 0,
+      }),
+      DataValue.create({
+        value: { wrongValue: 'GHG protocol' },
+        dataSectionId: LaptopFactory.ids.materialCo2.id,
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod,
+        row: 0,
+      }),
+      DataValue.create({
+        value: 9,
+        dataSectionId: LaptopFactory.ids.materialCo2.id,
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2Emissions,
         row: 0,
       }),
     ];
@@ -451,37 +259,41 @@ describe('ProductDataModel', () => {
     expect(validationOutput.isValid).toBeFalsy();
     expect(validationOutput.validationResults).toEqual([
       DataFieldValidationResult.create({
-        dataFieldId: 'field-1',
-        dataFieldName: 'Title',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
+        dataFieldName: 'Processor',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-2',
-        dataFieldName: 'Title 2',
-        isValid: false,
-        errorMessage: 'Value for data field is missing',
-      }),
-      DataFieldValidationResult.create({
-        dataFieldId: 'field-3',
-        dataFieldName: 'Title 3',
-        isValid: false,
-        row: 0,
-        errorMessage: 'Value for data field is missing',
-      }),
-      DataFieldValidationResult.create({
-        dataFieldId: 'field-4',
-        dataFieldName: 'Title 4',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
+        dataFieldName: 'Memory',
         isValid: true,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-5',
-        dataFieldName: 'Title 5',
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
+        dataFieldName: 'Water consumption',
+        errorMessage: 'Value for data field is missing',
         isValid: false,
+      }),
+      DataFieldValidationResult.create({
+        dataFieldId: LaptopFactory.ids.material.fields.materialType,
+        dataFieldName: 'Material type',
+        isValid: true,
+      }),
+      DataFieldValidationResult.create({
+        dataFieldId: LaptopFactory.ids.material.fields.mass,
+        dataFieldName: 'Mass',
+        errorMessage: 'Invalid input: expected number, received string',
+        isValid: false,
+      }),
+      DataFieldValidationResult.create({
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod,
+        dataFieldName: 'Co2 calculation method',
         errorMessage: 'Invalid input: expected string, received object',
+        isValid: false,
       }),
       DataFieldValidationResult.create({
-        dataFieldId: 'field-6',
-        dataFieldName: 'Title 6',
+        dataFieldId: LaptopFactory.ids.materialCo2.fields.co2Emissions,
+        dataFieldName: 'Co2 emissions',
         isValid: true,
       }),
     ]);

@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ProductDataModel,
-  VisibilityLevel,
-} from '../domain/product.data.model';
+import { ProductDataModel } from '../domain/product.data.model';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -68,10 +65,7 @@ export class ProductDataModelService {
     const foundDataModelDocs = await this.productDataModelDoc
       .find(
         {
-          $or: [
-            { ownedByOrganizationId: organizationId },
-            { visibility: VisibilityLevel.PUBLIC },
-          ],
+          $or: [{ ownedByOrganizationId: organizationId }],
         },
         '_id name version',
       )

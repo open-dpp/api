@@ -3,17 +3,16 @@ import {
   SectionBaseDtoSchema,
   sectionToDto,
 } from '../../../data-modelling/presentation/dto/section-base.dto';
-import {
-  ProductDataModel,
-  VisibilityLevel,
-} from '../../domain/product.data.model';
+import { ProductDataModel } from '../../domain/product.data.model';
+import { Sector } from '@open-dpp/api-client';
 
 const ProductDataModelDtoSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
+  description: z.string(),
+  sectors: z.enum(Sector).array(),
   version: z.string().min(1),
   sections: SectionBaseDtoSchema.array(),
-  visibility: z.enum(VisibilityLevel),
   createdByUserId: z.uuid(),
   ownedByOrganizationId: z.uuid(),
   marketplaceResourceId: z.string().nullable(),
@@ -27,8 +26,9 @@ export function productDataModelToDto(
   return ProductDataModelDtoSchema.parse({
     id: productDataModel.id,
     name: productDataModel.name,
+    description: productDataModel.description,
+    sectors: productDataModel.sectors,
     version: productDataModel.version,
-    visibility: productDataModel.visibility,
     sections: productDataModel.sections.map((section) => sectionToDto(section)),
     createdByUserId: productDataModel.createdByUserId,
     ownedByOrganizationId: productDataModel.ownedByOrganizationId,

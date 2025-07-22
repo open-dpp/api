@@ -1,9 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductDataModelService } from './product-data-model.service';
-import {
-  ProductDataModel,
-  VisibilityLevel,
-} from '../domain/product.data.model';
+import { ProductDataModel } from '../domain/product.data.model';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Connection } from 'mongoose';
@@ -14,10 +11,11 @@ import {
   ProductDataModelSchema,
 } from './product-data-model.schema';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { GroupSection, RepeaterSection } from '../domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
 import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
-import { productDataModelDbPropsFactory } from '../fixtures/product-data-model.factory';
+import { templateCreatePropsFactory } from '../fixtures/template.factory';
+import { laptopFactory } from '../fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../fixtures/section.factory';
+import { SectionType } from '../../data-modelling/domain/section-base';
 
 describe('ProductDataModelService', () => {
   let service: ProductDataModelService;
@@ -44,9 +42,9 @@ describe('ProductDataModelService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  const laptopModelPlain = productDataModelDbPropsFactory.build({
-    ownedByOrganizationId: organizationId,
-    createdByUserId: userId,
+  const laptopModelPlain = laptopFactory.build({
+    organizationId,
+    userId,
   });
 
   it('fails if requested product data model could not be found', async () => {
@@ -73,9 +71,9 @@ describe('ProductDataModelService', () => {
 
     const otherOrganizationId = randomUUID();
     const laptopOtherOrganization = ProductDataModel.loadFromDb(
-      productDataModelDbPropsFactory.build({
-        ownedByOrganizationId: otherOrganizationId,
-        createdByUserId: randomUUID(),
+      laptopFactory.build({
+        organizationId: otherOrganizationId,
+        userId: randomUUID(),
       }),
     );
     laptopOtherOrganization.assignMarketplaceResource(marketplaceResourceId);
@@ -95,53 +93,22 @@ describe('ProductDataModelService', () => {
   });
 
   it('sets correct default granularity level', async () => {
-    const laptopModel = {
-      id: randomUUID(),
-      visibility: VisibilityLevel.PRIVATE,
-      name: 'Laptop',
-      version: 'v2',
+    const laptopModel = laptopFactory.build({
       sections: [
-        GroupSection.loadFromDb({
-          id: 's1',
+        sectionDbPropsFactory.build({
           name: 'Environment',
-          layout: Layout.create({
-            cols: { sm: 3 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 7 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
-          dataFields: [],
-          parentId: undefined,
-          subSections: [],
           granularityLevel: undefined,
         }),
-        RepeaterSection.loadFromDb({
-          id: 's2',
+        sectionDbPropsFactory.build({
+          type: SectionType.REPEATABLE,
           name: 'Materials',
-          layout: Layout.create({
-            cols: { sm: 3 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 7 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
-          dataFields: [],
-          parentId: undefined,
-          subSections: [],
-          granularityLevel: GranularityLevel.MODEL,
+          granularityLevel: undefined,
         }),
       ],
-      publications: [],
-      marketplaceResourceId: null,
-    };
-
-    const productDataModelDraft = ProductDataModel.loadFromDb({
-      ...laptopModel,
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
     });
-    const { id } = await service.save(productDataModelDraft);
+
+    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const { id } = await service.save(productDataModel);
     const found = await service.findOneOrFail(id);
     expect(found.sections[0].granularityLevel).toBeUndefined();
     expect(found.sections[1].granularityLevel).toEqual(GranularityLevel.MODEL);
@@ -164,35 +131,24 @@ describe('ProductDataModelService', () => {
     ]);
   });
 
-  it('should return all product data models belonging to organization and which are public', async () => {
+  it('should return all product data models belonging to organization', async () => {
     const laptopModel = ProductDataModel.loadFromDb({
       ...laptopModelPlain,
-      visibility: VisibilityLevel.PRIVATE,
     });
     const phoneModel = ProductDataModel.loadFromDb({
       ...laptopModelPlain,
       id: randomUUID(),
       name: 'phone',
-      visibility: VisibilityLevel.PRIVATE,
     });
-    const otherUserId = randomUUID();
     const otherOrganizationId = randomUUID();
-    const publicModel = ProductDataModel.create({
-      name: 'publicModel',
-      userId,
-      organizationId,
-      visibility: VisibilityLevel.PUBLIC,
-    });
-
-    const privateModel = ProductDataModel.create({
-      name: 'privateModel',
-      userId: otherUserId,
-      organizationId: otherOrganizationId,
-      visibility: VisibilityLevel.PRIVATE,
-    });
+    const privateModel = ProductDataModel.create(
+      templateCreatePropsFactory.build({
+        name: 'privateModel',
+        organizationId: otherOrganizationId,
+      }),
+    );
     await service.save(laptopModel);
     await service.save(phoneModel);
-    await service.save(publicModel);
     await service.save(privateModel);
 
     const foundAll =
@@ -207,11 +163,6 @@ describe('ProductDataModelService', () => {
       id: phoneModel.id,
       name: phoneModel.name,
       version: phoneModel.version,
-    });
-    expect(foundAll).toContainEqual({
-      id: publicModel.id,
-      name: publicModel.name,
-      version: publicModel.version,
     });
     expect(foundAll).not.toContainEqual({
       id: privateModel.id,

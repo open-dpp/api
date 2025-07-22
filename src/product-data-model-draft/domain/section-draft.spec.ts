@@ -5,7 +5,6 @@ import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { GroupSection } from '../../product-data-model/domain/section';
 
 describe('DataSectionDraft', () => {
   const layout = Layout.create({
@@ -321,29 +320,27 @@ describe('DataSectionDraft', () => {
     });
     section.addDataField(dataField1);
     const publishedSection = section.publish();
-    expect(publishedSection).toEqual(
-      GroupSection.loadFromDb({
-        id: section.id,
-        parentId: undefined,
-        name: 'Technical specification',
-        dataFields: [dataField1.publish()],
-        subSections: [subSection.id],
-        layout: layout,
-        granularityLevel: GranularityLevel.MODEL,
-      }),
-    );
+    expect(publishedSection).toEqual({
+      id: section.id,
+      type: SectionType.GROUP,
+      parentId: undefined,
+      name: 'Technical specification',
+      dataFields: [dataField1.publish()],
+      subSections: [subSection.id],
+      layout: layout,
+      granularityLevel: GranularityLevel.MODEL,
+    });
 
     const publishedSubSection = subSection.publish();
-    expect(publishedSubSection).toEqual(
-      GroupSection.loadFromDb({
-        id: subSection.id,
-        name: 'Dimensions',
-        dataFields: [],
-        subSections: [],
-        parentId: section.id,
-        layout: layout,
-        granularityLevel: GranularityLevel.MODEL,
-      }),
-    );
+    expect(publishedSubSection).toEqual({
+      id: subSection.id,
+      type: SectionType.GROUP,
+      name: 'Dimensions',
+      dataFields: [],
+      subSections: [],
+      parentId: section.id,
+      layout: layout,
+      granularityLevel: GranularityLevel.MODEL,
+    });
   });
 });

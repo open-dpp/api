@@ -11,156 +11,31 @@ import { randomUUID } from 'crypto';
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
-  GroupSection,
-  RepeaterSection,
-} from '../../product-data-model/domain/section';
-import { TextField } from '../../product-data-model/domain/data-field';
+  productDataModelDraftCreatePropsFactory,
+  productDataModelDraftDbFactory,
+} from '../fixtures/product-data-model-draft.factory';
+import { textFieldProps } from '../fixtures/data-field-draft.factory';
+import {
+  sectionDraftDbPropsFactory,
+  sectionDraftEnvironment,
+  sectionDraftFactoryIds,
+} from '../fixtures/section-draft.factory';
+import { Sector } from '@open-dpp/api-client';
 
 describe('ProductDataModelDraft', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
-  const laptopModel: ProductDataModelDraftDbProps = {
-    id: randomUUID(),
-    publications: [],
-    name: 'Laptop',
-    version: '1.0.0',
-    organizationId: organizationId,
-    userId: userId,
-    sections: [
-      DataSectionDraft.loadFromDb({
-        id: randomUUID(),
-        parentId: undefined,
-        type: SectionType.GROUP,
-        name: 'Umwelt',
-        layout: Layout.create({
-          cols: { sm: 3 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          DataFieldDraft.create({
-            type: DataFieldType.TEXT_FIELD,
-            name: 'Title',
-            options: { max: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          DataFieldDraft.create({
-            type: DataFieldType.TEXT_FIELD,
-            name: 'Title 2',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-        subSections: [],
-      }),
-      DataSectionDraft.loadFromDb({
-        id: 'm1',
-        parentId: undefined,
-        name: 'Material',
-        type: SectionType.REPEATABLE,
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          DataFieldDraft.create({
-            type: DataFieldType.TEXT_FIELD,
-            name: 'rep field 1',
-            options: {},
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          DataFieldDraft.create({
-            type: DataFieldType.TEXT_FIELD,
-            name: 'rep field 2',
-            options: {},
-            layout: Layout.create({
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-        subSections: ['m1.1'],
-      }),
-      DataSectionDraft.loadFromDb({
-        id: 'm1.1',
-        parentId: 'm1',
-        name: 'Measurement',
-        type: SectionType.GROUP,
-        layout: Layout.create({
-          cols: { sm: 4 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-        }),
-        dataFields: [
-          DataFieldDraft.create({
-            type: DataFieldType.TEXT_FIELD,
-            name: 'rep field 1',
-            options: {},
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          DataFieldDraft.create({
-            type: DataFieldType.TEXT_FIELD,
-            name: 'rep field 2',
-            options: {},
-            layout: Layout.create({
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-        subSections: [],
-      }),
-    ],
-  };
+  const laptopModel: ProductDataModelDraftDbProps =
+    productDataModelDraftDbFactory.build({ userId, organizationId });
 
   it('is renamed', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'My Draft',
-      userId,
-      organizationId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build(),
+    );
     productDataModelDraft.rename('Final Draft');
     expect(productDataModelDraft.name).toEqual('Final Draft');
   });
@@ -168,36 +43,81 @@ describe('ProductDataModelDraft', () => {
   it('is published', () => {
     const productDataModelDraft = ProductDataModelDraft.loadFromDb(laptopModel);
     const otherUserId = randomUUID();
-    const publishedProductDataModel = productDataModelDraft.publish(
-      otherUserId,
-      VisibilityLevel.PUBLIC,
-    );
+    const publishedProductDataModel =
+      productDataModelDraft.publish(otherUserId);
 
     const expected: ProductDataModelDbProps = {
+      id: expect.any(String),
       marketplaceResourceId: null,
       name: productDataModelDraft.name,
-      id: expect.any(String),
+      description: productDataModelDraft.description,
+      sectors: [Sector.ELECTRONICS],
       version: '1.0.0',
-      ownedByOrganizationId: organizationId,
-      createdByUserId: otherUserId,
-      visibility: VisibilityLevel.PUBLIC,
+      organizationId: organizationId,
+      userId: otherUserId,
       sections: [
-        GroupSection.loadFromDb({
+        {
+          type: SectionType.GROUP,
           parentId: undefined,
           subSections: [],
           id: productDataModelDraft.sections[0].id,
+          granularityLevel: GranularityLevel.MODEL,
           name: 'Umwelt',
-          layout: Layout.create({
+          layout: {
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowSpan: { sm: 1 },
             rowStart: { sm: 1 },
-          }),
+          },
           dataFields: [
-            TextField.loadFromDb({
+            {
+              type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[0].dataFields[0].id,
-              name: 'Title',
+              name: 'Title 1',
+              options: { max: 2 },
+              layout: {
+                colStart: { sm: 1 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.MODEL,
+            },
+            {
+              type: DataFieldType.TEXT_FIELD,
+              id: productDataModelDraft.sections[0].dataFields[1].id,
+              name: 'Title 2',
+              options: { max: 2 },
+              layout: {
+                colStart: { sm: 2 },
+                colSpan: { sm: 1 },
+                rowSpan: { sm: 1 },
+                rowStart: { sm: 1 },
+              },
+              granularityLevel: GranularityLevel.MODEL,
+            },
+          ],
+        },
+        {
+          type: SectionType.REPEATABLE,
+          parentId: undefined,
+          subSections: [productDataModelDraft.sections[2].id],
+          name: 'Material',
+          granularityLevel: GranularityLevel.MODEL,
+          id: productDataModelDraft.sections[1].id,
+          layout: {
+            cols: { sm: 3 },
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+          },
+          dataFields: [
+            {
+              type: DataFieldType.TEXT_FIELD,
+              id: productDataModelDraft.sections[1].dataFields[0].id,
+              name: 'Material Title 1',
               options: { max: 2 },
               layout: Layout.create({
                 colStart: { sm: 1 },
@@ -206,50 +126,12 @@ describe('ProductDataModelDraft', () => {
                 rowStart: { sm: 1 },
               }),
               granularityLevel: GranularityLevel.MODEL,
-            }),
-            TextField.loadFromDb({
-              id: productDataModelDraft.sections[0].dataFields[1].id,
-              name: 'Title 2',
-              options: { min: 2 },
-              layout: Layout.create({
-                colStart: { sm: 2 },
-                colSpan: { sm: 1 },
-                rowSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-              }),
-              granularityLevel: GranularityLevel.MODEL,
-            }),
-          ],
-        }),
-        RepeaterSection.loadFromDb({
-          parentId: undefined,
-          subSections: [productDataModelDraft.sections[2].id],
-          name: 'Material',
-          id: productDataModelDraft.sections[1].id,
-          layout: Layout.create({
-            cols: { sm: 2 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-          }),
-          dataFields: [
-            TextField.loadFromDb({
-              id: productDataModelDraft.sections[1].dataFields[0].id,
-              name: 'rep field 1',
-              options: {},
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-              }),
-              granularityLevel: GranularityLevel.MODEL,
-            }),
-            TextField.loadFromDb({
+            },
+            {
+              type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[1].dataFields[1].id,
-              name: 'rep field 2',
-              options: {},
+              name: 'Material Title 2',
+              options: { max: 2 },
               layout: Layout.create({
                 colStart: { sm: 2 },
                 colSpan: { sm: 1 },
@@ -257,48 +139,52 @@ describe('ProductDataModelDraft', () => {
                 rowStart: { sm: 1 },
               }),
               granularityLevel: GranularityLevel.MODEL,
-            }),
+            },
           ],
-        }),
-        GroupSection.loadFromDb({
+        },
+        {
+          type: SectionType.GROUP,
           parentId: productDataModelDraft.sections[1].id,
           subSections: [],
           name: 'Measurement',
+          granularityLevel: GranularityLevel.MODEL,
           id: productDataModelDraft.sections[2].id,
-          layout: Layout.create({
-            cols: { sm: 4 },
+          layout: {
+            cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowSpan: { sm: 1 },
             rowStart: { sm: 1 },
-          }),
+          },
           dataFields: [
-            TextField.loadFromDb({
+            {
+              type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[2].dataFields[0].id,
-              name: 'rep field 1',
-              options: {},
-              layout: Layout.create({
+              name: 'Measurement Title 1',
+              options: { max: 2 },
+              layout: {
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowSpan: { sm: 1 },
                 rowStart: { sm: 1 },
-              }),
+              },
               granularityLevel: GranularityLevel.MODEL,
-            }),
-            TextField.loadFromDb({
+            },
+            {
+              type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[2].dataFields[1].id,
-              name: 'rep field 2',
-              options: {},
-              layout: Layout.create({
+              name: 'Measurement Title 2',
+              options: { max: 2 },
+              layout: {
                 colStart: { sm: 2 },
                 colSpan: { sm: 1 },
                 rowSpan: { sm: 1 },
                 rowStart: { sm: 1 },
-              }),
+              },
               granularityLevel: GranularityLevel.MODEL,
-            }),
+            },
           ],
-        }),
+        },
       ],
     };
     expect(publishedProductDataModel).toEqual(
@@ -311,10 +197,7 @@ describe('ProductDataModelDraft', () => {
         version: '1.0.0',
       },
     ]);
-    const againPublished = productDataModelDraft.publish(
-      otherUserId,
-      VisibilityLevel.PRIVATE,
-    );
+    const againPublished = productDataModelDraft.publish(otherUserId);
     expect(againPublished.version).toEqual('2.0.0');
     expect(productDataModelDraft.publications).toEqual([
       {
@@ -339,11 +222,9 @@ describe('ProductDataModelDraft', () => {
   it('should be created', () => {
     const userId = randomUUID();
     const organizationId = randomUUID();
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Handy',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     expect(productDataModelDraft.id).toBeDefined();
     expect(productDataModelDraft.version).toEqual('1.0.0');
     expect(productDataModelDraft.sections).toEqual([]);
@@ -361,11 +242,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should add sections', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -385,11 +264,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add repeater section with parent', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -410,11 +287,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should add subSection', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -437,11 +312,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add subSection if parent id not found', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -455,11 +328,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add subSection if its granularity level differs from parent', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const parentSection = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -484,11 +355,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should set subSection granularity level to parent one if undefined', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const parentSection = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -509,11 +378,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should modify section', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -548,11 +415,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should delete a section', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -622,11 +487,9 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to delete a section if it could not be found', () => {
-    const productDataModelDraft = ProductDataModelDraft.create({
-      name: 'Laptop',
-      organizationId,
-      userId,
-    });
+    const productDataModelDraft = ProductDataModelDraft.create(
+      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
     const section = DataSectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
@@ -642,33 +505,7 @@ describe('ProductDataModelDraft', () => {
 
   it('should add field', () => {
     const productDataModelDraft = ProductDataModelDraft.loadFromDb({
-      id: 'product-1',
-      name: 'Laptop',
-      version: '1.0',
-      publications: [],
-      organizationId: organizationId,
-      userId: userId,
-      sections: [
-        DataSectionDraft.loadFromDb({
-          id: 'section-1',
-          name: 'Section 1',
-          parentId: undefined,
-          subSections: [],
-
-          layout,
-          type: SectionType.GROUP,
-          dataFields: [],
-        }),
-        DataSectionDraft.loadFromDb({
-          id: 'section-2',
-          name: 'Section 2',
-          parentId: undefined,
-          subSections: [],
-          layout,
-          type: SectionType.REPEATABLE,
-          dataFields: [],
-        }),
-      ],
+      ...productDataModelDraftDbFactory.build(),
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
@@ -683,63 +520,54 @@ describe('ProductDataModelDraft', () => {
       granularityLevel: GranularityLevel.MODEL,
     });
 
-    productDataModelDraft.addDataFieldToSection('section-1', dataField1);
-    productDataModelDraft.addDataFieldToSection('section-1', dataField2);
+    productDataModelDraft.addDataFieldToSection(
+      sectionDraftFactoryIds.environment,
+      dataField1,
+    );
+    productDataModelDraft.addDataFieldToSection(
+      sectionDraftFactoryIds.environment,
+      dataField2,
+    );
 
+    const existingFields = sectionDraftEnvironment
+      .build()
+      .dataFields.map((d) => DataFieldDraft.loadFromDb(d));
     expect(
-      productDataModelDraft.findSectionOrFail('section-1').dataFields,
-    ).toEqual([dataField1, dataField2]);
+      productDataModelDraft.findSectionOrFail(
+        sectionDraftFactoryIds.environment,
+      ).dataFields,
+    ).toEqual([...existingFields, dataField1, dataField2]);
 
     expect(() =>
-      productDataModelDraft.addDataFieldToSection('section-3', dataField1),
-    ).toThrow(new NotFoundError(DataSectionDraft.name, 'section-3'));
+      productDataModelDraft.addDataFieldToSection(
+        'not-found-section',
+        dataField1,
+      ),
+    ).toThrow(new NotFoundError(DataSectionDraft.name, 'not-found-section'));
   });
 
   it('should delete data field', () => {
-    const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
-      type: DataFieldType.TEXT_FIELD,
-      layout,
-      granularityLevel: GranularityLevel.MODEL,
-    });
-    const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
-      type: DataFieldType.TEXT_FIELD,
-      layout,
-      granularityLevel: GranularityLevel.MODEL,
-    });
-    const productDataModelDraft = ProductDataModelDraft.loadFromDb({
-      id: 'product-1',
-      name: 'Laptop',
-      version: '1.0',
-      publications: [],
-      organizationId: organizationId,
-      userId: userId,
-      sections: [
-        DataSectionDraft.loadFromDb({
-          id: 'section-1',
-          name: 'Section 1',
-          parentId: undefined,
-          subSections: [],
-          layout,
-          type: SectionType.GROUP,
-          dataFields: [dataField1, dataField2],
-        }),
-        DataSectionDraft.loadFromDb({
-          parentId: undefined,
-          subSections: [],
-          layout,
-          id: 'section-2',
-          name: 'Section 2',
-          type: SectionType.REPEATABLE,
-          dataFields: [],
-        }),
-      ],
-    });
+    const dataFieldProps1 = textFieldProps.build({ name: 'Processor' });
+    const dataFieldProps2 = textFieldProps.build({ name: 'Memory' });
+    const productDataModelDraft = ProductDataModelDraft.loadFromDb(
+      productDataModelDraftDbFactory.build({
+        sections: [
+          sectionDraftDbPropsFactory.build({
+            id: 'section-1',
+            name: 'section-1',
+            dataFields: [dataFieldProps1, dataFieldProps2],
+          }),
+          sectionDraftEnvironment.build(),
+        ],
+      }),
+    );
 
-    productDataModelDraft.deleteDataFieldOfSection('section-1', dataField1.id);
+    productDataModelDraft.deleteDataFieldOfSection(
+      'section-1',
+      dataFieldProps1.id,
+    );
     expect(
       productDataModelDraft.findSectionOrFail('section-1').dataFields,
-    ).toEqual([dataField2]);
+    ).toEqual([DataFieldDraft.loadFromDb(dataFieldProps2)]);
   });
 });

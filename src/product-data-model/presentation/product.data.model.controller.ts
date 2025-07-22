@@ -33,12 +33,11 @@ export class ProductDataModelController {
     @Request() req: AuthRequest,
   ) {
     const found = await this.productDataModelService.findOneOrFail(id);
-    if (!found.isPublic()) {
-      await this.permissionsService.canAccessOrganizationOrFail(
-        found.ownedByOrganizationId,
-        req.authContext,
-      );
-    }
+
+    await this.permissionsService.canAccessOrganizationOrFail(
+      found.ownedByOrganizationId,
+      req.authContext,
+    );
 
     return productDataModelToDto(found);
   }

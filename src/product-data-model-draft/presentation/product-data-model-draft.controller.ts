@@ -30,7 +30,11 @@ import {
   UpdateProductDataModelDraftDto,
   UpdateProductDataModelDraftDtoSchema,
 } from './dto/update-product-data-model-draft.dto';
-import { PublishDto, PublishDtoSchema } from './dto/publish.dto';
+import {
+  PublishDto,
+  PublishDtoSchema,
+  VisibilityLevel,
+} from './dto/publish.dto';
 import {
   UpdateDataFieldDraftDto,
   UpdateDataFieldDraftDtoSchema,
@@ -46,7 +50,6 @@ import {
   UpdateSectionDraftDtoSchema,
 } from './dto/update-section-draft.dto';
 import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
-import { VisibilityLevel } from '../../product-data-model/domain/product.data.model';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 
 @Controller('/organizations/:orgaId/product-data-model-drafts')
@@ -179,13 +182,11 @@ export class ProductDataModelDraftController {
 
     const publishedProductDataModel = foundProductDataModelDraft.publish(
       req.authContext.user.id,
-      publishDto.visibility,
     );
 
     if (publishDto.visibility === VisibilityLevel.PUBLIC) {
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
-        publishDto.sectors,
         req.authContext.token,
       );
       publishedProductDataModel.assignMarketplaceResource(

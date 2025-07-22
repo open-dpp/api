@@ -18,11 +18,10 @@ import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resource
 import { UsersService } from '../users/infrastructure/users.service';
 import { MarketplaceService } from './marketplace.service';
 import { DataSource } from 'typeorm';
-import { Sector } from '@open-dpp/api-client';
-import { productDataModelDbPropsFactory } from '../product-data-model/fixtures/product-data-model.factory';
 import { passportTemplateDtoFactory } from './fixtures/passport.template.factory';
 import { MongooseTestingModule } from '../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { laptopFactory } from '../product-data-model/fixtures/laptop.factory';
 
 export const mockCreatePassportTemplateInMarketplace = jest.fn();
 export const mockGetPassportTemplateInMarketplace = jest.fn();
@@ -71,9 +70,9 @@ describe('MarketplaceService', () => {
     dataSource = module.get<DataSource>(DataSource);
   });
 
-  const laptopModelPlain = productDataModelDbPropsFactory.build({
-    ownedByOrganizationId: organizationId,
-    createdByUserId: userId,
+  const laptopModelPlain = laptopFactory.build({
+    organizationId,
+    userId,
   });
 
   it('should upload product data model to marketplace', async () => {
@@ -90,25 +89,25 @@ describe('MarketplaceService', () => {
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
-    const sectors = [Sector.BATTERY];
     mockCreatePassportTemplateInMarketplace.mockResolvedValue({
       data: { id: randomUUID() },
     });
     const token = randomUUID();
-    await service.upload(productDataModel, sectors, token);
+    await service.upload(productDataModel, token);
     expect(mockSetActiveOrganizationId).toBeCalledWith(organizationId);
     expect(mockSetApiKey).toHaveBeenCalledWith(token);
     const expected: PassportTemplateCreateDto = {
       version: productDataModel.version,
       name: productDataModel.name,
-      description: `Vorlage ${productDataModel.name}`,
-      sectors,
+      description: productDataModel.description,
+      sectors: productDataModel.sectors,
       organizationName: organization.name,
       templateData: {
         _id: productDataModel.id,
         name: productDataModel.name,
+        description: productDataModel.description,
+        sectors: productDataModel.sectors,
         version: productDataModel.version,
-        visibility: productDataModel.visibility,
         _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
         sections: productDataModel.sections.map((s) => ({
           _id: s.id,

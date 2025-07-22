@@ -32,8 +32,10 @@ export class ProductDataModelDraftService {
       { _id: productDataModel.id },
       {
         name: productDataModel.name,
+        description: productDataModel.description,
+        sectors: productDataModel.sectors,
         version: newVersion || productDataModel.version,
-        _schemaVersion: ProductDataModelDraftDocSchemaVersion.v1_0_1,
+        _schemaVersion: ProductDataModelDraftDocSchemaVersion.v1_0_2,
         publications: productDataModel.publications,
         sections: productDataModel.sections.map((s) => ({
           _id: s.id,
@@ -121,6 +123,8 @@ export class ProductDataModelDraftService {
     return ProductDataModelDraft.loadFromDb({
       id: plainDoc._id,
       name: plainDoc.name,
+      description: plainDoc.description,
+      sectors: plainDoc.sectors,
       version: plainDoc.version,
       sections: plainDoc.sections.map((s) => this.createSection(s)),
       publications: plainDoc.publications,

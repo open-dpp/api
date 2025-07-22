@@ -1,34 +1,39 @@
 import { randomUUID } from 'crypto';
 import { DataFieldDraft } from './data-field-draft';
-import { DataSectionDraft } from './section-draft';
+import { DataSectionDraft, DataSectionDraftDbProps } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
-import {
-  ProductDataModel,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import * as semver from 'semver';
-import { LayoutProps } from '../../data-modelling/domain/layout';
+import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
+import { Sector } from '@open-dpp/api-client';
 
 export type Publication = {
   id: string;
   version: string;
 };
 
-export type ProductDataModelDraftDbProps = {
-  id: string;
+export type ProductDataModelDraftCreateProps = {
   name: string;
+  sectors: Sector[];
+  description: string;
+  userId: string;
+  organizationId: string;
+};
+
+export type ProductDataModelDraftDbProps = ProductDataModelDraftCreateProps & {
+  id: string;
   version: string;
   publications: Publication[];
-  organizationId: string;
-  userId: string;
-  sections: DataSectionDraft[];
+  sections: DataSectionDraftDbProps[];
 };
 
 export class ProductDataModelDraft {
   private constructor(
     public readonly id: string,
     private _name: string,
+    public readonly description: string,
+    public readonly sectors: Sector[],
     public readonly version: string,
     private readonly _publications: Publication[],
     private _ownedByOrganizationId: string | undefined,
@@ -38,12 +43,16 @@ export class ProductDataModelDraft {
 
   static create(data: {
     name: string;
+    description: string;
+    sectors: Sector[];
     userId: string;
     organizationId: string;
   }) {
     return new ProductDataModelDraft(
       randomUUID(),
       data.name,
+      data.description,
+      data.sectors,
       '1.0.0',
       [],
       data.organizationId,
@@ -80,11 +89,13 @@ export class ProductDataModelDraft {
     return new ProductDataModelDraft(
       data.id,
       data.name,
+      data.description,
+      data.sectors,
       data.version,
       data.publications,
       data.organizationId,
       data.userId,
-      data.sections,
+      data.sections.map((s) => DataSectionDraft.loadFromDb(s)),
     );
   }
 
@@ -183,10 +194,7 @@ export class ProductDataModelDraft {
     this.sections.push(section);
   }
 
-  publish(
-    createdByUserId: string,
-    visibility: VisibilityLevel,
-  ): ProductDataModel {
+  publish(createdByUserId: string): ProductDataModel {
     const lastPublished = this.publications.slice(-1);
 
     const versionToPublish =
@@ -198,10 +206,11 @@ export class ProductDataModelDraft {
       id: randomUUID(),
       marketplaceResourceId: null,
       name: this.name,
+      description: this.description,
+      sectors: this.sectors,
       version: versionToPublish,
-      createdByUserId: createdByUserId,
-      ownedByOrganizationId: this.ownedByOrganizationId,
-      visibility,
+      userId: createdByUserId,
+      organizationId: this.ownedByOrganizationId,
       sections: this.sections.map((s) => s.publish()),
     });
     this.publications.push({ id: published.id, version: published.version });

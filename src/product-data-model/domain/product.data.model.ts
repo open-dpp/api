@@ -1,9 +1,15 @@
 import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldValidationResult } from './data-field';
-import { DataSection } from './section';
+import {
+  DataSection,
+  DataSectionDbProps,
+  findSectionClassByTypeOrFail,
+} from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { Sector } from '@open-dpp/api-client';
+import { omitBy } from 'lodash';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -32,19 +38,18 @@ export class ValidationResult {
   }
 }
 
-export enum VisibilityLevel {
-  PUBLIC = 'Public',
-  PRIVATE = 'Private',
-}
-
-export type ProductDataModelDbProps = {
-  id: string;
+export type ProductDataModelCreateProps = {
   name: string;
+  description: string;
+  sectors: Sector[];
+  userId: string;
+  organizationId: string;
+};
+
+export type ProductDataModelDbProps = ProductDataModelCreateProps & {
+  id: string;
   version: string;
-  createdByUserId: string;
-  ownedByOrganizationId: string;
-  visibility: VisibilityLevel;
-  sections: DataSection[];
+  sections: DataSectionDbProps[];
   marketplaceResourceId: string | null;
 };
 
@@ -52,27 +57,30 @@ export class ProductDataModel {
   private constructor(
     public readonly id: string,
     public readonly name: string,
+    public description: string,
+    public sectors: Sector[],
     public readonly version: string,
     private _createdByUserId: string,
     private _ownedByOrganizationId: string,
-    private _visibility: VisibilityLevel,
     public readonly sections: DataSection[],
     public marketplaceResourceId: string | null,
   ) {}
 
   static create(plain: {
     name: string;
+    description: string;
+    sectors: Sector[];
     userId: string;
     organizationId: string;
-    visibility?: VisibilityLevel;
   }) {
     return new ProductDataModel(
       randomUUID(),
       plain.name,
+      plain.description,
+      plain.sectors,
       '1.0.0',
       plain.userId,
       plain.organizationId,
-      plain.visibility || VisibilityLevel.PRIVATE,
       [],
       null,
     );
@@ -82,25 +90,21 @@ export class ProductDataModel {
     return new ProductDataModel(
       data.id,
       data.name,
+      data.description,
+      data.sectors,
       data.version,
-      data.createdByUserId,
-      data.ownedByOrganizationId,
-      data.visibility,
-      data.sections,
+      data.userId,
+      data.organizationId,
+      data.sections.map((s) => {
+        const SectionClass = findSectionClassByTypeOrFail(s.type);
+        return SectionClass.loadFromDb(s);
+      }),
       data.marketplaceResourceId,
     );
   }
 
   public isOwnedBy(organizationId: string) {
     return this.ownedByOrganizationId === organizationId;
-  }
-
-  public isPublic() {
-    return this.visibility === VisibilityLevel.PUBLIC;
-  }
-
-  public get visibility() {
-    return this._visibility;
   }
 
   public get createdByUserId() {

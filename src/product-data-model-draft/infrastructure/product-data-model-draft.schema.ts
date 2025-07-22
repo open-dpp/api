@@ -18,12 +18,13 @@ const PublicationSchema = SchemaFactory.createForClass(PublicationDoc);
 export enum ProductDataModelDraftDocSchemaVersion {
   v1_0_0 = '1.0.0',
   v1_0_1 = '1.0.1',
+  v1_0_2 = '1.0.2',
 }
 
 @Schema({ collection: 'product_data_model_drafts' })
 export class ProductDataModelDraftDoc extends ProductDataModelBaseDoc {
   @Prop({
-    default: ProductDataModelDraftDocSchemaVersion.v1_0_1,
+    default: ProductDataModelDraftDocSchemaVersion.v1_0_2,
     enum: ProductDataModelDraftDocSchemaVersion,
   }) // Track schema version
   _schemaVersion: ProductDataModelDraftDocSchemaVersion;

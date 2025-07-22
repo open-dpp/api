@@ -19,7 +19,6 @@ import { UserEntity } from '../../users/infrastructure/user.entity';
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Item } from '../../items/domain/item';
@@ -27,12 +26,10 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { DataValue } from '../../product-passport/domain/data-value';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import {
-  GroupSection,
-  RepeaterSection,
-} from '../../product-data-model/domain/section';
 import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { Sector } from '@open-dpp/api-client';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
@@ -103,13 +100,15 @@ describe('UniqueProductIdentifierController', () => {
   const laptopModel: ProductDataModelDbProps = {
     id: randomUUID(),
     marketplaceResourceId: null,
-    visibility: VisibilityLevel.PRIVATE,
+    description: 'My laptop',
+    sectors: [Sector.ELECTRONICS],
     name: 'Laptop',
     version: '1.0',
-    ownedByOrganizationId: organizationId,
-    createdByUserId: authContext.user.id,
+    organizationId: organizationId,
+    userId: authContext.user.id,
     sections: [
-      RepeaterSection.loadFromDb({
+      {
+        type: SectionType.REPEATABLE,
         id: sectionId1,
         parentId: undefined,
         name: 'Repeating Section',
@@ -123,7 +122,8 @@ describe('UniqueProductIdentifierController', () => {
         granularityLevel: GranularityLevel.MODEL,
         subSections: [sectionId2],
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId1,
             name: 'Title 1',
             options: { min: 2 },
@@ -134,8 +134,9 @@ describe('UniqueProductIdentifierController', () => {
               rowSpan: { sm: 1 },
             }),
             granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId2,
             name: 'Title 2',
             options: { min: 7 },
@@ -146,10 +147,11 @@ describe('UniqueProductIdentifierController', () => {
               rowSpan: { sm: 1 },
             }),
             granularityLevel: GranularityLevel.MODEL,
-          }),
+          },
         ],
-      }),
-      RepeaterSection.loadFromDb({
+      },
+      {
+        type: SectionType.REPEATABLE,
         id: sectionIdForItem1,
         parentId: undefined,
         name: 'Repeating Section for item',
@@ -163,7 +165,8 @@ describe('UniqueProductIdentifierController', () => {
         granularityLevel: GranularityLevel.ITEM,
         subSections: [sectionIdForItem2],
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldIdForItem1,
             name: 'Title 1 for item',
             options: { min: 7 },
@@ -174,8 +177,9 @@ describe('UniqueProductIdentifierController', () => {
               rowSpan: { sm: 1 },
             }),
             granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldIdForItem2,
             name: 'Title 2 for item',
             options: { min: 7 },
@@ -186,10 +190,11 @@ describe('UniqueProductIdentifierController', () => {
               rowSpan: { sm: 1 },
             }),
             granularityLevel: GranularityLevel.ITEM,
-          }),
+          },
         ],
-      }),
-      GroupSection.loadFromDb({
+      },
+      {
+        type: SectionType.GROUP,
         parentId: sectionId1,
         id: sectionId2,
         name: 'Group Section',
@@ -203,47 +208,51 @@ describe('UniqueProductIdentifierController', () => {
         }),
         granularityLevel: GranularityLevel.MODEL,
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId3,
             name: 'Title 3',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId4,
             name: 'Title 4',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 2 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.MODEL,
-          }),
+          },
         ],
-      }),
-      GroupSection.loadFromDb({
+      },
+      {
+        type: SectionType.GROUP,
         parentId: sectionIdForItem1,
         id: sectionIdForItem2,
         name: 'Group Section for item',
         subSections: [],
-        layout: Layout.create({
+        layout: {
           cols: { sm: 3 },
           colStart: { sm: 1 },
           colSpan: { sm: 1 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        }),
+        },
         granularityLevel: GranularityLevel.ITEM,
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldIdForItem3,
             name: 'Title 3 for item',
             options: { min: 8 },
@@ -254,66 +263,70 @@ describe('UniqueProductIdentifierController', () => {
               rowSpan: { sm: 1 },
             }),
             granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldIdForItem4,
             name: 'Title 4 for item',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 2 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.ITEM,
-          }),
+          },
         ],
-      }),
-      GroupSection.loadFromDb({
+      },
+      {
+        type: SectionType.GROUP,
         id: sectionId3,
         parentId: undefined,
         name: 'Group Section 2',
         subSections: [],
-        layout: Layout.create({
+        layout: {
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 1 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        }),
+        },
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId5,
             name: 'Title sg21',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 1 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldIdForItem5,
             name: 'Title sg21 for item',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 2 },
               colSpan: { sm: 1 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.ITEM,
-          }),
+          },
         ],
-      }),
+      },
     ],
   };
 
   it(`/GET public view for unique product identifier`, async () => {
     const productDataModel = ProductDataModel.loadFromDb({ ...laptopModel });
-    await productDataModelService.save(productDataModel);
+    const test = await productDataModelService.save(productDataModel);
 
     const model = Model.loadFromDb({
       id: randomUUID(),

@@ -6,17 +6,19 @@ import {
   DataFieldDoc,
   SectionDoc,
 } from '../../data-modelling/infrastructure/product-data-model-base.schema';
-import { DataSection, findSectionClassByTypeOrFail } from './section';
-import { Layout } from '../../data-modelling/domain/layout';
-import { DataField, findDataFieldClassByTypeOrFail } from './data-field';
+import { DataSectionDbProps } from './section';
+import { DataFieldDbProps } from './data-field';
 import { ProductDataModel } from './product.data.model';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
 export function serializeProductDataModel(productDataModel: ProductDataModel) {
   return {
     _id: productDataModel.id,
     name: productDataModel.name,
+    description: productDataModel.description,
+    sectors: productDataModel.sectors,
     version: productDataModel.version,
-    visibility: productDataModel.visibility,
     _schemaVersion: ProductDataModelDocSchemaVersion.v1_0_1,
     sections: productDataModel.sections.map((s) => ({
       _id: s.id,
@@ -42,51 +44,55 @@ export function serializeProductDataModel(productDataModel: ProductDataModel) {
 }
 
 export function deserializeProductDataModel(plain: ProductDataModelDoc) {
-  return ProductDataModel.loadFromDb({
+  const tmp = {
     id: plain._id,
     marketplaceResourceId: plain.marketplaceResourceId,
     name: plain.name,
+    description: plain.description,
+    sectors: plain.sectors,
     version: plain.version,
-    createdByUserId: plain.createdByUserId,
-    ownedByOrganizationId: plain.ownedByOrganizationId,
-    visibility: plain.visibility,
+    userId: plain.createdByUserId,
+    organizationId: plain.ownedByOrganizationId,
     sections: plain.sections.map((s: SectionDoc) => createSection(s)),
-  });
+  };
+  return ProductDataModel.loadFromDb(tmp);
 }
 
-function createSection(sectionDoc: SectionDoc): DataSection {
-  const sharedProps = {
+function createSection(sectionDoc: SectionDoc): DataSectionDbProps {
+  return {
     id: sectionDoc._id,
+    type: sectionDoc.type,
     name: sectionDoc.name,
     parentId: sectionDoc.parentId,
     subSections: sectionDoc.subSections,
     dataFields: sectionDoc.dataFields.map((df) => createDataField(df)),
-    layout: Layout.create({
+    layout: {
       cols: sectionDoc.layout.cols,
       colStart: sectionDoc.layout.colStart,
       colSpan: sectionDoc.layout.colSpan,
       rowStart: sectionDoc.layout.rowStart,
       rowSpan: sectionDoc.layout.rowSpan,
-    }),
-    granularityLevel: sectionDoc.granularityLevel,
+    },
+    granularityLevel: sectionDoc.granularityLevel
+      ? sectionDoc.granularityLevel
+      : sectionDoc.type === SectionType.REPEATABLE
+        ? GranularityLevel.MODEL
+        : undefined,
   };
-  const SectionClass = findSectionClassByTypeOrFail(sectionDoc.type);
-  return SectionClass.loadFromDb(sharedProps);
 }
 
-function createDataField(dataFieldDoc: DataFieldDoc): DataField {
-  const sharedProps = {
+function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
+  return {
     id: dataFieldDoc._id,
-    layout: Layout.create({
+    type: dataFieldDoc.type,
+    layout: {
       colStart: dataFieldDoc.layout.colStart,
       colSpan: dataFieldDoc.layout.colSpan,
       rowStart: dataFieldDoc.layout.rowStart,
       rowSpan: dataFieldDoc.layout.rowSpan,
-    }),
+    },
     granularityLevel: dataFieldDoc.granularityLevel,
     options: dataFieldDoc.options,
     name: dataFieldDoc.name,
   };
-  const DataFieldClass = findDataFieldClassByTypeOrFail(dataFieldDoc.type);
-  return DataFieldClass.loadFromDb(sharedProps);
 }

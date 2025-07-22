@@ -27,18 +27,15 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { DataValue } from '../../product-passport/domain/data-value';
-import {
-  GroupSection,
-  RepeaterSection,
-} from '../../product-data-model/domain/section';
 import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { Sector } from '@open-dpp/api-client';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -114,103 +111,112 @@ describe('ItemsController', () => {
     id: randomUUID(),
     marketplaceResourceId: null,
     name: 'Laptop',
+    description: 'My laptop',
+    sectors: [Sector.ELECTRONICS],
     version: '1.0',
-    visibility: VisibilityLevel.PRIVATE,
-    ownedByOrganizationId: organization.id,
-    createdByUserId: authContext.user.id,
+    organizationId: organization.id,
+    userId: authContext.user.id,
     sections: [
-      GroupSection.loadFromDb({
+      {
+        type: SectionType.GROUP,
         id: sectionId1,
         name: 'Section name',
         parentId: undefined,
         subSections: [],
-        layout: Layout.create({
+        layout: {
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        }),
+        },
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId1,
             name: 'Title',
             options: { min: 2 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId2,
             name: 'Title 2',
             options: { min: 7 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.ITEM,
-          }),
+          },
         ],
-      }),
-      GroupSection.loadFromDb({
+      },
+      {
+        type: SectionType.GROUP,
         id: sectionId2,
         name: 'Section name 2',
         parentId: undefined,
         subSections: [],
-        layout: Layout.create({
+        layout: {
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        }),
+        },
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId3,
             name: 'Title 3',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.ITEM,
-          }),
+          },
         ],
-      }),
-      RepeaterSection.loadFromDb({
+      },
+      {
+        type: SectionType.REPEATABLE,
         id: sectionId3,
         name: 'Repeating Section',
         parentId: undefined,
         subSections: [],
-        layout: Layout.create({
+        layout: {
           cols: { sm: 2 },
           colStart: { sm: 1 },
           colSpan: { sm: 2 },
           rowStart: { sm: 1 },
           rowSpan: { sm: 1 },
-        }),
+        },
         dataFields: [
-          TextField.loadFromDb({
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId4,
             name: 'Title 4',
             options: { min: 8 },
-            layout: Layout.create({
+            layout: {
               colStart: { sm: 1 },
               colSpan: { sm: 2 },
               rowStart: { sm: 1 },
               rowSpan: { sm: 1 },
-            }),
+            },
             granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
             id: dataFieldId5,
             name: 'Title 5',
             options: { min: 8 },
@@ -221,9 +227,9 @@ describe('ItemsController', () => {
               rowSpan: { sm: 1 },
             }),
             granularityLevel: GranularityLevel.ITEM,
-          }),
+          },
         ],
-      }),
+      },
     ],
   };
 

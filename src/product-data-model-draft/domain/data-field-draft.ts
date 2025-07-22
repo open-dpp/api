@@ -3,13 +3,22 @@ import {
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
 import { merge } from 'lodash';
-import { Layout } from '../../data-modelling/domain/layout';
+import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
-import {
-  DataField,
-  findDataFieldClassByTypeOrFail,
-} from '../../product-data-model/domain/data-field';
+import { DataFieldDbProps } from '../../product-data-model/domain/data-field';
+
+export type DataFieldDraftCreateProps = {
+  name: string;
+  type: DataFieldType;
+  options?: Record<string, unknown>;
+  layout: LayoutProps;
+  granularityLevel: GranularityLevel;
+};
+
+export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
+  id: string;
+};
 
 export class DataFieldDraft extends DataFieldBase {
   private constructor(
@@ -22,37 +31,24 @@ export class DataFieldDraft extends DataFieldBase {
   ) {
     super(id, _name, type, options, layout, granularityLevel);
   }
-  static create(data: {
-    name: string;
-    type: DataFieldType;
-    options?: Record<string, unknown>;
-    layout: Layout;
-    granularityLevel: GranularityLevel;
-  }): DataFieldDraft {
+  static create(data: DataFieldDraftCreateProps): DataFieldDraft {
     return new DataFieldDraft(
       randomUUID(),
       data.name,
       data.type,
       data.options,
-      data.layout,
+      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
 
-  static loadFromDb(data: {
-    id: string;
-    name: string;
-    type: DataFieldType;
-    options: Record<string, unknown> | undefined;
-    layout: Layout;
-    granularityLevel: GranularityLevel;
-  }) {
+  static loadFromDb(data: DataFieldDraftDbProps) {
     return new DataFieldDraft(
       data.id,
       data.name,
       data.type,
       data.options,
-      data.layout,
+      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -65,14 +61,14 @@ export class DataFieldDraft extends DataFieldBase {
     this._name = newName;
   }
 
-  publish(): DataField {
-    const DataFieldClass = findDataFieldClassByTypeOrFail(this.type);
-    return DataFieldClass.loadFromDb({
+  publish(): DataFieldDbProps {
+    return {
+      type: this.type,
       id: this.id,
       layout: this.layout,
       granularityLevel: this.granularityLevel,
       options: this.options,
       name: this.name,
-    });
+    };
   }
 }

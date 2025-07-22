@@ -13,7 +13,6 @@ import { randomUUID } from 'crypto';
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { ProductDataModelModule } from '../../product-data-model/product.data.model.module';
@@ -27,15 +26,12 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { modelToDto } from './dto/model.dto';
 import { ignoreIds } from '../../../test/utils';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { uniqueProductIdentifierToDto } from '../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
 import {
-  GroupSection,
-  RepeaterSection,
-} from '../../product-data-model/domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+  LaptopFactory,
+  laptopFactory,
+} from '../../product-data-model/fixtures/laptop.factory';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -97,122 +93,9 @@ describe('ModelsController', () => {
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = {
-    id: randomUUID(),
-    marketplaceResourceId: null,
-    createdByUserId: randomUUID(),
-    ownedByOrganizationId: organization.id,
-    visibility: VisibilityLevel.PRIVATE,
-    name: 'Laptop',
-    version: '1.0',
-    sections: [
-      GroupSection.loadFromDb({
-        id: sectionId1,
-        parentId: undefined,
-        subSections: [],
-        name: 'Section name',
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId1,
-            name: 'Title',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: dataFieldId2,
-            name: 'Title 2',
-            options: { min: 7 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-      }),
-      GroupSection.loadFromDb({
-        id: sectionId2,
-        parentId: undefined,
-        subSections: [],
-        name: 'Section name 2',
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId3,
-            name: 'Title 3',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-      }),
-      RepeaterSection.loadFromDb({
-        id: sectionId3,
-        parentId: undefined,
-        subSections: [],
-        name: 'Repeating Section',
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId4,
-            name: 'Title 4',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-          TextField.loadFromDb({
-            id: dataFieldId5,
-            name: 'Title 5',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          }),
-        ],
-      }),
-    ],
-  };
+  const laptopModel: ProductDataModelDbProps = laptopFactory
+    .addSections()
+    .build({ organizationId: organization.id, userId: authContext.user.id });
 
   it(`/CREATE model`, async () => {
     const body = { name: 'My name', description: 'My desc' };
@@ -424,20 +307,20 @@ describe('ModelsController', () => {
     expect(responseGet.body.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
-          dataSectionId: sectionId1,
-          dataFieldId: dataFieldId1,
+          dataSectionId: LaptopFactory.ids.techSpecs.id,
+          dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
           value: undefined,
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: sectionId1,
-          dataFieldId: dataFieldId2,
+          dataSectionId: LaptopFactory.ids.techSpecs.id,
+          dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
           value: undefined,
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: sectionId2,
-          dataFieldId: dataFieldId3,
+          dataSectionId: LaptopFactory.ids.environment.id,
+          dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
           value: undefined,
           row: 0,
         }),
@@ -522,15 +405,15 @@ describe('ModelsController', () => {
     const dataValue3 = model.dataValues[2];
     const updatedValues = [
       {
-        dataFieldId: dataValue1.dataFieldId,
-        dataSectionId: dataValue1.dataSectionId,
-        value: 'value 1',
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        value: 'AMD 8',
         row: 0,
       },
       {
-        dataFieldId: dataValue3.dataFieldId,
-        dataSectionId: dataValue3.dataSectionId,
-        value: 'value 3',
+        dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
+        dataSectionId: LaptopFactory.ids.environment.id,
+        value: 888,
         row: 0,
       },
     ];
@@ -549,7 +432,7 @@ describe('ModelsController', () => {
     const expectedDataValues = [
       {
         ...dataValue1,
-        value: 'value 1',
+        value: 'AMD 8',
         row: 0,
       },
       {
@@ -558,7 +441,7 @@ describe('ModelsController', () => {
       },
       {
         ...dataValue3,
-        value: 'value 3',
+        value: 888,
         row: 0,
       },
     ];

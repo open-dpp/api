@@ -1,5 +1,4 @@
 import { sectionBaseDocumentation } from '../data-modelling/presentation/dto/docs/section-base.doc';
-import { VisibilityLevel } from '../product-data-model/domain/product.data.model';
 
 export const productDataModelDocumentation = {
   type: 'object',
@@ -19,10 +18,6 @@ export const productDataModelDocumentation = {
     sections: {
       type: 'array',
       items: { ...sectionBaseDocumentation },
-    },
-    visibility: {
-      type: 'string',
-      enum: Object.values(VisibilityLevel),
     },
     createdByUserId: {
       type: 'string',

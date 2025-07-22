@@ -20,7 +20,6 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import {
   ProductDataModel,
   ProductDataModelDbProps,
-  VisibilityLevel,
 } from '../../product-data-model/domain/product.data.model';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
@@ -36,9 +35,9 @@ import { ConfigService } from '@nestjs/config';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Organization } from '../../organizations/domain/organization';
-import { GroupSection } from '../../product-data-model/domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+import { laptopFactory } from '../../product-data-model/fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../../product-data-model/fixtures/section.factory';
+import { dataFieldDbPropsFactory } from '../../product-data-model/fixtures/data-field.factory';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -126,44 +125,23 @@ describe('AasConnectionController', () => {
   const sectionId1 = randomUUID();
   const dataFieldId1 = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = {
-    id: randomUUID(),
-    marketplaceResourceId: null,
-    visibility: VisibilityLevel.PRIVATE,
-    name: 'Laptop',
-    version: '1.0',
-    ownedByOrganizationId: organizationId,
-    createdByUserId: authContext.user.id,
+  const laptopModel: ProductDataModelDbProps = laptopFactory.build({
+    organizationId,
+    userId: authContext.user.id,
     sections: [
-      GroupSection.loadFromDb({
+      sectionDbPropsFactory.build({
         id: sectionId1,
         name: 'Carbon Footprint',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
         dataFields: [
-          TextField.loadFromDb({
+          dataFieldDbPropsFactory.build({
             id: dataFieldId1,
             name: 'PCFCalculationMethod',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
             granularityLevel: GranularityLevel.ITEM,
           }),
         ],
       }),
     ],
-  };
+  });
 
   it(`/CREATE items via connection`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(true);

@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { templateCreatePropsFactory } from '../../product-data-model/fixtures/template.factory';
 
 describe('Model', () => {
   const userId = randomUUID();
@@ -330,19 +331,22 @@ describe('Model', () => {
         organizationId,
       });
 
-      const productDataModel1 = ProductDataModel.create({
-        name: 'existing-pdm',
-        userId,
-        organizationId,
-      });
+      const productDataModel1 = ProductDataModel.create(
+        templateCreatePropsFactory.build({
+          userId,
+          organizationId,
+        }),
+      );
 
       model.assignProductDataModel(productDataModel1);
 
-      const productDataModel2 = ProductDataModel.create({
-        name: 'other-pdm',
-        userId,
-        organizationId,
-      });
+      const productDataModel2 = ProductDataModel.create(
+        templateCreatePropsFactory.build({
+          name: 'Test Model 2',
+          userId,
+          organizationId,
+        }),
+      );
 
       // Try to assign a second product data model
       expect(() => model.assignProductDataModel(productDataModel2)).toThrow(

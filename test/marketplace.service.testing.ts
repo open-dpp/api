@@ -1,6 +1,6 @@
 import { ProductDataModel } from '../src/product-data-model/domain/product.data.model';
 import { Sector } from '@open-dpp/api-client';
-import { productDataModelDbPropsFactory } from '../src/product-data-model/fixtures/product-data-model.factory';
+import { laptopFactory } from '../src/product-data-model/fixtures/laptop.factory';
 
 export class MarketplaceServiceTesting {
   constructor() {}
@@ -15,10 +15,8 @@ export class MarketplaceServiceTesting {
   }
 
   async download(templateId: string) {
-    return ProductDataModel.loadFromDb({
-      ...productDataModelDbPropsFactory.build({
-        marketplaceResourceId: templateId,
-      }),
-    });
+    return ProductDataModel.loadFromDb(
+      laptopFactory.build({ marketplaceResourceId: templateId }),
+    );
   }
 }

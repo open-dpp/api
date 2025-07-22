@@ -1,4 +1,9 @@
-import { DataField, DataFieldValidationResult } from './data-field';
+import {
+  DataField,
+  DataFieldDbProps,
+  DataFieldValidationResult,
+  findDataFieldClassByTypeOrFail,
+} from './data-field';
 import { groupBy } from 'lodash';
 import {
   DataSectionBase,
@@ -6,21 +11,22 @@ import {
 } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { Layout } from '../../data-modelling/domain/layout';
+import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
 
 type DataSectionProps = {
   name: string;
-  layout: Layout;
+  layout: LayoutProps;
   granularityLevel?: GranularityLevel; // Required for repeater sections
 };
 
-type DataSectionDbProps = DataSectionProps & {
+export type DataSectionDbProps = DataSectionProps & {
   id: string;
+  type: SectionType;
   parentId: string | undefined;
   subSections: string[];
-  dataFields: DataField[];
+  dataFields: DataFieldDbProps[];
 };
 
 export abstract class DataSection extends DataSectionBase {
@@ -46,7 +52,7 @@ export abstract class DataSection extends DataSectionBase {
       randomUUID(),
       data.name,
       type,
-      data.layout,
+      Layout.create(data.layout),
       [],
       undefined,
       data.granularityLevel,
@@ -64,11 +70,14 @@ export abstract class DataSection extends DataSectionBase {
       data.id,
       data.name,
       type,
-      data.layout,
+      Layout.create(data.layout),
       data.subSections,
       data.parentId,
       data.granularityLevel,
-      data.dataFields,
+      data.dataFields.map((d) => {
+        const DataFieldClass = findDataFieldClassByTypeOrFail(d.type);
+        return DataFieldClass.loadFromDb(d);
+      }),
     );
   }
 
