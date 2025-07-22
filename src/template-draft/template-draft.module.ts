@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ProductDataModelDraftController } from './presentation/product-data-model-draft.controller';
+import { TemplateDraftController } from './presentation/template-draft.controller';
 import { ProductDataModelService } from '../product-data-model/infrastructure/product-data-model.service';
-import { ProductDataModelDraftService } from './infrastructure/product-data-model-draft.service';
+import { TemplateDraftService } from './infrastructure/template-draft.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  ProductDataModelDraftDoc,
-  ProductDataModelDraftSchema,
-} from './infrastructure/product-data-model-draft.schema';
+  TemplateDraftDoc,
+  TemplateDraftSchema,
+} from './infrastructure/template-draft.schema';
 import {
   ProductDataModelDoc,
   ProductDataModelSchema,
@@ -18,8 +18,8 @@ import { MarketplaceModule } from '../marketplace/marketplace.module';
   imports: [
     MongooseModule.forFeature([
       {
-        name: ProductDataModelDraftDoc.name,
-        schema: ProductDataModelDraftSchema,
+        name: TemplateDraftDoc.name,
+        schema: TemplateDraftSchema,
       },
       {
         name: ProductDataModelDoc.name,
@@ -29,8 +29,8 @@ import { MarketplaceModule } from '../marketplace/marketplace.module';
     MarketplaceModule,
     PermissionsModule,
   ],
-  controllers: [ProductDataModelDraftController],
-  providers: [ProductDataModelService, ProductDataModelDraftService],
-  exports: [ProductDataModelDraftService],
+  controllers: [TemplateDraftController],
+  providers: [ProductDataModelService, TemplateDraftService],
+  exports: [TemplateDraftService],
 })
-export class ProductDataModelDraftModule {}
+export class TemplateDraftModule {}

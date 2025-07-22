@@ -13,7 +13,7 @@ export type Publication = {
   version: string;
 };
 
-export type ProductDataModelDraftCreateProps = {
+export type TemplateDraftCreateProps = {
   name: string;
   sectors: Sector[];
   description: string;
@@ -21,14 +21,14 @@ export type ProductDataModelDraftCreateProps = {
   organizationId: string;
 };
 
-export type ProductDataModelDraftDbProps = ProductDataModelDraftCreateProps & {
+export type TemplateDraftDbProps = TemplateDraftCreateProps & {
   id: string;
   version: string;
   publications: Publication[];
   sections: DataSectionDraftDbProps[];
 };
 
-export class ProductDataModelDraft {
+export class TemplateDraft {
   private constructor(
     public readonly id: string,
     private _name: string,
@@ -48,7 +48,7 @@ export class ProductDataModelDraft {
     userId: string;
     organizationId: string;
   }) {
-    return new ProductDataModelDraft(
+    return new TemplateDraft(
       randomUUID(),
       data.name,
       data.description,
@@ -85,8 +85,8 @@ export class ProductDataModelDraft {
     return this._ownedByOrganizationId;
   }
 
-  static loadFromDb(data: ProductDataModelDraftDbProps): ProductDataModelDraft {
-    return new ProductDataModelDraft(
+  static loadFromDb(data: TemplateDraftDbProps): TemplateDraft {
+    return new TemplateDraft(
       data.id,
       data.name,
       data.description,

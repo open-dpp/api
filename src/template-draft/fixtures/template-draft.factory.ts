@@ -2,18 +2,18 @@ import { randomUUID } from 'crypto';
 import { Factory } from 'fishery';
 import { Sector } from '@open-dpp/api-client';
 import {
-  ProductDataModelDraftCreateProps,
-  ProductDataModelDraftDbProps,
-} from '../domain/product-data-model-draft';
-import { CreateProductDataModelDraftDto } from '../presentation/dto/create-product-data-model-draft.dto';
+  TemplateDraftCreateProps,
+  TemplateDraftDbProps,
+} from '../domain/template-draft';
+import { CreateTemplateDraftDto } from '../presentation/dto/create-template-draft.dto';
 import {
   sectionDraftEnvironment,
   sectionDraftMaterial,
   sectionDraftMeasurement,
 } from './section-draft.factory';
 
-export const productDataModelDraftCreatePropsFactory =
-  Factory.define<ProductDataModelDraftCreateProps>(() => ({
+export const templateDraftCreatePropsFactory =
+  Factory.define<TemplateDraftCreateProps>(() => ({
     name: 'Laptop',
     description: 'My Laptop',
     sectors: [Sector.ELECTRONICS],
@@ -21,15 +21,15 @@ export const productDataModelDraftCreatePropsFactory =
     userId: randomUUID(),
   }));
 
-export const productDataModelDraftCreateDtoFactory =
-  Factory.define<CreateProductDataModelDraftDto>(() => ({
+export const templateDraftCreateDtoFactory =
+  Factory.define<CreateTemplateDraftDto>(() => ({
     name: 'Laptop',
     description: 'My Laptop',
     sectors: [Sector.ELECTRONICS],
   }));
 
-export const productDataModelDraftDbFactory =
-  Factory.define<ProductDataModelDraftDbProps>(() => ({
+export const templateDraftDbFactory = Factory.define<TemplateDraftDbProps>(
+  () => ({
     id: randomUUID(),
     description: 'My description',
     sectors: [Sector.ELECTRONICS],
@@ -43,4 +43,5 @@ export const productDataModelDraftDbFactory =
       sectionDraftMaterial.build({ id: 'm1', subSections: ['meas1'] }),
       sectionDraftMeasurement.build({ id: 'meas1', parentId: 'm1' }),
     ],
-  }));
+  }),
+);

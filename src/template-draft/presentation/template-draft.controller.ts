@@ -9,15 +9,15 @@ import {
   Post,
   Request,
 } from '@nestjs/common';
-import { ProductDataModelDraft } from '../domain/product-data-model-draft';
+import { TemplateDraft } from '../domain/template-draft';
 import { AuthRequest } from '../../auth/auth-request';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import {
-  CreateProductDataModelDraftDto,
-  CreateProductDataModelDraftDtoSchema,
-} from './dto/create-product-data-model-draft.dto';
+  CreateTemplateDraftDto,
+  CreateTemplateDraftDtoSchema,
+} from './dto/create-template-draft.dto';
 import {
   CreateSectionDraftDto,
   CreateSectionDraftDtoSchema,
@@ -27,9 +27,9 @@ import {
   CreateDataFieldDraftSchema,
 } from './dto/create-data-field-draft.dto';
 import {
-  UpdateProductDataModelDraftDto,
-  UpdateProductDataModelDraftDtoSchema,
-} from './dto/update-product-data-model-draft.dto';
+  UpdateTemplateDraftDto,
+  UpdateTemplateDraftDtoSchema,
+} from './dto/update-template-draft.dto';
 import {
   PublishDto,
   PublishDtoSchema,
@@ -40,7 +40,7 @@ import {
   UpdateDataFieldDraftDtoSchema,
 } from './dto/update-data-field-draft.dto';
 
-import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
+import { TemplateDraftService } from '../infrastructure/template-draft.service';
 import { omit } from 'lodash';
 import { PermissionsService } from '../../permissions/permissions.service';
 
@@ -49,15 +49,15 @@ import {
   UpdateSectionDraftDto,
   UpdateSectionDraftDtoSchema,
 } from './dto/update-section-draft.dto';
-import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
+import { templateDraftToDto } from './dto/template-draft.dto';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 
-@Controller('/organizations/:orgaId/product-data-model-drafts')
-export class ProductDataModelDraftController {
+@Controller('/organizations/:orgaId/template-drafts')
+export class TemplateDraftController {
   constructor(
     private readonly permissionsService: PermissionsService,
     private readonly productDataModelService: ProductDataModelService,
-    private readonly productDataModelDraftService: ProductDataModelDraftService,
+    private readonly productDataModelDraftService: TemplateDraftService,
     private readonly marketplaceService: MarketplaceService,
   ) {}
 
@@ -65,17 +65,17 @@ export class ProductDataModelDraftController {
   async create(
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
-    @Body() body: CreateProductDataModelDraftDto,
+    @Body() body: CreateTemplateDraftDto,
   ) {
     const createProductDataModelDraftDto =
-      CreateProductDataModelDraftDtoSchema.parse(body);
+      CreateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(
-        ProductDataModelDraft.create({
+        TemplateDraft.create({
           ...createProductDataModelDraftDto,
           organizationId,
           userId: req.authContext.user.id,
@@ -99,7 +99,7 @@ export class ProductDataModelDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    return productDataModelDraftToDto(foundProductDataModelDraft);
+    return templateDraftToDto(foundProductDataModelDraft);
   }
 
   @Patch(':draftId')
@@ -107,10 +107,10 @@ export class ProductDataModelDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() body: UpdateProductDataModelDraftDto,
+    @Body() body: UpdateTemplateDraftDto,
   ) {
     const modifyProductDataModelDraftDto =
-      UpdateProductDataModelDraftDtoSchema.parse(body);
+      UpdateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -123,7 +123,7 @@ export class ProductDataModelDraftController {
     foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
     await this.productDataModelDraftService.save(foundProductDataModelDraft);
 
-    return productDataModelDraftToDto(foundProductDataModelDraft);
+    return templateDraftToDto(foundProductDataModelDraft);
   }
 
   @Post(':draftId/sections')
@@ -157,7 +157,7 @@ export class ProductDataModelDraftController {
     } else {
       foundProductDataModelDraft.addSection(section);
     }
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(foundProductDataModelDraft),
     );
   }
@@ -200,7 +200,7 @@ export class ProductDataModelDraftController {
       publishedProductDataModel.version,
     );
 
-    return productDataModelDraftToDto(draft);
+    return templateDraftToDto(draft);
   }
 
   @Post(':draftId/sections/:sectionId/data-fields')
@@ -230,7 +230,7 @@ export class ProductDataModelDraftController {
 
     foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
 
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(foundProductDataModelDraft),
     );
   }
@@ -253,7 +253,7 @@ export class ProductDataModelDraftController {
 
     foundProductDataModelDraft.deleteSection(sectionId);
 
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(foundProductDataModelDraft),
     );
   }
@@ -282,7 +282,7 @@ export class ProductDataModelDraftController {
       omit(modifySectionDraftDto),
     );
 
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(foundProductDataModelDraft),
     );
   }
@@ -313,7 +313,7 @@ export class ProductDataModelDraftController {
       omit(modifyDataFieldDraftDto, 'view'),
     );
 
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(foundProductDataModelDraft),
     );
   }
@@ -338,7 +338,7 @@ export class ProductDataModelDraftController {
 
     foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
 
-    return productDataModelDraftToDto(
+    return templateDraftToDto(
       await this.productDataModelDraftService.save(foundProductDataModelDraft),
     );
   }
@@ -360,7 +360,7 @@ export class ProductDataModelDraftController {
 
   private hasPermissionsOrFail(
     organizationId: string,
-    productDataModelDraft: ProductDataModelDraft,
+    productDataModelDraft: TemplateDraft,
   ) {
     if (!productDataModelDraft.isOwnedBy(organizationId)) {
       throw new ForbiddenException();

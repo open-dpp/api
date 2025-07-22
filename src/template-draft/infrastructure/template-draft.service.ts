@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
-  ProductDataModelDraftDoc,
-  ProductDataModelDraftDocSchemaVersion,
-} from './product-data-model-draft.schema';
-import { ProductDataModelDraft } from '../domain/product-data-model-draft';
+  TemplateDraftDoc,
+  TemplateDraftDocSchemaVersion,
+} from './template-draft.schema';
+import { TemplateDraft } from '../domain/template-draft';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -18,16 +18,16 @@ import { Layout } from '../../data-modelling/domain/layout';
 import { DataSectionDraft } from '../domain/section-draft';
 
 @Injectable()
-export class ProductDataModelDraftService {
+export class TemplateDraftService {
   constructor(
-    @InjectModel(ProductDataModelDraftDoc.name)
-    private productDataModelDraftDoc: Model<ProductDataModelDraftDoc>,
+    @InjectModel(TemplateDraftDoc.name)
+    private productDataModelDraftDoc: Model<TemplateDraftDoc>,
   ) {}
 
   async save(
-    productDataModel: ProductDataModelDraft,
+    productDataModel: TemplateDraft,
     newVersion?: string,
-  ): Promise<ProductDataModelDraft> {
+  ): Promise<TemplateDraft> {
     const draftDoc = await this.productDataModelDraftDoc.findOneAndUpdate(
       { _id: productDataModel.id },
       {
@@ -35,7 +35,7 @@ export class ProductDataModelDraftService {
         description: productDataModel.description,
         sectors: productDataModel.sectors,
         version: newVersion || productDataModel.version,
-        _schemaVersion: ProductDataModelDraftDocSchemaVersion.v1_0_2,
+        _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_2,
         publications: productDataModel.publications,
         sections: productDataModel.sections.map((s) => ({
           _id: s.id,
@@ -117,10 +117,10 @@ export class ProductDataModelDraftService {
     });
   }
 
-  convertToDomain(productDataModelDraftDoc: ProductDataModelDraftDoc) {
+  convertToDomain(productDataModelDraftDoc: TemplateDraftDoc) {
     const plainDoc = productDataModelDraftDoc.toObject();
 
-    return ProductDataModelDraft.loadFromDb({
+    return TemplateDraft.loadFromDb({
       id: plainDoc._id,
       name: plainDoc.name,
       description: plainDoc.description,
@@ -136,7 +136,7 @@ export class ProductDataModelDraftService {
   async findOneOrFail(id: string) {
     const draftDoc = await this.productDataModelDraftDoc.findById(id).exec();
     if (!draftDoc) {
-      throw new NotFoundInDatabaseException(ProductDataModelDraft.name);
+      throw new NotFoundInDatabaseException(TemplateDraft.name);
     }
     return this.convertToDomain(draftDoc);
   }

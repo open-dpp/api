@@ -1,7 +1,4 @@
-import {
-  ProductDataModelDraft,
-  ProductDataModelDraftDbProps,
-} from './product-data-model-draft';
+import { TemplateDraft, TemplateDraftDbProps } from './template-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { DataSectionDraft } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
@@ -15,9 +12,9 @@ import {
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
-  productDataModelDraftCreatePropsFactory,
-  productDataModelDraftDbFactory,
-} from '../fixtures/product-data-model-draft.factory';
+  templateDraftCreatePropsFactory,
+  templateDraftDbFactory,
+} from '../fixtures/template-draft.factory';
 import { textFieldProps } from '../fixtures/data-field-draft.factory';
 import {
   sectionDraftDbPropsFactory,
@@ -29,19 +26,21 @@ import { Sector } from '@open-dpp/api-client';
 describe('ProductDataModelDraft', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
-  const laptopModel: ProductDataModelDraftDbProps =
-    productDataModelDraftDbFactory.build({ userId, organizationId });
+  const laptopModel: TemplateDraftDbProps = templateDraftDbFactory.build({
+    userId,
+    organizationId,
+  });
 
   it('is renamed', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build(),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build(),
     );
     productDataModelDraft.rename('Final Draft');
     expect(productDataModelDraft.name).toEqual('Final Draft');
   });
 
   it('is published', () => {
-    const productDataModelDraft = ProductDataModelDraft.loadFromDb(laptopModel);
+    const productDataModelDraft = TemplateDraft.loadFromDb(laptopModel);
     const otherUserId = randomUUID();
     const publishedProductDataModel =
       productDataModelDraft.publish(otherUserId);
@@ -222,8 +221,8 @@ describe('ProductDataModelDraft', () => {
   it('should be created', () => {
     const userId = randomUUID();
     const organizationId = randomUUID();
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     expect(productDataModelDraft.id).toBeDefined();
     expect(productDataModelDraft.version).toEqual('1.0.0');
@@ -242,8 +241,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should add sections', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -264,8 +263,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add repeater section with parent', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -287,8 +286,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should add subSection', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -312,8 +311,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add subSection if parent id not found', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -328,8 +327,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add subSection if its granularity level differs from parent', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const parentSection = DataSectionDraft.create({
       name: 'Technical specification',
@@ -355,8 +354,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should set subSection granularity level to parent one if undefined', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const parentSection = DataSectionDraft.create({
       name: 'Technical specification',
@@ -378,8 +377,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should modify section', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section = DataSectionDraft.create({
       name: 'Technical specification',
@@ -415,8 +414,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should delete a section', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = DataSectionDraft.create({
       name: 'Technical specification',
@@ -487,8 +486,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to delete a section if it could not be found', () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({ organizationId, userId }),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section = DataSectionDraft.create({
       name: 'Technical specification',
@@ -504,8 +503,8 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should add field', () => {
-    const productDataModelDraft = ProductDataModelDraft.loadFromDb({
-      ...productDataModelDraftDbFactory.build(),
+    const productDataModelDraft = TemplateDraft.loadFromDb({
+      ...templateDraftDbFactory.build(),
     });
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
@@ -549,8 +548,8 @@ describe('ProductDataModelDraft', () => {
   it('should delete data field', () => {
     const dataFieldProps1 = textFieldProps.build({ name: 'Processor' });
     const dataFieldProps2 = textFieldProps.build({ name: 'Memory' });
-    const productDataModelDraft = ProductDataModelDraft.loadFromDb(
-      productDataModelDraftDbFactory.build({
+    const productDataModelDraft = TemplateDraft.loadFromDb(
+      templateDraftDbFactory.build({
         sections: [
           sectionDraftDbPropsFactory.build({
             id: 'section-1',

@@ -6,10 +6,10 @@ import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.test
 import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
-import { ProductDataModelDraftModule } from '../product-data-model-draft.module';
+import { TemplateDraftModule } from '../template-draft.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { ProductDataModelDraft } from '../domain/product-data-model-draft';
+import { TemplateDraft } from '../domain/template-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
@@ -17,11 +17,11 @@ import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  ProductDataModelDraftDoc,
-  ProductDataModelDraftSchema,
-} from '../infrastructure/product-data-model-draft.schema';
+  TemplateDraftDoc,
+  TemplateDraftSchema,
+} from '../infrastructure/template-draft.schema';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { ProductDataModelDraftService } from '../infrastructure/product-data-model-draft.service';
+import { TemplateDraftService } from '../infrastructure/template-draft.service';
 import {
   ProductDataModelDoc,
   ProductDataModelSchema,
@@ -30,7 +30,7 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { productDataModelDraftToDto } from './dto/product-data-model-draft.dto';
+import { templateDraftToDto } from './dto/template-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
@@ -38,15 +38,15 @@ import { Sector } from '@open-dpp/api-client';
 import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import {
-  productDataModelDraftCreateDtoFactory,
-  productDataModelDraftCreatePropsFactory,
-} from '../fixtures/product-data-model-draft.factory';
+  templateDraftCreateDtoFactory,
+  templateDraftCreatePropsFactory,
+} from '../fixtures/template-draft.factory';
 import { VisibilityLevel } from './dto/publish.dto';
 
-describe('ProductsDataModelDraftController', () => {
+describe('TemplateDraftController', () => {
   let app: INestApplication;
   const authContext = new AuthContext();
-  let productDataModelDraftService: ProductDataModelDraftService;
+  let templateDraftService: TemplateDraftService;
   let productDataModelService: ProductDataModelService;
   authContext.user = new User(randomUUID(), 'test@test.test');
   const userId = authContext.user.id;
@@ -64,15 +64,15 @@ describe('ProductsDataModelDraftController', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: ProductDataModelDraftDoc.name,
-            schema: ProductDataModelDraftSchema,
+            name: TemplateDraftDoc.name,
+            schema: TemplateDraftSchema,
           },
           {
             name: ProductDataModelDoc.name,
             schema: ProductDataModelSchema,
           },
         ]),
-        ProductDataModelDraftModule,
+        TemplateDraftModule,
       ],
       providers: [
         {
@@ -96,9 +96,8 @@ describe('ProductsDataModelDraftController', () => {
     productDataModelService = module.get<ProductDataModelService>(
       ProductDataModelService,
     );
-    productDataModelDraftService = module.get<ProductDataModelDraftService>(
-      ProductDataModelDraftService,
-    );
+    templateDraftService =
+      module.get<TemplateDraftService>(TemplateDraftService);
     marketplaceServiceTesting =
       module.get<MarketplaceService>(MarketplaceService);
 
@@ -111,10 +110,10 @@ describe('ProductsDataModelDraftController', () => {
   const userNotMemberTxt = `fails if user is not member of organization`;
   const draftDoesNotBelongToOrga = `fails if draft does not belong to organization`;
 
-  it(`/CREATE product data model draft`, async () => {
-    const body = productDataModelDraftCreateDtoFactory.build();
+  it(`/CREATE template draft`, async () => {
+    const body = templateDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
-      .post(`/organizations/${organizationId}/product-data-model-drafts`)
+      .post(`/organizations/${organizationId}/template-drafts`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -126,17 +125,15 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
-    expect(response.body).toEqual(productDataModelDraftToDto(found));
+    const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(response.body).toEqual(templateDraftToDto(found));
   });
 
-  it(`/CREATE product data model draft ${userNotMemberTxt}`, async () => {
-    const body = productDataModelDraftCreateDtoFactory.build();
+  it(`/CREATE template draft ${userNotMemberTxt}`, async () => {
+    const body = templateDraftCreateDtoFactory.build();
 
     const response = await request(app.getHttpServer())
-      .post(`/organizations/${otherOrganizationId}/product-data-model-drafts`)
+      .post(`/organizations/${otherOrganizationId}/template-drafts`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -149,19 +146,19 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/PATCH product data model draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+  it(`/PATCH template draft`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
     );
 
-    await productDataModelDraftService.save(laptopDraft);
-    const body = productDataModelDraftCreateDtoFactory.build();
+    await templateDraftService.save(laptopDraft);
+    const body = templateDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
       )
       .set(
         'Authorization',
@@ -174,24 +171,24 @@ describe('ProductsDataModelDraftController', () => {
       .send(body);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
-      ...productDataModelDraftToDto(laptopDraft),
+      ...templateDraftToDto(laptopDraft),
       ...body,
     });
   });
 
-  it(`/PATCH product data model draft ${userNotMemberTxt}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+  it(`/PATCH template draft ${userNotMemberTxt}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
 
-    await productDataModelDraftService.save(laptopDraft);
-    const body = productDataModelDraftCreateDtoFactory.build();
+    await templateDraftService.save(laptopDraft);
+    const body = templateDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${laptopDraft.id}`,
+        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}`,
       )
       .set(
         'Authorization',
@@ -205,18 +202,18 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/PATCH product data model draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+  it(`/PATCH template draft ${draftDoesNotBelongToOrga}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
-    const body = productDataModelDraftCreateDtoFactory.build();
+    await templateDraftService.save(laptopDraft);
+    const body = templateDraftCreateDtoFactory.build();
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
       )
       .set(
         'Authorization',
@@ -230,9 +227,9 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/PUBLISH product data model draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+  it(`/PUBLISH template draft`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -253,7 +250,7 @@ describe('ProductsDataModelDraftController', () => {
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     await organizationService.save(
       Organization.fromPlain({
@@ -278,12 +275,12 @@ describe('ProductsDataModelDraftController', () => {
 
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set('Authorization', token)
       .send(body);
     expect(response.status).toEqual(201);
-    const foundDraft = await productDataModelDraftService.findOneOrFail(
+    const foundDraft = await templateDraftService.findOneOrFail(
       response.body.id,
     );
     expect(foundDraft.publications).toEqual([
@@ -300,9 +297,9 @@ describe('ProductsDataModelDraftController', () => {
     expect(spyUpload).toHaveBeenCalledWith(foundModel, token.substring(7));
   });
 
-  it(`/PUBLISH product data model draft ${userNotMemberTxt}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+  it(`/PUBLISH template draft ${userNotMemberTxt}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -313,7 +310,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${laptopDraft}/publish`,
+        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft}/publish`,
       )
       .set(
         'Authorization',
@@ -327,21 +324,21 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/PUBLISH product data model draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+  it(`/PUBLISH template draft ${draftDoesNotBelongToOrga}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const body = {
       visibility: VisibilityLevel.PUBLIC,
       sectors: [Sector.TEXTILE],
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set(
         'Authorization',
@@ -355,24 +352,24 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/GET product data model drafts of organization`, async () => {
+  it(`/GET template drafts of organization`, async () => {
     const myOrgaId = randomUUID();
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: myOrgaId,
         userId,
       }),
     );
-    const phoneDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const phoneDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: myOrgaId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
-    await productDataModelDraftService.save(phoneDraft);
+    await templateDraftService.save(laptopDraft);
+    await templateDraftService.save(phoneDraft);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${myOrgaId}/product-data-model-drafts`)
+      .get(`/organizations/${myOrgaId}/template-drafts`)
       .set(
         'Authorization',
         getKeycloakAuthToken(userId, [myOrgaId], keycloakAuthTestingGuard),
@@ -385,9 +382,9 @@ describe('ProductsDataModelDraftController', () => {
     ]);
   });
 
-  it(`/GET product data model drafts of organization ${userNotMemberTxt}`, async () => {
+  it(`/GET template drafts of organization ${userNotMemberTxt}`, async () => {
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${otherOrganizationId}/product-data-model-drafts`)
+      .get(`/organizations/${otherOrganizationId}/template-drafts`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -400,13 +397,13 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const body = {
       name: 'Technical Specs',
       type: SectionType.GROUP,
@@ -421,7 +418,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
         'Authorization',
@@ -451,10 +448,10 @@ describe('ProductsDataModelDraftController', () => {
         },
       },
     ]);
-    const foundDraft = await productDataModelDraftService.findOneOrFail(
+    const foundDraft = await templateDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(productDataModelDraftToDto(foundDraft));
+    expect(response.body).toEqual(templateDraftToDto(foundDraft));
   });
 
   const layoutWithoutCols = {
@@ -465,8 +462,8 @@ describe('ProductsDataModelDraftController', () => {
   };
 
   it(`/CREATE sub section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -480,7 +477,7 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addSection(section);
 
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const body = {
       name: 'Dimensions',
@@ -497,7 +494,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
         'Authorization',
@@ -530,12 +527,8 @@ describe('ProductsDataModelDraftController', () => {
       },
     ];
     expect(response.body.sections).toEqual(expectedSectionsBody);
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
-    expect(response.body.sections).toEqual(
-      productDataModelDraftToDto(found).sections,
-    );
+    const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(response.body.sections).toEqual(templateDraftToDto(found).sections);
   });
 
   it(`/CREATE section draft ${userNotMemberTxt}`, async () => {
@@ -554,7 +547,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections`,
       )
       .set(
         'Authorization',
@@ -569,13 +562,13 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE section draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const body = {
       name: 'Dimensions',
       type: SectionType.GROUP,
@@ -591,7 +584,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
         'Authorization',
@@ -606,8 +599,8 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/GET draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -621,11 +614,9 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addSection(section);
 
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
-      .get(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
-      )
+      .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -635,16 +626,14 @@ describe('ProductsDataModelDraftController', () => {
         ),
       );
     expect(response.status).toEqual(200);
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
-    expect(response.body).toEqual(productDataModelDraftToDto(found));
+    const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(response.body).toEqual(templateDraftToDto(found));
   });
 
   it(`/GET draft ${userNotMemberTxt}`, async () => {
     const response = await request(app.getHttpServer())
       .get(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}`,
       )
       .set(
         'Authorization',
@@ -658,18 +647,16 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/GET draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const response = await request(app.getHttpServer())
-      .get(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}`,
-      )
+      .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
       .set(
         'Authorization',
         getKeycloakAuthToken(
@@ -682,8 +669,8 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -697,7 +684,7 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addSection(section);
 
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const body = {
       name: 'Technical Specs',
@@ -711,7 +698,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set(
         'Authorization',
@@ -723,9 +710,7 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
+    const found = await templateDraftService.findOneOrFail(response.body.id);
     expect(sectionToDto(found.findSectionOrFail(section.id))).toEqual({
       ...sectionToDto(section),
       name: body.name,
@@ -746,7 +731,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/${randomUUID()}`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
       .set(
         'Authorization',
@@ -761,13 +746,13 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH section draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const body = {
       name: 'Technical Specs',
       layout: {
@@ -780,7 +765,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
       .set(
         'Authorization',
@@ -795,8 +780,8 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE section draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -809,10 +794,10 @@ describe('ProductsDataModelDraftController', () => {
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .delete(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set(
         'Authorization',
@@ -823,16 +808,14 @@ describe('ProductsDataModelDraftController', () => {
         ),
       );
     expect(response.status).toEqual(200);
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
+    const found = await templateDraftService.findOneOrFail(response.body.id);
     expect(found.sections).toEqual([]);
   });
 
   it(`/DELETE section draft ${userNotMemberTxt}`, async () => {
     const response = await request(app.getHttpServer())
       .delete(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/${randomUUID()}`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
       .set(
         'Authorization',
@@ -846,17 +829,17 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE section draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const response = await request(app.getHttpServer())
       .delete(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
       .set(
         'Authorization',
@@ -870,8 +853,8 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE data field draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -884,7 +867,7 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addSection(section);
 
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const body = {
       name: 'Processor',
@@ -897,7 +880,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
       )
       .set(
         'Authorization',
@@ -920,10 +903,10 @@ describe('ProductsDataModelDraftController', () => {
         granularityLevel: GranularityLevel.MODEL,
       },
     ]);
-    const foundDraft = await productDataModelDraftService.findOneOrFail(
+    const foundDraft = await templateDraftService.findOneOrFail(
       response.body.id,
     );
-    expect(response.body).toEqual(productDataModelDraftToDto(foundDraft));
+    expect(response.body).toEqual(templateDraftToDto(foundDraft));
   });
 
   it(`/CREATE data field draft ${userNotMemberTxt}`, async () => {
@@ -938,7 +921,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
       )
       .set(
         'Authorization',
@@ -953,13 +936,13 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/CREATE data field draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const body = {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
@@ -971,7 +954,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
       )
       .set(
         'Authorization',
@@ -986,8 +969,8 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH data field draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -1007,7 +990,7 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
 
@@ -1023,7 +1006,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
       .set(
         'Authorization',
@@ -1035,9 +1018,7 @@ describe('ProductsDataModelDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
+    const found = await templateDraftService.findOneOrFail(response.body.id);
     expect(found.sections[0].dataFields).toEqual([
       {
         ...dataField,
@@ -1061,7 +1042,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
       )
       .set(
         'Authorization',
@@ -1076,13 +1057,13 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/PATCH data field draft ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const body = {
       name: 'Memory',
       options: { max: 8 },
@@ -1095,7 +1076,7 @@ describe('ProductsDataModelDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
       )
       .set(
         'Authorization',
@@ -1110,8 +1091,8 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE data field draft`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId,
         userId,
       }),
@@ -1133,10 +1114,10 @@ describe('ProductsDataModelDraftController', () => {
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
     const response = await request(app.getHttpServer())
       .delete(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
       .set(
         'Authorization',
@@ -1149,16 +1130,14 @@ describe('ProductsDataModelDraftController', () => {
     expect(response.status).toEqual(200);
     expect(response.body.id).toBeDefined();
     expect(response.body.sections[0].dataFields).toEqual([]);
-    const found = await productDataModelDraftService.findOneOrFail(
-      response.body.id,
-    );
-    expect(response.body).toEqual(productDataModelDraftToDto(found));
+    const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(response.body).toEqual(templateDraftToDto(found));
   });
 
   it(`/DELETE data field ${userNotMemberTxt}`, async () => {
     const response = await request(app.getHttpServer())
       .delete(
-        `/organizations/${otherOrganizationId}/product-data-model-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
+        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
       .set(
         'Authorization',
@@ -1172,17 +1151,17 @@ describe('ProductsDataModelDraftController', () => {
   });
 
   it(`/DELETE data field ${draftDoesNotBelongToOrga}`, async () => {
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,
         userId,
       }),
     );
-    await productDataModelDraftService.save(laptopDraft);
+    await templateDraftService.save(laptopDraft);
 
     const response = await request(app.getHttpServer())
       .delete(
-        `/organizations/${organizationId}/product-data-model-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
       .set(
         'Authorization',

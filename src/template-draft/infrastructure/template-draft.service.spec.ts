@@ -1,17 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import {
-  ProductDataModelDraft,
-  ProductDataModelDraftDbProps,
-} from '../domain/product-data-model-draft';
+import { TemplateDraft, TemplateDraftDbProps } from '../domain/template-draft';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { ProductDataModelDraftService } from './product-data-model-draft.service';
-import {
-  ProductDataModelDraftDoc,
-  ProductDataModelDraftSchema,
-} from './product-data-model-draft.schema';
+import { TemplateDraftService } from './template-draft.service';
+import { TemplateDraftDoc, TemplateDraftSchema } from './template-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { DataSectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
@@ -20,13 +14,13 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
-  productDataModelDraftCreatePropsFactory,
-  productDataModelDraftDbFactory,
-} from '../fixtures/product-data-model-draft.factory';
+  templateDraftCreatePropsFactory,
+  templateDraftDbFactory,
+} from '../fixtures/template-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 
 describe('ProductDataModelDraftMongoService', () => {
-  let service: ProductDataModelDraftService;
+  let service: TemplateDraftService;
   let mongoConnection: Connection;
 
   beforeAll(async () => {
@@ -35,35 +29,32 @@ describe('ProductDataModelDraftMongoService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: ProductDataModelDraftDoc.name,
-            schema: ProductDataModelDraftSchema,
+            name: TemplateDraftDoc.name,
+            schema: TemplateDraftSchema,
           },
         ]),
       ],
-      providers: [ProductDataModelDraftService],
+      providers: [TemplateDraftService],
     }).compile();
-    service = module.get<ProductDataModelDraftService>(
-      ProductDataModelDraftService,
-    );
+    service = module.get<TemplateDraftService>(TemplateDraftService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  const laptopModelPlain: ProductDataModelDraftDbProps =
-    productDataModelDraftDbFactory.build({
-      publications: [
-        {
-          id: randomUUID(),
-          version: '1.0.0',
-        },
-        {
-          id: randomUUID(),
-          version: '2.0.0',
-        },
-      ],
-    });
+  const laptopModelPlain: TemplateDraftDbProps = templateDraftDbFactory.build({
+    publications: [
+      {
+        id: randomUUID(),
+        version: '1.0.0',
+      },
+      {
+        id: randomUUID(),
+        version: '2.0.0',
+      },
+    ],
+  });
 
   it('saves draft', async () => {
-    const productDataModelDraft = ProductDataModelDraft.loadFromDb({
+    const productDataModelDraft = TemplateDraft.loadFromDb({
       ...laptopModelPlain,
     });
     const { id } = await service.save(productDataModelDraft);
@@ -73,7 +64,7 @@ describe('ProductDataModelDraftMongoService', () => {
 
   it('fails if requested product data model draft could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
-      new NotFoundInDatabaseException(ProductDataModelDraft.name),
+      new NotFoundInDatabaseException(TemplateDraft.name),
     );
   });
 
@@ -93,22 +84,21 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('sets correct default granularity level', async () => {
-    const laptopModel: ProductDataModelDraftDbProps =
-      productDataModelDraftDbFactory.build({
-        sections: [
-          sectionDraftDbPropsFactory.build({
-            id: 's1',
-            type: SectionType.GROUP,
-            granularityLevel: undefined,
-          }),
-          sectionDraftDbPropsFactory.build({
-            id: 's2',
-            type: SectionType.REPEATABLE,
-          }),
-        ],
-      });
+    const laptopModel: TemplateDraftDbProps = templateDraftDbFactory.build({
+      sections: [
+        sectionDraftDbPropsFactory.build({
+          id: 's1',
+          type: SectionType.GROUP,
+          granularityLevel: undefined,
+        }),
+        sectionDraftDbPropsFactory.build({
+          id: 's2',
+          type: SectionType.REPEATABLE,
+        }),
+      ],
+    });
 
-    const productDataModelDraft = ProductDataModelDraft.loadFromDb({
+    const productDataModelDraft = TemplateDraft.loadFromDb({
       ...laptopModel,
       organizationId: randomUUID(),
       userId: randomUUID(),
@@ -122,8 +112,8 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should delete section on product data model draft', async () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build(),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build(),
     );
     const section1 = DataSectionDraft.create({
       name: 'Technical Specs',
@@ -162,8 +152,8 @@ describe('ProductDataModelDraftMongoService', () => {
   });
 
   it('should delete data fields of product data model draft', async () => {
-    const productDataModelDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build(),
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build(),
     );
     const section = DataSectionDraft.create({
       name: 'Tech specs',
@@ -197,14 +187,14 @@ describe('ProductDataModelDraftMongoService', () => {
   it('should return all product data model drafts by organization', async () => {
     const organizationId = randomUUID();
 
-    const laptopDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         name: 'laptop',
         organizationId,
       }),
     );
-    const phoneDraft = ProductDataModelDraft.create(
-      productDataModelDraftCreatePropsFactory.build({
+    const phoneDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
         name: 'phone',
         organizationId,
       }),
@@ -214,8 +204,8 @@ describe('ProductDataModelDraftMongoService', () => {
     const otherOrganizationId = randomUUID();
 
     await service.save(
-      ProductDataModelDraft.create(
-        productDataModelDraftCreatePropsFactory.build({
+      TemplateDraft.create(
+        templateDraftCreatePropsFactory.build({
           organizationId: otherOrganizationId,
         }),
       ),
