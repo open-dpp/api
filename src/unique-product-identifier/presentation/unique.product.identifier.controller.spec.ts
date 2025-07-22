@@ -326,7 +326,6 @@ describe('UniqueProductIdentifierController', () => {
 
   it(`/GET public view for unique product identifier`, async () => {
     const productDataModel = ProductDataModel.loadFromDb({ ...laptopModel });
-    const test = await productDataModelService.save(productDataModel);
 
     const model = Model.loadFromDb({
       id: randomUUID(),

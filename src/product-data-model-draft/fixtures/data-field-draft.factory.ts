@@ -7,7 +7,7 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { layoutPropsFactory } from '../../data-modelling/fixtures/layout.factory';
 
 export const dataFieldDraftDbPropsFactory =
-  Factory.define<DataFieldDraftDbProps>(({ params }) => ({
+  Factory.define<DataFieldDraftDbProps>(() => ({
     id: randomUUID(),
     type: DataFieldType.TEXT_FIELD,
     name: 'Title',

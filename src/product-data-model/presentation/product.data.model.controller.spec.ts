@@ -21,14 +21,10 @@ import {
   ProductDataModelSchema,
 } from '../infrastructure/product-data-model.schema';
 import { Connection } from 'mongoose';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { GroupSection } from '../domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../domain/data-field';
 import { productDataModelToDto } from './dto/product-data-model.dto';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { templateCreatePropsFactory } from '../fixtures/template.factory';
-import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
+import { laptopFactory } from '../fixtures/laptop.factory';
 
 describe('ProductsDataModelController', () => {
   let app: INestApplication;

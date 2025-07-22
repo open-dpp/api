@@ -9,7 +9,6 @@ import {
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { Sector } from '@open-dpp/api-client';
-import { omitBy } from 'lodash';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];

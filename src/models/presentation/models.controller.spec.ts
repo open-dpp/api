@@ -84,12 +84,9 @@ describe('ModelsController', () => {
     await app.init();
   });
 
-  const sectionId1 = randomUUID();
-  const sectionId2 = randomUUID();
   const sectionId3 = randomUUID();
   const dataFieldId1 = randomUUID();
-  const dataFieldId2 = randomUUID();
-  const dataFieldId3 = randomUUID();
+
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 

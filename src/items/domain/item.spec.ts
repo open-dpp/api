@@ -16,9 +16,6 @@ describe('Item', () => {
   const organizationId = randomUUID();
   const userId = randomUUID();
 
-  const sectionId1 = randomUUID();
-  const dataFieldId1 = randomUUID();
-
   const laptopModel: ProductDataModelDbProps = laptopFactory
     .addSections()
     .build({ organizationId, userId });

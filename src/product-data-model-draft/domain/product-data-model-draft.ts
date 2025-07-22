@@ -4,7 +4,7 @@ import { DataSectionDraft, DataSectionDraftDbProps } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
 import * as semver from 'semver';
-import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
+import { LayoutProps } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Sector } from '@open-dpp/api-client';
 

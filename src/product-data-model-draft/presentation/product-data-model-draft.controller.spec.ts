@@ -265,8 +265,6 @@ describe('ProductsDataModelDraftController', () => {
       }),
     );
 
-    const sectors = [Sector.BATTERY, Sector.TEXTILE];
-
     const body = {
       visibility: VisibilityLevel.PUBLIC,
     };
