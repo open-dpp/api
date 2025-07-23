@@ -33,7 +33,7 @@ describe('UniqueProductIdentifierController', () => {
   let modelsService: ModelsService;
   let itemsService: ItemsService;
 
-  let productDataModelService: TemplateService;
+  let templateService: TemplateService;
   const reflector: Reflector = new Reflector();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
     new Map(),
@@ -66,7 +66,7 @@ describe('UniqueProductIdentifierController', () => {
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
-    productDataModelService = moduleRef.get<TemplateService>(TemplateService);
+    templateService = moduleRef.get<TemplateService>(TemplateService);
 
     app = moduleRef.createNestApplication();
 
@@ -320,16 +320,16 @@ describe('UniqueProductIdentifierController', () => {
   };
 
   it(`/GET public view for unique product identifier`, async () => {
-    const productDataModel = Template.loadFromDb({ ...laptopModel });
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb({ ...laptopModel });
+    await templateService.save(template);
 
     const model = Model.loadFromDb({
       id: randomUUID(),
       name: 'Model Y',
       description: 'My desc',
-      productDataModelId: productDataModel.id,
-      ownedByOrganizationId: organizationId,
-      createdByUserId: authContext.user.id,
+      templateId: template.id,
+      organizationId: organizationId,
+      userId: authContext.user.id,
       uniqueProductIdentifiers: [],
       dataValues: [
         DataValue.create({
@@ -391,7 +391,7 @@ describe('UniqueProductIdentifierController', () => {
 
     const item = Item.loadFromDb({
       id: randomUUID(),
-      productDataModelId: productDataModel.id,
+      templateId: template.id,
       organizationId: organizationId,
       userId: authContext.user.id,
       modelId: model.id,
@@ -801,13 +801,13 @@ describe('UniqueProductIdentifierController', () => {
 
   it(`/GET reference of unique product identifier`, async () => {
     const productDataModel = Template.loadFromDb({ ...laptopModel });
-    await productDataModelService.save(productDataModel);
+    await templateService.save(productDataModel);
     const model = Model.create({
       name: 'model',
       userId: randomUUID(),
       organizationId: randomUUID(),
     });
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     const item = Item.create({ organizationId, userId: authContext.user.id });
     item.defineModel(model, productDataModel);
     const { uuid } = item.createUniqueProductIdentifier('externalId');
@@ -837,13 +837,13 @@ describe('UniqueProductIdentifierController', () => {
 
   it(`/GET model reference of unique product identifier`, async () => {
     const productDataModel = Template.loadFromDb({ ...laptopModel });
-    await productDataModelService.save(productDataModel);
+    await templateService.save(productDataModel);
     const model = Model.create({
       name: 'model',
       userId: randomUUID(),
       organizationId: organizationId,
     });
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
     const response = await request(app.getHttpServer())

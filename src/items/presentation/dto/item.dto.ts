@@ -24,7 +24,7 @@ export function itemToDto(item: Item): ItemDto {
     uniqueProductIdentifiers: item.uniqueProductIdentifiers.map((u) =>
       uniqueProductIdentifierToDto(u),
     ),
-    productDataModelId: item.productDataModelId,
+    productDataModelId: item.templateId,
     dataValues: item.dataValues.map((d) => dataValueToDto(d)),
   });
 }

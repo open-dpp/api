@@ -126,12 +126,12 @@ export class AasConnection {
 
   assignModel(model: Model) {
     this._modelId = model.id;
-    if (!model.productDataModelId) {
+    if (!model.templateId) {
       throw new ValueError(
         `Model ${model.id} does not have a product data model assigned`,
       );
     }
-    this._dataModelId = model.productDataModelId;
+    this._dataModelId = model.templateId;
   }
 
   replaceFieldAssignments(fieldAssignments: AasFieldAssignment[]) {

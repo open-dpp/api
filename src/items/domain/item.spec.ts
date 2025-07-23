@@ -25,14 +25,14 @@ describe('Item', () => {
       organizationId: organizationId,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
 
     item.defineModel(model, productDataModel);
     expect(item.id).toBeDefined();
     expect(item.modelId).toEqual(model.id);
     expect(item.ownedByOrganizationId).toEqual(organizationId);
     expect(item.createdByUserId).toEqual(userId);
-    expect(item.productDataModelId).toEqual(model.productDataModelId);
+    expect(item.templateId).toEqual(model.templateId);
     expect(item.uniqueProductIdentifiers).toEqual([]);
     expect(item.dataValues).toEqual([
       DataValue.create({

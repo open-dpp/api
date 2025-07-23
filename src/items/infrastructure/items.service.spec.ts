@@ -9,9 +9,9 @@ import { TraceabilityEventsModule } from '../../traceability-events/traceability
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { userObj1 } from '../../../test/users-and-orgs';
 import { AuthContext } from '../../auth/auth-request';
-import { Connection } from 'mongoose';
+import { Connection, Model as MongooseModel } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { ItemDoc, ItemSchema } from './item.schema';
+import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from './item.schema';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -41,6 +41,7 @@ describe('ItemsService', () => {
   let mongoConnection: Connection;
   const authContext = new AuthContext();
   authContext.user = userObj1;
+  let itemDoc: MongooseModel<ItemDoc>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -71,6 +72,7 @@ describe('ItemsService', () => {
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
+    itemDoc = mongoConnection.model(ItemDoc.name, ItemSchema);
   });
 
   it('fails if requested item could not be found', async () => {
@@ -215,7 +217,7 @@ describe('ItemsService', () => {
       ],
     });
 
-    item.assignProductDataModel(productDataModel);
+    item.assignTemplate(productDataModel);
     item.addDataValues([
       DataValue.create({
         value: undefined,
@@ -226,7 +228,7 @@ describe('ItemsService', () => {
     ]);
     const { id } = await itemService.save(item);
     const foundItem = await itemService.findOneOrFail(id);
-    expect(foundItem.productDataModelId).toEqual(productDataModel.id);
+    expect(foundItem.templateId).toEqual(productDataModel.id);
     expect(foundItem.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -347,6 +349,27 @@ describe('ItemsService', () => {
     expect(item.modelId).toBe(modelId);
     expect(item.uniqueProductIdentifiers).toEqual(upis);
     expect(item.uniqueProductIdentifiers).toHaveLength(2);
+  });
+
+  it(`should migrate from ${ItemDocSchemaVersion.v1_0_0} to ${ItemDocSchemaVersion.v1_0_1}`, async () => {
+    const id = randomUUID();
+    await itemDoc.findOneAndUpdate(
+      { _id: id },
+      {
+        _schemaVersion: ItemDocSchemaVersion.v1_0_0,
+        name: 'Migration Name',
+        description: 'desc',
+        productDataModelId: 'templateId',
+        dataValues: [],
+        createdByUserId: 'userId',
+        ownedByOrganizationId: 'orgId',
+      },
+      { upsert: true },
+    );
+    const found = await itemService.findOneOrFail(id); // or _id: new ObjectId(idAsString)
+    expect(found.templateId).toEqual('templateId');
+    const saved = await itemService.save(found);
+    expect(saved.templateId).toEqual('templateId');
   });
 
   afterAll(async () => {

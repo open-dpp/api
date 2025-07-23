@@ -8,6 +8,15 @@ import { Template } from '../../templates/domain/template';
 import { ValueError } from '../../exceptions/domain.errors';
 import { DataValue } from '../../product-passport/domain/data-value';
 
+export type ItemCreateProps = { organizationId: string; userId: string };
+export type ItemDbProps = ItemCreateProps & {
+  id: string;
+  uniqueProductIdentifiers: UniqueProductIdentifier[];
+  modelId: string | undefined;
+  templateId: string | undefined;
+  dataValues: DataValue[];
+};
+
 export class Item extends ProductPassport {
   granularityLevel = GranularityLevel.ITEM;
   private constructor(
@@ -16,7 +25,7 @@ export class Item extends ProductPassport {
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
     private _modelId: string | undefined,
-    productDataModelId: string | undefined,
+    templateId: string | undefined,
     dataValues: DataValue[],
   ) {
     super(
@@ -24,12 +33,12 @@ export class Item extends ProductPassport {
       ownedByOrganizationId,
       createdByUserId,
       uniqueProductIdentifiers,
-      productDataModelId,
+      templateId,
       dataValues,
     );
   }
 
-  public static create(data: { organizationId: string; userId: string }) {
+  public static create(data: ItemCreateProps) {
     return new Item(
       randomUUID(),
       data.organizationId,
@@ -41,22 +50,14 @@ export class Item extends ProductPassport {
     );
   }
 
-  public static loadFromDb(data: {
-    id: string;
-    organizationId: string;
-    userId: string;
-    uniqueProductIdentifiers: UniqueProductIdentifier[];
-    modelId: string | undefined;
-    productDataModelId: string | undefined;
-    dataValues: DataValue[];
-  }) {
+  public static loadFromDb(data: ItemDbProps) {
     return new Item(
       data.id,
       data.organizationId,
       data.userId,
       data.uniqueProductIdentifiers,
       data.modelId,
-      data.productDataModelId,
+      data.templateId,
       data.dataValues,
     );
   }
@@ -66,12 +67,12 @@ export class Item extends ProductPassport {
   }
 
   defineModel(model: Model, productDataModel?: Template) {
-    if (productDataModel && model.productDataModelId !== productDataModel.id) {
+    if (productDataModel && model.templateId !== productDataModel.id) {
       throw new ValueError('Model and product data model do not match');
     }
     this._modelId = model.id;
     if (productDataModel) {
-      this.assignProductDataModel(productDataModel);
+      this.assignTemplate(productDataModel);
     }
   }
 }

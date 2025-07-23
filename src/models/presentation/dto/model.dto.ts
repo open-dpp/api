@@ -31,6 +31,6 @@ export function modelToDto(model: Model): ModelDto {
     uniqueProductIdentifiers: model.uniqueProductIdentifiers.map((u) =>
       uniqueProductIdentifierToDto(u),
     ),
-    productDataModelId: model.productDataModelId,
+    productDataModelId: model.templateId,
   });
 }

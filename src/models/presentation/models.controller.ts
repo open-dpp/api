@@ -197,7 +197,7 @@ export class ModelsController {
       throw new ForbiddenException();
     }
 
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     return modelToDto(await this.modelsService.save(model));
   }
 
@@ -232,7 +232,7 @@ export class ModelsController {
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.templateService.findOneOrFail(
-      model.productDataModelId,
+      model.templateId,
     );
     const validationResult = productDataModel.validate(
       model.dataValues,
@@ -275,7 +275,7 @@ export class ModelsController {
     }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
     const productDataModel = await this.templateService.findOneOrFail(
-      model.productDataModelId,
+      model.templateId,
     );
     const validationResult = productDataModel.validate(
       model.dataValues,

@@ -6,6 +6,7 @@ import { ModelDoc, ModelDocSchemaVersion } from './model.schema';
 import { Model as MongooseModel } from 'mongoose';
 import { Model } from '../domain/model';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { migrateModelDoc } from './migrations';
 
 @Injectable()
 export class ModelsService {
@@ -19,13 +20,14 @@ export class ModelsService {
     modelDoc: ModelDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
+    migrateModelDoc(modelDoc);
     return Model.loadFromDb({
       id: modelDoc._id,
       name: modelDoc.name,
-      ownedByOrganizationId: modelDoc.ownedByOrganizationId,
-      createdByUserId: modelDoc.createdByUserId,
+      organizationId: modelDoc.ownedByOrganizationId,
+      userId: modelDoc.createdByUserId,
       uniqueProductIdentifiers,
-      productDataModelId: modelDoc.productDataModelId ?? undefined,
+      templateId: modelDoc.templateId,
       dataValues: modelDoc.dataValues
         ? modelDoc.dataValues.map((dv) => ({
             value: dv.value ?? undefined,
@@ -34,7 +36,6 @@ export class ModelsService {
             row: dv.row,
           }))
         : [],
-
       description: modelDoc.description ?? undefined,
     });
   }
@@ -43,18 +44,23 @@ export class ModelsService {
     const dataModelDoc = await this.modelDoc.findOneAndUpdate(
       { _id: model.id },
       {
-        _schemaVersion: ModelDocSchemaVersion.v1_0_0,
-        name: model.name,
-        description: model.description,
-        productDataModelId: model.productDataModelId,
-        dataValues: model.dataValues.map((d) => ({
-          value: d.value,
-          dataSectionId: d.dataSectionId,
-          dataFieldId: d.dataFieldId,
-          row: d.row,
-        })),
-        createdByUserId: model.createdByUserId,
-        ownedByOrganizationId: model.ownedByOrganizationId,
+        $set: {
+          _schemaVersion: ModelDocSchemaVersion.v1_0_1,
+          name: model.name,
+          description: model.description,
+          templateId: model.templateId,
+          dataValues: model.dataValues.map((d) => ({
+            value: d.value,
+            dataSectionId: d.dataSectionId,
+            dataFieldId: d.dataFieldId,
+            row: d.row,
+          })),
+          createdByUserId: model.createdByUserId,
+          ownedByOrganizationId: model.ownedByOrganizationId,
+        },
+        $unset: {
+          productDataModelId: 1,
+        },
       },
       {
         new: true, // Return the updated document

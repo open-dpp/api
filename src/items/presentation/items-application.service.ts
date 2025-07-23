@@ -32,10 +32,8 @@ export class ItemsApplicationService {
       userId: userId,
     });
 
-    const productDataModel = model.productDataModelId
-      ? await this.productDataModelService.findOneOrFail(
-          model.productDataModelId,
-        )
+    const productDataModel = model.templateId
+      ? await this.productDataModelService.findOneOrFail(model.templateId)
       : undefined;
     item.defineModel(model, productDataModel);
     item.createUniqueProductIdentifier(externalUUID);

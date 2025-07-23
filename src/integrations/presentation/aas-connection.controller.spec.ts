@@ -149,7 +149,7 @@ describe('AasConnectionController', () => {
       userId: authContext.user.id,
       name: 'Laptop',
     });
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     const aasMapping = AasConnection.create({
       name: 'Connection Name',
       organizationId,
@@ -202,7 +202,7 @@ describe('AasConnectionController', () => {
       foundUniqueProductIdentifier.referenceId,
     );
     expect(item.modelId).toEqual(model.id);
-    expect(item.productDataModelId).toEqual(productDataModel.id);
+    expect(item.templateId).toEqual(productDataModel.id);
   });
 
   it(`/CREATE connection`, async () => {
@@ -213,7 +213,7 @@ describe('AasConnectionController', () => {
       userId: authContext.user.id,
       name: 'Laptop',
     });
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
 
     const body = {
@@ -270,7 +270,7 @@ describe('AasConnectionController', () => {
       userId: authContext.user.id,
       name: 'Laptop',
     });
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
 
     const body = {

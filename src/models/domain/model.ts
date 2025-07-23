@@ -4,6 +4,21 @@ import { ProductPassport } from '../../product-passport/domain/product-passport'
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 
+type ModelCreateProps = {
+  name: string;
+  userId: string;
+  organizationId: string;
+  description?: string;
+};
+
+type ModelDbProps = ModelCreateProps & {
+  id: string;
+  uniqueProductIdentifiers: UniqueProductIdentifier[];
+  templateId: string;
+  dataValues: DataValue[];
+  description: string | undefined;
+};
+
 export class Model extends ProductPassport {
   granularityLevel = GranularityLevel.MODEL;
   name: string;
@@ -15,7 +30,7 @@ export class Model extends ProductPassport {
     ownedByOrganizationId: string,
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    productDataModelId: string | undefined,
+    templateId: string | undefined,
     dataValues: DataValue[],
     description: string | undefined,
   ) {
@@ -24,19 +39,14 @@ export class Model extends ProductPassport {
       ownedByOrganizationId,
       createdByUserId,
       uniqueProductIdentifiers,
-      productDataModelId,
+      templateId,
       dataValues,
     );
     this.name = name;
     this.description = description;
   }
 
-  static create(data: {
-    name: string;
-    userId: string;
-    organizationId: string;
-    description?: string;
-  }) {
+  static create(data: ModelCreateProps) {
     return new Model(
       randomUUID(),
       data.name,
@@ -49,23 +59,14 @@ export class Model extends ProductPassport {
     );
   }
 
-  static loadFromDb(data: {
-    id: string;
-    name: string;
-    ownedByOrganizationId: string;
-    createdByUserId: string;
-    uniqueProductIdentifiers: UniqueProductIdentifier[];
-    productDataModelId: string | undefined;
-    dataValues: DataValue[];
-    description: string | undefined;
-  }) {
+  static loadFromDb(data: ModelDbProps) {
     return new Model(
       data.id,
       data.name,
-      data.ownedByOrganizationId,
-      data.createdByUserId,
+      data.organizationId,
+      data.userId,
       data.uniqueProductIdentifiers,
-      data.productDataModelId,
+      data.templateId,
       data.dataValues,
       data.description,
     );

@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModelsService } from './models.service';
-import { Model } from '../domain/model';
 import { randomUUID } from 'crypto';
 import { Template } from '../../templates/domain/template';
 import { Organization } from '../../organizations/domain/organization';
@@ -10,6 +9,7 @@ import { TraceabilityEvent } from '../../traceability-events/domain/traceability
 import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import { Model as MongooseModel } from 'mongoose';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -23,18 +23,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { ModelDoc, ModelSchema } from './model.schema';
+import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from './model.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
+import { Model } from '../domain/model';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;
   const user = new User(randomUUID(), 'test@example.com');
   const organization = Organization.create({ name: 'Firma Y', user });
   let mongoConnection: Connection;
+  let modelDoc: MongooseModel<ModelDoc>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -78,6 +80,7 @@ describe('ModelsService', () => {
 
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
+    modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
   });
 
   it('should create a model', async () => {
@@ -92,7 +95,7 @@ describe('ModelsService', () => {
         .build({ organizationId: organization.id, userId: user.id }),
     );
 
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     model.addDataValues([
       DataValue.create({
         value: undefined,
@@ -105,7 +108,7 @@ describe('ModelsService', () => {
     const foundModel = await modelsService.findOneOrFail(id);
     expect(foundModel.name).toEqual(model.name);
     expect(foundModel.description).toEqual(model.description);
-    expect(foundModel.productDataModelId).toEqual(productDataModel.id);
+    expect(foundModel.templateId).toEqual(productDataModel.id);
     expect(foundModel.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -170,6 +173,29 @@ describe('ModelsService', () => {
     expect(foundModels.map((m) => m)).toEqual(
       [model1, model2, model3].map((m) => m),
     );
+  });
+
+  it(`should migrate from ${ModelDocSchemaVersion.v1_0_0} to ${ModelDocSchemaVersion.v1_0_1}`, async () => {
+    const id = randomUUID();
+    await modelDoc.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          _schemaVersion: ModelDocSchemaVersion.v1_0_0,
+          name: 'Migration Name',
+          description: 'desc',
+          productDataModelId: 'templateId',
+          dataValues: [],
+          createdByUserId: 'userId',
+          ownedByOrganizationId: 'orgId',
+        },
+      },
+      { upsert: true },
+    );
+    const found = await modelsService.findOneOrFail(id); // or _id: new ObjectId(idAsString)
+    expect(found.templateId).toEqual('templateId');
+    const saved = await modelsService.save(found);
+    expect(saved.templateId).toEqual('templateId');
   });
 
   afterAll(async () => {

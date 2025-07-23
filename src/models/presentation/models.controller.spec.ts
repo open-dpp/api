@@ -24,7 +24,6 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { modelToDto } from './dto/model.dto';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { uniqueProductIdentifierToDto } from '../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
 import {
   LaptopFactory,
   laptopFactory,
@@ -34,7 +33,7 @@ describe('ModelsController', () => {
   let app: INestApplication;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let modelsService: ModelsService;
-  let productDataModelService: TemplateService;
+  let templateService: TemplateService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@example.com');
@@ -71,7 +70,7 @@ describe('ModelsController', () => {
       UniqueProductIdentifierService,
     );
     modelsService = moduleRef.get(ModelsService);
-    productDataModelService = moduleRef.get<TemplateService>(TemplateService);
+    templateService = moduleRef.get<TemplateService>(TemplateService);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
@@ -88,7 +87,13 @@ describe('ModelsController', () => {
     .build({ organizationId: organization.id, userId: authContext.user.id });
 
   it(`/CREATE model`, async () => {
-    const body = { name: 'My name', description: 'My desc' };
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
+    const body = {
+      name: 'My name',
+      description: 'My desc',
+      templateId: template.id,
+    };
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models`)
       .set(
@@ -104,17 +109,14 @@ describe('ModelsController', () => {
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
     expect(found.isOwnedBy(organization.id)).toBeTruthy();
+    expect(found.templateId).toEqual(template.id);
     const foundUniqueProductIdentifiers =
       await uniqueProductIdentifierService.findAllByReferencedId(found.id);
-    expect(foundUniqueProductIdentifiers).toHaveLength(1);
     for (const uniqueProductIdentifier of foundUniqueProductIdentifiers) {
       expect(uniqueProductIdentifier.referenceId).toEqual(found.id);
     }
-    const sortFn = (a, b) => a.uuid.localeCompare(b.uuid);
-    expect([...response.body.uniqueProductIdentifiers].sort(sortFn)).toEqual(
-      [...foundUniqueProductIdentifiers]
-        .map((u) => uniqueProductIdentifierToDto(u))
-        .sort(sortFn),
+    expect(response.body.uniqueProductIdentifiers).toEqual(
+      foundUniqueProductIdentifiers,
     );
   });
 
@@ -268,7 +270,7 @@ describe('ModelsController', () => {
     await modelsService.save(model);
 
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    await templateService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
       .post(
@@ -331,7 +333,7 @@ describe('ModelsController', () => {
     await modelsService.save(model);
 
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    await templateService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
       .post(
@@ -361,7 +363,7 @@ describe('ModelsController', () => {
     await modelsService.save(model);
 
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    await templateService.save(productDataModel);
 
     const response = await request(app.getHttpServer())
       .post(
@@ -387,8 +389,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const dataValue2 = model.dataValues[1];
@@ -448,8 +450,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const updatedValues = [
@@ -485,8 +487,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const updatedValues = [
@@ -519,8 +521,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const updatedValues = [
       {
@@ -567,8 +569,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const existingDataValues = model.dataValues;
     const addedValues = [
@@ -616,8 +618,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const addedValues = [];
     const response = await request(app.getHttpServer())
@@ -645,8 +647,8 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    await templateService.save(productDataModel);
+    model.assignTemplate(productDataModel);
     await modelsService.save(model);
     const addedValues = [];
     const response = await request(app.getHttpServer())

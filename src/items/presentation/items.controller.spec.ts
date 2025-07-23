@@ -237,7 +237,7 @@ describe('ItemsController', () => {
       organizationId: organization.id,
     });
     const productDataModel = Template.loadFromDb(laptopModel);
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     await productDataModelService.save(productDataModel);
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -283,7 +283,7 @@ describe('ItemsController', () => {
           row: 0,
         },
       ],
-      productDataModelId: model.productDataModelId,
+      productDataModelId: model.templateId,
     });
   });
 
@@ -342,7 +342,7 @@ describe('ItemsController', () => {
     const item = Item.create({ organizationId, userId });
     const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     item.defineModel(model, productDataModel);
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
@@ -457,7 +457,7 @@ describe('ItemsController', () => {
     });
     const productDataModel = Template.loadFromDb(laptopModel);
     await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     item.defineModel(model, productDataModel);
     const dataValue1 = item.dataValues[0];
     const dataValue2 = item.dataValues[1];

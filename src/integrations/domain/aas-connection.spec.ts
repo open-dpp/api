@@ -84,7 +84,7 @@ describe('AasMapping', () => {
         userId,
       }),
     );
-    model.assignProductDataModel(productDataModel);
+    model.assignTemplate(productDataModel);
     aasConnection.assignModel(model);
     expect(aasConnection.dataModelId).toEqual(productDataModel.id);
     expect(aasConnection.modelId).toEqual(model.id);

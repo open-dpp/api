@@ -159,13 +159,13 @@ export class ItemsController {
       throw new ForbiddenException();
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    if (!item.productDataModelId) {
+    if (!item.templateId) {
       throw new BadRequestException(
         'Item does not have a product data model assigned',
       );
     }
     const productDataModel = await this.productDataModelService.findOneOrFail(
-      item.productDataModelId,
+      item.templateId,
     );
 
     const validationResult = productDataModel.validate(
@@ -210,13 +210,13 @@ export class ItemsController {
     }
 
     item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    if (!item.productDataModelId) {
+    if (!item.templateId) {
       throw new BadRequestException(
         'Item does not have a product data model assigned',
       );
     }
     const productDataModel = await this.productDataModelService.findOneOrFail(
-      item.productDataModelId,
+      item.templateId,
     );
 
     const validationResult = productDataModel.validate(

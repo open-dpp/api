@@ -11,7 +11,7 @@ export abstract class ProductPassport {
     private _ownedByOrganizationId: string,
     private _createdByUserId: string,
     public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    private _productDataModelId: string | undefined = undefined,
+    private _templateId: string | undefined = undefined,
     private _dataValues: DataValue[] = [],
   ) {}
 
@@ -27,8 +27,8 @@ export abstract class ProductPassport {
     return this.ownedByOrganizationId === organizationId;
   }
 
-  public get productDataModelId() {
-    return this._productDataModelId;
+  public get templateId() {
+    return this._templateId;
   }
 
   public get dataValues() {
@@ -80,14 +80,12 @@ export abstract class ProductPassport {
     });
   }
 
-  public assignProductDataModel(productDataModel: Template) {
-    if (this.productDataModelId !== undefined) {
-      throw Error('This model is already connected to a product data model');
+  public assignTemplate(template: Template) {
+    if (this.templateId !== undefined) {
+      throw Error('This model is already connected to a template');
     }
-    this._productDataModelId = productDataModel.id;
-    this._dataValues = productDataModel.createInitialDataValues(
-      this.granularityLevel,
-    );
+    this._templateId = template.id;
+    this._dataValues = template.createInitialDataValues(this.granularityLevel);
   }
 
   public createUniqueProductIdentifier(externalUUID?: string) {

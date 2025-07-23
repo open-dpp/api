@@ -31,7 +31,7 @@ export class UniqueProductIdentifierController {
     const model = await this.modelsService.findOneOrFail(modelId);
 
     const productDataModel = await this.productDataModelService.findOneOrFail(
-      model.productDataModelId,
+      model.templateId,
     );
     return View.create({
       model: model,

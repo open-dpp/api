@@ -40,7 +40,7 @@ describe('Model', () => {
     expect(model.name).toEqual('My name');
     expect(model.description).toEqual('my description');
     expect(model.uniqueProductIdentifiers).toEqual([]);
-    expect(model.productDataModelId).toBeUndefined();
+    expect(model.templateId).toBeUndefined();
     expect(model.dataValues).toEqual([]);
   });
 
@@ -70,10 +70,10 @@ describe('Model', () => {
     const model = Model.loadFromDb({
       id,
       name,
-      ownedByOrganizationId,
-      createdByUserId,
+      organizationId: ownedByOrganizationId,
+      userId: createdByUserId,
       uniqueProductIdentifiers: [],
-      productDataModelId,
+      templateId: productDataModelId,
       dataValues,
       description,
     });
@@ -82,7 +82,7 @@ describe('Model', () => {
     expect(model.description).toEqual(description);
     expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy();
     expect(model.dataValues).toEqual(dataValues);
-    expect(model.productDataModelId).toEqual(productDataModelId);
+    expect(model.templateId).toEqual(productDataModelId);
   });
 
   it('add data values', () => {
@@ -315,9 +315,9 @@ describe('Model', () => {
       } as unknown as Template;
 
       // Assign the product data model
-      model.assignProductDataModel(productDataModel);
+      model.assignTemplate(productDataModel);
 
-      expect(model.productDataModelId).toBe('pdm-1');
+      expect(model.templateId).toBe('pdm-1');
       expect(model.dataValues).toHaveLength(2);
       expect(productDataModel.createInitialDataValues).toHaveBeenCalled();
     });
@@ -331,16 +331,16 @@ describe('Model', () => {
         organizationId,
       });
 
-      const productDataModel1 = Template.create(
+      const template1 = Template.create(
         templateCreatePropsFactory.build({
           userId,
           organizationId,
         }),
       );
 
-      model.assignProductDataModel(productDataModel1);
+      model.assignTemplate(template1);
 
-      const productDataModel2 = Template.create(
+      const template2 = Template.create(
         templateCreatePropsFactory.build({
           name: 'Test Model 2',
           userId,
@@ -349,8 +349,8 @@ describe('Model', () => {
       );
 
       // Try to assign a second product data model
-      expect(() => model.assignProductDataModel(productDataModel2)).toThrow(
-        'This model is already connected to a product data model',
+      expect(() => model.assignTemplate(template2)).toThrow(
+        'This model is already connected to a template',
       );
     });
   });
