@@ -269,12 +269,12 @@ describe('ModelsController', () => {
     });
     await modelsService.save(model);
 
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
 
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${organization.id}/models/${model.id}/templates/${productDataModel.id}`,
+        `/organizations/${organization.id}/models/${model.id}/templates/${template.id}`,
       )
       .set(
         'Authorization',
@@ -318,7 +318,7 @@ describe('ModelsController', () => {
         }),
       ]),
     );
-    expect(responseGet.body.productDataModelId).toEqual(productDataModel.id);
+    expect(responseGet.body.templateId).toEqual(template.id);
   });
 
   it('assigns template to model fails if user is not member of organization', async () => {

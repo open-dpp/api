@@ -283,7 +283,7 @@ describe('ItemsController', () => {
           row: 0,
         },
       ],
-      productDataModelId: model.templateId,
+      templateId: model.templateId,
     });
   });
 

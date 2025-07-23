@@ -14,7 +14,7 @@ export const ModelDtoSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
-  productDataModelId: z.uuid().optional(),
+  templateId: z.uuid().optional(),
   dataValues: DataValueDtoSchema.array(),
   owner: z.uuid(),
 });
@@ -31,6 +31,6 @@ export function modelToDto(model: Model): ModelDto {
     uniqueProductIdentifiers: model.uniqueProductIdentifiers.map((u) =>
       uniqueProductIdentifierToDto(u),
     ),
-    productDataModelId: model.templateId,
+    templateId: model.templateId,
   });
 }

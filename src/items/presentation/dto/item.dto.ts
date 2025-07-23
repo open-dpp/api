@@ -12,7 +12,7 @@ import {
 export const ItemDtoSchema = z.object({
   id: z.uuid(),
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
-  productDataModelId: z.uuid().optional(),
+  templateId: z.uuid().optional(),
   dataValues: DataValueDtoSchema.array(),
 });
 
@@ -24,7 +24,7 @@ export function itemToDto(item: Item): ItemDto {
     uniqueProductIdentifiers: item.uniqueProductIdentifiers.map((u) =>
       uniqueProductIdentifierToDto(u),
     ),
-    productDataModelId: item.templateId,
+    templateId: item.templateId,
     dataValues: item.dataValues.map((d) => dataValueToDto(d)),
   });
 }
