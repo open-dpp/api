@@ -36,6 +36,7 @@ import {
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -60,10 +61,10 @@ export class ModelsController {
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
-    @Body() requestBody: CreateModelDto,
+    @Body(new ZodValidationPipe(CreateModelDtoSchema))
+    createModelDto: CreateModelDto,
     @Request() req: AuthRequest,
   ) {
-    const createModelDto = CreateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -72,8 +73,12 @@ export class ModelsController {
       ? await this.templateService.findOneOrFail(createModelDto.templateId)
       : await this.marketplaceService.download(
           organizationId,
+          req.authContext.user.id,
           createModelDto.marketplaceResourceId,
         );
+    if (!template.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,

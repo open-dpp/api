@@ -18,7 +18,10 @@ import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resource
 import { UsersService } from '../users/infrastructure/users.service';
 import { MarketplaceService } from './marketplace.service';
 import { DataSource } from 'typeorm';
-import { passportTemplateDtoFactory } from './fixtures/passport.template.factory';
+import {
+  passportTemplateDtoFactory,
+  templateDataFactory,
+} from './fixtures/passport.template.factory';
 import { MongooseTestingModule } from '../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { laptopFactory } from '../templates/fixtures/laptop.factory';
@@ -151,6 +154,7 @@ describe('MarketplaceService', () => {
     await templateService.save(template);
     const downloadedTemplate = await service.download(
       organizationId,
+      randomUUID(),
       'marketplaceResourceId',
     );
     expect(downloadedTemplate).toEqual(template);
@@ -158,12 +162,20 @@ describe('MarketplaceService', () => {
   });
 
   it('should download template from marketplace', async () => {
-    const passportTemplateDto = passportTemplateDtoFactory.build({});
+    const passportTemplateDto = passportTemplateDtoFactory.build({
+      templateData: templateDataFactory.build({
+        createdByUserId: randomUUID(),
+        ownedByOrganizationId: randomUUID(),
+      }),
+    });
     mockGetPassportTemplateInMarketplace.mockResolvedValue({
       data: passportTemplateDto,
     });
+    const organizationId = randomUUID();
+    const userId = randomUUID();
     const productDataModel = await service.download(
-      randomUUID(),
+      organizationId,
+      userId,
       passportTemplateDto.id,
     );
     expect(mockGetPassportTemplateInMarketplace).toBeCalledWith(
@@ -179,12 +191,8 @@ describe('MarketplaceService', () => {
     expect(productDataModel.version).toEqual(
       passportTemplateDto.templateData.version,
     );
-    expect(productDataModel.ownedByOrganizationId).toEqual(
-      passportTemplateDto.templateData.ownedByOrganizationId,
-    );
-    expect(productDataModel.createdByUserId).toEqual(
-      passportTemplateDto.templateData.createdByUserId,
-    );
+    expect(productDataModel.ownedByOrganizationId).toEqual(organizationId);
+    expect(productDataModel.createdByUserId).toEqual(userId);
   });
 
   afterEach(() => {

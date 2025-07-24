@@ -55,19 +55,25 @@ export class MarketplaceService {
 
   async download(
     organizationId: string,
-    templateId: string,
+    userId: string,
+    marketplaceResourceId: string,
   ): Promise<Template> {
     const existingTemplate =
       await this.templateService.findByMarketplaceResource(
         organizationId,
-        templateId,
+        marketplaceResourceId,
       );
     if (existingTemplate) {
       return existingTemplate;
     }
-    const response =
-      await this.marketplaceClient.passportTemplates.getById(templateId);
-    const templateDoc = new this.templateDoc(response.data.templateData);
+    const response = await this.marketplaceClient.passportTemplates.getById(
+      marketplaceResourceId,
+    );
+    const templateDoc = new this.templateDoc({
+      ...response.data.templateData,
+      ownedByOrganizationId: organizationId,
+      createdByUserId: userId,
+    });
     await templateDoc.validate();
 
     const template = deserializeProductDataModel(templateDoc.toObject());

@@ -151,12 +151,14 @@ describe('ModelsController', () => {
     expect(response.body.id).toEqual(found.id);
     expect(found.isOwnedBy(organization.id)).toBeTruthy();
     expect(found.templateId).toEqual(template.id);
-    const foundTemplate = await templateService.findOneOrFail(template.id);
-    expect(foundTemplate.marketplaceResourceId).toEqual(id);
   });
 
   it(`/CREATE model fails if user is not member of organization`, async () => {
-    const body = { name: 'My name', description: 'My desc' };
+    const body = {
+      name: 'My name',
+      description: 'My desc',
+      templateId: randomUUID(),
+    };
     const otherOrganizationId = randomUUID();
     const response = await request(app.getHttpServer())
       .post(`/organizations/${otherOrganizationId}/models`)
@@ -170,6 +172,86 @@ describe('ModelsController', () => {
       )
       .send(body);
     expect(response.status).toEqual(403);
+  });
+
+  it(`/CREATE model fails if template does not belong to organization`, async () => {
+    const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb({
+      ...laptopModel,
+      organizationId: otherOrganizationId,
+    });
+    await templateService.save(template);
+    const body = {
+      name: 'My name',
+      description: 'My desc',
+      templateId: template.id,
+    };
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organization.id}/models`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/CREATE model fails if template and marketplace resource id are provided`, async () => {
+    const body = {
+      name: 'My name',
+      description: 'My desc',
+      templateId: randomUUID(),
+      marketplaceResourceId: randomUUID(),
+    };
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organization.id}/models`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(400);
+    expect(response.body.errors).toEqual([
+      {
+        code: 'custom',
+        message: 'marketplaceResourceId and templateId are mutually exclusive',
+        path: [],
+      },
+    ]);
+  });
+
+  it(`/CREATE model fails if neither template nor marketplace resource id are provided`, async () => {
+    const body = {
+      name: 'My name',
+      description: 'My desc',
+    };
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organization.id}/models`)
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          authContext.user.id,
+          [organization.id],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(400);
+    expect(response.body.errors).toEqual([
+      {
+        code: 'custom',
+        message: 'marketplaceResourceId or templateId must be provided',
+        path: [],
+      },
+    ]);
   });
 
   it(`/GET models of organization`, async () => {
