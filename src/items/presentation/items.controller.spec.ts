@@ -38,7 +38,7 @@ describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
-  let productDataModelService: TemplateService;
+  let templateService: TemplateService;
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
@@ -49,52 +49,6 @@ describe('ItemsController', () => {
     name: 'orga',
     user: authContext.user,
   });
-
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
-        MongooseTestingModule,
-        ItemsModule,
-        PermissionsModule,
-      ],
-      providers: [
-        OrganizationsService,
-        UsersService,
-        {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
-        },
-        {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [{ id: authContext.user.id, email: authContext.user.email }],
-          }),
-        },
-      ],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: authContext.user.id, email: authContext.user.email }],
-        }),
-      )
-      .compile();
-
-    modelsService = moduleRef.get(ModelsService);
-    itemsService = moduleRef.get(ItemsService);
-    productDataModelService = moduleRef.get(TemplateService);
-    uniqueProductIdentifierService = moduleRef.get(
-      UniqueProductIdentifierService,
-    );
-    organizationsService = moduleRef.get(OrganizationsService);
-
-    app = moduleRef.createNestApplication();
-
-    await app.init();
-  });
-
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
   const sectionId3 = randomUUID();
@@ -103,7 +57,6 @@ describe('ItemsController', () => {
   const dataFieldId3 = randomUUID();
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
-
   const laptopModel: TemplateDbProps = {
     id: randomUUID(),
     marketplaceResourceId: null,
@@ -229,16 +182,81 @@ describe('ItemsController', () => {
       },
     ],
   };
+  const template = Template.loadFromDb(laptopModel);
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [
+        TypeOrmTestingModule,
+        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
+        MongooseTestingModule,
+        ItemsModule,
+        PermissionsModule,
+      ],
+      providers: [
+        OrganizationsService,
+        UsersService,
+        {
+          provide: APP_GUARD,
+          useValue: keycloakAuthTestingGuard,
+        },
+        {
+          provide: KeycloakResourcesService,
+          useValue: KeycloakResourcesServiceTesting.fromPlain({
+            users: [{ id: authContext.user.id, email: authContext.user.email }],
+          }),
+        },
+      ],
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [{ id: authContext.user.id, email: authContext.user.email }],
+        }),
+      )
+      .compile();
+
+    modelsService = moduleRef.get(ModelsService);
+    itemsService = moduleRef.get(ItemsService);
+    templateService = moduleRef.get(TemplateService);
+    uniqueProductIdentifierService = moduleRef.get(
+      UniqueProductIdentifierService,
+    );
+    organizationsService = moduleRef.get(OrganizationsService);
+
+    app = moduleRef.createNestApplication();
+    await templateService.save(template);
+    await app.init();
+  });
+
+  const expectedDataValues = [
+    {
+      dataSectionId: sectionId1,
+      dataFieldId: dataFieldId1,
+      value: undefined,
+      row: 0,
+    },
+    {
+      dataSectionId: sectionId1,
+      dataFieldId: dataFieldId2,
+      value: undefined,
+      row: 0,
+    },
+    {
+      dataSectionId: sectionId2,
+      dataFieldId: dataFieldId3,
+      value: undefined,
+      row: 0,
+    },
+  ];
 
   it(`/CREATE item`, async () => {
     const model = Model.create({
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    model.assignTemplate(productDataModel);
-    await productDataModelService.save(productDataModel);
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -263,26 +281,7 @@ describe('ItemsController', () => {
           referenceId: found.id,
         },
       ],
-      dataValues: [
-        {
-          dataSectionId: sectionId1,
-          dataFieldId: dataFieldId1,
-          value: undefined,
-          row: 0,
-        },
-        {
-          dataSectionId: sectionId1,
-          dataFieldId: dataFieldId2,
-          value: undefined,
-          row: 0,
-        },
-        {
-          dataSectionId: sectionId2,
-          dataFieldId: dataFieldId3,
-          value: undefined,
-          row: 0,
-        },
-      ],
+      dataValues: expectedDataValues,
       templateId: model.templateId,
     });
   });
@@ -294,6 +293,7 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -316,6 +316,7 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -338,12 +339,11 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
-    const item = Item.create({ organizationId, userId });
+    const item = Item.create({ organizationId, userId, model, template });
     const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignTemplate(productDataModel);
-    item.defineModel(model, productDataModel);
+    await templateService.save(productDataModel);
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
     const addedValues = [
@@ -391,12 +391,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const addedValues = [];
     const response = await request(app.getHttpServer())
@@ -421,12 +423,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const addedValues = [];
     const response = await request(app.getHttpServer())
@@ -450,15 +454,15 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignTemplate(productDataModel);
-    item.defineModel(model, productDataModel);
+
     const dataValue1 = item.dataValues[0];
     const dataValue2 = item.dataValues[1];
     const dataValue3 = item.dataValues[2];
@@ -511,9 +515,17 @@ describe('ItemsController', () => {
 
   it('update data values fails if user is not member of organization', async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+      template,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
     await itemsService.save(item);
     const updatedValues = [
@@ -547,12 +559,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const updatedValues = [
       {
@@ -584,13 +598,15 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
+      model,
+      template,
     });
-    item.defineModel(model);
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
@@ -614,7 +630,8 @@ describe('ItemsController', () => {
           uuid: uniqueProductId.uuid,
         },
       ],
-      dataValues: [],
+      dataValues: expectedDataValues,
+      templateId: model.templateId,
     });
   });
   //
@@ -624,13 +641,15 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
 
-    item.defineModel(model);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
@@ -653,12 +672,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
 
     await itemsService.save(item);
     const otherOrganization = Organization.create({
@@ -687,21 +708,24 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
-    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
@@ -723,7 +747,8 @@ describe('ItemsController', () => {
             uuid: uniqueProductId1.uuid,
           },
         ],
-        dataValues: [],
+        dataValues: expectedDataValues,
+        templateId: model.templateId,
       },
       {
         id: item2.id,
@@ -733,7 +758,8 @@ describe('ItemsController', () => {
             uuid: uniqueProductId2.uuid,
           },
         ],
-        dataValues: [],
+        dataValues: expectedDataValues,
+        templateId: model.templateId,
       },
     ]);
   });
@@ -744,19 +770,22 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      model,
+      template,
     });
-    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
@@ -777,19 +806,22 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)

@@ -8,6 +8,7 @@ import {
   LaptopFactory,
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 
 describe('Item', () => {
   const organizationId = randomUUID();
@@ -18,16 +19,16 @@ describe('Item', () => {
     .build({ organizationId, userId });
 
   it('should create an item and defines model', () => {
-    const item = Item.create({ organizationId, userId });
+    const template = Template.loadFromDb(laptopModel);
+
     const model = Model.create({
       name: 'name',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    model.assignTemplate(productDataModel);
+    const item = Item.create({ organizationId, userId, template, model });
 
-    item.defineModel(model, productDataModel);
     expect(item.id).toBeDefined();
     expect(item.modelId).toEqual(model.id);
     expect(item.ownedByOrganizationId).toEqual(organizationId);
@@ -57,7 +58,15 @@ describe('Item', () => {
   });
 
   it('should create unique product identifier on item creation', () => {
-    const item = Item.create({ organizationId, userId });
+    const template = Template.loadFromDb(laptopModel);
+
+    const model = Model.create({
+      name: 'name',
+      userId: userId,
+      organizationId: organizationId,
+      template,
+    });
+    const item = Item.create({ organizationId, userId, model, template });
     const uniqueProductIdentifier1 = item.createUniqueProductIdentifier();
     const uniqueProductIdentifier2 = item.createUniqueProductIdentifier();
 
@@ -71,7 +80,15 @@ describe('Item', () => {
   });
 
   it('add data values', () => {
-    const item = Item.create({ organizationId, userId });
+    const template = Template.create(templateCreatePropsFactory.build());
+
+    const model = Model.create({
+      name: 'name',
+      userId: userId,
+      organizationId: organizationId,
+      template,
+    });
+    const item = Item.create({ organizationId, userId, template, model });
     item.addDataValues([
       DataValue.create({
         dataFieldId: 'fieldId2',

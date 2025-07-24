@@ -33,6 +33,7 @@ import { Layout } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -42,9 +43,11 @@ describe('ItemsService', () => {
   const authContext = new AuthContext();
   authContext.user = userObj1;
   let itemDoc: MongooseModel<ItemDoc>;
+  const template = Template.create(templateCreatePropsFactory.build());
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -86,25 +89,23 @@ describe('ItemsService', () => {
       name: 'name',
       userId: userId,
       organizationId,
+      template,
     });
 
     const item = Item.create({
       userId: userId,
       organizationId: organizationId,
+      template,
+      model,
     });
-    item.defineModel(model);
     const savedItem = await itemService.save(item);
     expect(savedItem.modelId).toEqual(model.id);
     const foundItem = await itemService.findOneOrFail(item.id);
     expect(foundItem.modelId).toEqual(model.id);
   });
 
-  it('should create an item with product data model', async () => {
-    const item = Item.create({
-      userId: userId,
-      organizationId: organizationId,
-    });
-    const productDataModel = Template.loadFromDb({
+  it('should create an item with template', async () => {
+    const template1 = Template.loadFromDb({
       marketplaceResourceId: null,
       id: randomUUID(),
       name: 'Laptop',
@@ -216,43 +217,54 @@ describe('ItemsService', () => {
         },
       ],
     });
+    const model = Model.create({
+      name: 'name',
+      userId: userId,
+      organizationId: organizationId,
+      template: template1,
+    });
+    const item = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+      template: template1,
+      model,
+    });
 
-    item.assignTemplate(productDataModel);
     item.addDataValues([
       DataValue.create({
         value: undefined,
-        dataSectionId: productDataModel.sections[2].id,
-        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        dataSectionId: template1.sections[2].id,
+        dataFieldId: template1.sections[2].dataFields[0].id,
         row: 0,
       }),
     ]);
     const { id } = await itemService.save(item);
     const foundItem = await itemService.findOneOrFail(id);
-    expect(foundItem.templateId).toEqual(productDataModel.id);
+    expect(foundItem.templateId).toEqual(template1.id);
     expect(foundItem.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[0].id,
-          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          dataSectionId: template1.sections[0].id,
+          dataFieldId: template1.sections[0].dataFields[0].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[0].id,
-          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          dataSectionId: template1.sections[0].id,
+          dataFieldId: template1.sections[0].dataFields[1].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[1].id,
-          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          dataSectionId: template1.sections[1].id,
+          dataFieldId: template1.sections[1].dataFields[0].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[2].id,
-          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          dataSectionId: template1.sections[2].id,
+          dataFieldId: template1.sections[2].dataFields[0].id,
           row: 0,
         }),
       ]),
@@ -264,30 +276,36 @@ describe('ItemsService', () => {
       name: 'name',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
     const model2 = Model.create({
       name: 'name',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
     const item1 = Item.create({
       userId: userId,
       organizationId: organizationId,
+      template,
+      model: model1,
     });
-    item1.defineModel(model1);
     const item2 = Item.create({
       userId: userId,
       organizationId: organizationId,
+      template,
+      model: model1,
     });
-    item2.defineModel(model1);
+
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = Item.create({
       userId: userId,
       organizationId: organizationId,
+      model: model2,
+      template,
     });
-    item3.defineModel(model2);
-
+    await itemService.save(item3);
     const foundItems = await itemService.findAllByModel(model1.id);
     expect(foundItems).toEqual([item1, item2]);
   });
@@ -297,13 +315,15 @@ describe('ItemsService', () => {
       name: 'Model with UPIs',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
     // Create item with unique product identifiers
     const item = Item.create({
       userId: userId,
       organizationId: organizationId,
+      model,
+      template,
     });
-    item.defineModel(model);
 
     // Add unique product identifiers to the item
     const upi1 = item.createUniqueProductIdentifier();
@@ -374,5 +394,6 @@ describe('ItemsService', () => {
 
   afterAll(async () => {
     await mongoConnection.close();
+    await module.close();
   });
 });

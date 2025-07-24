@@ -3,15 +3,17 @@ import { randomUUID } from 'crypto';
 import { ProductPassport } from '../../product-passport/domain/product-passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { Template } from '../../templates/domain/template';
 
 type ModelCreateProps = {
   name: string;
   userId: string;
   organizationId: string;
   description?: string;
+  template: Template;
 };
 
-type ModelDbProps = ModelCreateProps & {
+type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
   id: string;
   uniqueProductIdentifiers: UniqueProductIdentifier[];
   templateId: string;
@@ -30,7 +32,7 @@ export class Model extends ProductPassport {
     ownedByOrganizationId: string,
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    templateId: string | undefined,
+    templateId: string,
     dataValues: DataValue[],
     description: string | undefined,
   ) {
@@ -47,16 +49,18 @@ export class Model extends ProductPassport {
   }
 
   static create(data: ModelCreateProps) {
-    return new Model(
+    const model = new Model(
       randomUUID(),
       data.name,
       data.organizationId,
       data.userId,
       [],
-      undefined,
+      data.template.id,
       [],
       data.description,
     );
+    model.initializeDataValueFromTemplate(data.template);
+    return model;
   }
 
   static loadFromDb(data: ModelDbProps) {

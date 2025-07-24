@@ -800,16 +800,20 @@ describe('UniqueProductIdentifierController', () => {
   });
 
   it(`/GET reference of unique product identifier`, async () => {
-    const productDataModel = Template.loadFromDb({ ...laptopModel });
-    await templateService.save(productDataModel);
+    const template = Template.loadFromDb({ ...laptopModel });
+    await templateService.save(template);
     const model = Model.create({
       name: 'model',
       userId: randomUUID(),
       organizationId: randomUUID(),
+      template,
     });
-    model.assignTemplate(productDataModel);
-    const item = Item.create({ organizationId, userId: authContext.user.id });
-    item.defineModel(model, productDataModel);
+    const item = Item.create({
+      organizationId,
+      userId: authContext.user.id,
+      template,
+      model,
+    });
     const { uuid } = item.createUniqueProductIdentifier('externalId');
     await itemsService.save(item);
 
@@ -836,14 +840,14 @@ describe('UniqueProductIdentifierController', () => {
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
-    const productDataModel = Template.loadFromDb({ ...laptopModel });
-    await templateService.save(productDataModel);
+    const template = Template.loadFromDb({ ...laptopModel });
+    await templateService.save(template);
     const model = Model.create({
       name: 'model',
       userId: randomUUID(),
       organizationId: organizationId,
+      template,
     });
-    model.assignTemplate(productDataModel);
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
     const response = await request(app.getHttpServer())

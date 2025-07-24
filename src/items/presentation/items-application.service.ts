@@ -12,7 +12,7 @@ export class ItemsApplicationService {
   constructor(
     private readonly itemsService: ItemsService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: TemplateService,
+    private readonly templateService: TemplateService,
     private readonly traceabilityEventsService: TraceabilityEventsService,
   ) {}
 
@@ -26,16 +26,17 @@ export class ItemsApplicationService {
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
+    const template = model.templateId
+      ? await this.templateService.findOneOrFail(model.templateId)
+      : undefined;
 
     const item = Item.create({
       organizationId,
       userId: userId,
+      template,
+      model,
     });
 
-    const productDataModel = model.templateId
-      ? await this.productDataModelService.findOneOrFail(model.templateId)
-      : undefined;
-    item.defineModel(model, productDataModel);
     item.createUniqueProductIdentifier(externalUUID);
 
     await this.traceabilityEventsService.create(

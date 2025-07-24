@@ -84,23 +84,23 @@ describe('ModelsService', () => {
   });
 
   it('should create a model', async () => {
-    const model = Model.create({
-      name: 'My product',
-      userId: user.id,
-      organizationId: organization.id,
-    });
-    const productDataModel = Template.loadFromDb(
+    const template = Template.loadFromDb(
       laptopFactory
         .addSections()
         .build({ organizationId: organization.id, userId: user.id }),
     );
+    const model = Model.create({
+      name: 'My product',
+      userId: user.id,
+      organizationId: organization.id,
+      template,
+    });
 
-    model.assignTemplate(productDataModel);
     model.addDataValues([
       DataValue.create({
         value: undefined,
-        dataSectionId: productDataModel.sections[2].id,
-        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        dataSectionId: template.sections[2].id,
+        dataFieldId: template.sections[2].dataFields[0].id,
         row: 0,
       }),
     ]);
@@ -108,31 +108,31 @@ describe('ModelsService', () => {
     const foundModel = await modelsService.findOneOrFail(id);
     expect(foundModel.name).toEqual(model.name);
     expect(foundModel.description).toEqual(model.description);
-    expect(foundModel.templateId).toEqual(productDataModel.id);
+    expect(foundModel.templateId).toEqual(template.id);
     expect(foundModel.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[0].id,
-          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          dataSectionId: template.sections[0].id,
+          dataFieldId: template.sections[0].dataFields[0].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[0].id,
-          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          dataSectionId: template.sections[0].id,
+          dataFieldId: template.sections[0].dataFields[1].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[1].id,
-          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          dataSectionId: template.sections[1].id,
+          dataFieldId: template.sections[1].dataFields[0].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[2].id,
-          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          dataSectionId: template.sections[2].id,
+          dataFieldId: template.sections[2].dataFields[0].id,
           row: 0,
         }),
       ]),
@@ -149,20 +149,29 @@ describe('ModelsService', () => {
 
   it('should find all models of organization', async () => {
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(
+      laptopFactory
+        .addSections()
+        .build({ organizationId: organization.id, userId: user.id }),
+    );
+
     const model1 = Model.create({
       name: 'Product A',
       userId: user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     const model2 = Model.create({
       name: 'Product B',
       userId: user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     const model3 = Model.create({
       name: 'Product C',
       userId: user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model1);
     await modelsService.save(model2);

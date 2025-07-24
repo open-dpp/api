@@ -11,7 +11,7 @@ export abstract class ProductPassport {
     private _ownedByOrganizationId: string,
     private _createdByUserId: string,
     public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    private _templateId: string | undefined = undefined,
+    private _templateId: string,
     private _dataValues: DataValue[] = [],
   ) {}
 
@@ -80,11 +80,7 @@ export abstract class ProductPassport {
     });
   }
 
-  public assignTemplate(template: Template) {
-    if (this.templateId !== undefined) {
-      throw Error('This model is already connected to a template');
-    }
-    this._templateId = template.id;
+  protected initializeDataValueFromTemplate(template: Template) {
     this._dataValues = template.createInitialDataValues(this.granularityLevel);
   }
 

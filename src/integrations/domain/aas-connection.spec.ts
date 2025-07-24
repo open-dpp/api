@@ -73,20 +73,21 @@ describe('AasMapping', () => {
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
-    const model = Model.create({
-      organizationId: 'organizationId',
-      userId: 'userId',
-      name: 'modelName',
-    });
-    const productDataModel = Template.create(
+    const template = Template.create(
       templateCreatePropsFactory.build({
         organizationId,
         userId,
       }),
     );
-    model.assignTemplate(productDataModel);
+    const model = Model.create({
+      organizationId: 'organizationId',
+      userId: 'userId',
+      name: 'modelName',
+      template,
+    });
+
     aasConnection.assignModel(model);
-    expect(aasConnection.dataModelId).toEqual(productDataModel.id);
+    expect(aasConnection.dataModelId).toEqual(template.id);
     expect(aasConnection.modelId).toEqual(model.id);
   });
 

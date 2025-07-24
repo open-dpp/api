@@ -140,12 +140,15 @@ describe('ModelsController', () => {
   it(`/GET models of organization`, async () => {
     const modelNames = ['P1', 'P2'];
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(laptopModel);
+
     const models: Model[] = await Promise.all(
       modelNames.map(async (pn) => {
         const model = Model.create({
           name: pn,
           organizationId: otherOrganizationId,
           userId: authContext.user.id,
+          template,
         });
         return await modelsService.save(model);
       }),
@@ -155,6 +158,7 @@ describe('ModelsController', () => {
         name: 'Other Orga',
         organizationId: organization.id,
         userId: authContext.user.id,
+        template,
       }),
     );
 
@@ -175,11 +179,13 @@ describe('ModelsController', () => {
 
   it(`/GET models of organization fails if user is not part of organization`, async () => {
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: 'Model',
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
     });
     await modelsService.save(model);
 
@@ -197,10 +203,13 @@ describe('ModelsController', () => {
   });
 
   it(`/GET model`, async () => {
+    const template = Template.loadFromDb(laptopModel);
+
     const model = Model.create({
       name: 'Model',
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -219,10 +228,13 @@ describe('ModelsController', () => {
 
   it(`/GET model fails if user is not member of organization`, async () => {
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(laptopModel);
+
     const model = Model.create({
       name: 'Model',
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -240,10 +252,13 @@ describe('ModelsController', () => {
 
   it(`/GET model fails if model does not belong to organization`, async () => {
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(laptopModel);
+
     const model = Model.create({
       name: 'Model',
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -256,141 +271,20 @@ describe('ModelsController', () => {
           keycloakAuthTestingGuard,
         ),
       );
-    expect(response.status).toEqual(403);
-  });
-
-  it('assigns template to model', async () => {
-    const body = { name: 'My name', description: 'My desc' };
-
-    const model = Model.create({
-      name: 'My name',
-      organizationId: organization.id,
-      userId: authContext.user.id,
-    });
-    await modelsService.save(model);
-
-    const template = Template.loadFromDb(laptopModel);
-    await templateService.save(template);
-
-    const response = await request(app.getHttpServer())
-      .post(
-        `/organizations/${organization.id}/models/${model.id}/templates/${template.id}`,
-      )
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          authContext.user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
-      .send(body);
-    expect(response.status).toEqual(201);
-    const responseGet = await request(app.getHttpServer())
-      .get(`/organizations/${organization.id}/models/${model.id}`)
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          authContext.user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      );
-    expect(responseGet.body.dataValues).toEqual(
-      ignoreIds([
-        DataValue.create({
-          dataSectionId: LaptopFactory.ids.techSpecs.id,
-          dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
-          value: undefined,
-          row: 0,
-        }),
-        DataValue.create({
-          dataSectionId: LaptopFactory.ids.techSpecs.id,
-          dataFieldId: LaptopFactory.ids.techSpecs.fields.memory,
-          value: undefined,
-          row: 0,
-        }),
-        DataValue.create({
-          dataSectionId: LaptopFactory.ids.environment.id,
-          dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
-          value: undefined,
-          row: 0,
-        }),
-      ]),
-    );
-    expect(responseGet.body.templateId).toEqual(template.id);
-  });
-
-  it('assigns template to model fails if user is not member of organization', async () => {
-    const body = { name: 'My name', description: 'My desc' };
-    const otherOrganizationId = randomUUID();
-
-    const model = Model.create({
-      name: 'My name',
-      organizationId: otherOrganizationId,
-      userId: authContext.user.id,
-    });
-    await modelsService.save(model);
-
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-
-    const response = await request(app.getHttpServer())
-      .post(
-        `/organizations/${otherOrganizationId}/models/${model.id}/templates/${productDataModel.id}`,
-      )
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          authContext.user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
-      .send(body);
-    expect(response.status).toEqual(403);
-  });
-
-  it('assigns template to model fails if model does not belong to organization', async () => {
-    const body = { name: 'My name', description: 'My desc' };
-    const otherOrganizationId = randomUUID();
-
-    const model = Model.create({
-      name: 'My name',
-      organizationId: otherOrganizationId,
-      userId: authContext.user.id,
-    });
-    await modelsService.save(model);
-
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-
-    const response = await request(app.getHttpServer())
-      .post(
-        `/organizations/${organization.id}/models/${model.id}/templates/${productDataModel.id}`,
-      )
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          authContext.user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
-      .send(body);
     expect(response.status).toEqual(403);
   });
 
   //
   it('update data values of model', async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const dataValue2 = model.dataValues[1];
@@ -444,14 +338,15 @@ describe('ModelsController', () => {
 
   it('update data values fails if user is not member of organization', async () => {
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const updatedValues = [
@@ -480,15 +375,15 @@ describe('ModelsController', () => {
 
   it('update data values fails if model does not belong to organization', async () => {
     const otherOrganizationId = randomUUID();
-
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const updatedValues = [
@@ -515,14 +410,15 @@ describe('ModelsController', () => {
 
   //
   it('update data values fails caused by validation', async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const updatedValues = [
       {
@@ -563,14 +459,15 @@ describe('ModelsController', () => {
   });
   //
   it('add data values to model', async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const existingDataValues = model.dataValues;
     const addedValues = [
@@ -612,14 +509,15 @@ describe('ModelsController', () => {
 
   it('add data values to model fails if user is not member of organization', async () => {
     const otherOrganizationId = randomUUID();
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const addedValues = [];
     const response = await request(app.getHttpServer())
@@ -640,15 +538,15 @@ describe('ModelsController', () => {
 
   it('add data values to model fails if model does not belong to organization', async () => {
     const otherOrganizationId = randomUUID();
-
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       name: 'My name',
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
     });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
-    model.assignTemplate(productDataModel);
+
     await modelsService.save(model);
     const addedValues = [];
     const response = await request(app.getHttpServer())

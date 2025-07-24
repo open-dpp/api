@@ -43,7 +43,7 @@ describe('AasConnectionController', () => {
     new Map(),
     reflector,
   );
-  let productDataModelService: TemplateService;
+  let templateService: TemplateService;
   let aasConnectionService: AasConnectionService;
   let modelsService: ModelsService;
   let itemsSevice: ItemsService;
@@ -97,7 +97,7 @@ describe('AasConnectionController', () => {
       json({ limit: '50mb' }),
     );
 
-    productDataModelService = moduleRef.get(TemplateService);
+    templateService = moduleRef.get(TemplateService);
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
     itemsSevice = moduleRef.get(ItemsService);
@@ -142,19 +142,19 @@ describe('AasConnectionController', () => {
 
   it(`/CREATE items via connection`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       organizationId,
       userId: authContext.user.id,
       name: 'Laptop',
+      template,
     });
-    model.assignTemplate(productDataModel);
     const aasMapping = AasConnection.create({
       name: 'Connection Name',
       organizationId,
       userId: authContext.user.id,
-      dataModelId: productDataModel.id,
+      dataModelId: template.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
     });
@@ -202,23 +202,23 @@ describe('AasConnectionController', () => {
       foundUniqueProductIdentifier.referenceId,
     );
     expect(item.modelId).toEqual(model.id);
-    expect(item.templateId).toEqual(productDataModel.id);
+    expect(item.templateId).toEqual(template.id);
   });
 
   it(`/CREATE connection`, async () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       organizationId,
       userId: authContext.user.id,
       name: 'Laptop',
+      template,
     });
-    model.assignTemplate(productDataModel);
     await modelsService.save(model);
 
     const body = {
       name: 'Connection Name',
-      dataModelId: productDataModel.id,
+      dataModelId: template.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
       fieldAssignments: [
@@ -243,7 +243,7 @@ describe('AasConnectionController', () => {
       )
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.dataModelId).toEqual(productDataModel.id);
+    expect(response.body.dataModelId).toEqual(template.id);
     expect(response.body.aasType).toEqual(
       AssetAdministrationShellType.Semitrailer_Truck,
     );
@@ -263,14 +263,14 @@ describe('AasConnectionController', () => {
     });
     await aasConnectionService.save(aasConnection);
 
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       organizationId,
       userId: authContext.user.id,
       name: 'Laptop',
+      template,
     });
-    model.assignTemplate(productDataModel);
     await modelsService.save(model);
 
     const body = {
@@ -302,7 +302,7 @@ describe('AasConnectionController', () => {
     expect(response.status).toEqual(200);
     expect(response.body.name).toEqual('Other Name');
     expect(response.body.modelId).toEqual(model.id);
-    expect(response.body.dataModelId).toEqual(productDataModel.id);
+    expect(response.body.dataModelId).toEqual(template.id);
     expect(response.body.fieldAssignments).toEqual(body.fieldAssignments);
   });
 

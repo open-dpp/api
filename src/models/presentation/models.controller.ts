@@ -35,7 +35,6 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { templateParamDocumentation } from '../../templates/presentation/dto/template.dto';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -67,11 +66,15 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
+    const template = await this.templateService.findOneOrFail(
+      createModelDto.templateId,
+    );
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
       userId: req.authContext.user.id,
       organizationId: organizationId,
+      template,
     });
     model.createUniqueProductIdentifier();
     return modelToDto(await this.modelsService.save(model));
@@ -161,43 +164,6 @@ export class ModelsController {
       model.modifyDescription(updateModelDto.description);
     }
 
-    return modelToDto(await this.modelsService.save(model));
-  }
-
-  @ApiOperation({
-    summary: 'Assign product data model',
-    description: 'Assign product data model to model.',
-  })
-  @ApiParam(orgaParamDocumentation)
-  @ApiParam(modelParamDocumentation)
-  @ApiParam(templateParamDocumentation)
-  @ApiResponse({
-    schema: modelDocumentation,
-  })
-  @Post(':modelId/templates/:productDataModelId')
-  async assignProductDataModelToModel(
-    @Param('orgaId') organizationId: string,
-    @Param('modelId') modelId: string,
-    @Param('productDataModelId') productDataModelId: string,
-    @Request() req: AuthRequest,
-  ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-    const productDataModel =
-      await this.templateService.findOneOrFail(productDataModelId);
-    if (!productDataModel.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    const model = await this.modelsService.findOneOrFail(modelId);
-
-    if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    model.assignTemplate(productDataModel);
     return modelToDto(await this.modelsService.save(model));
   }
 
