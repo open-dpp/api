@@ -23,6 +23,7 @@ import { MongooseTestingModule } from '../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { laptopFactory } from '../templates/fixtures/laptop.factory';
 import { TemplateService } from '../templates/infrastructure/template.service';
+import { templateCreatePropsFactory } from '../templates/fixtures/template.factory';
 
 export const mockCreatePassportTemplateInMarketplace = jest.fn();
 export const mockGetPassportTemplateInMarketplace = jest.fn();
@@ -48,6 +49,7 @@ describe('MarketplaceService', () => {
   let organizationService: OrganizationsService;
   let module: TestingModule;
   let dataSource: DataSource;
+  let templateService: TemplateService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -71,6 +73,7 @@ describe('MarketplaceService', () => {
       ],
     }).compile();
     service = module.get<MarketplaceService>(MarketplaceService);
+    templateService = module.get<TemplateService>(TemplateService);
     organizationService =
       module.get<OrganizationsService>(OrganizationsService);
     dataSource = module.get<DataSource>(DataSource);
@@ -81,7 +84,7 @@ describe('MarketplaceService', () => {
     userId,
   });
 
-  it('should upload product data model to marketplace', async () => {
+  it('should upload template to marketplace', async () => {
     const organization = await organizationService.save(
       Organization.fromPlain({
         id: organizationId,
@@ -91,7 +94,7 @@ describe('MarketplaceService', () => {
         ownedByUserId: userId,
       }),
     );
-    const productDataModel = Template.loadFromDb({
+    const template = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
@@ -99,23 +102,23 @@ describe('MarketplaceService', () => {
       data: { id: randomUUID() },
     });
     const token = randomUUID();
-    await service.upload(productDataModel, token);
+    await service.upload(template, token);
     expect(mockSetActiveOrganizationId).toBeCalledWith(organizationId);
     expect(mockSetApiKey).toHaveBeenCalledWith(token);
     const expected: PassportTemplateCreateDto = {
-      version: productDataModel.version,
-      name: productDataModel.name,
-      description: productDataModel.description,
-      sectors: productDataModel.sectors,
+      version: template.version,
+      name: template.name,
+      description: template.description,
+      sectors: template.sectors,
       organizationName: organization.name,
       templateData: {
-        _id: productDataModel.id,
-        name: productDataModel.name,
-        description: productDataModel.description,
-        sectors: productDataModel.sectors,
-        version: productDataModel.version,
+        _id: template.id,
+        name: template.name,
+        description: template.description,
+        sectors: template.sectors,
+        version: template.version,
         _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
-        sections: productDataModel.sections.map((s) => ({
+        sections: template.sections.map((s) => ({
           _id: s.id,
           name: s.name,
           type: s.type,
@@ -132,15 +135,29 @@ describe('MarketplaceService', () => {
           subSections: s.subSections,
           parentId: s.parentId,
         })),
-        createdByUserId: productDataModel.createdByUserId,
-        ownedByOrganizationId: productDataModel.ownedByOrganizationId,
-        marketplaceResourceId: productDataModel.marketplaceResourceId,
+        createdByUserId: template.createdByUserId,
+        ownedByOrganizationId: template.ownedByOrganizationId,
+        marketplaceResourceId: template.marketplaceResourceId,
       },
     };
     expect(mockCreatePassportTemplateInMarketplace).toBeCalledWith(expected);
   });
 
-  it('should download product data model from marketplace', async () => {
+  it('should return already downloaded template instead of fetching it from the marketplace', async () => {
+    const template = Template.create(
+      templateCreatePropsFactory.build({ organizationId: organizationId }),
+    );
+    template.assignMarketplaceResource('marketplaceResourceId');
+    await templateService.save(template);
+    const downloadedTemplate = await service.download(
+      organizationId,
+      'marketplaceResourceId',
+    );
+    expect(downloadedTemplate).toEqual(template);
+    expect(mockGetPassportTemplateInMarketplace).not.toHaveBeenCalled();
+  });
+
+  it('should download template from marketplace', async () => {
     const passportTemplateDto = passportTemplateDtoFactory.build({});
     mockGetPassportTemplateInMarketplace.mockResolvedValue({
       data: passportTemplateDto,
