@@ -35,6 +35,7 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
+import { MarketplaceService } from '../../marketplace/marketplace.service';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -42,6 +43,7 @@ export class ModelsController {
     private readonly modelsService: ModelsService,
     private readonly templateService: TemplateService,
     private readonly permissionsService: PermissionsService,
+    private readonly marketplaceService: MarketplaceService,
   ) {}
 
   @ApiOperation({
@@ -66,9 +68,12 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const template = await this.templateService.findOneOrFail(
-      createModelDto.templateId,
-    );
+    const template = createModelDto.templateId
+      ? await this.templateService.findOneOrFail(createModelDto.templateId)
+      : await this.marketplaceService.download(
+          organizationId,
+          createModelDto.marketplaceResourceId,
+        );
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,

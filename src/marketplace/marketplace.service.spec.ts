@@ -22,6 +22,7 @@ import { passportTemplateDtoFactory } from './fixtures/passport.template.factory
 import { MongooseTestingModule } from '../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { laptopFactory } from '../templates/fixtures/laptop.factory';
+import { TemplateService } from '../templates/infrastructure/template.service';
 
 export const mockCreatePassportTemplateInMarketplace = jest.fn();
 export const mockGetPassportTemplateInMarketplace = jest.fn();
@@ -62,7 +63,12 @@ describe('MarketplaceService', () => {
         ]),
         KeycloakResourcesModule,
       ],
-      providers: [MarketplaceService, OrganizationsService, UsersService],
+      providers: [
+        MarketplaceService,
+        OrganizationsService,
+        UsersService,
+        TemplateService,
+      ],
     }).compile();
     service = module.get<MarketplaceService>(MarketplaceService);
     organizationService =
@@ -139,7 +145,10 @@ describe('MarketplaceService', () => {
     mockGetPassportTemplateInMarketplace.mockResolvedValue({
       data: passportTemplateDto,
     });
-    const productDataModel = await service.download(passportTemplateDto.id);
+    const productDataModel = await service.download(
+      randomUUID(),
+      passportTemplateDto.id,
+    );
     expect(mockGetPassportTemplateInMarketplace).toBeCalledWith(
       passportTemplateDto.id,
     );

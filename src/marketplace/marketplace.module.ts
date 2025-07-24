@@ -12,6 +12,7 @@ import {
   TemplateDoc,
   TemplateSchema,
 } from '../templates/infrastructure/template.schema';
+import { TemplateService } from '../templates/infrastructure/template.service';
 
 @Module({
   imports: [
@@ -26,7 +27,12 @@ import {
     KeycloakResourcesModule,
   ],
   controllers: [],
-  providers: [MarketplaceService, OrganizationsService, UsersService],
+  providers: [
+    MarketplaceService,
+    OrganizationsService,
+    UsersService,
+    TemplateService,
+  ],
 
   exports: [MarketplaceService],
 })

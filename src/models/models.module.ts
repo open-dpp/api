@@ -13,6 +13,7 @@ import {
 } from '../templates/infrastructure/template.schema';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
     UsersModule,
     PermissionsModule,
     TraceabilityEventsModule,
+    MarketplaceModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],

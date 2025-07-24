@@ -13,6 +13,7 @@ import {
 import { TemplateDoc } from '../templates/infrastructure/template.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { TemplateService } from '../templates/infrastructure/template.service';
 
 @Injectable()
 export class MarketplaceService {
@@ -22,7 +23,8 @@ export class MarketplaceService {
     configService: ConfigService,
     private organizationService: OrganizationsService,
     @InjectModel(TemplateDoc.name)
-    private productDataModelDoc: Model<TemplateDoc>,
+    private templateDoc: Model<TemplateDoc>,
+    private templateService: TemplateService,
   ) {
     const baseURL = configService.get<string>('MARKETPLACE_URL');
     if (!baseURL) {
@@ -31,38 +33,46 @@ export class MarketplaceService {
     this.marketplaceClient = new MarketplaceApiClient({ baseURL });
   }
   async upload(
-    productDataModel: Template,
+    template: Template,
     token: string,
   ): Promise<PassportTemplateDto> {
-    const templateData = serializeProductDataModel(productDataModel);
+    const templateData = serializeProductDataModel(template);
     const organization = await this.organizationService.findOneOrFail(
-      productDataModel.ownedByOrganizationId,
+      template.ownedByOrganizationId,
     );
     this.marketplaceClient.setActiveOrganizationId(organization.id);
     this.marketplaceClient.setApiKey(token);
     const response = await this.marketplaceClient.passportTemplates.create({
-      version: productDataModel.version,
-      name: productDataModel.name,
-      description: productDataModel.description,
-      sectors: productDataModel.sectors,
+      version: template.version,
+      name: template.name,
+      description: template.description,
+      sectors: template.sectors,
       organizationName: organization.name,
       templateData,
     });
     return response.data;
   }
 
-  async download(templateId: string): Promise<Template> {
+  async download(
+    organizationId: string,
+    templateId: string,
+  ): Promise<Template> {
+    const existingTemplate =
+      await this.templateService.findByMarketplaceResource(
+        organizationId,
+        templateId,
+      );
+    if (existingTemplate) {
+      return existingTemplate;
+    }
     const response =
       await this.marketplaceClient.passportTemplates.getById(templateId);
-    const productDataModelDoc = new this.productDataModelDoc(
-      response.data.templateData,
-    );
-    await productDataModelDoc.validate();
+    const templateDoc = new this.templateDoc(response.data.templateData);
+    await templateDoc.validate();
 
-    const productDataModel = deserializeProductDataModel(
-      productDataModelDoc.toObject(),
-    );
-    productDataModel.assignMarketplaceResource(response.data.id);
-    return productDataModel;
+    const template = deserializeProductDataModel(templateDoc.toObject());
+    template.assignMarketplaceResource(response.data.id);
+    await this.templateService.save(template);
+    return template;
   }
 }

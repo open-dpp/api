@@ -28,6 +28,9 @@ import {
   LaptopFactory,
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
+import { MarketplaceModule } from '../../marketplace/marketplace.module';
+import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
+import { MarketplaceService } from '../../marketplace/marketplace.service';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -41,6 +44,7 @@ describe('ModelsController', () => {
     name: 'orga',
     user: authContext.user,
   });
+  let marketplaceService: MarketplaceService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -50,6 +54,7 @@ describe('ModelsController', () => {
         ModelsModule,
         OrganizationsModule,
         TemplateModule,
+        MarketplaceModule,
       ],
       providers: [
         {
@@ -64,6 +69,8 @@ describe('ModelsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
+      .overrideProvider(MarketplaceService)
+      .useClass(MarketplaceServiceTesting)
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(
@@ -71,6 +78,7 @@ describe('ModelsController', () => {
     );
     modelsService = moduleRef.get(ModelsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
+    marketplaceService = moduleRef.get<MarketplaceService>(MarketplaceService);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
@@ -118,6 +126,33 @@ describe('ModelsController', () => {
     expect(response.body.uniqueProductIdentifiers).toEqual(
       foundUniqueProductIdentifiers,
     );
+  });
+
+  it(`/CREATE model using template from marketplace`, async () => {
+    const template = Template.loadFromDb(laptopModel);
+    const token = getKeycloakAuthToken(
+      authContext.user.id,
+      [organization.id],
+      keycloakAuthTestingGuard,
+    );
+    const { id } = await marketplaceService.upload(template, token);
+
+    const body = {
+      name: 'My name',
+      description: 'My desc',
+      marketplaceResourceId: id,
+    };
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${organization.id}/models`)
+      .set('Authorization', token)
+      .send(body);
+    expect(response.status).toEqual(201);
+    const found = await modelsService.findOneOrFail(response.body.id);
+    expect(response.body.id).toEqual(found.id);
+    expect(found.isOwnedBy(organization.id)).toBeTruthy();
+    expect(found.templateId).toEqual(template.id);
+    const foundTemplate = await templateService.findOneOrFail(template.id);
+    expect(foundTemplate.marketplaceResourceId).toEqual(id);
   });
 
   it(`/CREATE model fails if user is not member of organization`, async () => {

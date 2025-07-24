@@ -13,17 +13,17 @@ import {
 export class TemplateService {
   constructor(
     @InjectModel(TemplateDoc.name)
-    private productDataModelDoc: Model<TemplateDoc>,
+    private templateDoc: Model<TemplateDoc>,
   ) {}
 
-  convertToDomain(productDataModelDoc: TemplateDoc): Template {
-    const plain = productDataModelDoc.toObject();
+  convertToDomain(templateDoc: TemplateDoc): Template {
+    const plain = templateDoc.toObject();
     return deserializeProductDataModel(plain);
   }
 
   async save(productDataModel: Template) {
     const { _id, ...rest } = serializeProductDataModel(productDataModel);
-    const dataModelDoc = await this.productDataModelDoc.findOneAndUpdate(
+    const dataModelDoc = await this.templateDoc.findOneAndUpdate(
       { _id },
       rest,
       {
@@ -37,7 +37,7 @@ export class TemplateService {
   }
 
   async findByName(name: string) {
-    const foundDataModelDocs = await this.productDataModelDoc
+    const foundDataModelDocs = await this.templateDoc
       .find({ name: name }, '_id name version')
       .sort({ name: 1 })
       .exec();
@@ -52,17 +52,20 @@ export class TemplateService {
     organizationId: string,
     marketplaceResourceId: string,
   ) {
-    const foundDataModelDoc = await this.productDataModelDoc
+    const foundDataModelDoc = await this.templateDoc
       .findOne({
         ownedByOrganizationId: organizationId,
         marketplaceResourceId,
       })
       .exec();
+    if (!foundDataModelDoc) {
+      return undefined;
+    }
     return this.convertToDomain(foundDataModelDoc);
   }
 
   async findAllByOrganization(organizationId: string) {
-    const foundDataModelDocs = await this.productDataModelDoc
+    const foundDataModelDocs = await this.templateDoc
       .find(
         {
           $or: [{ ownedByOrganizationId: organizationId }],
@@ -79,7 +82,7 @@ export class TemplateService {
   }
 
   async findOneOrFail(id: string) {
-    const productEntity = await this.productDataModelDoc.findById(id);
+    const productEntity = await this.templateDoc.findById(id);
     if (!productEntity) {
       throw new NotFoundInDatabaseException(Template.name);
     }
