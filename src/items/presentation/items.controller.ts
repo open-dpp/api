@@ -209,9 +209,7 @@ export class ItemsController {
 
     item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     if (!item.templateId) {
-      throw new BadRequestException(
-        'Item does not have a template assigned',
-      );
+      throw new BadRequestException('Item does not have a template assigned');
     }
     const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
