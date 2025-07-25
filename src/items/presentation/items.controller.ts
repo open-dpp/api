@@ -40,7 +40,7 @@ export class ItemsController {
     private readonly permissionsService: PermissionsService,
     private readonly itemsApplicationService: ItemsApplicationService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: TemplateService,
+    private readonly templateService: TemplateService,
   ) {}
 
   @ApiOperation({
@@ -164,7 +164,7 @@ export class ItemsController {
         'Item does not have a product data model assigned',
       );
     }
-    const productDataModel = await this.productDataModelService.findOneOrFail(
+    const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
     );
 
@@ -215,7 +215,7 @@ export class ItemsController {
         'Item does not have a product data model assigned',
       );
     }
-    const productDataModel = await this.productDataModelService.findOneOrFail(
+    const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
     );
 
