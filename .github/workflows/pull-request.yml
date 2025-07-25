@@ -69,7 +69,7 @@ jobs:
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # Step 4: Wait for Postgres to be ready
       - name: Wait for PostgreSQL to be ready
