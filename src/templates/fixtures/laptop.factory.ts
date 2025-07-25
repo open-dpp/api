@@ -1,10 +1,6 @@
 import { dataFieldDbPropsFactory } from './data-field.factory';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import {
-  GranularityLevel,
-  Sector,
-  VisibilityLevel,
-} from '@open-dpp/api-client';
+import { GranularityLevel, Sector } from '@open-dpp/api-client';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import {
   layoutColStart2,
@@ -161,7 +157,6 @@ export const laptopFactory = LaptopFactory.define(() => ({
   description: 'My Laptop',
   sectors: [Sector.ELECTRONICS],
   version: 'v2',
-  visibility: VisibilityLevel.PUBLIC,
   organizationId: randomUUID(),
   userId: randomUUID(),
   sections: [],

@@ -113,6 +113,19 @@ export abstract class DataSection extends DataSectionBase {
     }
     return validations;
   }
+
+  toDbProps(): DataSectionDbProps {
+    return {
+      id: this.id,
+      type: this.type,
+      name: this.name,
+      layout: this.layout.toProps(),
+      subSections: this._subSections,
+      parentId: this._parentId,
+      granularityLevel: this.granularityLevel,
+      dataFields: this.dataFields.map((d) => d.toDbProps()),
+    };
+  }
 }
 
 export class RepeaterSection extends DataSection {
