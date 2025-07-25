@@ -160,9 +160,7 @@ export class ItemsController {
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
     if (!item.templateId) {
-      throw new BadRequestException(
-        'Item does not have a product data model assigned',
-      );
+      throw new BadRequestException('Item does not have a template assigned');
     }
     const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
@@ -212,7 +210,7 @@ export class ItemsController {
     item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     if (!item.templateId) {
       throw new BadRequestException(
-        'Item does not have a product data model assigned',
+        'Item does not have a template assigned',
       );
     }
     const productDataModel = await this.templateService.findOneOrFail(
