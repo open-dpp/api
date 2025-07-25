@@ -90,4 +90,5 @@ jobs:
           DB_DATABASE: management
           MONGO_DB_HOST: localhost
           MONGO_DB_PORT: 27017
+          MARKETPLACE_URL:
         run: npm test

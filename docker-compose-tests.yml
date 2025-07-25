@@ -18,3 +18,33 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin
       - MONGO_INITDB_DATABASE=management
     image: mongo:6.0
+  marketplace-db:
+    ports:
+      - 20006:27017
+    container_name: marketplace-db
+    volumes:
+      - ./marketplace-db:/data/db
+      - ./marketplace-db-config:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=management
+    image: mongo:6.0
+    networks:
+      - open-dpp-local
+  marketplace:
+    container_name: marketplace
+    image: ghcr.io/open-dpp/marketplace:main
+    environment:
+      - DB_HOST=marketplace-db
+      - DB_PORT=27017
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=management
+      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
+      - KEYCLOAK_JWT_PUBLIC_KEY=${KEYCLOAK_JWT_PUBLIC_KEY}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - open-dpp-local
