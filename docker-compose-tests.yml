@@ -1,6 +1,6 @@
 services:
-  api-db:
-    container_name: api-db
+  api-db-test:
+    container_name: api-db-test
     platform: linux/amd64 #for platform error on Apple M1 chips
     image: postgres:17-alpine
     environment:
@@ -9,19 +9,19 @@ services:
       POSTGRES_DB: 'management'
     ports:
       - '20003:5432'
-  api-mongo-db:
+  api-mongo-db-test:
     ports:
       - '27017:27017'
-    container_name: api-mongo-db
+    container_name: api-mongo-db-test
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin
       - MONGO_INITDB_DATABASE=management
     image: mongo:6.0
-  marketplace-db:
+  marketplace-db-test:
     ports:
       - 20006:27017
-    container_name: marketplace-db
+    container_name: marketplace-db-test
     volumes:
       - ./marketplace-db:/data/db
       - ./marketplace-db-config:/data/configdb
@@ -30,17 +30,16 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin
       - MONGO_INITDB_DATABASE=management
     image: mongo:6.0
-  marketplace:
-    container_name: marketplace
+  marketplace-test:
+    container_name: marketplace-test
     image: ghcr.io/open-dpp/marketplace:main
     environment:
-      - DB_HOST=marketplace-db
+      - DB_HOST=marketplace-db-test
       - DB_PORT=27017
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
       - DB_DATABASE=management
       - KEYCLOAK_NETWORK_URL=http://keycloak:8080
       - KEYCLOAK_JWT_PUBLIC_KEY=${KEYCLOAK_JWT_PUBLIC_KEY}
-    depends_on:
-      keycloak:
-        condition: service_healthy
+    ports:
+      - '20106:3000'
