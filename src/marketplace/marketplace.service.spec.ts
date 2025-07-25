@@ -6,7 +6,7 @@ import {
   TemplateDocSchemaVersion,
   TemplateSchema,
 } from '../templates/infrastructure/template.schema';
-import { PassportTemplateCreateDto } from '../../../open-dpp-api-client/src';
+import { PassportTemplateCreateDto } from '../../../open-dpp-api-client';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { Organization } from '../organizations/domain/organization';
 import { User } from '../users/domain/user';
