@@ -69,14 +69,14 @@ export class MarketplaceService {
     const response = await this.marketplaceClient.passportTemplates.getById(
       marketplaceResourceId,
     );
-    const templateDoc = new this.templateDoc({
-      ...response.data.templateData,
-      ownedByOrganizationId: organizationId,
-      createdByUserId: userId,
-    });
+    const templateDoc = new this.templateDoc(response.data.templateData);
     await templateDoc.validate();
 
-    const template = deserializeProductDataModel(templateDoc.toObject());
+    const template = deserializeProductDataModel(templateDoc.toObject()).copy(
+      organizationId,
+      userId,
+    );
+
     template.assignMarketplaceResource(response.data.id);
     await this.templateService.save(template);
     return template;

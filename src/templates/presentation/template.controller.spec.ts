@@ -19,6 +19,7 @@ import { templateToDto } from './dto/template.dto';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { templateCreatePropsFactory } from '../fixtures/template.factory';
 import { laptopFactory } from '../fixtures/laptop.factory';
+import { MigratePublicTemplatesService } from '../infrastructure/migrate-public-templates.service';
 
 describe('TemplateController', () => {
   let app: INestApplication;
@@ -54,6 +55,8 @@ describe('TemplateController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
+      .overrideProvider(MigratePublicTemplatesService)
+      .useValue({}) // TODO: remove this when public templates are migrated to the marketplace
       .compile();
 
     service = moduleRef.get<TemplateService>(TemplateService);
