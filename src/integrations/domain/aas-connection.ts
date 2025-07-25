@@ -84,7 +84,7 @@ export class AasConnection {
 
   generateDataValues(
     assetAdministrationShell: AssetAdministrationShell,
-    productDataModel: Template,
+    template: Template,
   ) {
     return assetAdministrationShell.propertiesWithParent
       .map(({ parentIdShort, property }) => {
@@ -95,17 +95,14 @@ export class AasConnection {
         );
 
         if (field) {
-          const dataFieldOfProductDataModel = productDataModel
+          const dataFieldOfTemplate = template
             .findSectionById(field.sectionId)
             ?.dataFields.find((d) => d.id === field.dataFieldId);
-          if (dataFieldOfProductDataModel) {
+          if (dataFieldOfTemplate) {
             return DataValue.create({
               dataSectionId: field.sectionId,
               dataFieldId: field.dataFieldId,
-              value: this.parseValue(
-                property,
-                dataFieldOfProductDataModel.type,
-              ),
+              value: this.parseValue(property, dataFieldOfTemplate.type),
               row: 0, // TODO: Replace hard coded row id
             });
           }
