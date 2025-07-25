@@ -28,7 +28,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Run linter
         run: npm run lint
 
@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Run type checks
         run: npm run check-ts
 
