@@ -23,7 +23,7 @@ export const modelDocumentation = {
     id: { type: 'string', format: 'uuid' },
     name: { type: 'string' },
     description: { type: 'string' },
-    productDataModelId: { type: 'string', format: 'uuid' },
+    templateId: { type: 'string', format: 'uuid' },
     uniqueProductIdentifiers: {
       type: 'array',
       items: { ...uniqueProductIdentifierDocumentation },
