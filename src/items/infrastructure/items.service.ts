@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model as MongooseModel } from 'mongoose';
 import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
+import { migrateItemDoc } from './migrations';
 
 @Injectable()
 export class ItemsService {
@@ -19,6 +20,7 @@ export class ItemsService {
     itemDoc: ItemDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
+    migrateItemDoc(itemDoc);
     return Item.loadFromDb({
       id: itemDoc.id,
       uniqueProductIdentifiers,
@@ -33,7 +35,7 @@ export class ItemsService {
             row: dv.row,
           }))
         : [],
-      productDataModelId: itemDoc.productDataModelId,
+      templateId: itemDoc.templateId,
     });
   }
 
@@ -41,17 +43,22 @@ export class ItemsService {
     const itemEntity = await this.itemDoc.findOneAndUpdate(
       { _id: item.id },
       {
-        _schemaVersion: ItemDocSchemaVersion.v1_0_1,
-        modelId: item.modelId,
-        productDataModelId: item.productDataModelId,
-        ownedByOrganizationId: item.ownedByOrganizationId,
-        createdByUserId: item.createdByUserId,
-        dataValues: item.dataValues.map((d) => ({
-          value: d.value,
-          dataSectionId: d.dataSectionId,
-          dataFieldId: d.dataFieldId,
-          row: d.row,
-        })),
+        $set: {
+          _schemaVersion: ItemDocSchemaVersion.v1_0_1,
+          modelId: item.modelId,
+          templateId: item.templateId,
+          ownedByOrganizationId: item.ownedByOrganizationId,
+          createdByUserId: item.createdByUserId,
+          dataValues: item.dataValues.map((d) => ({
+            value: d.value,
+            dataSectionId: d.dataSectionId,
+            dataFieldId: d.dataFieldId,
+            row: d.row,
+          })),
+        },
+        $unset: {
+          productDataModelId: 1,
+        },
       },
       {
         new: true, // Return the updated document

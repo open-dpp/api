@@ -1,12 +1,12 @@
 import { maxBy, minBy } from 'lodash';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
 import {
   DataSection,
   isGroupSection,
   isRepeaterSection,
   RepeaterSection,
-} from '../../product-data-model/domain/section';
+} from '../../templates/domain/section';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -14,13 +14,13 @@ import { DataValue } from '../../product-passport/domain/data-value';
 
 export class View {
   private constructor(
-    private readonly productDataModel: ProductDataModel,
+    private readonly productDataModel: Template,
     private readonly model: Model,
     private readonly item: Item | undefined,
   ) {}
 
   static create(data: {
-    productDataModel: ProductDataModel;
+    productDataModel: Template;
     model: Model;
     item?: Item;
   }) {

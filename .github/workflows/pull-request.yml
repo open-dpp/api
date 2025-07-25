@@ -8,7 +8,7 @@ on:
 
 
 env:
-  NODE_VERSION: 23
+  NODE_VERSION: 24
 
 jobs:
   lint:
@@ -28,7 +28,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Run linter
         run: npm run lint
 
@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Run type checks
         run: npm run check-ts
 
@@ -69,7 +69,7 @@ jobs:
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # Step 4: Wait for Postgres to be ready
       - name: Wait for PostgreSQL to be ready
@@ -90,4 +90,5 @@ jobs:
           DB_DATABASE: management
           MONGO_DB_HOST: localhost
           MONGO_DB_PORT: 27017
+          MARKETPLACE_URL: http://localhost:20106
         run: npm test

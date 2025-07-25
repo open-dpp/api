@@ -17,13 +17,9 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { IntegrationModule } from '../integration.module';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
 import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
@@ -36,9 +32,9 @@ import { ConfigService } from '@nestjs/config';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Organization } from '../../organizations/domain/organization';
-import { GroupSection } from '../../product-data-model/domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+import { laptopFactory } from '../../templates/fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
+import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -47,7 +43,7 @@ describe('AasConnectionController', () => {
     new Map(),
     reflector,
   );
-  let productDataModelService: ProductDataModelService;
+  let templateService: TemplateService;
   let aasConnectionService: AasConnectionService;
   let modelsService: ModelsService;
   let itemsSevice: ItemsService;
@@ -101,7 +97,7 @@ describe('AasConnectionController', () => {
       json({ limit: '50mb' }),
     );
 
-    productDataModelService = moduleRef.get(ProductDataModelService);
+    templateService = moduleRef.get(TemplateService);
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
     itemsSevice = moduleRef.get(ItemsService);
@@ -126,59 +122,39 @@ describe('AasConnectionController', () => {
   const sectionId1 = randomUUID();
   const dataFieldId1 = randomUUID();
 
-  const laptopModel: ProductDataModelDbProps = {
-    id: randomUUID(),
-    visibility: VisibilityLevel.PRIVATE,
-    name: 'Laptop',
-    version: '1.0',
-    ownedByOrganizationId: organizationId,
-    createdByUserId: authContext.user.id,
+  const laptopModel: TemplateDbProps = laptopFactory.build({
+    organizationId,
+    userId: authContext.user.id,
     sections: [
-      GroupSection.loadFromDb({
+      sectionDbPropsFactory.build({
         id: sectionId1,
         name: 'Carbon Footprint',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
         dataFields: [
-          TextField.loadFromDb({
+          dataFieldDbPropsFactory.build({
             id: dataFieldId1,
             name: 'PCFCalculationMethod',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
             granularityLevel: GranularityLevel.ITEM,
           }),
         ],
       }),
     ],
-  };
+  });
 
   it(`/CREATE items via connection`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       organizationId,
       userId: authContext.user.id,
       name: 'Laptop',
+      template,
     });
-    model.assignProductDataModel(productDataModel);
     const aasMapping = AasConnection.create({
       name: 'Connection Name',
       organizationId,
       userId: authContext.user.id,
-      dataModelId: productDataModel.id,
+      dataModelId: template.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
     });
@@ -226,23 +202,23 @@ describe('AasConnectionController', () => {
       foundUniqueProductIdentifier.referenceId,
     );
     expect(item.modelId).toEqual(model.id);
-    expect(item.productDataModelId).toEqual(productDataModel.id);
+    expect(item.templateId).toEqual(template.id);
   });
 
   it(`/CREATE connection`, async () => {
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       organizationId,
       userId: authContext.user.id,
       name: 'Laptop',
+      template,
     });
-    model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
 
     const body = {
       name: 'Connection Name',
-      dataModelId: productDataModel.id,
+      dataModelId: template.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
       fieldAssignments: [
@@ -267,7 +243,7 @@ describe('AasConnectionController', () => {
       )
       .send(body);
     expect(response.status).toEqual(201);
-    expect(response.body.dataModelId).toEqual(productDataModel.id);
+    expect(response.body.dataModelId).toEqual(template.id);
     expect(response.body.aasType).toEqual(
       AssetAdministrationShellType.Semitrailer_Truck,
     );
@@ -287,14 +263,14 @@ describe('AasConnectionController', () => {
     });
     await aasConnectionService.save(aasConnection);
 
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
     const model = Model.create({
       organizationId,
       userId: authContext.user.id,
       name: 'Laptop',
+      template,
     });
-    model.assignProductDataModel(productDataModel);
     await modelsService.save(model);
 
     const body = {
@@ -326,7 +302,7 @@ describe('AasConnectionController', () => {
     expect(response.status).toEqual(200);
     expect(response.body.name).toEqual('Other Name');
     expect(response.body.modelId).toEqual(model.id);
-    expect(response.body.dataModelId).toEqual(productDataModel.id);
+    expect(response.body.dataModelId).toEqual(template.id);
     expect(response.body.fieldAssignments).toEqual(body.fieldAssignments);
   });
 

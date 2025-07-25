@@ -47,6 +47,7 @@ export class KeycloakAuthTestingGuard implements CanActivate {
 
     if (this.tokenToUserMap.has(accessToken)) {
       const authContext = new AuthContext();
+      authContext.token = accessToken;
       authContext.user = this.tokenToUserMap.get(accessToken);
       authContext.permissions = permissions.map((permission) => {
         return {

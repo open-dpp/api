@@ -1,7 +1,7 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ItemsModule } from '../items/items.module';
 import { ModelsModule } from '../models/models.module';
-import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { TemplateModule } from '../templates/template.module';
 import { INestApplication } from '@nestjs/common';
 
 export function buildOpenApiDocumentation(app: INestApplication) {
@@ -22,7 +22,7 @@ export function buildOpenApiDocumentation(app: INestApplication) {
     .build();
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, {
-      include: [ItemsModule, ModelsModule, ProductDataModelModule],
+      include: [ItemsModule, ModelsModule, TemplateModule],
     });
   SwaggerModule.setup('api', app, documentFactory);
 }

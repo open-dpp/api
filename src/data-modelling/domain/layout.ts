@@ -60,6 +60,16 @@ export class Layout {
     }
   }
 
+  toProps(): LayoutProps {
+    return {
+      colStart: this.colStart,
+      colSpan: this.colSpan,
+      rowStart: this.rowStart,
+      rowSpan: this.rowSpan,
+      cols: this.cols,
+    };
+  }
+
   modify(plain: Partial<LayoutProps>) {
     Layout.validateLayoutProps(plain);
     this.colSpan = plain.colSpan ?? this.colSpan;

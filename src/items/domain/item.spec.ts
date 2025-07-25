@@ -1,84 +1,56 @@
 import { Item } from './item';
 import { randomUUID } from 'crypto';
 import { ignoreIds } from '../../../test/utils';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
-import { GroupSection } from '../../product-data-model/domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+import {
+  LaptopFactory,
+  laptopFactory,
+} from '../../templates/fixtures/laptop.factory';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 
 describe('Item', () => {
   const organizationId = randomUUID();
   const userId = randomUUID();
 
-  const sectionId1 = randomUUID();
-  const dataFieldId1 = randomUUID();
-
-  const laptopModel: ProductDataModelDbProps = {
-    id: randomUUID(),
-    visibility: VisibilityLevel.PRIVATE,
-    name: 'Laptop',
-    version: '1.0',
-    ownedByOrganizationId: organizationId,
-    createdByUserId: userId,
-    sections: [
-      GroupSection.loadFromDb({
-        id: sectionId1,
-        name: 'Section name',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId1,
-            name: 'Title',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-      }),
-    ],
-  };
+  const laptopModel: TemplateDbProps = laptopFactory
+    .addSections()
+    .build({ organizationId, userId });
 
   it('should create an item and defines model', () => {
-    const item = Item.create({ organizationId, userId });
+    const template = Template.loadFromDb(laptopModel);
+
     const model = Model.create({
       name: 'name',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    model.assignProductDataModel(productDataModel);
+    const item = Item.create({ organizationId, userId, template, model });
 
-    item.defineModel(model, productDataModel);
     expect(item.id).toBeDefined();
     expect(item.modelId).toEqual(model.id);
     expect(item.ownedByOrganizationId).toEqual(organizationId);
     expect(item.createdByUserId).toEqual(userId);
-    expect(item.productDataModelId).toEqual(model.productDataModelId);
+    expect(item.templateId).toEqual(model.templateId);
     expect(item.uniqueProductIdentifiers).toEqual([]);
     expect(item.dataValues).toEqual([
       DataValue.create({
-        dataSectionId: sectionId1,
-        dataFieldId: dataFieldId1,
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.serialNumber,
+        value: undefined,
+        row: 0,
+      }),
+      DataValue.create({
+        dataSectionId: LaptopFactory.ids.techSpecs.id,
+        dataFieldId: LaptopFactory.ids.techSpecs.fields.batteryStatus,
+        value: undefined,
+        row: 0,
+      }),
+      DataValue.create({
+        dataSectionId: LaptopFactory.ids.environment.id,
+        dataFieldId: LaptopFactory.ids.environment.fields.energyConsumption,
         value: undefined,
         row: 0,
       }),
@@ -86,7 +58,15 @@ describe('Item', () => {
   });
 
   it('should create unique product identifier on item creation', () => {
-    const item = Item.create({ organizationId, userId });
+    const template = Template.loadFromDb(laptopModel);
+
+    const model = Model.create({
+      name: 'name',
+      userId: userId,
+      organizationId: organizationId,
+      template,
+    });
+    const item = Item.create({ organizationId, userId, model, template });
     const uniqueProductIdentifier1 = item.createUniqueProductIdentifier();
     const uniqueProductIdentifier2 = item.createUniqueProductIdentifier();
 
@@ -100,7 +80,15 @@ describe('Item', () => {
   });
 
   it('add data values', () => {
-    const item = Item.create({ organizationId, userId });
+    const template = Template.create(templateCreatePropsFactory.build());
+
+    const model = Model.create({
+      name: 'name',
+      userId: userId,
+      organizationId: organizationId,
+      template,
+    });
+    const item = Item.create({ organizationId, userId, template, model });
     item.addDataValues([
       DataValue.create({
         dataFieldId: 'fieldId2',

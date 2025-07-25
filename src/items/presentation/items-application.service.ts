@@ -4,7 +4,7 @@ import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp
 import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
 import { ItemsService } from '../infrastructure/items.service';
 import { ModelsService } from '../../models/infrastructure/models.service';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class ItemsApplicationService {
   constructor(
     private readonly itemsService: ItemsService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly templateService: TemplateService,
     private readonly traceabilityEventsService: TraceabilityEventsService,
   ) {}
 
@@ -26,18 +26,17 @@ export class ItemsApplicationService {
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
+    const template = model.templateId
+      ? await this.templateService.findOneOrFail(model.templateId)
+      : undefined;
 
     const item = Item.create({
       organizationId,
       userId: userId,
+      template,
+      model,
     });
 
-    const productDataModel = model.productDataModelId
-      ? await this.productDataModelService.findOneOrFail(
-          model.productDataModelId,
-        )
-      : undefined;
-    item.defineModel(model, productDataModel);
     item.createUniqueProductIdentifier(externalUUID);
 
     await this.traceabilityEventsService.create(

@@ -12,7 +12,7 @@ import {
 import { AuthRequest } from '../../auth/auth-request';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { Public } from '../../auth/public/public.decorator';
 import { ConfigService } from '@nestjs/config';
 import { itemToDto } from '../../items/presentation/dto/item.dto';
@@ -46,7 +46,7 @@ export class AasConnectionController {
     private readonly organizationService: OrganizationsService,
     private readonly itemsApplicationService: ItemsApplicationService,
     private aasConnectionService: AasConnectionService,
-    private productDataModelService: ProductDataModelService,
+    private productDataModelService: TemplateService,
     private configService: ConfigService,
     private permissionsService: PermissionsService,
     private uniqueProductIdentifierService: UniqueProductIdentifierService,

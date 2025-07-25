@@ -15,8 +15,8 @@ import { generateConfig, generateMongoConfig } from './database/config';
 import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
 import { PermissionsModule } from './permissions/permissions.module';
 
-import { ProductDataModelModule } from './product-data-model/product.data.model.module';
-import { ProductDataModelDraftModule } from './product-data-model-draft/product-data-model-draft.module';
+import { TemplateModule } from './templates/template.module';
+import { TemplateDraftModule } from './template-draft/template-draft.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TraceabilityEventsModule } from './traceability-events/traceability-events.module';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
@@ -47,8 +47,8 @@ import { IntegrationModule } from './integrations/integration.module';
       }),
       inject: [ConfigService],
     }),
-    ProductDataModelDraftModule,
-    ProductDataModelModule,
+    TemplateDraftModule,
+    TemplateModule,
     ItemsModule,
     ModelsModule,
     OrganizationsModule,

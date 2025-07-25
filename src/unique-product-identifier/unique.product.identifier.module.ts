@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { UniqueProductIdentifierController } from './presentation/unique.product.identifier.controller';
 import { ModelsService } from '../models/infrastructure/models.service';
-import { ProductDataModelService } from '../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../templates/infrastructure/template.service';
 import { UsersModule } from '../users/users.module';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../product-data-model/infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateSchema,
+} from '../templates/infrastructure/template.schema';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from '../items/infrastructure/item.schema';
@@ -36,8 +36,8 @@ import { PermissionsModule } from '../permissions/permissions.module';
         schema: ModelSchema,
       },
       {
-        name: ProductDataModelDoc.name,
-        schema: ProductDataModelSchema,
+        name: TemplateDoc.name,
+        schema: TemplateSchema,
       },
     ]),
     OrganizationsModule,
@@ -49,7 +49,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
   providers: [
     UniqueProductIdentifierService,
     ModelsService,
-    ProductDataModelService,
+    TemplateService,
     ItemsService,
   ],
   exports: [UniqueProductIdentifierService],

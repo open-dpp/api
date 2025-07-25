@@ -3,7 +3,7 @@ import { Document, Schema } from 'mongoose';
 import { DataValueDoc, DataValueSchema } from './data-value.schema';
 
 export abstract class PassportDoc extends Document {
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   _id: string;
 
   @Prop({ required: true })
@@ -15,8 +15,12 @@ export abstract class PassportDoc extends Document {
   @Prop({ type: [DataValueSchema], default: [] })
   dataValues: DataValueDoc[];
 
+  /** @deprecated Since model and item version 1.0.1. Use templateId instead */
   @Prop({ required: false })
   productDataModelId?: string;
+
+  @Prop({ required: true })
+  templateId: string;
 
   @Prop()
   createdAt?: Date;

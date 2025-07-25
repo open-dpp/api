@@ -49,6 +49,7 @@ export class KeycloakAuthGuard implements CanActivate {
     }
 
     const authContext = new AuthContext();
+    authContext.token = accessToken;
     authContext.permissions = [];
 
     let payload: KeycloakUserInToken & { memberships: string[] | undefined };

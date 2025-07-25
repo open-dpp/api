@@ -3,6 +3,23 @@ import { randomUUID } from 'crypto';
 import { ProductPassport } from '../../product-passport/domain/product-passport';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { Template } from '../../templates/domain/template';
+
+type ModelCreateProps = {
+  name: string;
+  userId: string;
+  organizationId: string;
+  description?: string;
+  template: Template;
+};
+
+type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
+  id: string;
+  uniqueProductIdentifiers: UniqueProductIdentifier[];
+  templateId: string;
+  dataValues: DataValue[];
+  description: string | undefined;
+};
 
 export class Model extends ProductPassport {
   granularityLevel = GranularityLevel.MODEL;
@@ -15,7 +32,7 @@ export class Model extends ProductPassport {
     ownedByOrganizationId: string,
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    productDataModelId: string | undefined,
+    templateId: string,
     dataValues: DataValue[],
     description: string | undefined,
   ) {
@@ -24,48 +41,36 @@ export class Model extends ProductPassport {
       ownedByOrganizationId,
       createdByUserId,
       uniqueProductIdentifiers,
-      productDataModelId,
+      templateId,
       dataValues,
     );
     this.name = name;
     this.description = description;
   }
 
-  static create(data: {
-    name: string;
-    userId: string;
-    organizationId: string;
-    description?: string;
-  }) {
-    return new Model(
+  static create(data: ModelCreateProps) {
+    const model = new Model(
       randomUUID(),
       data.name,
       data.organizationId,
       data.userId,
       [],
-      undefined,
+      data.template.id,
       [],
       data.description,
     );
+    model.initializeDataValueFromTemplate(data.template);
+    return model;
   }
 
-  static loadFromDb(data: {
-    id: string;
-    name: string;
-    ownedByOrganizationId: string;
-    createdByUserId: string;
-    uniqueProductIdentifiers: UniqueProductIdentifier[];
-    productDataModelId: string | undefined;
-    dataValues: DataValue[];
-    description: string | undefined;
-  }) {
+  static loadFromDb(data: ModelDbProps) {
     return new Model(
       data.id,
       data.name,
-      data.ownedByOrganizationId,
-      data.createdByUserId,
+      data.organizationId,
+      data.userId,
       data.uniqueProductIdentifiers,
-      data.productDataModelId,
+      data.templateId,
       data.dataValues,
       data.description,
     );

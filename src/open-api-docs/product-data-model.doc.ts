@@ -1,7 +1,6 @@
 import { sectionBaseDocumentation } from '../data-modelling/presentation/dto/docs/section-base.doc';
-import { VisibilityLevel } from '../product-data-model/domain/product.data.model';
 
-export const productDataModelDocumentation = {
+export const templateDocumentation = {
   type: 'object',
   properties: {
     id: {
@@ -20,15 +19,15 @@ export const productDataModelDocumentation = {
       type: 'array',
       items: { ...sectionBaseDocumentation },
     },
-    visibility: {
-      type: 'string',
-      enum: Object.values(VisibilityLevel),
-    },
     createdByUserId: {
       type: 'string',
       format: 'uuid',
     },
     ownedByOrganizationId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    marketplaceResourceId: {
       type: 'string',
       format: 'uuid',
     },
@@ -44,7 +43,7 @@ export const productDataModelDocumentation = {
   ],
 };
 
-export const productDataModelGetAllDocumentation = {
+export const templateGetAllDocumentation = {
   type: 'object',
   properties: {
     id: {
