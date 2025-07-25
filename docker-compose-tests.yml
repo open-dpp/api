@@ -30,8 +30,6 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin
       - MONGO_INITDB_DATABASE=management
     image: mongo:6.0
-    networks:
-      - open-dpp-local
   marketplace:
     container_name: marketplace
     image: ghcr.io/open-dpp/marketplace:main
@@ -46,5 +44,3 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
-    networks:
-      - open-dpp-local
