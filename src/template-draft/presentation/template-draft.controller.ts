@@ -109,7 +109,7 @@ export class TemplateDraftController {
     @Request() req: AuthRequest,
     @Body() body: UpdateTemplateDraftDto,
   ) {
-    const modifyProductDataModelDraftDto =
+    const updateTemplateDraftDto =
       UpdateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
@@ -120,7 +120,7 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
+    foundProductDataModelDraft.rename(updateTemplateDraftDto.name);
     await this.templateDraftService.save(foundProductDataModelDraft);
 
     return templateDraftToDto(foundProductDataModelDraft);
