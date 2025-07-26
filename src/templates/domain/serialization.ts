@@ -12,15 +12,15 @@ import { Template } from './template';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
-export function serializeTemplate(productDataModel: Template) {
+export function serializeTemplate(template: Template) {
   return {
-    _id: productDataModel.id,
-    name: productDataModel.name,
-    description: productDataModel.description,
-    sectors: productDataModel.sectors,
-    version: productDataModel.version,
+    _id: template.id,
+    name: template.name,
+    description: template.description,
+    sectors: template.sectors,
+    version: template.version,
     _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
-    sections: productDataModel.sections.map((s) => ({
+    sections: template.sections.map((s) => ({
       _id: s.id,
       name: s.name,
       type: s.type,
