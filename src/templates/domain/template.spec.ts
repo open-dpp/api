@@ -295,7 +295,7 @@ describe('Template', () => {
     ]);
   });
 
-  it('should create data values at model level', () => {
+  it('should assign marketplace resource ID at the model level', () => {
     const productDataModel = Template.loadFromDb(laptopModel);
     productDataModel.assignMarketplaceResource('m1');
     expect(productDataModel.marketplaceResourceId).toEqual('m1');
