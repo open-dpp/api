@@ -5,7 +5,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { Template } from '../templates/domain/template';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   deserializeProductDataModel,
   serializeProductDataModel,
@@ -18,6 +18,7 @@ import { TemplateService } from '../templates/infrastructure/template.service';
 @Injectable()
 export class MarketplaceService {
   private readonly marketplaceClient: MarketplaceApiClient;
+  private readonly logger = new Logger(MarketplaceService.name);
 
   constructor(
     configService: ConfigService,
@@ -36,21 +37,31 @@ export class MarketplaceService {
     template: Template,
     token: string,
   ): Promise<PassportTemplateDto> {
-    const templateData = serializeProductDataModel(template);
-    const organization = await this.organizationService.findOneOrFail(
-      template.ownedByOrganizationId,
-    );
-    this.marketplaceClient.setActiveOrganizationId(organization.id);
-    this.marketplaceClient.setApiKey(token);
-    const response = await this.marketplaceClient.passportTemplates.create({
-      version: template.version,
-      name: template.name,
-      description: template.description,
-      sectors: template.sectors,
-      organizationName: organization.name,
-      templateData,
-    });
-    return response.data;
+    try {
+      const templateData = serializeProductDataModel(template);
+      const organization = await this.organizationService.findOneOrFail(
+        template.ownedByOrganizationId,
+      );
+      this.marketplaceClient.setActiveOrganizationId(organization.id);
+      this.marketplaceClient.setApiKey(token);
+      const response = await this.marketplaceClient.passportTemplates.create({
+        version: template.version,
+        name: template.name,
+        description: template.description,
+        sectors: template.sectors,
+        organizationName: organization.name,
+        templateData,
+      });
+      return response.data;
+    } catch (error) {
+      this.logger.error(
+        `Failed to upload template to marketplace: ${error.message}`,
+        error.stack,
+      );
+      throw new Error(
+        `Failed to upload template to marketplace: ${error.message}`,
+      );
+    }
   }
 
   async download(
