@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 
 export const CreateModelDtoSchema = z
   .object({
@@ -8,9 +8,9 @@ export const CreateModelDtoSchema = z
     marketplaceResourceId: z.string().optional(),
   })
   .refine((data) => !!data.templateId || !!data.marketplaceResourceId, {
-    message: 'marketplaceResourceId or templateId must be provided',
+    error: 'marketplaceResourceId or templateId must be provided',
   })
   .refine((data) => !(data.templateId && data.marketplaceResourceId), {
-    message: 'marketplaceResourceId and templateId are mutually exclusive',
+    error: 'marketplaceResourceId and templateId are mutually exclusive',
   });
 export type CreateModelDto = z.infer<typeof CreateModelDtoSchema>;

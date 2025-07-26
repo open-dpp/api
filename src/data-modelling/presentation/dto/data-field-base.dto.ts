@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { DataFieldBase, DataFieldType } from '../../domain/data-field-base';
 import { LayoutDtoSchema, layoutToDto } from './layout.dto';
 import { GranularityLevel } from '../../domain/granularity-level';

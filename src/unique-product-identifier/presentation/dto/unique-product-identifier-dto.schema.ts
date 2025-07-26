@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { UniqueProductIdentifier } from '../../domain/unique.product.identifier';
 import { GranularityLevel } from '../../../data-modelling/domain/granularity-level';
 

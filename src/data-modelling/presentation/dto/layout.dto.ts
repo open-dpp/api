@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { Layout, ResponsiveConfigSchema } from '../../domain/layout';
 
 export const LayoutDtoSchema = z.object({

@@ -9,7 +9,7 @@ import { Model } from '../../models/domain/model';
 import { ValueError } from '../../exceptions/domain.errors';
 import { Template } from '../../templates/domain/template';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 
 export class AasConnection {
   private constructor(
@@ -22,12 +22,15 @@ export class AasConnection {
     private _modelId: string | null,
     private _fieldAssignments: AasFieldAssignment[],
   ) {}
+
   get fieldAssignments() {
     return this._fieldAssignments;
   }
+
   get dataModelId() {
     return this._dataModelId;
   }
+
   get modelId() {
     return this._modelId;
   }

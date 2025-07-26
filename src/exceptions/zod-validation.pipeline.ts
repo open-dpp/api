@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private schema: z.ZodType) {}
+  constructor(private schema: z.ZodSchema) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transform(value: unknown, metadata: ArgumentMetadata) {

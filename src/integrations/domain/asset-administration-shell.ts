@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { flatMap, get } from 'lodash';
 import { semitrailerTruckAas } from './semitrailer-truck-aas';
 import { truckAas } from './truck';
@@ -13,7 +13,7 @@ export enum AssetAdministrationShellType {
 const AASPropertySchema = z.object({
   idShort: z.string(),
   value: z.string().optional(),
-  valueType: z.string().default('xs:string'),
+  valueType: z.string().prefault('xs:string'),
   modelType: z.literal('Property'),
 });
 
