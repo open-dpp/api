@@ -7,8 +7,8 @@ import { OrganizationsService } from '../organizations/infrastructure/organizati
 import { Template } from '../templates/domain/template';
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  deserializeProductDataModel,
-  serializeProductDataModel,
+  deserializeTemplate,
+  serializeTemplate,
 } from '../templates/domain/serialization';
 import { TemplateDoc } from '../templates/infrastructure/template.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -33,12 +33,13 @@ export class MarketplaceService {
     }
     this.marketplaceClient = new MarketplaceApiClient({ baseURL });
   }
+
   async upload(
     template: Template,
     token: string,
   ): Promise<PassportTemplateDto> {
     try {
-      const templateData = serializeProductDataModel(template);
+      const templateData = serializeTemplate(template);
       const organization = await this.organizationService.findOneOrFail(
         template.ownedByOrganizationId,
       );
@@ -87,7 +88,7 @@ export class MarketplaceService {
     });
     await templateDoc.validate();
 
-    const template = deserializeProductDataModel(templateDoc.toObject());
+    const template = deserializeTemplate(templateDoc.toObject());
     template.assignMarketplaceResource(response.data.id);
     await this.templateService.save(template);
     return template;

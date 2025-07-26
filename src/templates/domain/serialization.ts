@@ -12,7 +12,7 @@ import { Template } from './template';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
-export function serializeProductDataModel(productDataModel: Template) {
+export function serializeTemplate(productDataModel: Template) {
   return {
     _id: productDataModel.id,
     name: productDataModel.name,
@@ -43,7 +43,7 @@ export function serializeProductDataModel(productDataModel: Template) {
   };
 }
 
-export function deserializeProductDataModel(plain: TemplateDoc) {
+export function deserializeTemplate(plain: TemplateDoc) {
   const tmp = {
     id: plain._id,
     marketplaceResourceId: plain.marketplaceResourceId,
