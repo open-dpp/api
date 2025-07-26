@@ -14,7 +14,7 @@ import { laptopFactory } from '../fixtures/laptop.factory';
 import { sectionDbPropsFactory } from '../fixtures/section.factory';
 import { SectionType } from '../../data-modelling/domain/section-base';
 
-describe('ProductDataModelService', () => {
+describe('TemplateService', () => {
   let service: TemplateService;
   const userId = randomUUID();
   const organizationId = randomUUID();
