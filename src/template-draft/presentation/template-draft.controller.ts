@@ -56,8 +56,8 @@ import { MarketplaceService } from '../../marketplace/marketplace.service';
 export class TemplateDraftController {
   constructor(
     private readonly permissionsService: PermissionsService,
-    private readonly productDataModelService: TemplateService,
-    private readonly productDataModelDraftService: TemplateDraftService,
+    private readonly templateService: TemplateService,
+    private readonly templateDraftService: TemplateDraftService,
     private readonly marketplaceService: MarketplaceService,
   ) {}
 
@@ -74,7 +74,7 @@ export class TemplateDraftController {
       req.authContext,
     );
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(
+      await this.templateDraftService.save(
         TemplateDraft.create({
           ...createProductDataModelDraftDto,
           organizationId,
@@ -95,7 +95,7 @@ export class TemplateDraftController {
       req.authContext,
     );
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -116,12 +116,12 @@ export class TemplateDraftController {
       req.authContext,
     );
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.rename(modifyProductDataModelDraftDto.name);
-    await this.productDataModelDraftService.save(foundProductDataModelDraft);
+    await this.templateDraftService.save(foundProductDataModelDraft);
 
     return templateDraftToDto(foundProductDataModelDraft);
   }
@@ -140,7 +140,7 @@ export class TemplateDraftController {
     );
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -158,7 +158,7 @@ export class TemplateDraftController {
       foundProductDataModelDraft.addSection(section);
     }
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+      await this.templateDraftService.save(foundProductDataModelDraft),
     );
   }
 
@@ -176,7 +176,7 @@ export class TemplateDraftController {
     );
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -194,8 +194,8 @@ export class TemplateDraftController {
       );
     }
 
-    await this.productDataModelService.save(publishedProductDataModel);
-    const draft = await this.productDataModelDraftService.save(
+    await this.templateService.save(publishedProductDataModel);
+    const draft = await this.templateDraftService.save(
       foundProductDataModelDraft,
       publishedProductDataModel.version,
     );
@@ -219,7 +219,7 @@ export class TemplateDraftController {
     );
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -231,7 +231,7 @@ export class TemplateDraftController {
     foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
 
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+      await this.templateDraftService.save(foundProductDataModelDraft),
     );
   }
 
@@ -247,14 +247,14 @@ export class TemplateDraftController {
       req.authContext,
     );
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.deleteSection(sectionId);
 
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+      await this.templateDraftService.save(foundProductDataModelDraft),
     );
   }
 
@@ -273,7 +273,7 @@ export class TemplateDraftController {
     );
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -283,7 +283,7 @@ export class TemplateDraftController {
     );
 
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+      await this.templateDraftService.save(foundProductDataModelDraft),
     );
   }
 
@@ -303,7 +303,7 @@ export class TemplateDraftController {
     );
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -314,7 +314,7 @@ export class TemplateDraftController {
     );
 
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+      await this.templateDraftService.save(foundProductDataModelDraft),
     );
   }
 
@@ -332,14 +332,14 @@ export class TemplateDraftController {
     );
 
     const foundProductDataModelDraft =
-      await this.productDataModelDraftService.findOneOrFail(draftId);
+      await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
 
     return templateDraftToDto(
-      await this.productDataModelDraftService.save(foundProductDataModelDraft),
+      await this.templateDraftService.save(foundProductDataModelDraft),
     );
   }
 
@@ -353,7 +353,7 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    return await this.productDataModelDraftService.findAllByOrganization(
+    return await this.templateDraftService.findAllByOrganization(
       organizationId,
     );
   }
