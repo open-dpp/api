@@ -5,7 +5,7 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { DataValue } from '../../product-passport/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 
-describe('ProductDataModel', () => {
+describe('Template', () => {
   const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
 
   it('should create data values at model level', () => {
