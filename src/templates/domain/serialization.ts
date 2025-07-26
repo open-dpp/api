@@ -37,9 +37,9 @@ export function serializeTemplate(template: Template) {
       subSections: s.subSections,
       parentId: s.parentId,
     })),
-    createdByUserId: productDataModel.createdByUserId,
-    ownedByOrganizationId: productDataModel.ownedByOrganizationId,
-    marketplaceResourceId: productDataModel.marketplaceResourceId,
+    createdByUserId: template.createdByUserId,
+    ownedByOrganizationId: template.ownedByOrganizationId,
+    marketplaceResourceId: template.marketplaceResourceId,
   };
 }
 
