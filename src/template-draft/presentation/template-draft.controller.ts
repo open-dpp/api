@@ -360,9 +360,9 @@ export class TemplateDraftController {
 
   private hasPermissionsOrFail(
     organizationId: string,
-    productDataModelDraft: TemplateDraft,
+    templateDraft: TemplateDraft,
   ) {
-    if (!productDataModelDraft.isOwnedBy(organizationId)) {
+    if (!templateDraft.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
   }
