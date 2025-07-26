@@ -54,15 +54,15 @@ describe('TemplateDraftService', () => {
   });
 
   it('saves draft', async () => {
-    const productDataModelDraft = TemplateDraft.loadFromDb({
+    const templateDraft = TemplateDraft.loadFromDb({
       ...laptopModelPlain,
     });
-    const { id } = await service.save(productDataModelDraft);
+    const { id } = await service.save(templateDraft);
     const found = await service.findOneOrFail(id);
-    expect(found).toEqual(productDataModelDraft);
+    expect(found).toEqual(templateDraft);
   });
 
-  it('fails if requested product data model draft could not be found', async () => {
+  it('fails if requested template draft could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(TemplateDraft.name),
     );
@@ -98,12 +98,12 @@ describe('TemplateDraftService', () => {
       ],
     });
 
-    const productDataModelDraft = TemplateDraft.loadFromDb({
+    const templateDraft = TemplateDraft.loadFromDb({
       ...laptopModel,
       organizationId: randomUUID(),
       userId: randomUUID(),
     });
-    const { id } = await service.save(productDataModelDraft);
+    const { id } = await service.save(templateDraft);
     const found = await service.findOneOrFail(id);
     expect(found.findSectionOrFail('s1').granularityLevel).toBeUndefined();
     expect(found.findSectionOrFail('s2').granularityLevel).toEqual(
@@ -111,8 +111,8 @@ describe('TemplateDraftService', () => {
     );
   });
 
-  it('should delete section on product data model draft', async () => {
-    const productDataModelDraft = TemplateDraft.create(
+  it('should delete section on template draft', async () => {
+    const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
     const section1 = DataSectionDraft.create({
@@ -133,26 +133,26 @@ describe('TemplateDraftService', () => {
       layout,
       granularityLevel: GranularityLevel.ITEM,
     });
-    productDataModelDraft.addSection(section1);
-    productDataModelDraft.addSubSection(section1.id, section11);
-    productDataModelDraft.addSection(section2);
+    templateDraft.addSection(section1);
+    templateDraft.addSubSection(section1.id, section11);
+    templateDraft.addSection(section2);
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       layout,
       granularityLevel: GranularityLevel.ITEM,
     });
-    productDataModelDraft.addDataFieldToSection(section1.id, dataField);
+    templateDraft.addDataFieldToSection(section1.id, dataField);
 
-    await service.save(productDataModelDraft);
-    productDataModelDraft.deleteSection(section1.id);
-    const { id } = await service.save(productDataModelDraft);
+    await service.save(templateDraft);
+    templateDraft.deleteSection(section1.id);
+    const { id } = await service.save(templateDraft);
     const found = await service.findOneOrFail(id);
     expect(found.sections).toEqual([section2]);
   });
 
-  it('should delete data fields of product data model draft', async () => {
-    const productDataModelDraft = TemplateDraft.create(
+  it('should delete data fields of template draft', async () => {
+    const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
     const section = DataSectionDraft.create({
@@ -161,7 +161,7 @@ describe('TemplateDraftService', () => {
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    productDataModelDraft.addSection(section);
+    templateDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
@@ -175,16 +175,16 @@ describe('TemplateDraftService', () => {
       granularityLevel: GranularityLevel.MODEL,
     });
 
-    productDataModelDraft.addDataFieldToSection(section.id, dataField1);
-    productDataModelDraft.addDataFieldToSection(section.id, dataField2);
-    await service.save(productDataModelDraft);
-    productDataModelDraft.deleteDataFieldOfSection(section.id, dataField2.id);
-    await service.save(productDataModelDraft);
-    const found = await service.findOneOrFail(productDataModelDraft.id);
+    templateDraft.addDataFieldToSection(section.id, dataField1);
+    templateDraft.addDataFieldToSection(section.id, dataField2);
+    await service.save(templateDraft);
+    templateDraft.deleteDataFieldOfSection(section.id, dataField2.id);
+    await service.save(templateDraft);
+    const found = await service.findOneOrFail(templateDraft.id);
     expect(found.sections[0].dataFields).toEqual([dataField1]);
   });
 
-  it('should return all product data model drafts by organization', async () => {
+  it('should return all template drafts by organization', async () => {
     const organizationId = randomUUID();
 
     const laptopDraft = TemplateDraft.create(
