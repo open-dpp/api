@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { Sector } from '@open-dpp/api-client';
 
 export const CreateTemplateDraftDtoSchema = z.object({

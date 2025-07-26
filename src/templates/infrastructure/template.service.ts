@@ -5,8 +5,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TemplateDoc } from './template.schema';
 import {
-  deserializeProductDataModel,
-  serializeProductDataModel,
+  deserializeTemplate,
+  serializeTemplate,
 } from '../domain/serialization';
 
 @Injectable()
@@ -18,11 +18,11 @@ export class TemplateService {
 
   convertToDomain(templateDoc: TemplateDoc): Template {
     const plain = templateDoc.toObject();
-    return deserializeProductDataModel(plain);
+    return deserializeTemplate(plain);
   }
 
-  async save(productDataModel: Template) {
-    const { _id, ...rest } = serializeProductDataModel(productDataModel);
+  async save(template: Template) {
+    const { _id, ...rest } = serializeTemplate(template);
     const dataModelDoc = await this.templateDoc.findOneAndUpdate(
       { _id },
       rest,

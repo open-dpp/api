@@ -6,7 +6,7 @@ import { DataValue } from '../../product-passport/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 import { randomUUID } from 'crypto';
 
-describe('ProductDataModel', () => {
+describe('Template', () => {
   const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
 
   it('should create data values at model level', () => {
@@ -312,7 +312,7 @@ describe('ProductDataModel', () => {
     expect(templateCopy.sections).toEqual(template.sections);
   });
 
-  it('should create data values at model level', () => {
+  it('should assign marketplace resource ID at the model level', () => {
     const productDataModel = Template.loadFromDb(laptopModel);
     productDataModel.assignMarketplaceResource('m1');
     expect(productDataModel.marketplaceResourceId).toEqual('m1');

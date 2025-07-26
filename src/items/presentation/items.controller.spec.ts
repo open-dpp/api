@@ -342,8 +342,6 @@ describe('ItemsController', () => {
       template,
     });
     const item = Item.create({ organizationId, userId, model, template });
-    const productDataModel = Template.loadFromDb(laptopModel);
-    await templateService.save(productDataModel);
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
     const addedValues = [

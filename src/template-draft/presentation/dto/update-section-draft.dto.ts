@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { SectionLayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
 export const UpdateSectionDraftDtoSchema = z.object({

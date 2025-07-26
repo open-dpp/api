@@ -28,7 +28,12 @@ export class MarketplaceServiceTesting {
     userId: string,
     marketplaceResourceId: string,
   ): Promise<Template> {
-    const template = this.templateMap.get(marketplaceResourceId)!;
+    const template = this.templateMap.get(marketplaceResourceId);
+    if (!template) {
+      throw new Error(
+        `Template with marketplaceResourceId ${marketplaceResourceId} not found`,
+      );
+    }
     template.assignMarketplaceResource(marketplaceResourceId);
     return template;
   }

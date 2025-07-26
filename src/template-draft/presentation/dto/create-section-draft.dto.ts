@@ -1,6 +1,6 @@
 import { SectionType } from '../../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../../data-modelling/domain/granularity-level';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { SectionLayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
 export const CreateSectionDraftDtoSchema = z.object({

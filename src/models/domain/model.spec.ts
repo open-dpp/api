@@ -61,7 +61,7 @@ describe('Model', () => {
     const id = randomUUID();
     const name = 'My name';
     const description = 'Some description';
-    const productDataModelId = randomUUID();
+    const templateId = randomUUID();
     const dataValues = [
       {
         value: 'value1',
@@ -86,7 +86,7 @@ describe('Model', () => {
       organizationId: ownedByOrganizationId,
       userId: createdByUserId,
       uniqueProductIdentifiers: [],
-      templateId: productDataModelId,
+      templateId: templateId,
       dataValues,
       description,
     });
@@ -95,7 +95,7 @@ describe('Model', () => {
     expect(model.description).toEqual(description);
     expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy();
     expect(model.dataValues).toEqual(dataValues);
-    expect(model.templateId).toEqual(productDataModelId);
+    expect(model.templateId).toEqual(templateId);
   });
 
   it('add data values', () => {

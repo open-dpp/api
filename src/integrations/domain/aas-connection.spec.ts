@@ -174,7 +174,7 @@ describe('AasMapping', () => {
       ],
     });
 
-    const productDataModel = Template.loadFromDb(laptopModel);
+    const templateInstance = Template.loadFromDb(laptopModel);
 
     const fieldAssignment1 = AasFieldAssignment.create({
       dataFieldId: dataFieldId3,
@@ -193,7 +193,7 @@ describe('AasMapping', () => {
 
     const dataValues = aasConnection.generateDataValues(
       AssetAdministrationShell.create({ content: semitrailerTruckAas }),
-      productDataModel,
+      templateInstance,
     );
     expect(dataValues).toEqual(
       ignoreIds([

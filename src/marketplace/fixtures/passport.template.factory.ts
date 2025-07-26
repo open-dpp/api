@@ -50,7 +50,7 @@ export const templateDataFactory = Factory.define<Record<string, unknown>>(
           {
             _id: 'field-1',
             name: 'Product Name',
-            type: DataFieldType.NUMERIC_FIELD,
+            type: DataFieldType.TEXT_FIELD,
             options: { min: 2 },
             layout: {
               colSpan: { sm: 1 },

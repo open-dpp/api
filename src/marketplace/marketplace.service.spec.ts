@@ -28,10 +28,10 @@ import { laptopFactory } from '../templates/fixtures/laptop.factory';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import { templateCreatePropsFactory } from '../templates/fixtures/template.factory';
 
-export const mockCreatePassportTemplateInMarketplace = jest.fn();
-export const mockGetPassportTemplateInMarketplace = jest.fn();
-export const mockSetActiveOrganizationId = jest.fn();
-export const mockSetApiKey = jest.fn();
+const mockCreatePassportTemplateInMarketplace = jest.fn();
+const mockGetPassportTemplateInMarketplace = jest.fn();
+const mockSetActiveOrganizationId = jest.fn();
+const mockSetApiKey = jest.fn();
 
 jest.mock('@open-dpp/api-client', () => ({
   ...jest.requireActual('@open-dpp/api-client'),

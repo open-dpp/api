@@ -69,13 +69,32 @@ export class ModelsController {
       organizationId,
       req.authContext,
     );
-    const template = createModelDto.templateId
-      ? await this.templateService.findOneOrFail(createModelDto.templateId)
-      : await this.marketplaceService.download(
-          organizationId,
-          req.authContext.user.id,
-          createModelDto.marketplaceResourceId,
-        );
+
+    // Validate that only one of templateId or marketplaceResourceId is provided
+    if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
+      throw new BadRequestException(
+        'Either templateId or marketplaceResourceId must be provided',
+      );
+    }
+
+    if (createModelDto.templateId && createModelDto.marketplaceResourceId) {
+      throw new BadRequestException(
+        'Only one of templateId or marketplaceResourceId can be provided, not both',
+      );
+    }
+
+    let template;
+    if (createModelDto.templateId) {
+      template = await this.templateService.findOneOrFail(
+        createModelDto.templateId,
+      );
+    } else {
+      template = await this.marketplaceService.download(
+        organizationId,
+        req.authContext.user.id,
+        createModelDto.marketplaceResourceId,
+      );
+    }
     if (!template.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
@@ -207,10 +226,8 @@ export class ModelsController {
     }
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.templateService.findOneOrFail(
-      model.templateId,
-    );
-    const validationResult = productDataModel.validate(
+    const template = await this.templateService.findOneOrFail(model.templateId);
+    const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
     );
@@ -250,10 +267,8 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.templateService.findOneOrFail(
-      model.templateId,
-    );
-    const validationResult = productDataModel.validate(
+    const template = await this.templateService.findOneOrFail(model.templateId);
+    const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
     );

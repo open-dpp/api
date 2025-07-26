@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../users/infrastructure/user.entity';
@@ -16,7 +15,6 @@ import { TemplateService } from '../templates/infrastructure/template.service';
 
 @Module({
   imports: [
-    TypeOrmTestingModule,
     TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
     MongooseModule.forFeature([
       {

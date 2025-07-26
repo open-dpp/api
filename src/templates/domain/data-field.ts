@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import {
   DataFieldBase,
   DataFieldType,
@@ -124,6 +124,7 @@ export class TextField extends DataField {
       type: DataFieldType.TEXT_FIELD,
     });
   }
+
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
   }
@@ -144,6 +145,7 @@ export class ProductPassportLink extends DataField {
       type: DataFieldType.PRODUCT_PASSPORT_LINK,
     });
   }
+
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
   }
@@ -164,6 +166,7 @@ export class NumericField extends DataField {
       type: DataFieldType.NUMERIC_FIELD,
     });
   }
+
   validate(version: string, value: unknown): DataFieldValidationResult {
     const result = z.number().optional().safeParse(value);
     return DataFieldValidationResult.create({

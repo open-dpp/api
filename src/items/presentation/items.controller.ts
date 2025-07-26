@@ -40,7 +40,7 @@ export class ItemsController {
     private readonly permissionsService: PermissionsService,
     private readonly itemsApplicationService: ItemsApplicationService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: TemplateService,
+    private readonly templateService: TemplateService,
   ) {}
 
   @ApiOperation({
@@ -160,11 +160,9 @@ export class ItemsController {
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
     if (!item.templateId) {
-      throw new BadRequestException(
-        'Item does not have a product data model assigned',
-      );
+      throw new BadRequestException('Item does not have a template assigned');
     }
-    const productDataModel = await this.productDataModelService.findOneOrFail(
+    const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
     );
 
@@ -211,11 +209,9 @@ export class ItemsController {
 
     item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
     if (!item.templateId) {
-      throw new BadRequestException(
-        'Item does not have a product data model assigned',
-      );
+      throw new BadRequestException('Item does not have a template assigned');
     }
-    const productDataModel = await this.productDataModelService.findOneOrFail(
+    const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
     );
 

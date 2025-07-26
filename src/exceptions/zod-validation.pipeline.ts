@@ -4,7 +4,7 @@ import {
   Injectable,
   PipeTransform,
 } from '@nestjs/common';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {

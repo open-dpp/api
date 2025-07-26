@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { LayoutDtoSchema } from '../../../data-modelling/presentation/dto/layout.dto';
 
 export const UpdateDataFieldDraftDtoSchema = z.object({

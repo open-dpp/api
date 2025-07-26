@@ -22,9 +22,6 @@ services:
     ports:
       - 20006:27017
     container_name: marketplace-db-test
-    volumes:
-      - ./marketplace-db:/data/db
-      - ./marketplace-db-config:/data/configdb
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin

@@ -2,7 +2,7 @@ import {
   UniqueProductIdentifierDtoSchema,
   uniqueProductIdentifierToDto,
 } from '../../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { Model } from '../../domain/model';
 import {
   DataValueDtoSchema,

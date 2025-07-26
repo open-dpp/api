@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { SectionType } from '../../domain/section-base';
 import { layoutToDto, SectionLayoutDtoSchema } from './layout.dto';
 import { GranularityLevel } from '../../domain/granularity-level';

@@ -15,7 +15,7 @@ export class ModelDoc extends PassportDoc {
   name: string;
 
   @Prop({
-    default: ModelDocSchemaVersion.v1_0_0,
+    default: ModelDocSchemaVersion.v1_0_1,
     enum: ModelDocSchemaVersion,
   }) // Track schema version
   _schemaVersion: ModelDocSchemaVersion;
