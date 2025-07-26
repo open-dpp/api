@@ -6,7 +6,7 @@ import { UniqueProductIdentifierModule } from '../unique-product-identifier/uniq
 import { PermissionsModule } from '../permissions/permissions.module';
 import { ItemDoc, ItemSchema } from '../items/infrastructure/item.schema';
 import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
-import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { TemplateModule } from '../templates/template.module';
 import {
   AasConnectionDoc,
   AasConnectionSchema,
@@ -34,7 +34,7 @@ import { OrganizationsModule } from '../organizations/organizations.module';
       },
     ]),
     OrganizationsModule,
-    ProductDataModelModule,
+    TemplateModule,
     UniqueProductIdentifierModule,
     PermissionsModule,
     TraceabilityEventsModule,

@@ -9,9 +9,9 @@ import { TraceabilityEventsModule } from '../../traceability-events/traceability
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { userObj1 } from '../../../test/users-and-orgs';
 import { AuthContext } from '../../auth/auth-request';
-import { Connection } from 'mongoose';
+import { Connection, Model as MongooseModel } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { ItemDoc, ItemSchema } from './item.schema';
+import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from './item.schema';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -25,19 +25,15 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { UsersService } from '../../users/infrastructure/users.service';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import {
-  ProductDataModel,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { Layout } from '../../data-modelling/domain/layout';
-import {
-  GroupSection,
-  RepeaterSection,
-} from '../../product-data-model/domain/section';
-import { TextField } from '../../product-data-model/domain/data-field';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { Sector } from '@open-dpp/api-client';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -46,9 +42,12 @@ describe('ItemsService', () => {
   let mongoConnection: Connection;
   const authContext = new AuthContext();
   authContext.user = userObj1;
+  let itemDoc: MongooseModel<ItemDoc>;
+  const template = Template.create(templateCreatePropsFactory.build());
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -76,6 +75,7 @@ describe('ItemsService', () => {
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
+    itemDoc = mongoConnection.model(ItemDoc.name, ItemSchema);
   });
 
   it('fails if requested item could not be found', async () => {
@@ -89,109 +89,120 @@ describe('ItemsService', () => {
       name: 'name',
       userId: userId,
       organizationId,
+      template,
     });
 
     const item = Item.create({
       userId: userId,
       organizationId: organizationId,
+      template,
+      model,
     });
-    item.defineModel(model);
     const savedItem = await itemService.save(item);
     expect(savedItem.modelId).toEqual(model.id);
     const foundItem = await itemService.findOneOrFail(item.id);
     expect(foundItem.modelId).toEqual(model.id);
   });
 
-  it('should create an item with product data model', async () => {
-    const item = Item.create({
-      userId: userId,
-      organizationId: organizationId,
-    });
-    const productDataModel = ProductDataModel.loadFromDb({
+  it('should create an item with template', async () => {
+    const template1 = Template.loadFromDb({
+      marketplaceResourceId: null,
       id: randomUUID(),
       name: 'Laptop',
+      description: 'My Laptop',
+      sectors: [Sector.ELECTRONICS],
       version: '1.0',
-      visibility: VisibilityLevel.PRIVATE,
-      ownedByOrganizationId: organizationId,
-      createdByUserId: userId,
+      organizationId: organizationId,
+      userId: userId,
       sections: [
-        GroupSection.loadFromDb({
+        {
+          type: SectionType.GROUP,
           id: randomUUID(),
           parentId: undefined,
           subSections: [],
           name: 'Section 1',
-          layout: Layout.create({
+          layout: {
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          }),
+          },
           dataFields: [
-            TextField.create({
+            {
+              id: randomUUID(),
+              type: DataFieldType.TEXT_FIELD,
               name: 'Title',
               options: { min: 2 },
-              layout: Layout.create({
+              layout: {
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              }),
+              },
               granularityLevel: GranularityLevel.ITEM,
-            }),
-            TextField.create({
+            },
+            {
+              id: randomUUID(),
+              type: DataFieldType.TEXT_FIELD,
               name: 'Title 2',
               options: { min: 7 },
-              layout: Layout.create({
+              layout: {
                 colStart: { sm: 2 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              }),
+              },
               granularityLevel: GranularityLevel.ITEM,
-            }),
+            },
           ],
-        }),
-        GroupSection.loadFromDb({
+        },
+        {
+          type: SectionType.GROUP,
           id: randomUUID(),
           name: 'Section 2',
           parentId: undefined,
           subSections: [],
-          layout: Layout.create({
+          layout: {
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          }),
+          },
           dataFields: [
-            TextField.create({
+            {
+              id: randomUUID(),
+              type: DataFieldType.TEXT_FIELD,
               name: 'Title 3',
               options: { min: 8 },
-              layout: Layout.create({
+              layout: {
                 colStart: { sm: 1 },
                 colSpan: { sm: 1 },
                 rowStart: { sm: 1 },
                 rowSpan: { sm: 1 },
-              }),
+              },
               granularityLevel: GranularityLevel.ITEM,
-            }),
+            },
           ],
-        }),
-        RepeaterSection.loadFromDb({
+        },
+        {
+          type: SectionType.REPEATABLE,
           id: randomUUID(),
           parentId: undefined,
           subSections: [],
           name: 'Section 3',
-          layout: Layout.create({
+          layout: {
             cols: { sm: 3 },
             colStart: { sm: 1 },
             colSpan: { sm: 1 },
             rowStart: { sm: 1 },
             rowSpan: { sm: 1 },
-          }),
+          },
           dataFields: [
-            TextField.create({
+            {
+              id: randomUUID(),
+              type: DataFieldType.TEXT_FIELD,
               name: 'Title 4',
               options: { min: 8 },
               layout: Layout.create({
@@ -201,48 +212,59 @@ describe('ItemsService', () => {
                 rowSpan: { sm: 1 },
               }),
               granularityLevel: GranularityLevel.ITEM,
-            }),
+            },
           ],
-        }),
+        },
       ],
     });
+    const model = Model.create({
+      name: 'name',
+      userId: userId,
+      organizationId: organizationId,
+      template: template1,
+    });
+    const item = Item.create({
+      userId: userId,
+      organizationId: organizationId,
+      template: template1,
+      model,
+    });
 
-    item.assignProductDataModel(productDataModel);
     item.addDataValues([
       DataValue.create({
         value: undefined,
-        dataSectionId: productDataModel.sections[2].id,
-        dataFieldId: productDataModel.sections[2].dataFields[0].id,
+        dataSectionId: template1.sections[2].id,
+        dataFieldId: template1.sections[2].dataFields[0].id,
         row: 0,
       }),
     ]);
     const { id } = await itemService.save(item);
     const foundItem = await itemService.findOneOrFail(id);
-    expect(foundItem.productDataModelId).toEqual(productDataModel.id);
+    expect(foundItem.templateId).toEqual(template1.id);
     expect(foundItem.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[0].id,
-          dataFieldId: productDataModel.sections[0].dataFields[0].id,
+          dataSectionId: template1.sections[0].id,
+          dataFieldId: template1.sections[0].dataFields[0].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[0].id,
-          dataFieldId: productDataModel.sections[0].dataFields[1].id,
+          dataSectionId: template1.sections[0].id,
+          dataFieldId: template1.sections[0].dataFields[1].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[1].id,
-          dataFieldId: productDataModel.sections[1].dataFields[0].id,
+          dataSectionId: template1.sections[1].id,
+          dataFieldId: template1.sections[1].dataFields[0].id,
           row: 0,
         }),
         DataValue.create({
           value: undefined,
-          dataSectionId: productDataModel.sections[2].id,
-          dataFieldId: productDataModel.sections[2].dataFields[0].id,
+          dataSectionId: template1.sections[2].id,
+          dataFieldId: template1.sections[2].dataFields[0].id,
           row: 0,
         }),
       ]),
@@ -254,30 +276,36 @@ describe('ItemsService', () => {
       name: 'name',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
     const model2 = Model.create({
       name: 'name',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
     const item1 = Item.create({
       userId: userId,
       organizationId: organizationId,
+      template,
+      model: model1,
     });
-    item1.defineModel(model1);
     const item2 = Item.create({
       userId: userId,
       organizationId: organizationId,
+      template,
+      model: model1,
     });
-    item2.defineModel(model1);
+
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = Item.create({
       userId: userId,
       organizationId: organizationId,
+      model: model2,
+      template,
     });
-    item3.defineModel(model2);
-
+    await itemService.save(item3);
     const foundItems = await itemService.findAllByModel(model1.id);
     expect(foundItems).toEqual([item1, item2]);
   });
@@ -287,13 +315,15 @@ describe('ItemsService', () => {
       name: 'Model with UPIs',
       userId: userId,
       organizationId: organizationId,
+      template,
     });
     // Create item with unique product identifiers
     const item = Item.create({
       userId: userId,
       organizationId: organizationId,
+      model,
+      template,
     });
-    item.defineModel(model);
 
     // Add unique product identifiers to the item
     const upi1 = item.createUniqueProductIdentifier();
@@ -341,7 +371,29 @@ describe('ItemsService', () => {
     expect(item.uniqueProductIdentifiers).toHaveLength(2);
   });
 
+  it(`should migrate from ${ItemDocSchemaVersion.v1_0_0} to ${ItemDocSchemaVersion.v1_0_1}`, async () => {
+    const id = randomUUID();
+    await itemDoc.findOneAndUpdate(
+      { _id: id },
+      {
+        _schemaVersion: ItemDocSchemaVersion.v1_0_0,
+        name: 'Migration Name',
+        description: 'desc',
+        productDataModelId: 'templateId',
+        dataValues: [],
+        createdByUserId: 'userId',
+        ownedByOrganizationId: 'orgId',
+      },
+      { upsert: true },
+    );
+    const found = await itemService.findOneOrFail(id); // or _id: new ObjectId(idAsString)
+    expect(found.templateId).toEqual('templateId');
+    const saved = await itemService.save(found);
+    expect(saved.templateId).toEqual('templateId');
+  });
+
   afterAll(async () => {
     await mongoConnection.close();
+    await module.close();
   });
 });

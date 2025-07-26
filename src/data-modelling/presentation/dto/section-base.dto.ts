@@ -1,10 +1,10 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { SectionType } from '../../domain/section-base';
 import { layoutToDto, SectionLayoutDtoSchema } from './layout.dto';
 import { GranularityLevel } from '../../domain/granularity-level';
 import { DataFieldBaseSchema, dataFieldToDto } from './data-field-base.dto';
-import { DataSectionDraft } from '../../../product-data-model-draft/domain/section-draft';
-import { DataSection } from '../../../product-data-model/domain/section';
+import { DataSectionDraft } from '../../../template-draft/domain/section-draft';
+import { DataSection } from '../../../templates/domain/section';
 
 export const SectionBaseDtoSchema = z.object({
   id: z.uuid(),

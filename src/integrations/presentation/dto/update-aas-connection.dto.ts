@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { AasFieldAssignmentSchema } from './aas-connection.dto';
 
 export const UpdateAasConnectionSchema = z.object({

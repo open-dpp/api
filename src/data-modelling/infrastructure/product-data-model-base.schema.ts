@@ -4,6 +4,7 @@ import { DataFieldType } from '../domain/data-field-base';
 import { SectionType } from '../domain/section-base';
 import { LayoutDoc, LayoutSchema } from './layout.schema';
 import { GranularityLevel } from '../domain/granularity-level';
+import { Sector } from '@open-dpp/api-client';
 
 @Schema()
 export class DataFieldDoc {
@@ -54,12 +55,26 @@ export class SectionDoc {
 }
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 
-export abstract class ProductDataModelBaseDoc extends Document {
+export abstract class TemplateBaseDoc extends Document {
   @Prop({ required: true })
   _id: string;
 
   @Prop({ required: true })
   name: string;
+
+  @Prop({
+    required: true,
+    default: 'Passvorlage',
+  })
+  description: string;
+
+  @Prop({
+    required: true,
+    type: [String],
+    enum: Sector,
+    default: [Sector.OTHER],
+  })
+  sectors: Sector[];
 
   @Prop({ required: true })
   version: string;

@@ -14,7 +14,7 @@ import { CreateModelDto, CreateModelDtoSchema } from './dto/create-model.dto';
 import { UpdateModelDto, UpdateModelDtoSchema } from './dto/update-model.dto';
 import { AuthRequest } from '../../auth/auth-request';
 import { Model } from '../domain/model';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 
 import { modelToDto } from './dto/model.dto';
@@ -35,14 +35,16 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { productDataModelParamDocumentation } from '../../product-data-model/presentation/dto/product-data-model.dto';
+import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
   constructor(
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly templateService: TemplateService,
     private readonly permissionsService: PermissionsService,
+    private readonly marketplaceService: MarketplaceService,
   ) {}
 
   @ApiOperation({
@@ -59,19 +61,49 @@ export class ModelsController {
   @Post()
   async create(
     @Param('orgaId') organizationId: string,
-    @Body() requestBody: CreateModelDto,
+    @Body(new ZodValidationPipe(CreateModelDtoSchema))
+    createModelDto: CreateModelDto,
     @Request() req: AuthRequest,
   ) {
-    const createModelDto = CreateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
+
+    // Validate that only one of templateId or marketplaceResourceId is provided
+    if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
+      throw new BadRequestException(
+        'Either templateId or marketplaceResourceId must be provided',
+      );
+    }
+
+    if (createModelDto.templateId && createModelDto.marketplaceResourceId) {
+      throw new BadRequestException(
+        'Only one of templateId or marketplaceResourceId can be provided, not both',
+      );
+    }
+
+    let template;
+    if (createModelDto.templateId) {
+      template = await this.templateService.findOneOrFail(
+        createModelDto.templateId,
+      );
+    } else {
+      template = await this.marketplaceService.download(
+        organizationId,
+        req.authContext.user.id,
+        createModelDto.marketplaceResourceId,
+      );
+    }
+    if (!template.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
       userId: req.authContext.user.id,
       organizationId: organizationId,
+      template,
     });
     model.createUniqueProductIdentifier();
     return modelToDto(await this.modelsService.save(model));
@@ -165,43 +197,6 @@ export class ModelsController {
   }
 
   @ApiOperation({
-    summary: 'Assign product data model',
-    description: 'Assign product data model to model.',
-  })
-  @ApiParam(orgaParamDocumentation)
-  @ApiParam(modelParamDocumentation)
-  @ApiParam(productDataModelParamDocumentation)
-  @ApiResponse({
-    schema: modelDocumentation,
-  })
-  @Post(':modelId/product-data-models/:productDataModelId')
-  async assignProductDataModelToModel(
-    @Param('orgaId') organizationId: string,
-    @Param('modelId') modelId: string,
-    @Param('productDataModelId') productDataModelId: string,
-    @Request() req: AuthRequest,
-  ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-    const productDataModel =
-      await this.productDataModelService.findOneOrFail(productDataModelId);
-    if (!productDataModel.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    const model = await this.modelsService.findOneOrFail(modelId);
-
-    if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    model.assignProductDataModel(productDataModel);
-    return modelToDto(await this.modelsService.save(model));
-  }
-
-  @ApiOperation({
     summary: 'Modify data values of model',
     description: 'Modify data values of model.',
   })
@@ -231,10 +226,8 @@ export class ModelsController {
     }
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.productDataModelService.findOneOrFail(
-      model.productDataModelId,
-    );
-    const validationResult = productDataModel.validate(
+    const template = await this.templateService.findOneOrFail(model.templateId);
+    const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
     );
@@ -274,10 +267,8 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.productDataModelService.findOneOrFail(
-      model.productDataModelId,
-    );
-    const validationResult = productDataModel.validate(
+    const template = await this.templateService.findOneOrFail(model.templateId);
+    const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
     );

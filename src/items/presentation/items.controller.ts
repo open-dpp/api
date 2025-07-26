@@ -14,7 +14,7 @@ import { ItemsService } from '../infrastructure/items.service';
 import { itemToDto } from './dto/item.dto';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import {
   DataValueDto,
   DataValueDtoSchema,
@@ -40,7 +40,7 @@ export class ItemsController {
     private readonly permissionsService: PermissionsService,
     private readonly itemsApplicationService: ItemsApplicationService,
     private readonly modelsService: ModelsService,
-    private readonly productDataModelService: ProductDataModelService,
+    private readonly templateService: TemplateService,
   ) {}
 
   @ApiOperation({
@@ -159,13 +159,11 @@ export class ItemsController {
       throw new ForbiddenException();
     }
     item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    if (!item.productDataModelId) {
-      throw new BadRequestException(
-        'Item does not have a product data model assigned',
-      );
+    if (!item.templateId) {
+      throw new BadRequestException('Item does not have a template assigned');
     }
-    const productDataModel = await this.productDataModelService.findOneOrFail(
-      item.productDataModelId,
+    const productDataModel = await this.templateService.findOneOrFail(
+      item.templateId,
     );
 
     const validationResult = productDataModel.validate(
@@ -210,13 +208,11 @@ export class ItemsController {
     }
 
     item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    if (!item.productDataModelId) {
-      throw new BadRequestException(
-        'Item does not have a product data model assigned',
-      );
+    if (!item.templateId) {
+      throw new BadRequestException('Item does not have a template assigned');
     }
-    const productDataModel = await this.productDataModelService.findOneOrFail(
-      item.productDataModelId,
+    const productDataModel = await this.templateService.findOneOrFail(
+      item.templateId,
     );
 
     const validationResult = productDataModel.validate(

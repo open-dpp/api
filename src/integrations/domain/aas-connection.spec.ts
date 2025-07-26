@@ -7,19 +7,14 @@ import {
 } from './asset-administration-shell';
 import { semitrailerTruckAas } from './semitrailer-truck-aas';
 import { Model } from '../../models/domain/model';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { randomUUID } from 'crypto';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { GroupSection } from '../../product-data-model/domain/section';
-import { Layout } from '../../data-modelling/domain/layout';
-import {
-  NumericField,
-  TextField,
-} from '../../product-data-model/domain/data-field';
+import { laptopFactory } from '../../templates/fixtures/laptop.factory';
+import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
+import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 
 describe('AasMapping', () => {
   const organizationId = randomUUID();
@@ -78,19 +73,21 @@ describe('AasMapping', () => {
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
+    const template = Template.create(
+      templateCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
     const model = Model.create({
       organizationId: 'organizationId',
       userId: 'userId',
       name: 'modelName',
+      template,
     });
-    const productDataModel = ProductDataModel.create({
-      organizationId,
-      userId,
-      name: 'data model',
-    });
-    model.assignProductDataModel(productDataModel);
+
     aasConnection.assignModel(model);
-    expect(aasConnection.dataModelId).toEqual(productDataModel.id);
+    expect(aasConnection.dataModelId).toEqual(template.id);
     expect(aasConnection.modelId).toEqual(model.id);
   });
 
@@ -149,84 +146,35 @@ describe('AasMapping', () => {
     const dataFieldId2 = randomUUID();
     const dataFieldId3 = randomUUID();
 
-    const laptopModel: ProductDataModelDbProps = {
-      id: randomUUID(),
-      name: 'Laptop',
-      visibility: VisibilityLevel.PRIVATE,
-      version: '1.0',
-      ownedByOrganizationId: randomUUID(),
-      createdByUserId: randomUUID(),
+    const laptopModel: TemplateDbProps = laptopFactory.build({
       sections: [
-        GroupSection.loadFromDb({
+        sectionDbPropsFactory.build({
           id: sectionId1,
-          name: 'Section name',
-          parentId: undefined,
-          subSections: [],
-          layout: Layout.create({
-            cols: { sm: 2 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 2 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           dataFields: [
-            TextField.loadFromDb({
+            dataFieldDbPropsFactory.build({
               id: dataFieldId1,
-              name: 'Title',
-              options: { min: 2 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 2 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
               granularityLevel: GranularityLevel.ITEM,
             }),
-            TextField.loadFromDb({
+            dataFieldDbPropsFactory.build({
               id: dataFieldId2,
-              name: 'Title 2',
-              options: { min: 7 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 2 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
               granularityLevel: GranularityLevel.ITEM,
             }),
           ],
         }),
-        GroupSection.loadFromDb({
+        sectionDbPropsFactory.build({
           id: sectionId2,
-          name: 'Section name 2',
-          parentId: undefined,
-          subSections: [],
-          layout: Layout.create({
-            cols: { sm: 2 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 2 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           dataFields: [
-            NumericField.loadFromDb({
+            dataFieldDbPropsFactory.build({
               id: dataFieldId3,
-              name: 'Title 3',
-              options: { min: 8 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 2 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
+              type: DataFieldType.NUMERIC_FIELD,
               granularityLevel: GranularityLevel.ITEM,
             }),
           ],
         }),
       ],
-    };
+    });
 
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
+    const templateInstance = Template.loadFromDb(laptopModel);
 
     const fieldAssignment1 = AasFieldAssignment.create({
       dataFieldId: dataFieldId3,
@@ -245,7 +193,7 @@ describe('AasMapping', () => {
 
     const dataValues = aasConnection.generateDataValues(
       AssetAdministrationShell.create({ content: semitrailerTruckAas }),
-      productDataModel,
+      templateInstance,
     );
     expect(dataValues).toEqual(
       ignoreIds([

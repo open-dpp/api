@@ -2,7 +2,7 @@ import {
   UniqueProductIdentifierDtoSchema,
   uniqueProductIdentifierToDto,
 } from '../../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { Model } from '../../domain/model';
 import {
   DataValueDtoSchema,
@@ -14,7 +14,7 @@ export const ModelDtoSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
-  productDataModelId: z.uuid().optional(),
+  templateId: z.uuid().optional(),
   dataValues: DataValueDtoSchema.array(),
   owner: z.uuid(),
 });
@@ -31,6 +31,6 @@ export function modelToDto(model: Model): ModelDto {
     uniqueProductIdentifiers: model.uniqueProductIdentifiers.map((u) =>
       uniqueProductIdentifierToDto(u),
     ),
-    productDataModelId: model.productDataModelId,
+    templateId: model.templateId,
   });
 }

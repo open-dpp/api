@@ -2,17 +2,18 @@ import { Module } from '@nestjs/common';
 import { ModelsService } from './infrastructure/models.service';
 import { ModelsController } from './presentation/models.controller';
 import { UniqueProductIdentifierModule } from '../unique-product-identifier/unique.product.identifier.module';
-import { ProductDataModelModule } from '../product-data-model/product.data.model.module';
+import { TemplateModule } from '../templates/template.module';
 import { UsersModule } from '../users/users.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  ProductDataModelDoc,
-  ProductDataModelSchema,
-} from '../product-data-model/infrastructure/product-data-model.schema';
+  TemplateDoc,
+  TemplateSchema,
+} from '../templates/infrastructure/template.schema';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -22,16 +23,17 @@ import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
         schema: ModelSchema,
       },
       {
-        name: ProductDataModelDoc.name,
-        schema: ProductDataModelSchema,
+        name: TemplateDoc.name,
+        schema: TemplateSchema,
       },
     ]),
-    ProductDataModelModule,
+    TemplateModule,
     OrganizationsModule,
     UniqueProductIdentifierModule,
     UsersModule,
     PermissionsModule,
     TraceabilityEventsModule,
+    MarketplaceModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],

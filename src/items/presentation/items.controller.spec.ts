@@ -24,27 +24,21 @@ import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { PermissionsModule } from '../../permissions/permissions.module';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import {
-  ProductDataModel,
-  ProductDataModelDbProps,
-  VisibilityLevel,
-} from '../../product-data-model/domain/product.data.model';
+import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductDataModelService } from '../../product-data-model/infrastructure/product-data-model.service';
+import { TemplateService } from '../../templates/infrastructure/template.service';
 import { DataValue } from '../../product-passport/domain/data-value';
-import {
-  GroupSection,
-  RepeaterSection,
-} from '../../product-data-model/domain/section';
 import { Layout } from '../../data-modelling/domain/layout';
-import { TextField } from '../../product-data-model/domain/data-field';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { Sector } from '@open-dpp/api-client';
 
 describe('ItemsController', () => {
   let app: INestApplication;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
-  let productDataModelService: ProductDataModelService;
+  let templateService: TemplateService;
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
@@ -55,6 +49,140 @@ describe('ItemsController', () => {
     name: 'orga',
     user: authContext.user,
   });
+  const sectionId1 = randomUUID();
+  const sectionId2 = randomUUID();
+  const sectionId3 = randomUUID();
+  const dataFieldId1 = randomUUID();
+  const dataFieldId2 = randomUUID();
+  const dataFieldId3 = randomUUID();
+  const dataFieldId4 = randomUUID();
+  const dataFieldId5 = randomUUID();
+  const laptopModel: TemplateDbProps = {
+    id: randomUUID(),
+    marketplaceResourceId: null,
+    name: 'Laptop',
+    description: 'My laptop',
+    sectors: [Sector.ELECTRONICS],
+    version: '1.0',
+    organizationId: organization.id,
+    userId: authContext.user.id,
+    sections: [
+      {
+        type: SectionType.GROUP,
+        id: sectionId1,
+        name: 'Section name',
+        parentId: undefined,
+        subSections: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            type: DataFieldType.TEXT_FIELD,
+            id: dataFieldId1,
+            name: 'Title',
+            options: { min: 2 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
+            id: dataFieldId2,
+            name: 'Title 2',
+            options: { min: 7 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        type: SectionType.GROUP,
+        id: sectionId2,
+        name: 'Section name 2',
+        parentId: undefined,
+        subSections: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            type: DataFieldType.TEXT_FIELD,
+            id: dataFieldId3,
+            name: 'Title 3',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+      {
+        type: SectionType.REPEATABLE,
+        id: sectionId3,
+        name: 'Repeating Section',
+        parentId: undefined,
+        subSections: [],
+        layout: {
+          cols: { sm: 2 },
+          colStart: { sm: 1 },
+          colSpan: { sm: 2 },
+          rowStart: { sm: 1 },
+          rowSpan: { sm: 1 },
+        },
+        dataFields: [
+          {
+            type: DataFieldType.TEXT_FIELD,
+            id: dataFieldId4,
+            name: 'Title 4',
+            options: { min: 8 },
+            layout: {
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            },
+            granularityLevel: GranularityLevel.ITEM,
+          },
+          {
+            type: DataFieldType.TEXT_FIELD,
+            id: dataFieldId5,
+            name: 'Title 5',
+            options: { min: 8 },
+            layout: Layout.create({
+              colStart: { sm: 1 },
+              colSpan: { sm: 2 },
+              rowStart: { sm: 1 },
+              rowSpan: { sm: 1 },
+            }),
+            granularityLevel: GranularityLevel.ITEM,
+          },
+        ],
+      },
+    ],
+  };
+  const template = Template.loadFromDb(laptopModel);
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -90,151 +218,45 @@ describe('ItemsController', () => {
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
-    productDataModelService = moduleRef.get(ProductDataModelService);
+    templateService = moduleRef.get(TemplateService);
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
     organizationsService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
-
+    await templateService.save(template);
     await app.init();
   });
 
-  const sectionId1 = randomUUID();
-  const sectionId2 = randomUUID();
-  const sectionId3 = randomUUID();
-  const dataFieldId1 = randomUUID();
-  const dataFieldId2 = randomUUID();
-  const dataFieldId3 = randomUUID();
-  const dataFieldId4 = randomUUID();
-  const dataFieldId5 = randomUUID();
-
-  const laptopModel: ProductDataModelDbProps = {
-    id: randomUUID(),
-    name: 'Laptop',
-    version: '1.0',
-    visibility: VisibilityLevel.PRIVATE,
-    ownedByOrganizationId: organization.id,
-    createdByUserId: authContext.user.id,
-    sections: [
-      GroupSection.loadFromDb({
-        id: sectionId1,
-        name: 'Section name',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId1,
-            name: 'Title',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
-            id: dataFieldId2,
-            name: 'Title 2',
-            options: { min: 7 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-      }),
-      GroupSection.loadFromDb({
-        id: sectionId2,
-        name: 'Section name 2',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId3,
-            name: 'Title 3',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-      }),
-      RepeaterSection.loadFromDb({
-        id: sectionId3,
-        name: 'Repeating Section',
-        parentId: undefined,
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        dataFields: [
-          TextField.loadFromDb({
-            id: dataFieldId4,
-            name: 'Title 4',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-          TextField.loadFromDb({
-            id: dataFieldId5,
-            name: 'Title 5',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          }),
-        ],
-      }),
-    ],
-  };
+  const expectedDataValues = [
+    {
+      dataSectionId: sectionId1,
+      dataFieldId: dataFieldId1,
+      value: undefined,
+      row: 0,
+    },
+    {
+      dataSectionId: sectionId1,
+      dataFieldId: dataFieldId2,
+      value: undefined,
+      row: 0,
+    },
+    {
+      dataSectionId: sectionId2,
+      dataFieldId: dataFieldId3,
+      value: undefined,
+      row: 0,
+    },
+  ];
 
   it(`/CREATE item`, async () => {
     const model = Model.create({
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    model.assignProductDataModel(productDataModel);
-    await productDataModelService.save(productDataModel);
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
@@ -259,27 +281,8 @@ describe('ItemsController', () => {
           referenceId: found.id,
         },
       ],
-      dataValues: [
-        {
-          dataSectionId: sectionId1,
-          dataFieldId: dataFieldId1,
-          value: undefined,
-          row: 0,
-        },
-        {
-          dataSectionId: sectionId1,
-          dataFieldId: dataFieldId2,
-          value: undefined,
-          row: 0,
-        },
-        {
-          dataSectionId: sectionId2,
-          dataFieldId: dataFieldId3,
-          value: undefined,
-          row: 0,
-        },
-      ],
-      productDataModelId: model.productDataModelId,
+      dataValues: expectedDataValues,
+      templateId: model.templateId,
     });
   });
 
@@ -290,6 +293,7 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -312,6 +316,7 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
@@ -334,12 +339,9 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
-    const item = Item.create({ organizationId, userId });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
-    item.defineModel(model, productDataModel);
+    const item = Item.create({ organizationId, userId, model, template });
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
     const addedValues = [
@@ -387,12 +389,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const addedValues = [];
     const response = await request(app.getHttpServer())
@@ -417,12 +421,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const addedValues = [];
     const response = await request(app.getHttpServer())
@@ -446,15 +452,15 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    const productDataModel = ProductDataModel.loadFromDb(laptopModel);
-    await productDataModelService.save(productDataModel);
-    model.assignProductDataModel(productDataModel);
-    item.defineModel(model, productDataModel);
+
     const dataValue1 = item.dataValues[0];
     const dataValue2 = item.dataValues[1];
     const dataValue3 = item.dataValues[2];
@@ -507,9 +513,17 @@ describe('ItemsController', () => {
 
   it('update data values fails if user is not member of organization', async () => {
     const otherOrganizationId = randomUUID();
+    const model = Model.create({
+      name: 'name',
+      userId: authContext.user.id,
+      organizationId: organization.id,
+      template,
+    });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
     await itemsService.save(item);
     const updatedValues = [
@@ -543,12 +557,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const updatedValues = [
       {
@@ -580,13 +596,15 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: organization.id,
       userId: authContext.user.id,
+      model,
+      template,
     });
-    item.defineModel(model);
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
@@ -610,7 +628,8 @@ describe('ItemsController', () => {
           uuid: uniqueProductId.uuid,
         },
       ],
-      dataValues: [],
+      dataValues: expectedDataValues,
+      templateId: model.templateId,
     });
   });
   //
@@ -620,13 +639,15 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
 
-    item.defineModel(model);
     await itemsService.save(item);
     const response = await request(app.getHttpServer())
       .get(
@@ -649,12 +670,14 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: organization.id,
+      template,
     });
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
 
     await itemsService.save(item);
     const otherOrganization = Organization.create({
@@ -683,21 +706,24 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
-    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
@@ -719,7 +745,8 @@ describe('ItemsController', () => {
             uuid: uniqueProductId1.uuid,
           },
         ],
-        dataValues: [],
+        dataValues: expectedDataValues,
+        templateId: model.templateId,
       },
       {
         id: item2.id,
@@ -729,7 +756,8 @@ describe('ItemsController', () => {
             uuid: uniqueProductId2.uuid,
           },
         ],
-        dataValues: [],
+        dataValues: expectedDataValues,
+        templateId: model.templateId,
       },
     ]);
   });
@@ -740,19 +768,22 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      model,
+      template,
     });
-    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
@@ -773,19 +804,22 @@ describe('ItemsController', () => {
       name: 'name',
       userId: authContext.user.id,
       organizationId: otherOrganizationId,
+      template,
     });
     await modelsService.save(model);
     const item = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item.defineModel(model);
     await itemsService.save(item);
     const item2 = Item.create({
       organizationId: otherOrganizationId,
       userId: authContext.user.id,
+      template,
+      model,
     });
-    item2.defineModel(model);
     await itemsService.save(item2);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organization.id}/models/${model.id}/items`)

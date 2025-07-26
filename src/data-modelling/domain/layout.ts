@@ -1,12 +1,12 @@
 import { ValueError } from '../../exceptions/domain.errors';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 
 export const ResponsiveConfigSchema = z.object({
-  xs: z.number().int().min(1).max(12).optional(),
-  sm: z.number().int().min(1).max(12),
-  md: z.number().int().min(1).max(12).optional(),
-  lg: z.number().int().min(1).max(12).optional(),
-  xl: z.number().int().min(1).max(12).optional(),
+  xs: z.int().min(1).max(12).optional(),
+  sm: z.int().min(1).max(12),
+  md: z.int().min(1).max(12).optional(),
+  lg: z.int().min(1).max(12).optional(),
+  xl: z.int().min(1).max(12).optional(),
 });
 
 export type ResponsiveConfig = z.infer<typeof ResponsiveConfigSchema>;

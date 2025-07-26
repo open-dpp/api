@@ -11,7 +11,7 @@ export const itemDocumentation = {
       type: 'array',
       items: { ...uniqueProductIdentifierDocumentation },
     },
-    productDataModelId: { type: 'string', format: 'uuid' },
+    templateId: { type: 'string', format: 'uuid' },
     dataValues: { type: 'array', items: { ...dataValueDocumentation } },
   },
 };

@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { AssetAdministrationShellType } from '../../domain/asset-administration-shell';
 import { AasFieldAssignmentSchema } from './aas-connection.dto';
 

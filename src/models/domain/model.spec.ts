@@ -1,14 +1,21 @@
 import { Model } from './model';
 import { randomUUID } from 'crypto';
-import { ProductDataModel } from '../../product-data-model/domain/product.data.model';
+import { Template } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport/domain/data-value';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 
 describe('Model', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
+  const template = Template.create(templateCreatePropsFactory.build());
   it('should create unique product identifiers on model creation', () => {
-    const model = Model.create({ name: 'My model', userId, organizationId });
+    const model = Model.create({
+      name: 'My model',
+      userId,
+      organizationId,
+      template,
+    });
     const uniqueModelIdentifier1 = model.createUniqueProductIdentifier();
     const uniqueModelIdentifier2 = model.createUniqueProductIdentifier();
 
@@ -22,7 +29,12 @@ describe('Model', () => {
   });
 
   it('should create new model', () => {
-    const model = Model.create({ name: 'My model', userId, organizationId });
+    const model = Model.create({
+      name: 'My model',
+      userId,
+      organizationId,
+      template,
+    });
 
     expect(model.isOwnedBy(organizationId)).toBeTruthy();
     expect(model.isOwnedBy(randomUUID())).toBeFalsy();
@@ -34,12 +46,14 @@ describe('Model', () => {
       userId,
       organizationId,
       description: 'my description',
+      template,
     });
     expect(model.id).toEqual(expect.any(String));
     expect(model.name).toEqual('My name');
     expect(model.description).toEqual('my description');
     expect(model.uniqueProductIdentifiers).toEqual([]);
-    expect(model.productDataModelId).toBeUndefined();
+    expect(model.templateId).toEqual(template.id);
+
     expect(model.dataValues).toEqual([]);
   });
 
@@ -47,7 +61,7 @@ describe('Model', () => {
     const id = randomUUID();
     const name = 'My name';
     const description = 'Some description';
-    const productDataModelId = randomUUID();
+    const templateId = randomUUID();
     const dataValues = [
       {
         value: 'value1',
@@ -69,10 +83,10 @@ describe('Model', () => {
     const model = Model.loadFromDb({
       id,
       name,
-      ownedByOrganizationId,
-      createdByUserId,
+      organizationId: ownedByOrganizationId,
+      userId: createdByUserId,
       uniqueProductIdentifiers: [],
-      productDataModelId,
+      templateId: templateId,
       dataValues,
       description,
     });
@@ -81,11 +95,16 @@ describe('Model', () => {
     expect(model.description).toEqual(description);
     expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy();
     expect(model.dataValues).toEqual(dataValues);
-    expect(model.productDataModelId).toEqual(productDataModelId);
+    expect(model.templateId).toEqual(templateId);
   });
 
   it('add data values', () => {
-    const model = Model.create({ name: 'My name', userId, organizationId });
+    const model = Model.create({
+      name: 'My name',
+      userId,
+      organizationId,
+      template,
+    });
     model.addDataValues([
       DataValue.create({
         dataFieldId: 'fieldId2',
@@ -155,6 +174,7 @@ describe('Model', () => {
       name: 'my name',
       userId,
       organizationId,
+      template,
     });
     model.addDataValues(dataValues);
 
@@ -179,7 +199,12 @@ describe('Model', () => {
   });
 
   it('is renamed', () => {
-    const model = Model.create({ name: 'My Name', userId, organizationId });
+    const model = Model.create({
+      name: 'My Name',
+      userId,
+      organizationId,
+      template,
+    });
     model.rename('new Name');
     model.modifyDescription('new description');
     expect(model.name).toEqual('new Name');
@@ -213,6 +238,7 @@ describe('Model', () => {
       name: 'my name',
       userId,
       organizationId,
+      template,
     });
     model.addDataValues(dataValues);
     const dataValueUpdates = [
@@ -286,68 +312,34 @@ describe('Model', () => {
     });
   });
 
-  describe('assignProductDataModel', () => {
-    it('should assign product data model and initialize data values', () => {
-      const model = Model.create({
-        name: 'Test Model',
-        userId,
-        organizationId,
-      });
-
-      // Create a mock product data model
-      const productDataModel = {
-        id: 'pdm-1',
-        createInitialDataValues: jest.fn().mockReturnValue([
-          DataValue.create({
-            dataSectionId: 'section-1',
-            dataFieldId: 'field-1',
-            value: undefined,
-            row: 0,
-          }),
-          DataValue.create({
-            dataSectionId: 'section-1',
-            dataFieldId: 'field-2',
-            value: undefined,
-            row: 0,
-          }),
-        ]),
-      } as unknown as ProductDataModel;
-
-      // Assign the product data model
-      model.assignProductDataModel(productDataModel);
-
-      expect(model.productDataModelId).toBe('pdm-1');
-      expect(model.dataValues).toHaveLength(2);
-      expect(productDataModel.createInitialDataValues).toHaveBeenCalled();
+  it('should initialize data values', () => {
+    // Create a mock product data model
+    const template = {
+      id: 'pdm-1',
+      createInitialDataValues: jest.fn().mockReturnValue([
+        DataValue.create({
+          dataSectionId: 'section-1',
+          dataFieldId: 'field-1',
+          value: undefined,
+          row: 0,
+        }),
+        DataValue.create({
+          dataSectionId: 'section-1',
+          dataFieldId: 'field-2',
+          value: undefined,
+          row: 0,
+        }),
+      ]),
+    } as unknown as Template;
+    const model = Model.create({
+      name: 'Test Model',
+      userId,
+      organizationId,
+      template,
     });
 
-    it('should throw error if model already has a product data model', () => {
-      const userId = randomUUID();
-      const organizationId = randomUUID();
-      const model = Model.create({
-        name: 'Test Model',
-        userId,
-        organizationId,
-      });
-
-      const productDataModel1 = ProductDataModel.create({
-        name: 'existing-pdm',
-        userId,
-        organizationId,
-      });
-
-      model.assignProductDataModel(productDataModel1);
-
-      const productDataModel2 = ProductDataModel.create({
-        name: 'other-pdm',
-        userId,
-        organizationId,
-      });
-
-      // Try to assign a second product data model
-      expect(() => model.assignProductDataModel(productDataModel2)).toThrow(
-        'This model is already connected to a product data model',
-      );
-    });
+    expect(model.templateId).toBe('pdm-1');
+    expect(model.dataValues).toHaveLength(2);
+    expect(template.createInitialDataValues).toHaveBeenCalled();
   });
 });

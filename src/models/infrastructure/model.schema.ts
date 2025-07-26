@@ -6,6 +6,7 @@ import {
 
 export enum ModelDocSchemaVersion {
   v1_0_0 = '1.0.0',
+  v1_0_1 = '1.0.1',
 }
 
 @Schema({ collection: 'models', timestamps: true })
@@ -14,7 +15,7 @@ export class ModelDoc extends PassportDoc {
   name: string;
 
   @Prop({
-    default: ModelDocSchemaVersion.v1_0_0,
+    default: ModelDocSchemaVersion.v1_0_1,
     enum: ModelDocSchemaVersion,
   }) // Track schema version
   _schemaVersion: ModelDocSchemaVersion;
