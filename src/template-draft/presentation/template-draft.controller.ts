@@ -67,8 +67,7 @@ export class TemplateDraftController {
     @Request() req: AuthRequest,
     @Body() body: CreateTemplateDraftDto,
   ) {
-    const createTemplateDraftDto =
-      CreateTemplateDraftDtoSchema.parse(body);
+    const createTemplateDraftDto = CreateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -109,8 +108,7 @@ export class TemplateDraftController {
     @Request() req: AuthRequest,
     @Body() body: UpdateTemplateDraftDto,
   ) {
-    const updateTemplateDraftDto =
-      UpdateTemplateDraftDtoSchema.parse(body);
+    const updateTemplateDraftDto = UpdateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,

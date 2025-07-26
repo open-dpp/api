@@ -226,9 +226,7 @@ export class ModelsController {
     }
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    const template = await this.templateService.findOneOrFail(
-      model.templateId,
-    );
+    const template = await this.templateService.findOneOrFail(model.templateId);
     const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
@@ -269,9 +267,7 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    const template = await this.templateService.findOneOrFail(
-      model.templateId,
-    );
+    const template = await this.templateService.findOneOrFail(model.templateId);
     const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
