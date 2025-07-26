@@ -226,10 +226,10 @@ export class ModelsController {
     }
 
     model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.templateService.findOneOrFail(
+    const template = await this.templateService.findOneOrFail(
       model.templateId,
     );
-    const validationResult = productDataModel.validate(
+    const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
     );
@@ -269,10 +269,10 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    const productDataModel = await this.templateService.findOneOrFail(
+    const template = await this.templateService.findOneOrFail(
       model.templateId,
     );
-    const validationResult = productDataModel.validate(
+    const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
     );
