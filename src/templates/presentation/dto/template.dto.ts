@@ -20,17 +20,17 @@ const TemplateDtoSchema = z.object({
 
 export type TemplateDto = z.infer<typeof TemplateDtoSchema>;
 
-export function templateToDto(productDataModel: Template): TemplateDto {
+export function templateToDto(template: Template): TemplateDto {
   return TemplateDtoSchema.parse({
-    id: productDataModel.id,
-    name: productDataModel.name,
-    description: productDataModel.description,
-    sectors: productDataModel.sectors,
-    version: productDataModel.version,
-    sections: productDataModel.sections.map((section) => sectionToDto(section)),
-    createdByUserId: productDataModel.createdByUserId,
-    ownedByOrganizationId: productDataModel.ownedByOrganizationId,
-    marketplaceResourceId: productDataModel.marketplaceResourceId,
+    id: template.id,
+    name: template.name,
+    description: template.description,
+    sectors: template.sectors,
+    version: template.version,
+    sections: template.sections.map((section) => sectionToDto(section)),
+    createdByUserId: template.createdByUserId,
+    ownedByOrganizationId: template.ownedByOrganizationId,
+    marketplaceResourceId: template.marketplaceResourceId,
   });
 }
 
