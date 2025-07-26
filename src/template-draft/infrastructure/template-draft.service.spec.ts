@@ -19,7 +19,7 @@ import {
 } from '../fixtures/template-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 
-describe('ProductDataModelDraftMongoService', () => {
+describe('TemplateDraftService', () => {
   let service: TemplateDraftService;
   let mongoConnection: Connection;
 
