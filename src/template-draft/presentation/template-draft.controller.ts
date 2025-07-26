@@ -67,7 +67,7 @@ export class TemplateDraftController {
     @Request() req: AuthRequest,
     @Body() body: CreateTemplateDraftDto,
   ) {
-    const createProductDataModelDraftDto =
+    const createTemplateDraftDto =
       CreateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
@@ -76,7 +76,7 @@ export class TemplateDraftController {
     return templateDraftToDto(
       await this.templateDraftService.save(
         TemplateDraft.create({
-          ...createProductDataModelDraftDto,
+          ...createTemplateDraftDto,
           organizationId,
           userId: req.authContext.user.id,
         }),
