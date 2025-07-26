@@ -42,6 +42,10 @@ import {
   templateDraftCreatePropsFactory,
 } from '../fixtures/template-draft.factory';
 import { VisibilityLevel } from './dto/publish.dto';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
@@ -62,6 +66,8 @@ describe('TemplateDraftController', () => {
     module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
+        TypeOrmTestingModule,
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseModule.forFeature([
           {
             name: TemplateDraftDoc.name,
