@@ -21,23 +21,23 @@ import { DataSectionDraft } from '../domain/section-draft';
 export class TemplateDraftService {
   constructor(
     @InjectModel(TemplateDraftDoc.name)
-    private productDataModelDraftDoc: Model<TemplateDraftDoc>,
+    private templateDraftDocModel: Model<TemplateDraftDoc>,
   ) {}
 
   async save(
-    productDataModel: TemplateDraft,
+    templateDraft: TemplateDraft,
     newVersion?: string,
   ): Promise<TemplateDraft> {
-    const draftDoc = await this.productDataModelDraftDoc.findOneAndUpdate(
-      { _id: productDataModel.id },
+    const draftDoc = await this.templateDraftDocModel.findOneAndUpdate(
+      { _id: templateDraft.id },
       {
-        name: productDataModel.name,
-        description: productDataModel.description,
-        sectors: productDataModel.sectors,
-        version: newVersion || productDataModel.version,
+        name: templateDraft.name,
+        description: templateDraft.description,
+        sectors: templateDraft.sectors,
+        version: newVersion || templateDraft.version,
         _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_2,
-        publications: productDataModel.publications,
-        sections: productDataModel.sections.map((s) => ({
+        publications: templateDraft.publications,
+        sections: templateDraft.sections.map((s) => ({
           _id: s.id,
           name: s.name,
           type: s.type,
@@ -65,8 +65,8 @@ export class TemplateDraftService {
           subSections: s.subSections,
           granularityLevel: s.granularityLevel,
         })),
-        createdByUserId: productDataModel.createdByUserId,
-        ownedByOrganizationId: productDataModel.ownedByOrganizationId,
+        createdByUserId: templateDraft.createdByUserId,
+        ownedByOrganizationId: templateDraft.ownedByOrganizationId,
       },
       {
         new: true, // Return the updated document
@@ -117,8 +117,8 @@ export class TemplateDraftService {
     });
   }
 
-  convertToDomain(productDataModelDraftDoc: TemplateDraftDoc) {
-    const plainDoc = productDataModelDraftDoc.toObject();
+  convertToDomain(templateDraftDocModel: TemplateDraftDoc) {
+    const plainDoc = templateDraftDocModel.toObject();
 
     return TemplateDraft.loadFromDb({
       id: plainDoc._id,
@@ -134,7 +134,7 @@ export class TemplateDraftService {
   }
 
   async findOneOrFail(id: string) {
-    const draftDoc = await this.productDataModelDraftDoc.findById(id).exec();
+    const draftDoc = await this.templateDraftDocModel.findById(id).exec();
     if (!draftDoc) {
       throw new NotFoundInDatabaseException(TemplateDraft.name);
     }
@@ -143,7 +143,7 @@ export class TemplateDraftService {
 
   async findAllByOrganization(organizationId: string) {
     return (
-      await this.productDataModelDraftDoc
+      await this.templateDraftDocModel
         .find({ ownedByOrganizationId: organizationId }, '_id name')
         .sort({ name: 1 })
         .exec()
