@@ -79,49 +79,39 @@ export class MarketplaceService {
       return existingTemplate;
     }
 
-    try {
-      const response = await this.marketplaceClient.passportTemplates.getById(
-        marketplaceResourceId,
-      );
+    const response = await this.marketplaceClient.passportTemplates.getById(
+      marketplaceResourceId,
+    );
 
-      // Validate response and response.data
-      if (!response) {
-        throw new Error('Invalid response from marketplace API');
-      }
-
-      if (!response.data) {
-        throw new Error('Invalid response data from marketplace API');
-      }
-
-      // Validate response.data.templateData
-      if (
-        !response.data.templateData ||
-        typeof response.data.templateData !== 'object'
-      ) {
-        throw new Error('Invalid template data in marketplace API response');
-      }
-
-      // Create template document with validated data
-      const templateDoc = new this.templateDoc(response.data.templateData);
-
-      await templateDoc.validate();
-
-      const template = deserializeTemplate(templateDoc.toObject()).copy(
-        organizationId,
-        userId,
-      );
-
-      template.assignMarketplaceResource(response.data.id);
-      await this.templateService.save(template);
-      return template;
-    } catch (error) {
-      this.logger.error(
-        `Failed to download template from marketplace: ${error.message}`,
-        error.stack,
-      );
-      throw new Error(
-        `Failed to download template from marketplace: ${error.message}`,
-      );
+    // Validate response and response.data
+    if (!response) {
+      throw new Error('Invalid response from marketplace API');
     }
+
+    if (!response.data) {
+      throw new Error('Invalid response data from marketplace API');
+    }
+
+    // Validate response.data.templateData
+    if (
+      !response.data.templateData ||
+      typeof response.data.templateData !== 'object'
+    ) {
+      throw new Error('Invalid template data in marketplace API response');
+    }
+
+    // Create a template document with validated data
+    const templateDoc = new this.templateDoc(response.data.templateData);
+
+    await templateDoc.validate();
+
+    const template = deserializeTemplate(templateDoc.toObject()).copy(
+      organizationId,
+      userId,
+    );
+
+    template.assignMarketplaceResource(response.data.id);
+    await this.templateService.save(template);
+    return template;
   }
 }
