@@ -107,9 +107,9 @@ export class MarketplaceService {
       await templateDoc.validate();
 
       const template = deserializeTemplate(templateDoc.toObject()).copy(
-      organizationId,
-      userId,
-    );
+        organizationId,
+        userId,
+      );
 
       template.assignMarketplaceResource(response.data.id);
       await this.templateService.save(template);
