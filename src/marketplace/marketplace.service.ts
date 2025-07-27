@@ -102,6 +102,7 @@ export class MarketplaceService {
 
     // Create a template document with validated data
     const templateDoc = new this.templateDoc(response.data.templateData);
+    templateDoc._id = response.data.id;
 
     await templateDoc.validate();
 

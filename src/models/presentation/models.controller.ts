@@ -84,6 +84,7 @@ export class ModelsController {
     }
 
     let template;
+
     if (createModelDto.templateId) {
       template = await this.templateService.findOneOrFail(
         createModelDto.templateId,
