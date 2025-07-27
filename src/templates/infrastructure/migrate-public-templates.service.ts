@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { TemplateDoc } from './template.schema';
 import { Model } from 'mongoose';
 import { ModelDoc } from '../../models/infrastructure/model.schema';
-import { deserializeProductDataModel } from '../domain/serialization';
+import { deserializeTemplate } from '../domain/serialization';
 import { ItemDoc } from '../../items/infrastructure/item.schema';
 import { TemplateService } from './template.service';
 
@@ -24,70 +24,89 @@ export class MigratePublicTemplatesService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    this.logger.log('Migrating templates with visibility Public');
-    const templatesWithPublicFlag = await this.templateDoc
-      .find({
-        visibility: 'Public',
-      })
-      .exec();
-    for (const templateDoc of templatesWithPublicFlag) {
+    try {
+      this.logger.log('Migrating templates with visibility Public');
+      const templatesWithPublicFlag = await this.templateDoc
+        .find({
+          visibility: 'Public',
+        })
+        .exec();
       this.logger.log(
-        `-------Migrating template ${templateDoc.name}, ${templateDoc._id}}---------`,
+        `Found ${templatesWithPublicFlag.length} public templates to migrate`,
       );
-      const modelsGroupedByOrga = await this.modelDoc.aggregate([
-        {
-          $match: {
-            productDataModelId: templateDoc._id,
-          },
-        },
-        {
-          $group: {
-            _id: '$ownedByOrganizationId',
-            models: { $push: '$$ROOT' },
-          },
-        },
-      ]);
-
-      for (const modelGroup of modelsGroupedByOrga) {
-        const organizationId = modelGroup._id;
-        const models = modelGroup.models;
-
+      for (const templateDoc of templatesWithPublicFlag) {
         this.logger.log(
-          `++++Migrating models of organization ${organizationId}++++`,
+          `-------Migrating template ${templateDoc.name}, ${templateDoc._id}}---------`,
         );
-
-        const template = deserializeProductDataModel(templateDoc).copy(
-          organizationId,
-          models[0].createdByUserId,
-        );
-        this.logger.log('Save template copy', JSON.stringify(template));
-        await this.templateService.save(template);
-        this.logger.log('Update and save models connected to the old template');
-        await this.modelDoc.updateMany(
+        const modelsGroupedByOrga = await this.modelDoc.aggregate([
           {
-            productDataModelId: templateDoc._id,
-            ownedByOrganizationId: organizationId,
-          }, // find condition
-          {
-            $set: { templateId: template.id }, // set the new field
-            $unset: { productDataModelId: '' }, // remove the old field
+            $match: {
+              productDataModelId: templateDoc._id,
+            },
           },
-        );
-
-        this.logger.log('Update and save items connected to the old template');
-        await this.itemDoc.updateMany(
           {
-            productDataModelId: templateDoc._id,
-            ownedByOrganizationId: organizationId,
-          }, // find condition
-          {
-            $set: { templateId: template.id }, // set the new field
-            $unset: { productDataModelId: '' }, // remove the old field
+            $group: {
+              _id: '$ownedByOrganizationId',
+              models: { $push: '$$ROOT' },
+            },
           },
-        );
+        ]);
+
+        for (const modelGroup of modelsGroupedByOrga) {
+          const organizationId = modelGroup._id;
+          const models = modelGroup.models;
+
+          if (!models || models.length === 0) {
+            this.logger.warn(
+              `No models found for organization ${organizationId}, skipping`,
+            );
+            continue;
+          }
+
+          this.logger.log(
+            `++++Migrating models of organization ${organizationId}++++`,
+          );
+
+          const template = deserializeTemplate(templateDoc).copy(
+            organizationId,
+            models[0].createdByUserId,
+          );
+          this.logger.log('Save template copy', JSON.stringify(template));
+          await this.templateService.save(template);
+          this.logger.log(
+            'Update and save models connected to the old template',
+          );
+          await this.modelDoc.updateMany(
+            {
+              productDataModelId: templateDoc._id,
+              ownedByOrganizationId: organizationId,
+            }, // find condition
+            {
+              $set: { templateId: template.id }, // set the new field
+              $unset: { productDataModelId: '' }, // remove the old field
+            },
+          );
+
+          this.logger.log(
+            'Update and save items connected to the old template',
+          );
+          await this.itemDoc.updateMany(
+            {
+              productDataModelId: templateDoc._id,
+              ownedByOrganizationId: organizationId,
+            }, // find condition
+            {
+              $set: { templateId: template.id }, // set the new field
+              $unset: { productDataModelId: '' }, // remove the old field
+            },
+          );
+        }
+        this.logger.log('Delete old template');
+        await this.templateDoc.deleteOne({ _id: templateDoc._id });
       }
-      this.logger.log('Delete old template');
-      await this.templateDoc.deleteOne({ _id: templateDoc._id });
+    } catch (error) {
+      this.logger.error('Migration failed', error);
+      throw error;
     }
   }
 }
