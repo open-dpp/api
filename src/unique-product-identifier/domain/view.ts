@@ -14,22 +14,18 @@ import { DataValue } from '../../product-passport/domain/data-value';
 
 export class View {
   private constructor(
-    private readonly productDataModel: Template,
+    private readonly template: Template,
     private readonly model: Model,
     private readonly item: Item | undefined,
   ) {}
 
-  static create(data: {
-    productDataModel: Template;
-    model: Model;
-    item?: Item;
-  }) {
-    return new View(data.productDataModel, data.model, data.item);
+  static create(data: { template: Template; model: Model; item?: Item }) {
+    return new View(data.template, data.model, data.item);
   }
 
   build() {
     const nodes = [];
-    const rootSections = this.productDataModel.sections.filter(
+    const rootSections = this.template.sections.filter(
       (s) => s.parentId === undefined,
     );
     const rootSectionsFilteredByLevel = this.item
@@ -88,8 +84,7 @@ export class View {
 
     const children = this.processDataFields(section, dataValuesOfSection);
     for (const subSectionId of section.subSections) {
-      const subSection =
-        this.productDataModel.findSectionByIdOrFail(subSectionId);
+      const subSection = this.template.findSectionByIdOrFail(subSectionId);
       children.push(this.processSection(subSection, rowIndex));
     }
 

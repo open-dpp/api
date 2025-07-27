@@ -13,7 +13,7 @@ import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
   templateDocumentation,
   templateGetAllDocumentation,
-} from '../../open-api-docs/product-data-model.doc';
+} from '../../open-api-docs/template.doc';
 
 @Controller('/organizations/:organizationId/templates')
 export class TemplateController {

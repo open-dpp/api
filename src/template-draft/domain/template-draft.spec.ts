@@ -20,7 +20,7 @@ import {
 } from '../fixtures/section-draft.factory';
 import { Sector } from '@open-dpp/api-client';
 
-describe('ProductDataModelDraft', () => {
+describe('TemplateDraft', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
   const laptopModel: TemplateDraftDbProps = templateDraftDbFactory.build({
@@ -306,7 +306,7 @@ describe('ProductDataModelDraft', () => {
   });
 
   it('should fail to add subSection if parent id not found', () => {
-    const productDataModelDraft = TemplateDraft.create(
+    const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = DataSectionDraft.create({
@@ -316,9 +316,9 @@ describe('ProductDataModelDraft', () => {
       granularityLevel: GranularityLevel.MODEL,
     });
 
-    expect(() =>
-      productDataModelDraft.addSubSection('some id', section1),
-    ).toThrow(new NotFoundError(DataSectionDraft.name, 'some id'));
+    expect(() => templateDraft.addSubSection('some id', section1)).toThrow(
+      new NotFoundError(DataSectionDraft.name, 'some id'),
+    );
   });
 
   it('should fail to add subSection if its granularity level differs from parent', () => {
