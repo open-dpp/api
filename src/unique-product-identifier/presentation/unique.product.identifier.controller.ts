@@ -14,7 +14,7 @@ export class UniqueProductIdentifierController {
   constructor(
     private readonly modelsService: ModelsService,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly productDataModelService: TemplateService,
+    private readonly templateService: TemplateService,
     private readonly itemService: ItemsService,
     private readonly permissionsService: PermissionsService,
   ) {}
@@ -30,12 +30,10 @@ export class UniqueProductIdentifierController {
     const modelId = item?.modelId ?? uniqueProductIdentifier.referenceId;
     const model = await this.modelsService.findOneOrFail(modelId);
 
-    const productDataModel = await this.productDataModelService.findOneOrFail(
-      model.templateId,
-    );
+    const template = await this.templateService.findOneOrFail(model.templateId);
     return View.create({
       model: model,
-      productDataModel: productDataModel,
+      template: template,
       item,
     }).build();
   }

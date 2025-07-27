@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
-  createCommonIndexesForProductDataModel,
+  createCommonIndexesForTemplate,
   TemplateBaseDoc,
-} from '../../data-modelling/infrastructure/product-data-model-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema';
 
 @Schema({ _id: false }) // No separate _id for embedded documents
 class PublicationDoc {
@@ -32,7 +32,8 @@ export class TemplateDraftDoc extends TemplateBaseDoc {
   @Prop({ type: [PublicationSchema], default: [] })
   publications: PublicationDoc[];
 }
+
 export const TemplateDraftSchema =
   SchemaFactory.createForClass(TemplateDraftDoc);
 
-createCommonIndexesForProductDataModel(TemplateDraftSchema);
+createCommonIndexesForTemplate(TemplateDraftSchema);

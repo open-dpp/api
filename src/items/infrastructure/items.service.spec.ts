@@ -379,7 +379,7 @@ describe('ItemsService', () => {
         _schemaVersion: ItemDocSchemaVersion.v1_0_0,
         name: 'Migration Name',
         description: 'desc',
-        productDataModelId: 'templateId',
+        templateId: 'templateId',
         dataValues: [],
         createdByUserId: 'userId',
         ownedByOrganizationId: 'orgId',

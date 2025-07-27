@@ -87,6 +87,16 @@ export abstract class DataField extends DataFieldBase {
   }
 
   abstract validate(version: string, value: unknown): DataFieldValidationResult;
+  toDbProps(): DataFieldDbProps {
+    return {
+      id: this.id,
+      type: this.type,
+      name: this._name,
+      options: this.options,
+      layout: this.layout.toProps(),
+      granularityLevel: this.granularityLevel,
+    };
+  }
 }
 
 function validateString(

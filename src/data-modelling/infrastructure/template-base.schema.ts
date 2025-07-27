@@ -25,6 +25,7 @@ export class DataFieldDoc {
   })
   granularityLevel: GranularityLevel;
 }
+
 const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
 
 @Schema()
@@ -53,6 +54,7 @@ export class SectionDoc {
   })
   granularityLevel?: GranularityLevel;
 }
+
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 
 export abstract class TemplateBaseDoc extends Document {
@@ -89,6 +91,6 @@ export abstract class TemplateBaseDoc extends Document {
   ownedByOrganizationId: string;
 }
 
-export function createCommonIndexesForProductDataModel(schema: MongooseSchema) {
+export function createCommonIndexesForTemplate(schema: MongooseSchema) {
   schema.index({ ownedByOrganizationId: 1 });
 }

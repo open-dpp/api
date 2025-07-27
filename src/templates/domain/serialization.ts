@@ -5,22 +5,22 @@ import {
 import {
   DataFieldDoc,
   SectionDoc,
-} from '../../data-modelling/infrastructure/product-data-model-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema';
 import { DataSectionDbProps } from './section';
 import { DataFieldDbProps } from './data-field';
 import { Template } from './template';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
-export function serializeTemplate(template: Template) {
+export function serializeTemplate(t: Template) {
   return {
-    _id: template.id,
-    name: template.name,
-    description: template.description,
-    sectors: template.sectors,
-    version: template.version,
+    _id: t.id,
+    name: t.name,
+    description: t.description,
+    sectors: t.sectors,
+    version: t.version,
     _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
-    sections: template.sections.map((s) => ({
+    sections: t.sections.map((s) => ({
       _id: s.id,
       name: s.name,
       type: s.type,
@@ -37,9 +37,9 @@ export function serializeTemplate(template: Template) {
       subSections: s.subSections,
       parentId: s.parentId,
     })),
-    createdByUserId: template.createdByUserId,
-    ownedByOrganizationId: template.ownedByOrganizationId,
-    marketplaceResourceId: template.marketplaceResourceId,
+    createdByUserId: t.createdByUserId,
+    ownedByOrganizationId: t.ownedByOrganizationId,
+    marketplaceResourceId: t.marketplaceResourceId,
   };
 }
 

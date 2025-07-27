@@ -44,23 +44,23 @@ describe('TemplateService', () => {
     userId,
   });
 
-  it('fails if requested product data model could not be found', async () => {
+  it('fails if requested template could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Template.name),
     );
   });
 
-  it('should create product data model', async () => {
-    const productDataModel = Template.loadFromDb({
+  it('should create template', async () => {
+    const template = Template.loadFromDb({
       ...laptopModelPlain,
     });
 
-    const { id } = await service.save(productDataModel);
+    const { id } = await service.save(template);
     const found = await service.findOneOrFail(id);
-    expect(found).toEqual(productDataModel);
+    expect(found).toEqual(template);
   });
 
-  it('finds product data model by marketplaceResourceId', async () => {
+  it('finds template by marketplaceResourceId', async () => {
     const laptop = Template.loadFromDb(laptopModelPlain);
     const marketplaceResourceId = randomUUID();
     laptop.assignMarketplaceResource(marketplaceResourceId);
@@ -104,31 +104,31 @@ describe('TemplateService', () => {
       ],
     });
 
-    const productDataModel = Template.loadFromDb(laptopModel);
-    const { id } = await service.save(productDataModel);
+    const template = Template.loadFromDb(laptopModel);
+    const { id } = await service.save(template);
     const found = await service.findOneOrFail(id);
     expect(found.sections[0].granularityLevel).toBeUndefined();
     expect(found.sections[1].granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
-  it('should return product data models by name', async () => {
-    const productDataModel = Template.loadFromDb({
+  it('should return templates by name', async () => {
+    const template = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
 
-    await service.save(productDataModel);
-    const found = await service.findByName(productDataModel.name);
+    await service.save(template);
+    const found = await service.findByName(template.name);
     expect(found).toEqual([
       {
-        id: productDataModel.id,
-        name: productDataModel.name,
-        version: productDataModel.version,
+        id: template.id,
+        name: template.name,
+        version: template.version,
       },
     ]);
   });
 
-  it('should return all product data models belonging to organization', async () => {
+  it('should return all templates belonging to organization', async () => {
     const laptopModel = Template.loadFromDb({
       ...laptopModelPlain,
     });

@@ -37,7 +37,6 @@ export const templateDocumentation = {
     'name',
     'version',
     'sections',
-    'visibility',
     'createdByUserId',
     'ownedByOrganizationId',
   ],

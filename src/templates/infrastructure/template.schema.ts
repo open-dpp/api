@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
-  createCommonIndexesForProductDataModel,
+  createCommonIndexesForTemplate,
   TemplateBaseDoc,
-} from '../../data-modelling/infrastructure/product-data-model-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema';
 
 export enum TemplateDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -24,7 +24,8 @@ export class TemplateDoc extends TemplateBaseDoc {
   })
   marketplaceResourceId: string;
 }
+
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);
 
-createCommonIndexesForProductDataModel(TemplateSchema);
+createCommonIndexesForTemplate(TemplateSchema);
 TemplateSchema.index({ marketplaceResourceId: 1 });

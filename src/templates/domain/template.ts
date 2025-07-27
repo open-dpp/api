@@ -147,6 +147,21 @@ export class Template {
     }
     return validationOutput;
   }
+
+  copy(organizationId: string, userId: string) {
+    return Template.loadFromDb({
+      id: randomUUID(),
+      name: this.name,
+      description: this.description,
+      sectors: this.sectors,
+      version: this.version,
+      userId,
+      organizationId,
+      sections: this.sections.map((s) => s.toDbProps()),
+      marketplaceResourceId: this.marketplaceResourceId,
+    });
+  }
+
   public createInitialDataValues(granularity: GranularityLevel): DataValue[] {
     const rootGroupSections = this.sections
       .filter((s) => s.parentId === undefined)

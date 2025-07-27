@@ -4,6 +4,7 @@ import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
+import { randomUUID } from 'crypto';
 
 describe('Template', () => {
   const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
@@ -293,6 +294,22 @@ describe('Template', () => {
         isValid: true,
       }),
     ]);
+  });
+
+  it('should copy template', () => {
+    const template = Template.loadFromDb(laptopModel);
+    const orgaId = randomUUID();
+    const userId = randomUUID();
+    const templateCopy = template.copy(orgaId, userId);
+    expect(templateCopy.id).not.toEqual(template.id);
+    expect(templateCopy.ownedByOrganizationId).toEqual(orgaId);
+    expect(templateCopy.createdByUserId).toEqual(userId);
+    expect(templateCopy.name).toEqual(template.name);
+    expect(templateCopy.version).toEqual(template.version);
+    expect(templateCopy.marketplaceResourceId).toEqual(
+      template.marketplaceResourceId,
+    );
+    expect(templateCopy.sections).toEqual(template.sections);
   });
 
   it('should assign marketplace resource ID at the model level', () => {
