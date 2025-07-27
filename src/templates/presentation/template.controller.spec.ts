@@ -149,16 +149,22 @@ describe('TemplateController', () => {
       id: laptopTemplate.id,
       name: laptopTemplate.name,
       version: laptopTemplate.version,
+      description: laptopTemplate.description,
+      sectors: laptopTemplate.sectors,
     });
     expect(response.body).toContainEqual({
       id: phoneTemplate.id,
       name: phoneTemplate.name,
       version: phoneTemplate.version,
+      description: phoneTemplate.description,
+      sectors: phoneTemplate.sectors,
     });
     expect(response.body).not.toContainEqual({
       id: notAccessibleTemplate.id,
       name: notAccessibleTemplate.name,
       version: notAccessibleTemplate.version,
+      description: notAccessibleTemplate.description,
+      sectors: notAccessibleTemplate.sectors,
     });
   });
 

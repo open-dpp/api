@@ -14,6 +14,7 @@ export const itemDocumentation = {
     templateId: { type: 'string', format: 'uuid' },
     dataValues: { type: 'array', items: { ...dataValueDocumentation } },
   },
+  required: ['id', 'uniqueProductIdentifiers', 'templateId', 'dataValues'],
 };
 
 export const modelParamDocumentation = {

@@ -8,7 +8,10 @@ export const createModelDocumentation = {
   properties: {
     name: { type: 'string' },
     description: { type: 'string' },
+    templateId: { type: 'string', format: 'uuid' },
+    marketplaceResourceId: { type: 'string', format: 'uuid' },
   },
+  description: 'Either templateId or marketplaceResourceId must be provided.',
   required: ['name'],
 };
 
@@ -23,13 +26,13 @@ export const modelDocumentation = {
     id: { type: 'string', format: 'uuid' },
     name: { type: 'string' },
     description: { type: 'string' },
-    templateId: { type: 'string', format: 'uuid' },
     uniqueProductIdentifiers: {
       type: 'array',
       items: { ...uniqueProductIdentifierDocumentation },
     },
+    templateId: { type: 'string', format: 'uuid' },
     dataValues: { type: 'array', items: { ...dataValueDocumentation } },
     owner: { type: 'string', format: 'uuid' },
   },
-  required: ['name'],
+  required: ['id', 'name', 'uniqueProductIdentifiers', 'dataValues', 'owner'],
 };
