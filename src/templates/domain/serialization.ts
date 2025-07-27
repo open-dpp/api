@@ -5,7 +5,7 @@ import {
 import {
   DataFieldDoc,
   SectionDoc,
-} from '../../data-modelling/infrastructure/product-data-model-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema';
 import { DataSectionDbProps } from './section';
 import { DataFieldDbProps } from './data-field';
 import { Template } from './template';

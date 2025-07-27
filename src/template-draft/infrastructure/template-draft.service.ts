@@ -12,7 +12,7 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import {
   DataFieldDoc,
   SectionDoc,
-} from '../../data-modelling/infrastructure/product-data-model-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { Layout } from '../../data-modelling/domain/layout';
 import { DataSectionDraft } from '../domain/section-draft';
