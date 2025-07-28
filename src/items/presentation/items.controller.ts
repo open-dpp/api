@@ -32,6 +32,7 @@ import {
   dataValueDocumentation,
   orgaParamDocumentation,
 } from '../../product-passport/presentation/dto/docs/product-passport.doc';
+import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -46,7 +47,7 @@ export class ItemsController {
   @ApiOperation({
     summary: 'Create a new item',
     description:
-      'Creates a new item for the specified model. It uses the product data model of the model.',
+      'Creates a new item for the specified model. It uses the template of the model.',
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
@@ -146,10 +147,10 @@ export class ItemsController {
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
     @Param('itemId') itemId: string,
-    @Body() requestBody: DataValueDto[],
+    @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
+    addDataValues: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
-    const addDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -194,10 +195,10 @@ export class ItemsController {
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
     @Param('itemId') itemId: string,
-    @Body() requestBody: DataValueDto[],
+    @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
+    updateDataValues: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
-    const updateDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,

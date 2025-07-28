@@ -154,16 +154,22 @@ describe('TemplateService', () => {
       id: laptopModel.id,
       name: laptopModel.name,
       version: laptopModel.version,
+      description: laptopModel.description,
+      sectors: laptopModel.sectors,
     });
     expect(foundAll).toContainEqual({
       id: phoneModel.id,
       name: phoneModel.name,
       version: phoneModel.version,
+      description: phoneModel.description,
+      sectors: phoneModel.sectors,
     });
     expect(foundAll).not.toContainEqual({
       id: privateModel.id,
       name: privateModel.name,
       version: privateModel.version,
+      description: privateModel.description,
+      sectors: privateModel.sectors,
     });
   });
 

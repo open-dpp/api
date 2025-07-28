@@ -1,4 +1,5 @@
 import { sectionBaseDocumentation } from '../data-modelling/presentation/dto/docs/section-base.doc';
+import { Sector } from '@open-dpp/api-client';
 
 export const templateDocumentation = {
   type: 'object',
@@ -10,6 +11,17 @@ export const templateDocumentation = {
     name: {
       type: 'string',
       minLength: 1,
+    },
+    description: {
+      type: 'string',
+    },
+    sectors: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: Object.values(Sector),
+      },
+      description: 'The sectors which the template is applicable to.',
     },
     version: {
       type: 'string',
@@ -30,11 +42,13 @@ export const templateDocumentation = {
     marketplaceResourceId: {
       type: 'string',
       format: 'uuid',
+      nullable: true,
     },
   },
   required: [
     'id',
     'name',
+    'description',
     'version',
     'sections',
     'createdByUserId',
@@ -53,5 +67,14 @@ export const templateGetAllDocumentation = {
       type: 'string',
     },
     version: { type: 'string', minLength: 1 },
+    description: { type: 'string' },
+    sectors: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: Object.values(Sector),
+      },
+      description: 'The sectors which the template is applicable to.',
+    },
   },
 };

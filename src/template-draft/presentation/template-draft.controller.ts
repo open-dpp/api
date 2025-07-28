@@ -51,6 +51,7 @@ import {
 } from './dto/update-section-draft.dto';
 import { templateDraftToDto } from './dto/template-draft.dto';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {
@@ -65,9 +66,9 @@ export class TemplateDraftController {
   async create(
     @Param('orgaId') organizationId: string,
     @Request() req: AuthRequest,
-    @Body() body: CreateTemplateDraftDto,
+    @Body(new ZodValidationPipe(CreateTemplateDraftDtoSchema))
+    createTemplateDraftDto: CreateTemplateDraftDto,
   ) {
-    const createTemplateDraftDto = CreateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -106,9 +107,9 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() body: UpdateTemplateDraftDto,
+    @Body(new ZodValidationPipe(UpdateTemplateDraftDtoSchema))
+    updateTemplateDraftDto: UpdateTemplateDraftDto,
   ) {
-    const updateTemplateDraftDto = UpdateTemplateDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -129,9 +130,9 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() body: CreateSectionDraftDto,
+    @Body(new ZodValidationPipe(CreateSectionDraftDtoSchema))
+    createSectionDraftDto: CreateSectionDraftDto,
   ) {
-    const createSectionDraftDto = CreateSectionDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -165,9 +166,8 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body() body: PublishDto,
+    @Body(new ZodValidationPipe(PublishDtoSchema)) publishDto: PublishDto,
   ) {
-    const publishDto = PublishDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -207,10 +207,9 @@ export class TemplateDraftController {
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
     @Request() req: AuthRequest,
-    @Body()
-    body: CreateDataFieldDraftDto,
+    @Body(new ZodValidationPipe(CreateDataFieldDraftSchema))
+    createDataFieldDraftDto: CreateDataFieldDraftDto,
   ) {
-    const createDataFieldDraftDto = CreateDataFieldDraftSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -261,10 +260,10 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
-    @Body() body: UpdateSectionDraftDto,
+    @Body(new ZodValidationPipe(UpdateSectionDraftDtoSchema))
+    modifySectionDraftDto: UpdateSectionDraftDto,
     @Request() req: AuthRequest,
   ) {
-    const modifySectionDraftDto = UpdateSectionDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -291,10 +290,10 @@ export class TemplateDraftController {
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
     @Param('fieldId') fieldId: string,
-    @Body() body: UpdateDataFieldDraftDto,
+    @Body(new ZodValidationPipe(UpdateDataFieldDraftDtoSchema))
+    modifyDataFieldDraftDto: UpdateDataFieldDraftDto,
     @Request() req: AuthRequest,
   ) {
-    const modifyDataFieldDraftDto = UpdateDataFieldDraftDtoSchema.parse(body);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,

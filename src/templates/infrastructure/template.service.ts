@@ -70,7 +70,7 @@ export class TemplateService {
         {
           $or: [{ ownedByOrganizationId: organizationId }],
         },
-        '_id name version',
+        '_id name version description sectors',
       )
       .sort({ name: 1 })
       .exec();
@@ -78,6 +78,8 @@ export class TemplateService {
       id: dm._id,
       name: dm.name,
       version: dm.version,
+      description: dm.description,
+      sectors: dm.sectors,
     }));
   }
 

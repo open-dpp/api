@@ -12,7 +12,7 @@ import {
 export const ItemDtoSchema = z.object({
   id: z.uuid(),
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
-  templateId: z.uuid().optional(),
+  templateId: z.uuid(),
   dataValues: DataValueDtoSchema.array(),
 });
 

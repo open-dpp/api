@@ -14,7 +14,7 @@ export const ModelDtoSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
-  templateId: z.uuid().optional(),
+  templateId: z.uuid(),
   dataValues: DataValueDtoSchema.array(),
   owner: z.uuid(),
 });

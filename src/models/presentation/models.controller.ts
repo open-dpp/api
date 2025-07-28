@@ -174,10 +174,10 @@ export class ModelsController {
   async update(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() requestBody: UpdateModelDto,
+    @Body(new ZodValidationPipe(UpdateModelDtoSchema))
+    updateModelDto: UpdateModelDto,
     @Request() req: AuthRequest,
   ) {
-    const updateModelDto = UpdateModelDtoSchema.parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -213,10 +213,10 @@ export class ModelsController {
   async updateDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() requestBody: DataValueDto[],
+    @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
+    updateDataValues: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
-    const updateDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
@@ -255,10 +255,10 @@ export class ModelsController {
   async addDataValues(
     @Param('orgaId') organizationId: string,
     @Param('modelId') modelId: string,
-    @Body() requestBody: DataValueDto[],
+    @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
+    addDataValues: DataValueDto[],
     @Request() req: AuthRequest,
   ) {
-    const addDataValues = DataValueDtoSchema.array().parse(requestBody);
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
