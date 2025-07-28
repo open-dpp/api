@@ -1,13 +1,13 @@
-import { migratePassportDocToVersion_1_0_1 } from '../../product-passport/infrastructure/migrations';
+import { migratePassportDocToTemplateId } from '../../product-passport/infrastructure/migrations';
 import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
 
-function migrateToVersion_1_0_1(itemDoc: ItemDoc) {
-  migratePassportDocToVersion_1_0_1(itemDoc);
-  itemDoc._schemaVersion = ItemDocSchemaVersion.v1_0_1;
+function migrateToVersion_1_0_2(itemDoc: ItemDoc) {
+  migratePassportDocToTemplateId(itemDoc);
+  itemDoc._schemaVersion = ItemDocSchemaVersion.v1_0_2;
 }
 
 export function migrateItemDoc(itemDoc: ItemDoc) {
-  if (itemDoc._schemaVersion === ItemDocSchemaVersion.v1_0_0) {
-    migrateToVersion_1_0_1(itemDoc);
+  if (itemDoc._schemaVersion === ItemDocSchemaVersion.v1_0_1) {
+    migrateToVersion_1_0_2(itemDoc);
   }
 }

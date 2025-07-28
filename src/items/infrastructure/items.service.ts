@@ -44,7 +44,7 @@ export class ItemsService {
       { _id: item.id },
       {
         $set: {
-          _schemaVersion: ItemDocSchemaVersion.v1_0_1,
+          _schemaVersion: ItemDocSchemaVersion.v1_0_2,
           modelId: item.modelId,
           templateId: item.templateId,
           ownedByOrganizationId: item.ownedByOrganizationId,
