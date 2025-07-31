@@ -21,12 +21,12 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ItemsService } from '../../items/infrastructure/items.service';
-import { DataValue } from '../../product-passport/domain/data-value';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { Layout } from '../../data-modelling/domain/layout';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { Sector } from '@open-dpp/api-client';
+import {
+  phoneFactory,
+  phoneItemFactory,
+  phoneModelFactory,
+} from '../../views/fixtures/view.factory';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
@@ -72,387 +72,26 @@ describe('UniqueProductIdentifierController', () => {
 
     await app.init();
   });
-
-  const sectionId1 = randomUUID();
-  const sectionId2 = randomUUID();
-  const sectionId3 = randomUUID();
-
-  const sectionIdForItem1 = randomUUID();
-  const sectionIdForItem2 = randomUUID();
-
-  const dataFieldId1 = randomUUID();
-  const dataFieldId2 = randomUUID();
-  const dataFieldId3 = randomUUID();
-  const dataFieldId4 = randomUUID();
-  const dataFieldId5 = randomUUID();
-
-  const dataFieldIdForItem1 = randomUUID();
-  const dataFieldIdForItem2 = randomUUID();
-  const dataFieldIdForItem3 = randomUUID();
-  const dataFieldIdForItem4 = randomUUID();
-  const dataFieldIdForItem5 = randomUUID();
-
-  const laptopModel: TemplateDbProps = {
-    id: randomUUID(),
-    marketplaceResourceId: null,
-    description: 'My laptop',
-    sectors: [Sector.ELECTRONICS],
-    name: 'Laptop',
-    version: '1.0',
-    organizationId: organizationId,
-    userId: authContext.user.id,
-    sections: [
-      {
-        type: SectionType.REPEATABLE,
-        id: sectionId1,
-        parentId: undefined,
-        name: 'Repeating Section',
-        layout: Layout.create({
-          cols: { sm: 3 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        granularityLevel: GranularityLevel.MODEL,
-        subSections: [sectionId2],
-        dataFields: [
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldId1,
-            name: 'Title 1',
-            options: { min: 2 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          },
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldId2,
-            name: 'Title 2',
-            options: { min: 7 },
-            layout: Layout.create({
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.MODEL,
-          },
-        ],
-      },
-      {
-        type: SectionType.REPEATABLE,
-        id: sectionIdForItem1,
-        parentId: undefined,
-        name: 'Repeating Section for item',
-        layout: Layout.create({
-          cols: { sm: 3 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        granularityLevel: GranularityLevel.ITEM,
-        subSections: [sectionIdForItem2],
-        dataFields: [
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldIdForItem1,
-            name: 'Title 1 for item',
-            options: { min: 7 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          },
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldIdForItem2,
-            name: 'Title 2 for item',
-            options: { min: 7 },
-            layout: Layout.create({
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          },
-        ],
-      },
-      {
-        type: SectionType.GROUP,
-        parentId: sectionId1,
-        id: sectionId2,
-        name: 'Group Section',
-        subSections: [],
-        layout: Layout.create({
-          cols: { sm: 3 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        }),
-        granularityLevel: GranularityLevel.MODEL,
-        dataFields: [
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldId3,
-            name: 'Title 3',
-            options: { min: 8 },
-            layout: {
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
-            granularityLevel: GranularityLevel.MODEL,
-          },
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldId4,
-            name: 'Title 4',
-            options: { min: 8 },
-            layout: {
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
-            granularityLevel: GranularityLevel.MODEL,
-          },
-        ],
-      },
-      {
-        type: SectionType.GROUP,
-        parentId: sectionIdForItem1,
-        id: sectionIdForItem2,
-        name: 'Group Section for item',
-        subSections: [],
-        layout: {
-          cols: { sm: 3 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        },
-        granularityLevel: GranularityLevel.ITEM,
-        dataFields: [
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldIdForItem3,
-            name: 'Title 3 for item',
-            options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
-            granularityLevel: GranularityLevel.ITEM,
-          },
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldIdForItem4,
-            name: 'Title 4 for item',
-            options: { min: 8 },
-            layout: {
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
-            granularityLevel: GranularityLevel.ITEM,
-          },
-        ],
-      },
-      {
-        type: SectionType.GROUP,
-        id: sectionId3,
-        parentId: undefined,
-        name: 'Group Section 2',
-        subSections: [],
-        layout: {
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        },
-        dataFields: [
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldId5,
-            name: 'Title sg21',
-            options: { min: 8 },
-            layout: {
-              colStart: { sm: 1 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
-            granularityLevel: GranularityLevel.MODEL,
-          },
-          {
-            type: DataFieldType.TEXT_FIELD,
-            id: dataFieldIdForItem5,
-            name: 'Title sg21 for item',
-            options: { min: 8 },
-            layout: {
-              colStart: { sm: 2 },
-              colSpan: { sm: 1 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
-            granularityLevel: GranularityLevel.ITEM,
-          },
-        ],
-      },
-    ],
-  };
+  const authProps = { userId: authContext.user.id, organizationId };
+  const phoneTemplate: TemplateDbProps = phoneFactory
+    .addSections()
+    .build(authProps);
 
   it(`/GET public view for unique product identifier`, async () => {
-    const template = Template.loadFromDb({ ...laptopModel });
+    const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
 
-    const model = Model.loadFromDb({
-      id: randomUUID(),
-      name: 'Model Y',
-      description: 'My desc',
-      templateId: template.id,
-      organizationId: organizationId,
-      userId: authContext.user.id,
-      uniqueProductIdentifiers: [],
-      dataValues: [
-        DataValue.create({
-          dataFieldId: dataFieldId1,
-          dataSectionId: sectionId1,
-          value: 'val1,0',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId2,
-          dataSectionId: sectionId1,
-          value: 'val2,0',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId3,
-          dataSectionId: sectionId2,
-          value: 'val3,0',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId4,
-          dataSectionId: sectionId2,
-          value: 'val4,0',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId1,
-          dataSectionId: sectionId1,
-          value: 'val1,1',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId2,
-          dataSectionId: sectionId1,
-          value: 'val2,1',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId3,
-          dataSectionId: sectionId2,
-          value: 'val3,1',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId4,
-          dataSectionId: sectionId2,
-          value: 'val4,1',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldId5,
-          dataSectionId: sectionId3,
-          value: 'val5,0',
-          row: 0,
-        }),
-      ],
-    });
+    const model = Model.loadFromDb(
+      phoneModelFactory
+        .addDataValues()
+        .build({ ...authProps, templateId: template.id }),
+    );
 
-    const item = Item.loadFromDb({
-      id: randomUUID(),
-      templateId: template.id,
-      organizationId: organizationId,
-      userId: authContext.user.id,
-      modelId: model.id,
-      uniqueProductIdentifiers: [],
-      dataValues: [
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem1,
-          dataSectionId: sectionIdForItem1,
-          value: 'val1,0,item',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem2,
-          dataSectionId: sectionIdForItem1,
-          value: 'val2,0,item',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem3,
-          dataSectionId: sectionIdForItem2,
-          value: 'val3,0,item',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem4,
-          dataSectionId: sectionIdForItem2,
-          value: 'val4,0,item',
-          row: 0,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem1,
-          dataSectionId: sectionIdForItem1,
-          value: 'val1,1,item',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem2,
-          dataSectionId: sectionIdForItem1,
-          value: 'val2,1,item',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem3,
-          dataSectionId: sectionIdForItem2,
-          value: 'val3,1,item',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem4,
-          dataSectionId: sectionIdForItem2,
-          value: 'val4,1,item',
-          row: 1,
-        }),
-        DataValue.create({
-          dataFieldId: dataFieldIdForItem5,
-          dataSectionId: sectionId3,
-          value: 'val5,0,item',
-          row: 0,
-        }),
-      ],
-    });
+    const item = Item.loadFromDb(
+      phoneItemFactory
+        .addDataValues()
+        .build({ ...authProps, modelId: model.id, templateId: template.id }),
+    );
     const { uuid: modelUUID } = model.createUniqueProductIdentifier();
     const { uuid } = item.createUniqueProductIdentifier();
     await itemsService.save(item);
@@ -800,7 +439,7 @@ describe('UniqueProductIdentifierController', () => {
   });
 
   it(`/GET reference of unique product identifier`, async () => {
-    const template = Template.loadFromDb({ ...laptopModel });
+    const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
       name: 'model',
@@ -840,7 +479,7 @@ describe('UniqueProductIdentifierController', () => {
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
-    const template = Template.loadFromDb({ ...laptopModel });
+    const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
       name: 'model',

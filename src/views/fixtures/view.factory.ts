@@ -34,14 +34,14 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         dataFieldIdForItem5: randomUUID(),
       },
     },
-    sectionIdForItem1: {
+    sectionForItem1: {
       id: randomUUID(),
       fields: {
         dataFieldIdForItem1: randomUUID(),
         dataFieldIdForItem2: randomUUID(),
       },
     },
-    sectionIdForItem2: {
+    sectionForItem2: {
       id: randomUUID(),
       fields: {
         dataFieldIdForItem3: randomUUID(),
@@ -188,7 +188,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
   sectionForItem1() {
     return sectionDbPropsFactory.params({
       type: SectionType.REPEATABLE,
-      id: PhoneFactory.ids.sectionIdForItem1.id,
+      id: PhoneFactory.ids.sectionForItem1.id,
       name: 'Repeating Section for item',
       layout: Layout.create({
         cols: { sm: 3 },
@@ -202,7 +202,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
-          id: PhoneFactory.ids.sectionIdForItem1.fields.dataFieldIdForItem1,
+          id: PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
           name: 'Title 1 for item',
           options: { min: 7 },
           layout: Layout.create({
@@ -215,7 +215,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         },
         {
           type: DataFieldType.TEXT_FIELD,
-          id: PhoneFactory.ids.sectionIdForItem1.fields.dataFieldIdForItem2,
+          id: PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
           name: 'Title 2 for item',
           options: { min: 7 },
           layout: Layout.create({
@@ -233,7 +233,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
   sectionForItem2() {
     return sectionDbPropsFactory.params({
       type: SectionType.GROUP,
-      id: PhoneFactory.ids.sectionIdForItem2.id,
+      id: PhoneFactory.ids.sectionForItem2.id,
       name: 'Group Section for item',
       subSections: [],
       layout: {
@@ -247,7 +247,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
-          id: PhoneFactory.ids.sectionIdForItem2.fields.dataFieldIdForItem3,
+          id: PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
           name: 'Title 3 for item',
           options: { min: 8 },
           layout: Layout.create({
@@ -260,7 +260,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         },
         {
           type: DataFieldType.TEXT_FIELD,
-          id: PhoneFactory.ids.sectionIdForItem2.fields.dataFieldIdForItem4,
+          id: PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
           name: 'Title 4 for item',
           options: { min: 8 },
           layout: {
@@ -283,10 +283,10 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         }),
         this.section2().build({ parentId: PhoneFactory.ids.section1.id }),
         this.sectionForItem1().build({
-          subSections: [PhoneFactory.ids.sectionIdForItem2.id],
+          subSections: [PhoneFactory.ids.sectionForItem2.id],
         }),
         this.sectionForItem2().build({
-          parentId: PhoneFactory.ids.sectionIdForItem1.id,
+          parentId: PhoneFactory.ids.sectionForItem1.id,
         }),
         this.section3().build(),
       ],
@@ -387,7 +387,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
   }
 }
 
-export const phoneModel = PhoneModelFactory.define(() => ({
+export const phoneModelFactory = PhoneModelFactory.define(() => ({
   id: randomUUID(),
   name: 'Model Y',
   description: 'My desc',
@@ -398,67 +398,100 @@ export const phoneModel = PhoneModelFactory.define(() => ({
   dataValues: [],
 }));
 
-// export const phoneItem = Factory.define<ItemDbProps>(() => ({
-//   id: randomUUID(),
-//   templateId: randomUUID(),
-//   organizationId: randomUUID(),
-//   userId: randomUUID(),
-//   modelId: randomUUID(),
-//   uniqueProductIdentifiers: [],
-//   dataValues: [
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem1,
-//       dataSectionId: sectionIdForItem1,
-//       value: 'val1,0,item',
-//       row: 0,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem2,
-//       dataSectionId: sectionIdForItem1,
-//       value: 'val2,0,item',
-//       row: 0,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem3,
-//       dataSectionId: sectionIdForItem2,
-//       value: 'val3,0,item',
-//       row: 0,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem4,
-//       dataSectionId: sectionIdForItem2,
-//       value: 'val4,0,item',
-//       row: 0,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem1,
-//       dataSectionId: sectionIdForItem1,
-//       value: 'val1,1,item',
-//       row: 1,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem2,
-//       dataSectionId: sectionIdForItem1,
-//       value: 'val2,1,item',
-//       row: 1,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem3,
-//       dataSectionId: sectionIdForItem2,
-//       value: 'val3,1,item',
-//       row: 1,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem4,
-//       dataSectionId: sectionIdForItem2,
-//       value: 'val4,1,item',
-//       row: 1,
-//     }),
-//     DataValue.create({
-//       dataFieldId: dataFieldIdForItem5,
-//       dataSectionId: sectionId3,
-//       value: 'val5,0,item',
-//       row: 0,
-//     }),
-//   ],
-// }));
+export class PhoneItemFactory extends Factory<ItemDbProps> {
+  dataValuesSectionForItem1() {
+    return [
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
+        dataSectionId: PhoneFactory.ids.sectionForItem1.id,
+        value: 'val1,0,item',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
+        dataSectionId: PhoneFactory.ids.sectionForItem1.id,
+        value: 'val2,0,item',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
+        dataSectionId: PhoneFactory.ids.sectionForItem1.id,
+        value: 'val1,1,item',
+        row: 1,
+      }),
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
+        dataSectionId: PhoneFactory.ids.sectionForItem1.id,
+        value: 'val2,1,item',
+        row: 1,
+      }),
+    ];
+  }
+
+  dataValuesSectionForItem2() {
+    return [
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
+        dataSectionId: PhoneFactory.ids.sectionForItem2.id,
+        value: 'val3,0,item',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
+        dataSectionId: PhoneFactory.ids.sectionForItem2.id,
+        value: 'val4,0,item',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
+        dataSectionId: PhoneFactory.ids.sectionForItem2.id,
+        value: 'val3,1,item',
+        row: 1,
+      }),
+      DataValue.create({
+        dataFieldId:
+          PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
+        dataSectionId: PhoneFactory.ids.sectionForItem2.id,
+        value: 'val4,1,item',
+        row: 1,
+      }),
+    ];
+  }
+  dataValuesSection3() {
+    return [
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.sectionId3.fields.dataFieldIdForItem5,
+        dataSectionId: PhoneFactory.ids.sectionId3.id,
+        value: 'val5,0,item',
+        row: 0,
+      }),
+    ];
+  }
+
+  addDataValues() {
+    return this.params({
+      dataValues: [
+        ...this.dataValuesSectionForItem1(),
+        ...this.dataValuesSectionForItem2(),
+        ...this.dataValuesSection3(),
+      ],
+    });
+  }
+}
+
+export const phoneItemFactory = PhoneItemFactory.define(() => ({
+  id: randomUUID(),
+  templateId: randomUUID(),
+  organizationId: randomUUID(),
+  userId: randomUUID(),
+  modelId: randomUUID(),
+  uniqueProductIdentifiers: [],
+  dataValues: [],
+}));
