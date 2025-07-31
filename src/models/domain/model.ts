@@ -13,7 +13,7 @@ type ModelCreateProps = {
   template: Template;
 };
 
-type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
+export type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
   id: string;
   uniqueProductIdentifiers: UniqueProductIdentifier[];
   templateId: string;

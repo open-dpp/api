@@ -1,0 +1,464 @@
+import { randomUUID } from 'crypto';
+import { TemplateDbProps } from '../../templates/domain/template';
+import { SectionType } from '../../data-modelling/domain/section-base';
+import { Layout } from '../../data-modelling/domain/layout';
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { ModelDbProps } from '../../models/domain/model';
+import { DataValue } from '../../product-passport/domain/data-value';
+import { ItemDbProps } from '../../items/domain/item';
+import { Factory } from 'fishery';
+import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
+import { Sector } from '@open-dpp/api-client';
+
+export class PhoneFactory extends Factory<TemplateDbProps> {
+  static ids = {
+    section1: {
+      id: randomUUID(),
+      fields: {
+        dataField1: randomUUID(),
+        dataField2: randomUUID(),
+      },
+    },
+    section2: {
+      id: randomUUID(),
+      fields: {
+        dataField3: randomUUID(),
+        dataField4: randomUUID(),
+      },
+    },
+    sectionId3: {
+      id: randomUUID(),
+      fields: {
+        dataFieldId5: randomUUID(),
+        dataFieldIdForItem5: randomUUID(),
+      },
+    },
+    sectionIdForItem1: {
+      id: randomUUID(),
+      fields: {
+        dataFieldIdForItem1: randomUUID(),
+        dataFieldIdForItem2: randomUUID(),
+      },
+    },
+    sectionIdForItem2: {
+      id: randomUUID(),
+      fields: {
+        dataFieldIdForItem3: randomUUID(),
+        dataFieldIdForItem4: randomUUID(),
+      },
+    },
+  };
+
+  section1() {
+    return sectionDbPropsFactory.params({
+      type: SectionType.REPEATABLE,
+      id: PhoneFactory.ids.section1.id,
+      parentId: undefined,
+      name: 'Repeating Section',
+      layout: Layout.create({
+        cols: { sm: 3 },
+        colStart: { sm: 1 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 1 },
+        rowSpan: { sm: 1 },
+      }),
+      granularityLevel: GranularityLevel.MODEL,
+      subSections: [],
+      dataFields: [
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.section1.fields.dataField1,
+          name: 'Title 1',
+          options: { min: 2 },
+          layout: Layout.create({
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          }),
+          granularityLevel: GranularityLevel.MODEL,
+        },
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.section1.fields.dataField2,
+          name: 'Title 2',
+          options: { min: 7 },
+          layout: Layout.create({
+            colStart: { sm: 2 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          }),
+          granularityLevel: GranularityLevel.MODEL,
+        },
+      ],
+    });
+  }
+
+  section2() {
+    return sectionDbPropsFactory.params({
+      id: PhoneFactory.ids.section2.id,
+      type: SectionType.GROUP,
+      name: 'Group Section',
+      subSections: [],
+      layout: Layout.create({
+        cols: { sm: 3 },
+        colStart: { sm: 1 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 1 },
+        rowSpan: { sm: 1 },
+      }),
+      granularityLevel: GranularityLevel.MODEL,
+      dataFields: [
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.section2.fields.dataField3,
+          name: 'Title 3',
+          options: { min: 8 },
+          layout: {
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          granularityLevel: GranularityLevel.MODEL,
+        },
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.section2.fields.dataField4,
+          name: 'Title 4',
+          options: { min: 8 },
+          layout: {
+            colStart: { sm: 2 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          granularityLevel: GranularityLevel.MODEL,
+        },
+      ],
+    });
+  }
+
+  section3() {
+    return sectionDbPropsFactory.params({
+      type: SectionType.GROUP,
+      id: PhoneFactory.ids.sectionId3.id,
+      name: 'Group Section 2',
+      subSections: [],
+      layout: {
+        cols: { sm: 2 },
+        colStart: { sm: 1 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 1 },
+        rowSpan: { sm: 1 },
+      },
+      dataFields: [
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.sectionId3.fields.dataFieldId5,
+          name: 'Title sg21',
+          options: { min: 8 },
+          layout: {
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          granularityLevel: GranularityLevel.MODEL,
+        },
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.sectionId3.fields.dataFieldIdForItem5,
+          name: 'Title sg21 for item',
+          options: { min: 8 },
+          layout: {
+            colStart: { sm: 2 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          granularityLevel: GranularityLevel.ITEM,
+        },
+      ],
+    });
+  }
+
+  sectionForItem1() {
+    return sectionDbPropsFactory.params({
+      type: SectionType.REPEATABLE,
+      id: PhoneFactory.ids.sectionIdForItem1.id,
+      name: 'Repeating Section for item',
+      layout: Layout.create({
+        cols: { sm: 3 },
+        colStart: { sm: 1 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 1 },
+        rowSpan: { sm: 1 },
+      }),
+      granularityLevel: GranularityLevel.ITEM,
+      subSections: [],
+      dataFields: [
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.sectionIdForItem1.fields.dataFieldIdForItem1,
+          name: 'Title 1 for item',
+          options: { min: 7 },
+          layout: Layout.create({
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          }),
+          granularityLevel: GranularityLevel.ITEM,
+        },
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.sectionIdForItem1.fields.dataFieldIdForItem2,
+          name: 'Title 2 for item',
+          options: { min: 7 },
+          layout: Layout.create({
+            colStart: { sm: 2 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          }),
+          granularityLevel: GranularityLevel.ITEM,
+        },
+      ],
+    });
+  }
+
+  sectionForItem2() {
+    return sectionDbPropsFactory.params({
+      type: SectionType.GROUP,
+      id: PhoneFactory.ids.sectionIdForItem2.id,
+      name: 'Group Section for item',
+      subSections: [],
+      layout: {
+        cols: { sm: 3 },
+        colStart: { sm: 1 },
+        colSpan: { sm: 1 },
+        rowStart: { sm: 1 },
+        rowSpan: { sm: 1 },
+      },
+      granularityLevel: GranularityLevel.ITEM,
+      dataFields: [
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.sectionIdForItem2.fields.dataFieldIdForItem3,
+          name: 'Title 3 for item',
+          options: { min: 8 },
+          layout: Layout.create({
+            colStart: { sm: 1 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          }),
+          granularityLevel: GranularityLevel.ITEM,
+        },
+        {
+          type: DataFieldType.TEXT_FIELD,
+          id: PhoneFactory.ids.sectionIdForItem2.fields.dataFieldIdForItem4,
+          name: 'Title 4 for item',
+          options: { min: 8 },
+          layout: {
+            colStart: { sm: 2 },
+            colSpan: { sm: 1 },
+            rowStart: { sm: 1 },
+            rowSpan: { sm: 1 },
+          },
+          granularityLevel: GranularityLevel.ITEM,
+        },
+      ],
+    });
+  }
+
+  addSections() {
+    return this.params({
+      sections: [
+        this.section1().build({
+          subSections: [PhoneFactory.ids.section2.id],
+        }),
+        this.section2().build({ parentId: PhoneFactory.ids.section1.id }),
+        this.sectionForItem1().build({
+          subSections: [PhoneFactory.ids.sectionIdForItem2.id],
+        }),
+        this.sectionForItem2().build({
+          parentId: PhoneFactory.ids.sectionIdForItem1.id,
+        }),
+        this.section3().build(),
+      ],
+    });
+  }
+}
+
+export const phoneFactory = PhoneFactory.define(() => ({
+  id: randomUUID(),
+  marketplaceResourceId: null,
+  description: 'My phone',
+  sectors: [Sector.ELECTRONICS],
+  name: 'Phone',
+  version: '1.0.0',
+  organizationId: randomUUID(),
+  userId: randomUUID(),
+  sections: [],
+}));
+
+export class PhoneModelFactory extends Factory<ModelDbProps> {
+  dataValuesSection1() {
+    return [
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section1.fields.dataField1,
+        dataSectionId: PhoneFactory.ids.section1.id,
+        value: 'val1,0',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section1.fields.dataField2,
+        dataSectionId: PhoneFactory.ids.section1.id,
+        value: 'val2,0',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section1.fields.dataField1,
+        dataSectionId: PhoneFactory.ids.section1.id,
+        value: 'val1,1',
+        row: 1,
+      }),
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section1.fields.dataField2,
+        dataSectionId: PhoneFactory.ids.section1.id,
+        value: 'val2,1',
+        row: 1,
+      }),
+    ];
+  }
+
+  dataValuesSection2() {
+    return [
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section2.fields.dataField3,
+        dataSectionId: PhoneFactory.ids.section2.id,
+        value: 'val3,0',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section2.fields.dataField4,
+        dataSectionId: PhoneFactory.ids.section2.id,
+        value: 'val4,0',
+        row: 0,
+      }),
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section2.fields.dataField3,
+        dataSectionId: PhoneFactory.ids.section2.id,
+        value: 'val3,1',
+        row: 1,
+      }),
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.section2.fields.dataField4,
+        dataSectionId: PhoneFactory.ids.section2.id,
+        value: 'val4,1',
+        row: 1,
+      }),
+    ];
+  }
+
+  dataValuesSection3() {
+    return [
+      DataValue.create({
+        dataFieldId: PhoneFactory.ids.sectionId3.fields.dataFieldId5,
+        dataSectionId: PhoneFactory.ids.sectionId3.id,
+        value: 'val5,0',
+        row: 0,
+      }),
+    ];
+  }
+
+  addDataValues() {
+    return this.params({
+      dataValues: [
+        ...this.dataValuesSection1(),
+        ...this.dataValuesSection2(),
+        ...this.dataValuesSection3(),
+      ],
+    });
+  }
+}
+
+export const phoneModel = PhoneModelFactory.define(() => ({
+  id: randomUUID(),
+  name: 'Model Y',
+  description: 'My desc',
+  templateId: randomUUID(),
+  organizationId: randomUUID(),
+  userId: randomUUID(),
+  uniqueProductIdentifiers: [],
+  dataValues: [],
+}));
+
+// export const phoneItem = Factory.define<ItemDbProps>(() => ({
+//   id: randomUUID(),
+//   templateId: randomUUID(),
+//   organizationId: randomUUID(),
+//   userId: randomUUID(),
+//   modelId: randomUUID(),
+//   uniqueProductIdentifiers: [],
+//   dataValues: [
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem1,
+//       dataSectionId: sectionIdForItem1,
+//       value: 'val1,0,item',
+//       row: 0,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem2,
+//       dataSectionId: sectionIdForItem1,
+//       value: 'val2,0,item',
+//       row: 0,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem3,
+//       dataSectionId: sectionIdForItem2,
+//       value: 'val3,0,item',
+//       row: 0,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem4,
+//       dataSectionId: sectionIdForItem2,
+//       value: 'val4,0,item',
+//       row: 0,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem1,
+//       dataSectionId: sectionIdForItem1,
+//       value: 'val1,1,item',
+//       row: 1,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem2,
+//       dataSectionId: sectionIdForItem1,
+//       value: 'val2,1,item',
+//       row: 1,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem3,
+//       dataSectionId: sectionIdForItem2,
+//       value: 'val3,1,item',
+//       row: 1,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem4,
+//       dataSectionId: sectionIdForItem2,
+//       value: 'val4,1,item',
+//       row: 1,
+//     }),
+//     DataValue.create({
+//       dataFieldId: dataFieldIdForItem5,
+//       dataSectionId: sectionId3,
+//       value: 'val5,0,item',
+//       row: 0,
+//     }),
+//   ],
+// }));
