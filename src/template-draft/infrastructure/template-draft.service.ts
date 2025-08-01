@@ -15,7 +15,7 @@ import {
 } from '../../data-modelling/infrastructure/template-base.schema';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { Layout } from '../../data-modelling/domain/layout';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 
 @Injectable()
 export class TemplateDraftService {
@@ -95,7 +95,7 @@ export class TemplateDraftService {
   }
 
   createSection(sectionDoc: SectionDoc) {
-    return DataSectionDraft.loadFromDb({
+    return SectionDraft.loadFromDb({
       id: sectionDoc._id,
       name: sectionDoc.name,
       type: sectionDoc.type,

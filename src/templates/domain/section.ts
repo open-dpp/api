@@ -6,7 +6,7 @@ import {
 } from './data-field';
 import { groupBy } from 'lodash';
 import {
-  DataSectionBase,
+  SectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -15,13 +15,13 @@ import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
 
-type DataSectionProps = {
+type SectionProps = {
   name: string;
   layout: LayoutProps;
   granularityLevel?: GranularityLevel; // Required for repeater sections
 };
 
-export type DataSectionDbProps = DataSectionProps & {
+export type SectionDbProps = SectionProps & {
   id: string;
   type: SectionType;
   parentId: string | undefined;
@@ -29,7 +29,7 @@ export type DataSectionDbProps = DataSectionProps & {
   dataFields: DataFieldDbProps[];
 };
 
-export abstract class DataSection extends DataSectionBase {
+export abstract class Section extends SectionBase {
   public constructor(
     public readonly id: string,
     protected _name: string,
@@ -43,9 +43,9 @@ export abstract class DataSection extends DataSectionBase {
     super(id, _name, type, layout, _subSections, _parentId, granularityLevel);
   }
 
-  protected static createInstance<T extends DataSection>(
+  protected static createInstance<T extends Section>(
     Ctor: new (...args: any[]) => T,
-    data: DataSectionProps,
+    data: SectionProps,
     type: SectionType,
   ): T {
     return new Ctor(
@@ -61,9 +61,9 @@ export abstract class DataSection extends DataSectionBase {
   }
 
   // Add static factory method for loadFromDb
-  protected static loadFromDbInstance<T extends DataSection>(
+  protected static loadFromDbInstance<T extends Section>(
     Ctor: new (...args: any[]) => T,
-    data: DataSectionDbProps,
+    data: SectionDbProps,
     type: SectionType,
   ): T {
     return new Ctor(
@@ -114,7 +114,7 @@ export abstract class DataSection extends DataSectionBase {
     return validations;
   }
 
-  toDbProps(): DataSectionDbProps {
+  toDbProps(): SectionDbProps {
     return {
       id: this.id,
       type: this.type,
@@ -128,17 +128,17 @@ export abstract class DataSection extends DataSectionBase {
   }
 }
 
-export class RepeaterSection extends DataSection {
-  static create(data: DataSectionProps) {
-    return DataSection.createInstance(
+export class RepeaterSection extends Section {
+  static create(data: SectionProps) {
+    return Section.createInstance(
       RepeaterSection,
       data,
       SectionType.REPEATABLE,
     );
   }
 
-  static loadFromDb(data: DataSectionDbProps) {
-    return DataSection.loadFromDbInstance(
+  static loadFromDb(data: SectionDbProps) {
+    return Section.loadFromDbInstance(
       RepeaterSection,
       data,
       SectionType.REPEATABLE,
@@ -146,17 +146,13 @@ export class RepeaterSection extends DataSection {
   }
 }
 
-export class GroupSection extends DataSection {
-  static create(data: DataSectionProps) {
-    return DataSection.createInstance(GroupSection, data, SectionType.GROUP);
+export class GroupSection extends Section {
+  static create(data: SectionProps) {
+    return Section.createInstance(GroupSection, data, SectionType.GROUP);
   }
 
-  static loadFromDb(data: DataSectionDbProps) {
-    return DataSection.loadFromDbInstance(
-      GroupSection,
-      data,
-      SectionType.GROUP,
-    );
+  static loadFromDb(data: SectionDbProps) {
+    return Section.loadFromDbInstance(GroupSection, data, SectionType.GROUP);
   }
 }
 
@@ -173,12 +169,12 @@ export function findSectionClassByTypeOrFail(type: SectionType) {
   return foundSectionType.value;
 }
 
-export function isGroupSection(section: DataSection): section is GroupSection {
+export function isGroupSection(section: Section): section is GroupSection {
   return section.type === SectionType.GROUP;
 }
 
 export function isRepeaterSection(
-  section: DataSection,
+  section: Section,
 ): section is RepeaterSection {
   return section.type === SectionType.REPEATABLE;
 }

@@ -3,8 +3,8 @@ import { SectionType } from '../../domain/section-base';
 import { layoutToDto, SectionLayoutDtoSchema } from './layout.dto';
 import { GranularityLevel } from '../../domain/granularity-level';
 import { DataFieldBaseSchema, dataFieldToDto } from './data-field-base.dto';
-import { DataSectionDraft } from '../../../template-draft/domain/section-draft';
-import { DataSection } from '../../../templates/domain/section';
+import { SectionDraft } from '../../../template-draft/domain/section-draft';
+import { Section } from '../../../templates/domain/section';
 
 export const SectionBaseDtoSchema = z.object({
   id: z.uuid(),
@@ -17,7 +17,7 @@ export const SectionBaseDtoSchema = z.object({
   granularityLevel: z.enum(GranularityLevel).optional(),
 });
 
-export function sectionToDto(section: DataSection | DataSectionDraft) {
+export function sectionToDto(section: Section | SectionDraft) {
   return SectionBaseDtoSchema.parse({
     id: section.id,
     name: section.name,

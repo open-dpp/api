@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { TemplateDraft } from '../domain/template-draft';
 import { AuthRequest } from '../../auth/auth-request';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import {
@@ -143,7 +143,7 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       ...omit(createSectionDraftDto, ['parentSectionId', 'layout']),
       layout: Layout.create(createSectionDraftDto.layout),
     });

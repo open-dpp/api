@@ -5,6 +5,7 @@ import { TemplateService } from '../../templates/infrastructure/template.service
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Public } from '../../auth/public/public.decorator';
 import { ProductPassport } from '../domain/product-passport';
+import { productPassportToDto } from './dto/product-passport.dto';
 
 @Controller()
 export class ProductPassportController {
@@ -17,7 +18,7 @@ export class ProductPassportController {
 
   @Public()
   @Get('product-passport/:id')
-  async buildView(@Param('id') id: string) {
+  async getProductPassport(@Param('id') id: string) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOneOrFail(id);
     const item = await this.itemService.findOne(
@@ -35,6 +36,6 @@ export class ProductPassportController {
       item,
     });
 
-    return productPassport.mergeTemplateWithData();
+    return productPassportToDto(productPassport);
   }
 }

@@ -12,13 +12,13 @@ import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Item } from '../../items/domain/item';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import {
-  PhoneFactory,
   phoneFactory,
   phoneItemFactory,
   phoneModelFactory,
 } from '../fixtures/product-passport.factory';
 import { ProductPassport } from '../domain/product-passport';
 import { ProductPassportModule } from '../product-passport.module';
+import { productPassportToDto } from './dto/product-passport.dto';
 
 describe('ProductPassportController', () => {
   let app: INestApplication;
@@ -94,18 +94,7 @@ describe('ProductPassportController', () => {
       model: model,
       item: item,
     });
-    expect(response.body).toEqual({
-      id: item.uniqueProductIdentifiers[0].uuid,
-      name: model.name,
-      description: model.description,
-      sections: [
-        productPassport.getSectionWithData(PhoneFactory.ids.section1.id),
-        productPassport.getSectionWithData(PhoneFactory.ids.section2.id),
-        productPassport.getSectionWithData(PhoneFactory.ids.sectionForItem1.id),
-        productPassport.getSectionWithData(PhoneFactory.ids.sectionForItem2.id),
-        productPassport.getSectionWithData(PhoneFactory.ids.section3.id),
-      ],
-    });
+    expect(response.body).toEqual(productPassportToDto(productPassport));
   });
 
   // it(`/GET reference of unique product identifier`, async () => {

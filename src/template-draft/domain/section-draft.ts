@@ -1,29 +1,29 @@
 import { DataFieldDraft, DataFieldDraftDbProps } from './data-field-draft';
 import {
-  DataSectionBase,
+  SectionBase,
   SectionType,
 } from '../../data-modelling/domain/section-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
-import { DataSectionDbProps } from '../../templates/domain/section';
+import { SectionDbProps } from '../../templates/domain/section';
 
-export type DataSectionDraftCreateProps = {
+export type SectionDraftCreateProps = {
   name: string;
   type: SectionType;
   layout: LayoutProps;
   granularityLevel?: GranularityLevel;
 };
 
-export type DataSectionDraftDbProps = DataSectionDraftCreateProps & {
+export type SectionDraftDbProps = SectionDraftCreateProps & {
   id: string;
   subSections: string[];
   parentId: string | undefined;
   dataFields: DataFieldDraftDbProps[];
 };
 
-export class DataSectionDraft extends DataSectionBase {
+export class SectionDraft extends SectionBase {
   private constructor(
     public readonly id: string,
     protected _name: string,
@@ -37,11 +37,11 @@ export class DataSectionDraft extends DataSectionBase {
     super(id, _name, type, layout, _subSections, _parentId, granularityLevel);
   }
 
-  static create(data: DataSectionDraftCreateProps) {
+  static create(data: SectionDraftCreateProps) {
     if (data.type === SectionType.REPEATABLE && !data.granularityLevel) {
       throw new ValueError(`Repeatable must have a granularity level`);
     }
-    return new DataSectionDraft(
+    return new SectionDraft(
       randomUUID(),
       data.name,
       data.type,
@@ -53,8 +53,8 @@ export class DataSectionDraft extends DataSectionBase {
     );
   }
 
-  static loadFromDb(data: DataSectionDraftDbProps): DataSectionDraft {
-    return new DataSectionDraft(
+  static loadFromDb(data: SectionDraftDbProps): SectionDraft {
+    return new SectionDraft(
       data.id,
       data.name,
       data.type,
@@ -66,7 +66,7 @@ export class DataSectionDraft extends DataSectionBase {
     );
   }
 
-  assignParent(parent: DataSectionDraft) {
+  assignParent(parent: SectionDraft) {
     this._parentId = parent.id;
   }
 
@@ -90,12 +90,12 @@ export class DataSectionDraft extends DataSectionBase {
     this.dataFields.push(dataField);
   }
 
-  addSubSection(section: DataSectionDraft) {
+  addSubSection(section: SectionDraft) {
     this._subSections.push(section.id);
     section.assignParent(this);
   }
 
-  deleteSubSection(subSection: DataSectionDraft) {
+  deleteSubSection(subSection: SectionDraft) {
     if (!this.subSections.find((id) => id === subSection.id)) {
       throw new ValueError(
         `Could not found and delete sub section ${subSection.id} from ${this.id}`,
@@ -137,7 +137,7 @@ export class DataSectionDraft extends DataSectionBase {
     this.dataFields.splice(foundIndex, 1);
   }
 
-  publish(): DataSectionDbProps {
+  publish(): SectionDbProps {
     return {
       id: this.id,
       type: this.type,

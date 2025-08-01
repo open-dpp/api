@@ -1,78 +1,54 @@
 import { Template } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
 import { Item } from '../../items/domain/item';
-import { DataSection } from '../../templates/domain/section';
+import { Section } from '../../templates/domain/section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { maxBy, minBy } from 'lodash';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
-export class ProductPassport {
+export class DataSection extends Section {
   private constructor(
-    private readonly template: Template,
-    private readonly model: Model,
-    private readonly item: Item | null,
-    private readonly uniqueProductIdentifier: UniqueProductIdentifier,
-  ) {}
-
-  static create(data: {
-    template: Template;
-    model: Model;
-    item: Item | null;
-    uniqueProductIdentifier: UniqueProductIdentifier;
-  }) {
-    return new ProductPassport(
-      data.template,
-      data.model,
-      data.item,
-      data.uniqueProductIdentifier,
+    section: Section,
+    public readonly dataValues: { [key: string]: string }[],
+  ) {
+    super(
+      section.id,
+      section.name,
+      section.type,
+      section.layout,
+      section.subSections,
+      section.parentId,
+      section.granularityLevel,
+      section.dataFields,
     );
   }
 
-  mergeTemplateWithData() {
-    return {
-      id: this.uniqueProductIdentifier.uuid,
-      name: this.model.name,
-      description: this.model.description,
-      sections: this.template.sections.map((section) =>
-        this.getSectionWithData(section.id),
-      ),
-    };
+  static create(data: { section: Section; model: Model; item?: Item }) {
+    const dataValues = DataSection.constructDataValues(
+      data.section,
+      data.model,
+      data.item,
+    );
+    return new DataSection(data.section, dataValues);
   }
 
-  getSectionWithData(sectionId: string) {
-    const section = this.template.findSectionByIdOrFail(sectionId);
-    const dataValues = this.constructDataValues(section);
-    return {
-      name: section.name,
-      type: section.type,
-      id: section.id,
-      parentId: section.parentId,
-      subSections: section.subSections,
-      granularityLevel: section.granularityLevel,
-      dataFields: section.dataFields.map((field) => ({
-        options: field.options,
-        type: field.type,
-        id: field.id,
-        name: field.name,
-        granularityLevel: field.granularityLevel,
-      })),
-      dataValues,
-    };
-  }
-
-  constructDataValues(section: DataSection) {
+  private static constructDataValues(
+    section: Section,
+    model: Model,
+    item?: Item,
+  ) {
     let dataValuesOfSection: DataValue[];
     if (section.type === SectionType.REPEATABLE) {
       dataValuesOfSection =
         section.granularityLevel === GranularityLevel.MODEL
-          ? this.model.getDataValuesBySectionId(section.id)
-          : (this.item?.getDataValuesBySectionId(section.id) ?? []);
+          ? model.getDataValuesBySectionId(section.id)
+          : (item?.getDataValuesBySectionId(section.id) ?? []);
     } else {
-      dataValuesOfSection = this.model
+      dataValuesOfSection = model
         .getDataValuesBySectionId(section.id)
-        .concat(this.item?.getDataValuesBySectionId(section.id) ?? []);
+        .concat(item?.getDataValuesBySectionId(section.id) ?? []);
     }
 
     const minRow = minBy(dataValuesOfSection, 'row')?.row ?? 0;
@@ -83,23 +59,54 @@ export class ProductPassport {
         this.processDataFields(
           section,
           dataValuesOfSection.filter((v) => v.row === rowIndex),
+          item,
         ),
       );
     }
     return dataValues;
   }
 
-  processDataFields(section: DataSection, dataValuesOfSection: DataValue[]) {
+  private static processDataFields(
+    section: Section,
+    dataValuesOfSection: DataValue[],
+    item?: Item,
+  ) {
     const result = {};
     for (const dataField of section.dataFields) {
       const dataValue = dataValuesOfSection.find(
         (v) => v.dataFieldId === dataField.id,
       );
       // for model view: filter out data fields that are not in the model
-      if (this.item || dataField.granularityLevel !== GranularityLevel.ITEM) {
+      if (item || dataField.granularityLevel !== GranularityLevel.ITEM) {
         result[dataField.id] = dataValue?.value;
       }
     }
     return result;
+  }
+}
+
+export class ProductPassport {
+  private constructor(
+    public readonly id: string,
+    public readonly name: string,
+    public description: string,
+    public readonly dataSections: DataSection[],
+  ) {}
+
+  static create(data: {
+    template: Template;
+    model: Model;
+    item?: Item;
+    uniqueProductIdentifier: UniqueProductIdentifier;
+  }) {
+    const dataSections = data.template.sections.map((section) =>
+      DataSection.create({ section, model: data.model, item: data.item }),
+    );
+    return new ProductPassport(
+      data.uniqueProductIdentifier.uuid,
+      data.model.name,
+      data.model.description,
+      dataSections,
+    );
   }
 }

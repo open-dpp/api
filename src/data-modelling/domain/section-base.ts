@@ -6,7 +6,7 @@ export enum SectionType {
   REPEATABLE = 'Repeatable',
 }
 
-export abstract class DataSectionBase {
+export abstract class SectionBase {
   protected constructor(
     public readonly id: string,
     protected _name: string,

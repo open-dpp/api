@@ -7,7 +7,7 @@ import { Connection } from 'mongoose';
 import { TemplateDraftService } from './template-draft.service';
 import { TemplateDraftDoc, TemplateDraftSchema } from './template-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
@@ -115,19 +115,19 @@ describe('TemplateDraftService', () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
-    const section1 = DataSectionDraft.create({
+    const section1 = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.ITEM,
     });
-    const section11 = DataSectionDraft.create({
+    const section11 = SectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.ITEM,
     });
-    const section2 = DataSectionDraft.create({
+    const section2 = SectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
       layout,
@@ -155,7 +155,7 @@ describe('TemplateDraftService', () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tech specs',
       type: SectionType.GROUP,
       layout,

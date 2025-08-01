@@ -6,7 +6,7 @@ import {
   DataFieldDoc,
   SectionDoc,
 } from '../../data-modelling/infrastructure/template-base.schema';
-import { DataSectionDbProps } from './section';
+import { SectionDbProps } from './section';
 import { DataFieldDbProps } from './data-field';
 import { Template } from './template';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -58,7 +58,7 @@ export function deserializeTemplate(plain: TemplateDoc) {
   return Template.loadFromDb(tmp);
 }
 
-function createSection(sectionDoc: SectionDoc): DataSectionDbProps {
+function createSection(sectionDoc: SectionDoc): SectionDbProps {
   return {
     id: sectionDoc._id,
     type: sectionDoc.type,

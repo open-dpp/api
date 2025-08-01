@@ -1,4 +1,4 @@
-import { DataSectionDraft } from './section-draft';
+import { SectionDraft } from './section-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
@@ -15,13 +15,13 @@ describe('DataSectionDraft', () => {
     rowStart: { sm: 1 },
   });
   it('is created', () => {
-    const section1 = DataSectionDraft.create({
+    const section1 = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    const section2 = DataSectionDraft.create({
+    const section2 = SectionDraft.create({
       name: 'Material',
       type: SectionType.REPEATABLE,
       layout,
@@ -42,7 +42,7 @@ describe('DataSectionDraft', () => {
 
   it('fails on creation if no granularity level is set for repeater section', () => {
     expect(() =>
-      DataSectionDraft.create({
+      SectionDraft.create({
         name: 'Material',
         type: SectionType.REPEATABLE,
         layout,
@@ -51,7 +51,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('is renamed', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -62,7 +62,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('should add data field', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -87,7 +87,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('fails to add data field if granularity level of section and data field do not match', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -107,7 +107,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('should modify data field', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -158,7 +158,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('should modify data field fails if not found', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -187,7 +187,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('should delete data field', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -219,7 +219,7 @@ describe('DataSectionDraft', () => {
   });
 
   it('should fail to delete data field if id not exists', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
@@ -239,19 +239,19 @@ describe('DataSectionDraft', () => {
   });
 
   it('should add child section', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    const childSection1 = DataSectionDraft.create({
+    const childSection1 = SectionDraft.create({
       name: 'Sub specification 1',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    const childSection2 = DataSectionDraft.create({
+    const childSection2 = SectionDraft.create({
       name: 'Sub specification 2',
       type: SectionType.REPEATABLE,
       layout,
@@ -265,19 +265,19 @@ describe('DataSectionDraft', () => {
   });
 
   it('should delete sub section', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    const childSection1 = DataSectionDraft.create({
+    const childSection1 = SectionDraft.create({
       name: 'Sub specification 1',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    const childSection2 = DataSectionDraft.create({
+    const childSection2 = SectionDraft.create({
       name: 'Sub specification 2',
       type: SectionType.REPEATABLE,
       layout,
@@ -298,13 +298,13 @@ describe('DataSectionDraft', () => {
   });
 
   it('should publish section draft', () => {
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout,
       granularityLevel: GranularityLevel.MODEL,
     });
-    const subSection = DataSectionDraft.create({
+    const subSection = SectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
       layout,

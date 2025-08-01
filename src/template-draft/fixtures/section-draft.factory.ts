@@ -1,5 +1,5 @@
 import { Factory } from 'fishery';
-import { DataSectionDraftDbProps } from '../domain/section-draft';
+import { SectionDraftDbProps } from '../domain/section-draft';
 import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Layout } from '../../data-modelling/domain/layout';
@@ -10,8 +10,8 @@ import {
 import { textFieldProps } from './data-field-draft.factory';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 
-export const sectionDraftDbPropsFactory =
-  Factory.define<DataSectionDraftDbProps>(() => ({
+export const sectionDraftDbPropsFactory = Factory.define<SectionDraftDbProps>(
+  () => ({
     id: randomUUID(),
     parentId: undefined,
     type: SectionType.GROUP,
@@ -20,7 +20,8 @@ export const sectionDraftDbPropsFactory =
     dataFields: [],
     subSections: [],
     granularityLevel: GranularityLevel.MODEL,
-  }));
+  }),
+);
 
 export const sectionDraftFactoryIds = {
   environment: 'environment',

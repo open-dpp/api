@@ -2,7 +2,7 @@ import { maxBy, minBy } from 'lodash';
 import { Template } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
 import {
-  DataSection,
+  Section,
   isGroupSection,
   isRepeaterSection,
   RepeaterSection,
@@ -67,7 +67,7 @@ export class View {
     };
   }
 
-  processSection(section: DataSection, rowIndex?: number) {
+  processSection(section: Section, rowIndex?: number) {
     let dataValuesOfSection: DataValue[];
     if (section.type === SectionType.REPEATABLE) {
       dataValuesOfSection =
@@ -95,7 +95,7 @@ export class View {
     };
   }
 
-  processDataFields(section: DataSection, dataValuesOfSection: DataValue[]) {
+  processDataFields(section: Section, dataValuesOfSection: DataValue[]) {
     const result = [];
     for (const dataField of section.dataFields) {
       const dataValue = dataValuesOfSection.find(

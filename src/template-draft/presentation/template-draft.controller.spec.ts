@@ -11,7 +11,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { TemplateDraft } from '../domain/template-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { TemplateService } from '../../templates/infrastructure/template.service';
@@ -239,7 +239,7 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ ...layoutWithoutCols, cols: { sm: 2 } }),
@@ -473,7 +473,7 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
@@ -610,7 +610,7 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
@@ -680,7 +680,7 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
@@ -791,7 +791,7 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
@@ -863,7 +863,7 @@ describe('TemplateDraftController', () => {
         userId,
       }),
     );
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
@@ -979,7 +979,7 @@ describe('TemplateDraftController', () => {
         userId,
       }),
     );
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
@@ -1102,7 +1102,7 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
       layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
