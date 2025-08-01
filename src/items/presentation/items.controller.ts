@@ -18,9 +18,9 @@ import { TemplateService } from '../../templates/infrastructure/template.service
 import {
   DataValueDto,
   DataValueDtoSchema,
-} from '../../product-passport/presentation/dto/data-value.dto';
+} from '../../product-passport-data/presentation/dto/data-value.dto';
 import { ModelsService } from '../../models/infrastructure/models.service';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { ItemsApplicationService } from './items-application.service';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
@@ -31,7 +31,7 @@ import {
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
-} from '../../product-passport/presentation/dto/docs/product-passport.doc';
+} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
 import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
 
 @Controller('organizations/:orgaId/models/:modelId/items')

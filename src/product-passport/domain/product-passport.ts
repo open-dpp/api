@@ -1,95 +1,105 @@
 import { Template } from '../../templates/domain/template';
+import { Model } from '../../models/domain/model';
+import { Item } from '../../items/domain/item';
+import { DataSection } from '../../templates/domain/section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { maxBy, minBy } from 'lodash';
+import { DataValue } from '../../product-passport-data/domain/data-value';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { DataValue } from './data-value';
 
-export abstract class ProductPassport {
-  abstract granularityLevel: GranularityLevel;
-
-  protected constructor(
-    public readonly id: string,
-    private _ownedByOrganizationId: string,
-    private _createdByUserId: string,
-    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    private _templateId: string,
-    private _dataValues: DataValue[] = [],
+export class ProductPassport {
+  private constructor(
+    private readonly template: Template,
+    private readonly model: Model,
+    private readonly item: Item | null,
+    private readonly uniqueProductIdentifier: UniqueProductIdentifier,
   ) {}
 
-  public get createdByUserId() {
-    return this._createdByUserId;
-  }
-
-  public get ownedByOrganizationId() {
-    return this._ownedByOrganizationId;
-  }
-
-  public isOwnedBy(organizationId: string) {
-    return this.ownedByOrganizationId === organizationId;
-  }
-
-  public get templateId() {
-    return this._templateId;
-  }
-
-  public get dataValues() {
-    return this._dataValues;
-  }
-
-  public getDataValuesBySectionId(sectionId: string, row?: number) {
-    const allRows = this.dataValues.filter(
-      (d) => d.dataSectionId === sectionId,
+  static create(data: {
+    template: Template;
+    model: Model;
+    item: Item | null;
+    uniqueProductIdentifier: UniqueProductIdentifier;
+  }) {
+    return new ProductPassport(
+      data.template,
+      data.model,
+      data.item,
+      data.uniqueProductIdentifier,
     );
-    return row !== undefined ? allRows.filter((d) => d.row === row) : allRows;
   }
 
-  public addDataValues(dataValues: DataValue[]) {
-    for (const dataValue of dataValues) {
-      if (
-        this.dataValues.find(
-          (d) =>
-            d.dataFieldId === dataValue.dataFieldId &&
-            d.dataSectionId === dataValue.dataSectionId &&
-            d.row === dataValue.row,
-        )
-      ) {
-        throw new Error(
-          `Data value for section ${dataValue.dataSectionId}, field ${dataValue.dataFieldId}, row ${dataValue.row} already exists`,
-        );
+  mergeTemplateWithData() {
+    return {
+      id: this.uniqueProductIdentifier.uuid,
+      name: this.model.name,
+      description: this.model.description,
+      sections: this.template.sections.map((section) =>
+        this.getSectionWithData(section.id),
+      ),
+    };
+  }
+
+  getSectionWithData(sectionId: string) {
+    const section = this.template.findSectionByIdOrFail(sectionId);
+    const dataValues = this.constructDataValues(section);
+    return {
+      name: section.name,
+      type: section.type,
+      id: section.id,
+      parentId: section.parentId,
+      subSections: section.subSections,
+      granularityLevel: section.granularityLevel,
+      dataFields: section.dataFields.map((field) => ({
+        options: field.options,
+        type: field.type,
+        id: field.id,
+        name: field.name,
+        granularityLevel: field.granularityLevel,
+      })),
+      dataValues,
+    };
+  }
+
+  constructDataValues(section: DataSection) {
+    let dataValuesOfSection: DataValue[];
+    if (section.type === SectionType.REPEATABLE) {
+      dataValuesOfSection =
+        section.granularityLevel === GranularityLevel.MODEL
+          ? this.model.getDataValuesBySectionId(section.id)
+          : (this.item?.getDataValuesBySectionId(section.id) ?? []);
+    } else {
+      dataValuesOfSection = this.model
+        .getDataValuesBySectionId(section.id)
+        .concat(this.item?.getDataValuesBySectionId(section.id) ?? []);
+    }
+
+    const minRow = minBy(dataValuesOfSection, 'row')?.row ?? 0;
+    const maxRow = maxBy(dataValuesOfSection, 'row')?.row ?? 0;
+    const dataValues = [];
+    for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
+      dataValues.push(
+        this.processDataFields(
+          section,
+          dataValuesOfSection.filter((v) => v.row === rowIndex),
+        ),
+      );
+    }
+    return dataValues;
+  }
+
+  processDataFields(section: DataSection, dataValuesOfSection: DataValue[]) {
+    const result = {};
+    for (const dataField of section.dataFields) {
+      const dataValue = dataValuesOfSection.find(
+        (v) => v.dataFieldId === dataField.id,
+      );
+      // for model view: filter out data fields that are not in the model
+      if (this.item || dataField.granularityLevel !== GranularityLevel.ITEM) {
+        result[dataField.id] = dataValue?.value;
       }
     }
-    this.dataValues.push(...dataValues);
-  }
-
-  public modifyDataValues(dataValues: DataValue[]) {
-    this._dataValues = this.dataValues.map((existingDataValue) => {
-      const incomingDataValue = dataValues.find(
-        (dataValue) =>
-          dataValue.dataFieldId === existingDataValue.dataFieldId &&
-          dataValue.dataSectionId === existingDataValue.dataSectionId &&
-          dataValue.row === existingDataValue.row,
-      );
-      if (incomingDataValue) {
-        return DataValue.create({
-          value: incomingDataValue.value,
-          dataSectionId: existingDataValue.dataSectionId,
-          dataFieldId: existingDataValue.dataFieldId,
-          row: existingDataValue.row,
-        });
-      }
-      return existingDataValue;
-    });
-  }
-
-  protected initializeDataValueFromTemplate(template: Template) {
-    this._dataValues = template.createInitialDataValues(this.granularityLevel);
-  }
-
-  public createUniqueProductIdentifier(externalUUID?: string) {
-    const uniqueProductIdentifier = UniqueProductIdentifier.create({
-      externalUUID,
-      referenceId: this.id,
-    });
-    this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
-    return uniqueProductIdentifier;
+    return result;
   }
 }

@@ -26,7 +26,7 @@ import {
   phoneFactory,
   phoneItemFactory,
   phoneModelFactory,
-} from '../../views/fixtures/view.factory';
+} from '../../product-passport/fixtures/product-passport.factory';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;

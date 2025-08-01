@@ -2,7 +2,7 @@ import { Template, TemplateDbProps } from './template';
 import { DataFieldValidationResult } from './data-field';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 import { randomUUID } from 'crypto';
 

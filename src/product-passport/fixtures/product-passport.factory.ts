@@ -5,7 +5,7 @@ import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ModelDbProps } from '../../models/domain/model';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { ItemDbProps } from '../../items/domain/item';
 import { Factory } from 'fishery';
 import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
@@ -27,7 +27,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         dataField4: randomUUID(),
       },
     },
-    sectionId3: {
+    section3: {
       id: randomUUID(),
       fields: {
         dataFieldId5: randomUUID(),
@@ -144,7 +144,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
   section3() {
     return sectionDbPropsFactory.params({
       type: SectionType.GROUP,
-      id: PhoneFactory.ids.sectionId3.id,
+      id: PhoneFactory.ids.section3.id,
       name: 'Group Section 2',
       subSections: [],
       layout: {
@@ -157,7 +157,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
-          id: PhoneFactory.ids.sectionId3.fields.dataFieldId5,
+          id: PhoneFactory.ids.section3.fields.dataFieldId5,
           name: 'Title sg21',
           options: { min: 8 },
           layout: {
@@ -170,7 +170,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         },
         {
           type: DataFieldType.TEXT_FIELD,
-          id: PhoneFactory.ids.sectionId3.fields.dataFieldIdForItem5,
+          id: PhoneFactory.ids.section3.fields.dataFieldIdForItem5,
           name: 'Title sg21 for item',
           options: { min: 8 },
           layout: {
@@ -368,8 +368,8 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
   dataValuesSection3() {
     return [
       DataValue.create({
-        dataFieldId: PhoneFactory.ids.sectionId3.fields.dataFieldId5,
-        dataSectionId: PhoneFactory.ids.sectionId3.id,
+        dataFieldId: PhoneFactory.ids.section3.fields.dataFieldId5,
+        dataSectionId: PhoneFactory.ids.section3.id,
         value: 'val5,0',
         row: 0,
       }),
@@ -467,8 +467,8 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
   dataValuesSection3() {
     return [
       DataValue.create({
-        dataFieldId: PhoneFactory.ids.sectionId3.fields.dataFieldIdForItem5,
-        dataSectionId: PhoneFactory.ids.sectionId3.id,
+        dataFieldId: PhoneFactory.ids.section3.fields.dataFieldIdForItem5,
+        dataSectionId: PhoneFactory.ids.section3.id,
         value: 'val5,0,item',
         row: 0,
       }),
@@ -486,12 +486,20 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
   }
 }
 
-export const phoneItemFactory = PhoneItemFactory.define(() => ({
-  id: randomUUID(),
-  templateId: randomUUID(),
-  organizationId: randomUUID(),
-  userId: randomUUID(),
-  modelId: randomUUID(),
-  uniqueProductIdentifiers: [],
-  dataValues: [],
-}));
+export const phoneItemFactory = PhoneItemFactory.define(({ params }) => {
+  const id = params.id ?? randomUUID();
+  return {
+    id,
+    templateId: randomUUID(),
+    organizationId: randomUUID(),
+    userId: randomUUID(),
+    modelId: randomUUID(),
+    uniqueProductIdentifiers: [
+      {
+        uuid: randomUUID(),
+        referenceId: id,
+      },
+    ],
+    dataValues: [],
+  };
+});

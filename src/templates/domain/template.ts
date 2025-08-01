@@ -7,7 +7,7 @@ import {
   findSectionClassByTypeOrFail,
 } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { Sector } from '@open-dpp/api-client';
 
 export class ValidationResult {
