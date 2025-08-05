@@ -11,13 +11,11 @@ import {
 } from '../../data-modelling/domain/section-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';
-import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
 
 type SectionProps = {
   name: string;
-  layout: LayoutProps;
   granularityLevel?: GranularityLevel; // Required for repeater sections
 };
 
@@ -34,13 +32,12 @@ export abstract class Section extends SectionBase {
     public readonly id: string,
     protected _name: string,
     public readonly type: SectionType,
-    public readonly layout: Layout,
     protected _subSections: string[],
     protected _parentId: string | undefined,
     public granularityLevel: GranularityLevel | undefined,
     public readonly dataFields: DataField[],
   ) {
-    super(id, _name, type, layout, _subSections, _parentId, granularityLevel);
+    super(id, _name, type, _subSections, _parentId, granularityLevel);
   }
 
   protected static createInstance<T extends Section>(
@@ -52,7 +49,6 @@ export abstract class Section extends SectionBase {
       randomUUID(),
       data.name,
       type,
-      Layout.create(data.layout),
       [],
       undefined,
       data.granularityLevel,
@@ -70,7 +66,6 @@ export abstract class Section extends SectionBase {
       data.id,
       data.name,
       type,
-      Layout.create(data.layout),
       data.subSections,
       data.parentId,
       data.granularityLevel,
@@ -119,7 +114,6 @@ export abstract class Section extends SectionBase {
       id: this.id,
       type: this.type,
       name: this.name,
-      layout: this.layout.toProps(),
       subSections: this._subSections,
       parentId: this._parentId,
       granularityLevel: this.granularityLevel,

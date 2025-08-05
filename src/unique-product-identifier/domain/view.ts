@@ -90,7 +90,6 @@ export class View {
 
     return {
       name: isGroupSection(section) ? section.name : undefined,
-      layout: section.layout,
       children,
     };
   }
@@ -107,7 +106,6 @@ export class View {
           type: dataField.type,
           name: dataField.name,
           value: dataValue?.value,
-          layout: dataField.layout,
         });
       }
     }

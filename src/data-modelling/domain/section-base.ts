@@ -1,4 +1,3 @@
-import { Layout } from './layout';
 import { GranularityLevel } from './granularity-level';
 
 export enum SectionType {
@@ -11,7 +10,6 @@ export abstract class SectionBase {
     public readonly id: string,
     protected _name: string,
     public readonly type: SectionType,
-    public readonly layout: Layout,
     protected _subSections: string[],
     protected _parentId?: string,
     public granularityLevel?: GranularityLevel,

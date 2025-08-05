@@ -11,7 +11,6 @@ import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
   templateDraftCreatePropsFactory,
@@ -68,21 +67,6 @@ describe('TemplateDraftService', () => {
     );
   });
 
-  const commonLayout = {
-    colStart: { sm: 1 },
-    colSpan: { sm: 7 },
-    rowStart: { sm: 1 },
-    rowSpan: { sm: 1 },
-  };
-
-  const layoutDataField = Layout.create({
-    ...commonLayout,
-  });
-  const layout = Layout.create({
-    cols: { sm: 3 },
-    ...commonLayout,
-  });
-
   it('sets correct default granularity level', async () => {
     const laptopModel: TemplateDraftDbProps = templateDraftDbFactory.build({
       sections: [
@@ -118,19 +102,16 @@ describe('TemplateDraftService', () => {
     const section1 = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
     const section11 = SectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
     const section2 = SectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
     templateDraft.addSection(section1);
@@ -139,7 +120,6 @@ describe('TemplateDraftService', () => {
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
     templateDraft.addDataFieldToSection(section1.id, dataField);
@@ -158,20 +138,17 @@ describe('TemplateDraftService', () => {
     const section = SectionDraft.create({
       name: 'Tech specs',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.MODEL,
     });
     templateDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout: layoutDataField,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
-      layout: layoutDataField,
       granularityLevel: GranularityLevel.MODEL,
     });
 

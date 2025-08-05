@@ -4,7 +4,6 @@ import {
   SectionType,
 } from '../../data-modelling/domain/section-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
-import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { SectionDbProps } from '../../templates/domain/section';
@@ -12,7 +11,6 @@ import { SectionDbProps } from '../../templates/domain/section';
 export type SectionDraftCreateProps = {
   name: string;
   type: SectionType;
-  layout: LayoutProps;
   granularityLevel?: GranularityLevel;
 };
 
@@ -28,13 +26,12 @@ export class SectionDraft extends SectionBase {
     public readonly id: string,
     protected _name: string,
     public readonly type: SectionType,
-    public readonly layout: Layout,
     protected _subSections: string[],
     protected _parentId: string | undefined,
     public granularityLevel: GranularityLevel | undefined,
     public readonly dataFields: DataFieldDraft[],
   ) {
-    super(id, _name, type, layout, _subSections, _parentId, granularityLevel);
+    super(id, _name, type, _subSections, _parentId, granularityLevel);
   }
 
   static create(data: SectionDraftCreateProps) {
@@ -45,7 +42,6 @@ export class SectionDraft extends SectionBase {
       randomUUID(),
       data.name,
       data.type,
-      Layout.create(data.layout),
       [],
       undefined,
       data.granularityLevel,
@@ -58,7 +54,6 @@ export class SectionDraft extends SectionBase {
       data.id,
       data.name,
       data.type,
-      Layout.create(data.layout),
       data.subSections,
       data.parentId,
       data.granularityLevel,
@@ -111,7 +106,6 @@ export class SectionDraft extends SectionBase {
     data: {
       name?: string;
       options?: Record<string, unknown>;
-      layout: Partial<LayoutProps>;
     },
   ) {
     const found = this.dataFields.find((d) => d.id === dataFieldId);
@@ -123,9 +117,6 @@ export class SectionDraft extends SectionBase {
     }
     if (data.options) {
       found.mergeOptions(data.options);
-    }
-    if (data.layout) {
-      found.layout.modify(data.layout);
     }
   }
 
@@ -144,7 +135,6 @@ export class SectionDraft extends SectionBase {
       name: this.name,
       parentId: this.parentId,
       subSections: this.subSections,
-      layout: this.layout,
       dataFields: this.dataFields.map((d) => d.publish()),
       granularityLevel: this.granularityLevel,
     };

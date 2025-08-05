@@ -30,10 +30,8 @@ export function serializeTemplate(t: Template) {
         name: d.name,
         type: d.type,
         options: d.options,
-        layout: d.layout,
         granularityLevel: d.granularityLevel,
       })),
-      layout: s.layout,
       subSections: s.subSections,
       parentId: s.parentId,
     })),
@@ -66,13 +64,6 @@ function createSection(sectionDoc: SectionDoc): SectionDbProps {
     parentId: sectionDoc.parentId,
     subSections: sectionDoc.subSections,
     dataFields: sectionDoc.dataFields.map((df) => createDataField(df)),
-    layout: {
-      cols: sectionDoc.layout.cols,
-      colStart: sectionDoc.layout.colStart,
-      colSpan: sectionDoc.layout.colSpan,
-      rowStart: sectionDoc.layout.rowStart,
-      rowSpan: sectionDoc.layout.rowSpan,
-    },
     granularityLevel: sectionDoc.granularityLevel
       ? sectionDoc.granularityLevel
       : sectionDoc.type === SectionType.REPEATABLE
@@ -85,12 +76,6 @@ function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
   return {
     id: dataFieldDoc._id,
     type: dataFieldDoc.type,
-    layout: {
-      colStart: dataFieldDoc.layout.colStart,
-      colSpan: dataFieldDoc.layout.colSpan,
-      rowStart: dataFieldDoc.layout.rowStart,
-      rowSpan: dataFieldDoc.layout.rowSpan,
-    },
     granularityLevel: dataFieldDoc.granularityLevel,
     options: dataFieldDoc.options,
     name: dataFieldDoc.name,

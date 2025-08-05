@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
 import { TemplateDbProps } from '../../templates/domain/template';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { ModelDbProps } from '../../models/domain/model';
@@ -56,13 +55,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       id: PhoneFactory.ids.section1.id,
       parentId: undefined,
       name: 'Repeating Section',
-      layout: Layout.create({
-        cols: { sm: 3 },
-        colStart: { sm: 1 },
-        colSpan: { sm: 1 },
-        rowStart: { sm: 1 },
-        rowSpan: { sm: 1 },
-      }),
       granularityLevel: GranularityLevel.MODEL,
       subSections: [],
       dataFields: [
@@ -71,12 +63,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.section1.fields.dataField1,
           name: 'Title 1',
           options: { min: 2 },
-          layout: Layout.create({
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           granularityLevel: GranularityLevel.MODEL,
         },
         {
@@ -84,12 +70,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.section1.fields.dataField2,
           name: 'Title 2',
           options: { min: 7 },
-          layout: Layout.create({
-            colStart: { sm: 2 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           granularityLevel: GranularityLevel.MODEL,
         },
       ],
@@ -102,13 +82,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       type: SectionType.GROUP,
       name: 'Group Section',
       subSections: [],
-      layout: Layout.create({
-        cols: { sm: 3 },
-        colStart: { sm: 1 },
-        colSpan: { sm: 1 },
-        rowStart: { sm: 1 },
-        rowSpan: { sm: 1 },
-      }),
       granularityLevel: GranularityLevel.MODEL,
       dataFields: [
         {
@@ -116,12 +89,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.section2.fields.dataField3,
           name: 'Title 3',
           options: { min: 8 },
-          layout: {
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           granularityLevel: GranularityLevel.MODEL,
         },
         {
@@ -129,12 +96,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.section2.fields.dataField4,
           name: 'Title 4',
           options: { min: 8 },
-          layout: {
-            colStart: { sm: 2 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           granularityLevel: GranularityLevel.MODEL,
         },
       ],
@@ -147,25 +108,12 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       id: PhoneFactory.ids.section3.id,
       name: 'Group Section 2',
       subSections: [],
-      layout: {
-        cols: { sm: 2 },
-        colStart: { sm: 1 },
-        colSpan: { sm: 1 },
-        rowStart: { sm: 1 },
-        rowSpan: { sm: 1 },
-      },
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section3.fields.dataFieldId5,
           name: 'Title sg21',
           options: { min: 8 },
-          layout: {
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           granularityLevel: GranularityLevel.MODEL,
         },
         {
@@ -173,12 +121,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.section3.fields.dataFieldIdForItem5,
           name: 'Title sg21 for item',
           options: { min: 8 },
-          layout: {
-            colStart: { sm: 2 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           granularityLevel: GranularityLevel.ITEM,
         },
       ],
@@ -190,13 +132,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       type: SectionType.REPEATABLE,
       id: PhoneFactory.ids.sectionForItem1.id,
       name: 'Repeating Section for item',
-      layout: Layout.create({
-        cols: { sm: 3 },
-        colStart: { sm: 1 },
-        colSpan: { sm: 1 },
-        rowStart: { sm: 1 },
-        rowSpan: { sm: 1 },
-      }),
       granularityLevel: GranularityLevel.ITEM,
       subSections: [],
       dataFields: [
@@ -205,12 +140,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
           name: 'Title 1 for item',
           options: { min: 7 },
-          layout: Layout.create({
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           granularityLevel: GranularityLevel.ITEM,
         },
         {
@@ -218,12 +147,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
           name: 'Title 2 for item',
           options: { min: 7 },
-          layout: Layout.create({
-            colStart: { sm: 2 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           granularityLevel: GranularityLevel.ITEM,
         },
       ],
@@ -236,13 +159,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       id: PhoneFactory.ids.sectionForItem2.id,
       name: 'Group Section for item',
       subSections: [],
-      layout: {
-        cols: { sm: 3 },
-        colStart: { sm: 1 },
-        colSpan: { sm: 1 },
-        rowStart: { sm: 1 },
-        rowSpan: { sm: 1 },
-      },
       granularityLevel: GranularityLevel.ITEM,
       dataFields: [
         {
@@ -250,12 +166,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
           name: 'Title 3 for item',
           options: { min: 8 },
-          layout: Layout.create({
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          }),
           granularityLevel: GranularityLevel.ITEM,
         },
         {
@@ -263,12 +173,6 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           id: PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
           name: 'Title 4 for item',
           options: { min: 8 },
-          layout: {
-            colStart: { sm: 2 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           granularityLevel: GranularityLevel.ITEM,
         },
       ],

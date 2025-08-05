@@ -4,7 +4,6 @@ import { SectionDraft, SectionDraftDbProps } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Template } from '../../templates/domain/template';
 import * as semver from 'semver';
-import { LayoutProps } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Sector } from '@open-dpp/api-client';
 
@@ -119,15 +118,11 @@ export class TemplateDraft {
     this._sections = this.sections.filter((s) => s.id !== section.id);
   }
 
-  modifySection(
-    sectionId: string,
-    data: { name?: string; layout: Partial<LayoutProps> },
-  ) {
+  modifySection(sectionId: string, data: { name?: string }) {
     const section = this.findSectionOrFail(sectionId);
     if (data.name) {
       section.rename(data.name);
     }
-    section.layout.modify(data.layout);
   }
 
   modifyDataField(
@@ -136,7 +131,6 @@ export class TemplateDraft {
     data: {
       name?: string;
       options?: Record<string, unknown>;
-      layout: Partial<LayoutProps>;
     },
   ) {
     this.findSectionOrFail(sectionId).modifyDataField(dataFieldId, data);

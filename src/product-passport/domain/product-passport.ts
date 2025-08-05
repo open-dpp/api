@@ -17,7 +17,6 @@ export class DataSection extends Section {
       section.id,
       section.name,
       section.type,
-      section.layout,
       section.subSections,
       section.parentId,
       section.granularityLevel,

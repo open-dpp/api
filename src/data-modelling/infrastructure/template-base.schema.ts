@@ -2,7 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { DataFieldType } from '../domain/data-field-base';
 import { SectionType } from '../domain/section-base';
-import { LayoutDoc, LayoutSchema } from './layout.schema';
 import { GranularityLevel } from '../domain/granularity-level';
 import { Sector } from '@open-dpp/api-client';
 
@@ -16,8 +15,6 @@ export class DataFieldDoc {
   type: DataFieldType;
   @Prop({ required: true, type: MongooseSchema.Types.Mixed }) // Accepts any JSON object
   options: Record<string, unknown>;
-  @Prop({ required: true, type: LayoutSchema })
-  layout: LayoutDoc;
   @Prop({
     required: true,
     enum: GranularityLevel,
@@ -46,8 +43,6 @@ export class SectionDoc {
 
   @Prop({ default: [] })
   subSections: string[];
-  @Prop({ required: true, type: LayoutSchema })
-  layout: LayoutDoc;
 
   @Prop({
     enum: GranularityLevel,

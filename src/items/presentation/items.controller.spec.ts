@@ -29,7 +29,6 @@ import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { DataValue } from '../../product-passport-data/domain/data-value';
-import { Layout } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
@@ -73,25 +72,12 @@ describe('ItemsController', () => {
         name: 'Section name',
         parentId: undefined,
         subSections: [],
-        layout: {
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        },
         dataFields: [
           {
             type: DataFieldType.TEXT_FIELD,
             id: dataFieldId1,
             name: 'Title',
             options: { min: 2 },
-            layout: {
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
             granularityLevel: GranularityLevel.ITEM,
           },
           {
@@ -99,12 +85,6 @@ describe('ItemsController', () => {
             id: dataFieldId2,
             name: 'Title 2',
             options: { min: 7 },
-            layout: {
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
@@ -115,25 +95,12 @@ describe('ItemsController', () => {
         name: 'Section name 2',
         parentId: undefined,
         subSections: [],
-        layout: {
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        },
         dataFields: [
           {
             type: DataFieldType.TEXT_FIELD,
             id: dataFieldId3,
             name: 'Title 3',
             options: { min: 8 },
-            layout: {
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
@@ -144,25 +111,13 @@ describe('ItemsController', () => {
         name: 'Repeating Section',
         parentId: undefined,
         subSections: [],
-        layout: {
-          cols: { sm: 2 },
-          colStart: { sm: 1 },
-          colSpan: { sm: 2 },
-          rowStart: { sm: 1 },
-          rowSpan: { sm: 1 },
-        },
         dataFields: [
           {
             type: DataFieldType.TEXT_FIELD,
             id: dataFieldId4,
             name: 'Title 4',
             options: { min: 8 },
-            layout: {
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            },
+
             granularityLevel: GranularityLevel.ITEM,
           },
           {
@@ -170,12 +125,6 @@ describe('ItemsController', () => {
             id: dataFieldId5,
             name: 'Title 5',
             options: { min: 8 },
-            layout: Layout.create({
-              colStart: { sm: 1 },
-              colSpan: { sm: 2 },
-              rowStart: { sm: 1 },
-              rowSpan: { sm: 1 },
-            }),
             granularityLevel: GranularityLevel.ITEM,
           },
         ],

@@ -3,7 +3,6 @@ import {
   DataFieldBase,
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
-import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
@@ -46,7 +45,6 @@ export class DataFieldValidationResult {
 type DataFieldProps = {
   name: string;
   options?: Record<string, unknown>;
-  layout: LayoutProps;
   granularityLevel: GranularityLevel;
 };
 
@@ -66,7 +64,6 @@ export abstract class DataField extends DataFieldBase {
       data.name,
       type,
       data.options ?? {},
-      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -81,7 +78,6 @@ export abstract class DataField extends DataFieldBase {
       data.name,
       data.type,
       data.options,
-      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -93,7 +89,6 @@ export abstract class DataField extends DataFieldBase {
       type: this.type,
       name: this._name,
       options: this.options,
-      layout: this.layout.toProps(),
       granularityLevel: this.granularityLevel,
     };
   }

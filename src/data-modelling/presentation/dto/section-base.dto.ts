@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { SectionType } from '../../domain/section-base';
-import { layoutToDto, SectionLayoutDtoSchema } from './layout.dto';
 import { GranularityLevel } from '../../domain/granularity-level';
 import { DataFieldBaseSchema, dataFieldToDto } from './data-field-base.dto';
 import { SectionDraft } from '../../../template-draft/domain/section-draft';
@@ -12,7 +11,6 @@ export const SectionBaseDtoSchema = z.object({
   type: z.enum(SectionType),
   parentId: z.string().optional(),
   subSections: z.string().array(),
-  layout: SectionLayoutDtoSchema,
   dataFields: DataFieldBaseSchema.array(),
   granularityLevel: z.enum(GranularityLevel).optional(),
 });
@@ -26,7 +24,6 @@ export function sectionToDto(section: Section | SectionDraft) {
       dataFieldToDto(dataField),
     ),
     parentId: section.parentId,
-    layout: layoutToDto(section.layout),
     subSections: section.subSections,
     granularityLevel: section.granularityLevel,
   });

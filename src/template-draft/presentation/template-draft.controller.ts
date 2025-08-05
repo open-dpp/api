@@ -44,7 +44,6 @@ import { TemplateDraftService } from '../infrastructure/template-draft.service';
 import { omit } from 'lodash';
 import { PermissionsService } from '../../permissions/permissions.service';
 
-import { Layout } from '../../data-modelling/domain/layout';
 import {
   UpdateSectionDraftDto,
   UpdateSectionDraftDtoSchema,
@@ -144,8 +143,7 @@ export class TemplateDraftController {
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     const section = SectionDraft.create({
-      ...omit(createSectionDraftDto, ['parentSectionId', 'layout']),
-      layout: Layout.create(createSectionDraftDto.layout),
+      ...omit(createSectionDraftDto, ['parentSectionId']),
     });
 
     if (createSectionDraftDto.parentSectionId) {
@@ -220,10 +218,7 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    const dataField = DataFieldDraft.create({
-      ...omit(createDataFieldDraftDto, ['layout']),
-      layout: Layout.create(createDataFieldDraftDto.layout),
-    });
+    const dataField = DataFieldDraft.create(createDataFieldDraftDto);
 
     foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
 
