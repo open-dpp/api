@@ -11,7 +11,7 @@ const DataSectionDtoSchema = z.object({
   type: z.enum(SectionType),
   parentId: z.string().optional(),
   subSections: z.array(z.string()),
-  granularityLevel: z.enum(GranularityLevel),
+  granularityLevel: z.enum(GranularityLevel).optional(),
   dataFields: DataFieldBaseSchema.omit({ layout: true }).array(),
   dataValues: z.record(z.string(), z.unknown()).array(),
 });
@@ -19,7 +19,7 @@ const DataSectionDtoSchema = z.object({
 const ProductPassportDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   dataSections: DataSectionDtoSchema.array(),
 });
 

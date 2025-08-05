@@ -17,7 +17,7 @@ export class ProductPassportController {
   ) {}
 
   @Public()
-  @Get('product-passport/:id')
+  @Get('product-passports/:id')
   async getProductPassport(@Param('id') id: string) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOneOrFail(id);

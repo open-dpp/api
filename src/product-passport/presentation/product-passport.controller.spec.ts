@@ -84,7 +84,7 @@ describe('ProductPassportController', () => {
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockReturnValue(true);
     const response = await request(app.getHttpServer()).get(
-      `/product-passport/${uuid}`,
+      `/product-passports/${uuid}`,
     );
     expect(response.status).toEqual(200);
 
@@ -96,48 +96,6 @@ describe('ProductPassportController', () => {
     });
     expect(response.body).toEqual(productPassportToDto(productPassport));
   });
-
-  // it(`/GET reference of unique product identifier`, async () => {
-  //   const authProps = { userId: authContext.user.id, organizationId };
-  //   const template = Template.loadFromDb(
-  //     phoneFactory.addSections().build(authProps),
-  //   );
-  //   const model = Model.loadFromDb(
-  //     phoneModelFactory
-  //       .addDataValues()
-  //       .build({ templateId: template.id, ...authProps }),
-  //   );
-  //   const item = Item.loadFromDb(
-  //     phoneItemFactory.addDataValues().build({
-  //       modelId: model.id,
-  //       templateId: template.id,
-  //       ...authProps,
-  //     }),
-  //   );
-  //   const { uuid } = item.createUniqueProductIdentifier('externalId');
-  //   await itemsService.save(item);
-  //
-  //   const response = await request(app.getHttpServer())
-  //     .get(
-  //       `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
-  //     )
-  //     .set(
-  //       'Authorization',
-  //       getKeycloakAuthToken(
-  //         authContext.user.id,
-  //         [organizationId],
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     );
-  //
-  //   expect(response.status).toEqual(200);
-  //   expect(response.body).toEqual({
-  //     id: item.id,
-  //     organizationId,
-  //     modelId: model.id,
-  //     granularityLevel: GranularityLevel.ITEM,
-  //   });
-  // });
 
   afterAll(async () => {
     await module.close();
