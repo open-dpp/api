@@ -10,6 +10,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
 import { buildOpenApiDocumentation } from './open-api-docs';
 import { ConfigService } from '@nestjs/config';
+import { rawBodyMiddleware } from './raw-body.middleware';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,6 +31,12 @@ export async function bootstrap() {
   app.use(
     '/organizations/:organizationId/integration',
     json({ limit: '50mb' }),
+  );
+  app.use(
+    rawBodyMiddleware({
+      limit: '10mb',
+      rawBodyUrls: [`/files/upload-dpp-file/:upi,`],
+    }),
   );
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
