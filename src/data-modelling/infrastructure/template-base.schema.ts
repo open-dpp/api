@@ -21,6 +21,9 @@ export class DataFieldDoc {
     default: GranularityLevel.MODEL,
   })
   granularityLevel: GranularityLevel;
+  /** @deprecated Since template and template draft version 1.0.2. Use templateId instead */
+  @Prop({ required: false, type: MongooseSchema.Types.Mixed })
+  layout: Record<string, unknown>;
 }
 
 const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
@@ -37,6 +40,10 @@ export class SectionDoc {
   type: SectionType;
   @Prop({ type: [DataFieldSchema], default: [] })
   dataFields: DataFieldDoc[];
+
+  /** @deprecated Since template version and template draft 1.0.2. Use templateId instead */
+  @Prop({ required: false, type: MongooseSchema.Types.Mixed })
+  layout: Record<string, unknown>;
 
   @Prop({ required: false })
   parentId?: string;

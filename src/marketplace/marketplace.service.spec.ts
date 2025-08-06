@@ -120,7 +120,7 @@ describe('MarketplaceService', () => {
         description: template.description,
         sectors: template.sectors,
         version: template.version,
-        _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
+        _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
         sections: template.sections.map((s) => ({
           _id: s.id,
           name: s.name,

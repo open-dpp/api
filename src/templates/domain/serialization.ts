@@ -19,7 +19,7 @@ export function serializeTemplate(t: Template) {
     description: t.description,
     sectors: t.sectors,
     version: t.version,
-    _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
+    _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
     sections: t.sections.map((s) => ({
       _id: s.id,
       name: s.name,

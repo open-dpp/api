@@ -34,7 +34,7 @@ export class TemplateDraftService {
         description: templateDraft.description,
         sectors: templateDraft.sectors,
         version: newVersion || templateDraft.version,
-        _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_2,
+        _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_3,
         publications: templateDraft.publications,
         sections: templateDraft.sections.map((s) => ({
           _id: s.id,

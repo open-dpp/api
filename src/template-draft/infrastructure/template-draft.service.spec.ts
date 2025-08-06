@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { TemplateDraft, TemplateDraftDbProps } from '../domain/template-draft';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { Connection, Model as MongooseModel } from 'mongoose';
 import { TemplateDraftService } from './template-draft.service';
 import { TemplateDraftDoc, TemplateDraftSchema } from './template-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
@@ -17,13 +17,16 @@ import {
   templateDraftDbFactory,
 } from '../fixtures/template-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
+import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
 
 describe('TemplateDraftService', () => {
   let service: TemplateDraftService;
   let mongoConnection: Connection;
+  let module: TestingModule;
+  let templateDraftDoc: MongooseModel<TemplateDraftDoc>;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -37,6 +40,10 @@ describe('TemplateDraftService', () => {
     }).compile();
     service = module.get<TemplateDraftService>(TemplateDraftService);
     mongoConnection = module.get<Connection>(getConnectionToken());
+    templateDraftDoc = mongoConnection.model(
+      TemplateDraftDoc.name,
+      TemplateDraftSchema,
+    );
   });
 
   const laptopModelPlain: TemplateDraftDbProps = templateDraftDbFactory.build({
@@ -194,7 +201,81 @@ describe('TemplateDraftService', () => {
     ]);
   });
 
+  it(`should migrate from smaller equal ${TemplateDocSchemaVersion.v1_0_2} to ${TemplateDocSchemaVersion.v1_0_3}`, async () => {
+    const id = randomUUID();
+    await templateDraftDoc.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          _schemaVersion: TemplateDocSchemaVersion.v1_0_2,
+          name: 'name',
+          version: '1.0.0',
+          createdByUserId: randomUUID(),
+          ownedByOrganizationId: randomUUID(),
+          sections: [
+            {
+              _id: randomUUID(),
+              name: 's1',
+              type: SectionType.GROUP,
+              layout: {
+                colSpan: {
+                  sm: 1,
+                },
+                colStart: {
+                  sm: 1,
+                },
+                rowStart: {
+                  sm: 1,
+                },
+                rowSpan: {
+                  sm: 1,
+                },
+                cols: {
+                  sm: 1,
+                },
+              },
+              dataFields: [
+                {
+                  _id: randomUUID(),
+                  name: 'f1',
+                  type: DataFieldType.TEXT_FIELD,
+                  granularityLevel: GranularityLevel.MODEL,
+                  layout: {
+                    colSpan: {
+                      sm: 1,
+                    },
+                    colStart: {
+                      sm: 1,
+                    },
+                    rowStart: {
+                      sm: 1,
+                    },
+                    rowSpan: {
+                      sm: 1,
+                    },
+                  },
+                },
+              ],
+              subSections: [],
+            },
+          ],
+        },
+      },
+      { upsert: true },
+    );
+    let foundRaw = await templateDraftDoc.findById(id);
+    expect(foundRaw.sections[0].layout).toBeDefined();
+    expect(foundRaw.sections[0].dataFields[0].layout).toBeDefined();
+    const found = await service.findOneOrFail(id);
+    const saved = await service.save(found);
+    foundRaw = await templateDraftDoc.findById(saved.id);
+    expect(foundRaw._schemaVersion).toEqual(TemplateDocSchemaVersion.v1_0_3);
+    expect(foundRaw.sections[0].layout).toBeUndefined();
+    expect(foundRaw.sections[0].dataFields[0].layout).toBeUndefined();
+  });
+
   afterAll(async () => {
     await mongoConnection.close(); // Close connection after tests
+    await module.close();
   });
 });
