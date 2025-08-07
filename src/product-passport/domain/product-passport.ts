@@ -50,10 +50,12 @@ export class DataSection extends Section {
         .concat(item?.getDataValuesBySectionId(section.id) ?? []);
     }
 
+    const maxFound = maxBy(dataValuesOfSection, 'row')?.row;
+
     const minRow = minBy(dataValuesOfSection, 'row')?.row ?? 0;
-    const maxRow = maxBy(dataValuesOfSection, 'row')?.row ?? 0;
+    const maxRow = Number.isFinite(maxFound) ? maxFound + 1 : 0;
     const dataValues = [];
-    for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
+    for (let rowIndex = minRow; rowIndex < maxRow; rowIndex++) {
       dataValues.push(
         this.processDataFields(
           section,

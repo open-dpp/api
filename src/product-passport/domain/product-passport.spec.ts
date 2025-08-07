@@ -173,6 +173,15 @@ describe('ProductPassport', () => {
       ...sharedProps,
       section: template.findSectionById(PhoneFactory.ids.sectionForItem1.id),
     });
-    expect(dataSectionForItem1.dataValues).toEqual([{}]);
+    expect(dataSectionForItem1.dataValues).toEqual([]);
+  });
+
+  it('is create with empty model', () => {
+    const emptyModel = Model.loadFromDb(phoneModelFactory.build());
+    const dataSection1 = DataSection.create({
+      model: emptyModel,
+      section: template.findSectionById(PhoneFactory.ids.section1.id),
+    });
+    expect(dataSection1.dataValues).toEqual([]);
   });
 });
