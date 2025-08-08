@@ -3,28 +3,30 @@ import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { TemplateDraft, TemplateDraftDbProps } from '../domain/template-draft';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { Connection, Model as MongooseModel } from 'mongoose';
 import { TemplateDraftService } from './template-draft.service';
 import { TemplateDraftDoc, TemplateDraftSchema } from './template-draft.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
   templateDraftCreatePropsFactory,
   templateDraftDbFactory,
 } from '../fixtures/template-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
+import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
 
 describe('TemplateDraftService', () => {
   let service: TemplateDraftService;
   let mongoConnection: Connection;
+  let module: TestingModule;
+  let templateDraftDoc: MongooseModel<TemplateDraftDoc>;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -38,6 +40,10 @@ describe('TemplateDraftService', () => {
     }).compile();
     service = module.get<TemplateDraftService>(TemplateDraftService);
     mongoConnection = module.get<Connection>(getConnectionToken());
+    templateDraftDoc = mongoConnection.model(
+      TemplateDraftDoc.name,
+      TemplateDraftSchema,
+    );
   });
 
   const laptopModelPlain: TemplateDraftDbProps = templateDraftDbFactory.build({
@@ -66,21 +72,6 @@ describe('TemplateDraftService', () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(TemplateDraft.name),
     );
-  });
-
-  const commonLayout = {
-    colStart: { sm: 1 },
-    colSpan: { sm: 7 },
-    rowStart: { sm: 1 },
-    rowSpan: { sm: 1 },
-  };
-
-  const layoutDataField = Layout.create({
-    ...commonLayout,
-  });
-  const layout = Layout.create({
-    cols: { sm: 3 },
-    ...commonLayout,
   });
 
   it('sets correct default granularity level', async () => {
@@ -115,22 +106,19 @@ describe('TemplateDraftService', () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
-    const section1 = DataSectionDraft.create({
+    const section1 = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
-    const section11 = DataSectionDraft.create({
+    const section11 = SectionDraft.create({
       name: 'Dimensions',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
-    const section2 = DataSectionDraft.create({
+    const section2 = SectionDraft.create({
       name: 'Traceability',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
     templateDraft.addSection(section1);
@@ -139,7 +127,6 @@ describe('TemplateDraftService', () => {
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout,
       granularityLevel: GranularityLevel.ITEM,
     });
     templateDraft.addDataFieldToSection(section1.id, dataField);
@@ -155,23 +142,20 @@ describe('TemplateDraftService', () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tech specs',
       type: SectionType.GROUP,
-      layout,
       granularityLevel: GranularityLevel.MODEL,
     });
     templateDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout: layoutDataField,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
       name: 'Memory',
       type: DataFieldType.TEXT_FIELD,
-      layout: layoutDataField,
       granularityLevel: GranularityLevel.MODEL,
     });
 
@@ -217,7 +201,81 @@ describe('TemplateDraftService', () => {
     ]);
   });
 
+  it(`should migrate from smaller equal ${TemplateDocSchemaVersion.v1_0_2} to ${TemplateDocSchemaVersion.v1_0_3}`, async () => {
+    const id = randomUUID();
+    await templateDraftDoc.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          _schemaVersion: TemplateDocSchemaVersion.v1_0_2,
+          name: 'name',
+          version: '1.0.0',
+          createdByUserId: randomUUID(),
+          ownedByOrganizationId: randomUUID(),
+          sections: [
+            {
+              _id: randomUUID(),
+              name: 's1',
+              type: SectionType.GROUP,
+              layout: {
+                colSpan: {
+                  sm: 1,
+                },
+                colStart: {
+                  sm: 1,
+                },
+                rowStart: {
+                  sm: 1,
+                },
+                rowSpan: {
+                  sm: 1,
+                },
+                cols: {
+                  sm: 1,
+                },
+              },
+              dataFields: [
+                {
+                  _id: randomUUID(),
+                  name: 'f1',
+                  type: DataFieldType.TEXT_FIELD,
+                  granularityLevel: GranularityLevel.MODEL,
+                  layout: {
+                    colSpan: {
+                      sm: 1,
+                    },
+                    colStart: {
+                      sm: 1,
+                    },
+                    rowStart: {
+                      sm: 1,
+                    },
+                    rowSpan: {
+                      sm: 1,
+                    },
+                  },
+                },
+              ],
+              subSections: [],
+            },
+          ],
+        },
+      },
+      { upsert: true },
+    );
+    let foundRaw = await templateDraftDoc.findById(id);
+    expect(foundRaw.sections[0].layout).toBeDefined();
+    expect(foundRaw.sections[0].dataFields[0].layout).toBeDefined();
+    const found = await service.findOneOrFail(id);
+    const saved = await service.save(found);
+    foundRaw = await templateDraftDoc.findById(saved.id);
+    expect(foundRaw._schemaVersion).toEqual(TemplateDocSchemaVersion.v1_0_3);
+    expect(foundRaw.sections[0].layout).toBeUndefined();
+    expect(foundRaw.sections[0].dataFields[0].layout).toBeUndefined();
+  });
+
   afterAll(async () => {
     await mongoConnection.close(); // Close connection after tests
+    await module.close();
   });
 });

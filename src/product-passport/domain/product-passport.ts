@@ -1,95 +1,113 @@
 import { Template } from '../../templates/domain/template';
+import { Model } from '../../models/domain/model';
+import { Item } from '../../items/domain/item';
+import { Section } from '../../templates/domain/section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { maxBy, minBy } from 'lodash';
+import { DataValue } from '../../product-passport-data/domain/data-value';
+import { SectionType } from '../../data-modelling/domain/section-base';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { DataValue } from './data-value';
 
-export abstract class ProductPassport {
-  abstract granularityLevel: GranularityLevel;
-
-  protected constructor(
-    public readonly id: string,
-    private _ownedByOrganizationId: string,
-    private _createdByUserId: string,
-    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    private _templateId: string,
-    private _dataValues: DataValue[] = [],
-  ) {}
-
-  public get createdByUserId() {
-    return this._createdByUserId;
-  }
-
-  public get ownedByOrganizationId() {
-    return this._ownedByOrganizationId;
-  }
-
-  public isOwnedBy(organizationId: string) {
-    return this.ownedByOrganizationId === organizationId;
-  }
-
-  public get templateId() {
-    return this._templateId;
-  }
-
-  public get dataValues() {
-    return this._dataValues;
-  }
-
-  public getDataValuesBySectionId(sectionId: string, row?: number) {
-    const allRows = this.dataValues.filter(
-      (d) => d.dataSectionId === sectionId,
+export class DataSection extends Section {
+  private constructor(
+    section: Section,
+    public readonly dataValues: { [key: string]: string }[],
+  ) {
+    super(
+      section.id,
+      section.name,
+      section.type,
+      section.subSections,
+      section.parentId,
+      section.granularityLevel,
+      section.dataFields,
     );
-    return row !== undefined ? allRows.filter((d) => d.row === row) : allRows;
   }
 
-  public addDataValues(dataValues: DataValue[]) {
-    for (const dataValue of dataValues) {
-      if (
-        this.dataValues.find(
-          (d) =>
-            d.dataFieldId === dataValue.dataFieldId &&
-            d.dataSectionId === dataValue.dataSectionId &&
-            d.row === dataValue.row,
-        )
-      ) {
-        throw new Error(
-          `Data value for section ${dataValue.dataSectionId}, field ${dataValue.dataFieldId}, row ${dataValue.row} already exists`,
-        );
+  static create(data: { section: Section; model: Model; item?: Item }) {
+    const dataValues = DataSection.constructDataValues(
+      data.section,
+      data.model,
+      data.item,
+    );
+    return new DataSection(data.section, dataValues);
+  }
+
+  private static constructDataValues(
+    section: Section,
+    model: Model,
+    item?: Item,
+  ) {
+    let dataValuesOfSection: DataValue[];
+    if (section.type === SectionType.REPEATABLE) {
+      dataValuesOfSection =
+        section.granularityLevel === GranularityLevel.MODEL
+          ? model.getDataValuesBySectionId(section.id)
+          : (item?.getDataValuesBySectionId(section.id) ?? []);
+    } else {
+      dataValuesOfSection = model
+        .getDataValuesBySectionId(section.id)
+        .concat(item?.getDataValuesBySectionId(section.id) ?? []);
+    }
+
+    const maxFound = maxBy(dataValuesOfSection, 'row')?.row;
+
+    const minRow = minBy(dataValuesOfSection, 'row')?.row ?? 0;
+    const maxRow = Number.isFinite(maxFound) ? maxFound + 1 : 0;
+    const dataValues = [];
+    for (let rowIndex = minRow; rowIndex < maxRow; rowIndex++) {
+      dataValues.push(
+        this.processDataFields(
+          section,
+          dataValuesOfSection.filter((v) => v.row === rowIndex),
+          item,
+        ),
+      );
+    }
+    return dataValues;
+  }
+
+  private static processDataFields(
+    section: Section,
+    dataValuesOfSection: DataValue[],
+    item?: Item,
+  ) {
+    const result = {};
+    for (const dataField of section.dataFields) {
+      const dataValue = dataValuesOfSection.find(
+        (v) => v.dataFieldId === dataField.id,
+      );
+      // for model view: filter out data fields that are not in the model
+      if (item || dataField.granularityLevel !== GranularityLevel.ITEM) {
+        result[dataField.id] = dataValue?.value;
       }
     }
-    this.dataValues.push(...dataValues);
+    return result;
   }
+}
 
-  public modifyDataValues(dataValues: DataValue[]) {
-    this._dataValues = this.dataValues.map((existingDataValue) => {
-      const incomingDataValue = dataValues.find(
-        (dataValue) =>
-          dataValue.dataFieldId === existingDataValue.dataFieldId &&
-          dataValue.dataSectionId === existingDataValue.dataSectionId &&
-          dataValue.row === existingDataValue.row,
-      );
-      if (incomingDataValue) {
-        return DataValue.create({
-          value: incomingDataValue.value,
-          dataSectionId: existingDataValue.dataSectionId,
-          dataFieldId: existingDataValue.dataFieldId,
-          row: existingDataValue.row,
-        });
-      }
-      return existingDataValue;
-    });
-  }
+export class ProductPassport {
+  private constructor(
+    public readonly id: string,
+    public readonly name: string,
+    public description: string,
+    public readonly dataSections: DataSection[],
+  ) {}
 
-  protected initializeDataValueFromTemplate(template: Template) {
-    this._dataValues = template.createInitialDataValues(this.granularityLevel);
-  }
-
-  public createUniqueProductIdentifier(externalUUID?: string) {
-    const uniqueProductIdentifier = UniqueProductIdentifier.create({
-      externalUUID,
-      referenceId: this.id,
-    });
-    this.uniqueProductIdentifiers.push(uniqueProductIdentifier);
-    return uniqueProductIdentifier;
+  static create(data: {
+    template: Template;
+    model: Model;
+    item?: Item;
+    uniqueProductIdentifier: UniqueProductIdentifier;
+  }) {
+    const dataSections = data.template.sections.map((section) =>
+      DataSection.create({ section, model: data.model, item: data.item }),
+    );
+    return new ProductPassport(
+      data.uniqueProductIdentifier.uuid,
+      data.model.name,
+      data.model.description,
+      dataSections,
+    );
   }
 }

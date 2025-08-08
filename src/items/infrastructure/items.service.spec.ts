@@ -28,8 +28,7 @@ import { UniqueProductIdentifierService } from '../../unique-product-identifier/
 import { Template } from '../../templates/domain/template';
 import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport/domain/data-value';
-import { Layout } from '../../data-modelling/domain/layout';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
@@ -121,25 +120,12 @@ describe('ItemsService', () => {
           parentId: undefined,
           subSections: [],
           name: 'Section 1',
-          layout: {
-            cols: { sm: 3 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           dataFields: [
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
               name: 'Title',
               options: { min: 2 },
-              layout: {
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
               granularityLevel: GranularityLevel.ITEM,
             },
             {
@@ -147,12 +133,6 @@ describe('ItemsService', () => {
               type: DataFieldType.TEXT_FIELD,
               name: 'Title 2',
               options: { min: 7 },
-              layout: {
-                colStart: { sm: 2 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
               granularityLevel: GranularityLevel.ITEM,
             },
           ],
@@ -163,25 +143,12 @@ describe('ItemsService', () => {
           name: 'Section 2',
           parentId: undefined,
           subSections: [],
-          layout: {
-            cols: { sm: 3 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           dataFields: [
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
               name: 'Title 3',
               options: { min: 8 },
-              layout: {
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              },
               granularityLevel: GranularityLevel.ITEM,
             },
           ],
@@ -192,25 +159,12 @@ describe('ItemsService', () => {
           parentId: undefined,
           subSections: [],
           name: 'Section 3',
-          layout: {
-            cols: { sm: 3 },
-            colStart: { sm: 1 },
-            colSpan: { sm: 1 },
-            rowStart: { sm: 1 },
-            rowSpan: { sm: 1 },
-          },
           dataFields: [
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
               name: 'Title 4',
               options: { min: 8 },
-              layout: Layout.create({
-                colStart: { sm: 1 },
-                colSpan: { sm: 1 },
-                rowStart: { sm: 1 },
-                rowSpan: { sm: 1 },
-              }),
               granularityLevel: GranularityLevel.ITEM,
             },
           ],

@@ -2,12 +2,12 @@ import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldValidationResult } from './data-field';
 import {
-  DataSection,
-  DataSectionDbProps,
+  Section,
+  SectionDbProps,
   findSectionClassByTypeOrFail,
 } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { Sector } from '@open-dpp/api-client';
 
 export class ValidationResult {
@@ -48,7 +48,7 @@ export type TemplateCreateProps = {
 export type TemplateDbProps = TemplateCreateProps & {
   id: string;
   version: string;
-  sections: DataSectionDbProps[];
+  sections: SectionDbProps[];
   marketplaceResourceId: string | null;
 };
 
@@ -61,7 +61,7 @@ export class Template {
     public readonly version: string,
     private _createdByUserId: string,
     private _ownedByOrganizationId: string,
-    public readonly sections: DataSection[],
+    public readonly sections: Section[],
     public marketplaceResourceId: string | null,
   ) {}
 
@@ -114,7 +114,7 @@ export class Template {
     return this._ownedByOrganizationId;
   }
 
-  findSectionByIdOrFail(id: string): DataSection {
+  findSectionByIdOrFail(id: string): Section {
     const section = this.findSectionById(id);
     if (!section) {
       throw new Error(`Section with id ${id} not found`);
@@ -122,7 +122,7 @@ export class Template {
     return section;
   }
 
-  findSectionById(id: string): DataSection | undefined {
+  findSectionById(id: string): Section | undefined {
     return this.sections.find((s) => s.id === id);
   }
 

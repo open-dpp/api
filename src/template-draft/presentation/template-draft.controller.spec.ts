@@ -11,7 +11,7 @@ import { KeycloakResourcesService } from '../../keycloak-resources/infrastructur
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { TemplateDraft } from '../domain/template-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { TemplateService } from '../../templates/infrastructure/template.service';
@@ -28,7 +28,6 @@ import {
 } from '../../templates/infrastructure/template.schema';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
-import { Layout } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { templateDraftToDto } from './dto/template-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
@@ -57,7 +56,6 @@ describe('TemplateDraftController', () => {
   const organizationId = randomUUID();
   const otherOrganizationId = randomUUID();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
-  const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
   let module: TestingModule;
   let organizationService: OrganizationsService;
   let marketplaceServiceTesting: MarketplaceService;
@@ -239,10 +237,9 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout: Layout.create({ ...layoutWithoutCols, cols: { sm: 2 } }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -250,7 +247,6 @@ describe('TemplateDraftController', () => {
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout: Layout.create({ ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
@@ -411,13 +407,6 @@ describe('TemplateDraftController', () => {
     const body = {
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout: {
-        colStart: { sm: 2 },
-        colSpan: { sm: 1 },
-        rowStart: { sm: 3 },
-        rowSpan: { sm: 3 },
-        cols: { sm: 3 },
-      },
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -443,13 +432,6 @@ describe('TemplateDraftController', () => {
         id: expect.any(String),
         dataFields: [],
         subSections: [],
-        layout: {
-          colStart: { sm: 2 },
-          colSpan: { sm: 1 },
-          rowStart: { sm: 3 },
-          rowSpan: { sm: 3 },
-          cols: { sm: 3 },
-        },
       },
     ]);
     const foundDraft = await templateDraftService.findOneOrFail(
@@ -457,13 +439,6 @@ describe('TemplateDraftController', () => {
     );
     expect(response.body).toEqual(templateDraftToDto(foundDraft));
   });
-
-  const layoutWithoutCols = {
-    colStart: { sm: 2 },
-    colSpan: { lg: 1, sm: 1 },
-    rowStart: { sm: 3 },
-    rowSpan: { sm: 3 },
-  };
 
   it(`/CREATE sub section draft`, async () => {
     const laptopDraft = TemplateDraft.create(
@@ -473,10 +448,9 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical specification',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -487,13 +461,7 @@ describe('TemplateDraftController', () => {
       name: 'Dimensions',
       type: SectionType.GROUP,
       parentSectionId: section.id,
-      layout: {
-        cols: { sm: 3 },
-        colStart: { sm: 2 },
-        colSpan: { lg: 1, sm: 1 },
-        rowStart: { lg: 1, sm: 1 },
-        rowSpan: { lg: 1, sm: 1 },
-      },
+
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -520,13 +488,7 @@ describe('TemplateDraftController', () => {
         dataFields: [],
         subSections: [],
         parentId: section.id,
-        layout: {
-          cols: { sm: 3 },
-          colStart: { sm: 2 },
-          colSpan: { lg: 1, sm: 1 },
-          rowStart: { lg: 1, sm: 1 },
-          rowSpan: { lg: 1, sm: 1 },
-        },
+
         granularityLevel: GranularityLevel.MODEL,
       },
     ];
@@ -540,13 +502,6 @@ describe('TemplateDraftController', () => {
       name: 'Dimensions',
       type: SectionType.GROUP,
       parentSectionId: undefined,
-      layout: {
-        cols: { sm: 3 },
-        colStart: { sm: 2 },
-        colSpan: { lg: 1, sm: 1 },
-        rowStart: { lg: 1, sm: 1 },
-        rowSpan: { lg: 1, sm: 1 },
-      },
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -577,13 +532,7 @@ describe('TemplateDraftController', () => {
       name: 'Dimensions',
       type: SectionType.GROUP,
       parentSectionId: undefined,
-      layout: {
-        cols: { sm: 3 },
-        colStart: { sm: 2 },
-        colSpan: { lg: 1, sm: 1 },
-        rowStart: { lg: 1, sm: 1 },
-        rowSpan: { lg: 1, sm: 1 },
-      },
+
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -610,10 +559,9 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -680,10 +628,9 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -692,13 +639,6 @@ describe('TemplateDraftController', () => {
 
     const body = {
       name: 'Technical Specs',
-      layout: {
-        cols: newConfig,
-        rowSpan: newConfig,
-        rowStart: newConfig,
-        colStart: newConfig,
-        colSpan: newConfig,
-      },
     };
     const response = await request(app.getHttpServer())
       .patch(
@@ -718,20 +658,12 @@ describe('TemplateDraftController', () => {
     expect(sectionToDto(found.findSectionOrFail(section.id))).toEqual({
       ...sectionToDto(section),
       name: body.name,
-      layout: body.layout,
     });
   });
 
   it(`/PATCH section draft ${userNotMemberTxt}`, async () => {
     const body = {
       name: 'Technical Specs',
-      layout: {
-        cols: newConfig,
-        rowSpan: newConfig,
-        rowStart: newConfig,
-        colStart: newConfig,
-        colSpan: newConfig,
-      },
     };
     const response = await request(app.getHttpServer())
       .patch(
@@ -759,13 +691,6 @@ describe('TemplateDraftController', () => {
     await templateDraftService.save(laptopDraft);
     const body = {
       name: 'Technical Specs',
-      layout: {
-        cols: newConfig,
-        rowSpan: newConfig,
-        rowStart: newConfig,
-        colStart: newConfig,
-        colSpan: newConfig,
-      },
     };
     const response = await request(app.getHttpServer())
       .patch(
@@ -791,10 +716,9 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Tecs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -863,10 +787,9 @@ describe('TemplateDraftController', () => {
         userId,
       }),
     );
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -877,9 +800,6 @@ describe('TemplateDraftController', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
-      layout: {
-        ...layoutWithoutCols,
-      },
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -903,7 +823,6 @@ describe('TemplateDraftController', () => {
         type: DataFieldType.TEXT_FIELD,
         id: expect.any(String),
         options: { min: 2 },
-        layout: layoutWithoutCols,
         granularityLevel: GranularityLevel.MODEL,
       },
     ]);
@@ -918,9 +837,7 @@ describe('TemplateDraftController', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
-      layout: {
-        ...layoutWithoutCols,
-      },
+
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -951,9 +868,7 @@ describe('TemplateDraftController', () => {
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
-      layout: {
-        ...layoutWithoutCols,
-      },
+
       granularityLevel: GranularityLevel.MODEL,
     };
     const response = await request(app.getHttpServer())
@@ -979,34 +894,24 @@ describe('TemplateDraftController', () => {
         userId,
       }),
     );
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout: Layout.create({ ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
     await templateDraftService.save(laptopDraft);
 
-    const newConfig = { xs: 1, sm: 2, md: 4, lg: 4, xl: 8 };
-
     const body = {
       name: 'Memory',
       options: { max: 8 },
-      layout: {
-        rowSpan: newConfig,
-        rowStart: newConfig,
-        colStart: newConfig,
-        colSpan: newConfig,
-      },
     };
     const response = await request(app.getHttpServer())
       .patch(
@@ -1028,7 +933,6 @@ describe('TemplateDraftController', () => {
         ...dataField,
         _name: body.name,
         options: body.options,
-        layout: body.layout,
       },
     ]);
   });
@@ -1037,12 +941,6 @@ describe('TemplateDraftController', () => {
     const body = {
       name: 'Memory',
       options: { max: 8 },
-      layout: {
-        rowSpan: newConfig,
-        rowStart: newConfig,
-        colStart: newConfig,
-        colSpan: newConfig,
-      },
     };
     const response = await request(app.getHttpServer())
       .patch(
@@ -1071,12 +969,6 @@ describe('TemplateDraftController', () => {
     const body = {
       name: 'Memory',
       options: { max: 8 },
-      layout: {
-        rowSpan: newConfig,
-        rowStart: newConfig,
-        colStart: newConfig,
-        colSpan: newConfig,
-      },
     };
     const response = await request(app.getHttpServer())
       .patch(
@@ -1102,10 +994,9 @@ describe('TemplateDraftController', () => {
       }),
     );
 
-    const section = DataSectionDraft.create({
+    const section = SectionDraft.create({
       name: 'Technical Specs',
       type: SectionType.GROUP,
-      layout: Layout.create({ cols: { sm: 2 }, ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
@@ -1113,7 +1004,6 @@ describe('TemplateDraftController', () => {
     const dataField = DataFieldDraft.create({
       name: 'Processor',
       type: DataFieldType.TEXT_FIELD,
-      layout: Layout.create({ ...layoutWithoutCols }),
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addDataFieldToSection(section.id, dataField);

@@ -2,11 +2,11 @@ import { randomUUID } from 'crypto';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductPassport } from '../../product-passport/domain/product-passport';
+import { ProductPassportData } from '../../product-passport-data/domain/product-passport-data';
 import { Model } from '../../models/domain/model';
 import { Template } from '../../templates/domain/template';
 import { ValueError } from '../../exceptions/domain.errors';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 
 export type ItemCreateProps = {
   organizationId: string;
@@ -22,7 +22,7 @@ export type ItemDbProps = Omit<ItemCreateProps, 'template' | 'model'> & {
   modelId: string;
 };
 
-export class Item extends ProductPassport {
+export class Item extends ProductPassportData {
   granularityLevel = GranularityLevel.ITEM;
   private constructor(
     id: string,

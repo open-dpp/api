@@ -14,8 +14,7 @@ import {
   SectionDoc,
 } from '../../data-modelling/infrastructure/template-base.schema';
 import { DataFieldDraft } from '../domain/data-field-draft';
-import { Layout } from '../../data-modelling/domain/layout';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 
 @Injectable()
 export class TemplateDraftService {
@@ -35,7 +34,7 @@ export class TemplateDraftService {
         description: templateDraft.description,
         sectors: templateDraft.sectors,
         version: newVersion || templateDraft.version,
-        _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_2,
+        _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_3,
         publications: templateDraft.publications,
         sections: templateDraft.sections.map((s) => ({
           _id: s.id,
@@ -46,22 +45,11 @@ export class TemplateDraftService {
             name: d.name,
             type: d.type,
             options: d.options,
-            layout: {
-              colStart: d.layout.colStart,
-              colSpan: d.layout.colSpan,
-              rowStart: d.layout.rowStart,
-              rowSpan: d.layout.rowSpan,
-            },
+
             granularityLevel: d.granularityLevel,
           })),
           parentId: s.parentId,
-          layout: {
-            colStart: s.layout.colStart,
-            colSpan: s.layout.colSpan,
-            rowStart: s.layout.rowStart,
-            rowSpan: s.layout.rowSpan,
-            cols: s.layout.cols,
-          },
+
           subSections: s.subSections,
           granularityLevel: s.granularityLevel,
         })),
@@ -84,28 +72,16 @@ export class TemplateDraftService {
       name: dataFieldDoc.name,
       type: dataFieldDoc.type,
       options: dataFieldDoc.options,
-      layout: Layout.create({
-        colStart: dataFieldDoc.layout.colStart,
-        colSpan: dataFieldDoc.layout.colSpan,
-        rowStart: dataFieldDoc.layout.rowStart,
-        rowSpan: dataFieldDoc.layout.rowSpan,
-      }),
+
       granularityLevel: dataFieldDoc.granularityLevel,
     });
   }
 
   createSection(sectionDoc: SectionDoc) {
-    return DataSectionDraft.loadFromDb({
+    return SectionDraft.loadFromDb({
       id: sectionDoc._id,
       name: sectionDoc.name,
       type: sectionDoc.type,
-      layout: Layout.create({
-        colStart: sectionDoc.layout.colStart,
-        colSpan: sectionDoc.layout.colSpan,
-        rowStart: sectionDoc.layout.rowStart,
-        rowSpan: sectionDoc.layout.rowSpan,
-        cols: sectionDoc.layout.cols,
-      }),
       subSections: sectionDoc.subSections,
       parentId: sectionDoc.parentId,
       dataFields: sectionDoc.dataFields.map((d) => this.createDataField(d)),
