@@ -152,12 +152,42 @@ export class TemplateDraft {
     return section;
   }
 
+  moveSectionDown(sectionId: string) {
+    this.moveSectionPosition(sectionId, 'down');
+  }
+
+  moveSectionUp(sectionId: string) {
+    this.moveSectionPosition(sectionId, 'up');
+  }
+
+  private moveSectionPosition(sectionId: string, direction: 'up' | 'down') {
+    const section = this.findSectionOrFail(sectionId);
+    const fromIndex = this.sections.findIndex((s) => s.id === sectionId);
+    const siblingSections = this.findSectionsOfParent(section.parentId);
+    const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
+
+    const removedSections = this._sections.splice(fromIndex, 1)[0];
+
+    const shiftIndex = direction === 'up' ? -1 : 1;
+    let toIndex = siblingIndex + shiftIndex;
+    if (toIndex < 0) {
+      toIndex = 0;
+    } else if (toIndex >= siblingSections.length) {
+      toIndex = siblingSections.length - 1;
+    }
+    this._sections.splice(toIndex, 0, removedSections);
+  }
+
   findSectionWithParent(sectionId: string) {
     const section = this.sections.find((s) => s.id === sectionId);
     const parent = section?.parentId
       ? this.sections.find((s) => s.id === section.parentId)
       : undefined;
     return { section, parent };
+  }
+
+  findSectionsOfParent(parentSectionId?: string) {
+    return this.sections.filter((s) => s.parentId === parentSectionId);
   }
 
   addSubSection(parentSectionId: string, section: SectionDraft) {

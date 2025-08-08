@@ -45,6 +45,7 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
+import { sectionDraftEnvironment } from '../fixtures/section-draft.factory';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
@@ -706,6 +707,45 @@ describe('TemplateDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(403);
+  });
+
+  it(`/POST move section`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
+
+    const section = SectionDraft.create({
+      name: 'Tecs',
+      type: SectionType.GROUP,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    laptopDraft.addSection(section);
+
+    await templateDraftService.save(laptopDraft);
+
+    const body = {
+      type: 'position',
+      // parentSectionId: laptopDraft.sections[0].id,
+      position: 0,
+    };
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(200);
+    const found = await templateDraftService.findOneOrFail(response.body.id);
   });
 
   it(`/DELETE section draft`, async () => {

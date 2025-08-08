@@ -325,6 +325,67 @@ describe('TemplateDraft', () => {
     ]);
   });
 
+  it('should move section', () => {
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
+    const section1 = SectionDraft.create({
+      name: 'Technical specification',
+      type: SectionType.GROUP,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    const subSection11 = SectionDraft.create({
+      name: 'Dimensions',
+      type: SectionType.GROUP,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    const section2 = SectionDraft.create({
+      name: 'Environment',
+      type: SectionType.GROUP,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    const subSection12 = SectionDraft.create({
+      name: 'Manufacturer',
+      type: SectionType.GROUP,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    const subSection21 = SectionDraft.create({
+      name: 'Water',
+      type: SectionType.GROUP,
+      granularityLevel: GranularityLevel.MODEL,
+    });
+    productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, subSection11);
+    productDataModelDraft.addSection(section2);
+    productDataModelDraft.addSubSection(section1.id, subSection12);
+    productDataModelDraft.addSubSection(section2.id, subSection21);
+    expect(productDataModelDraft.sections).toEqual([
+      section1,
+      subSection11,
+      section2,
+      subSection12,
+      subSection21,
+    ]);
+
+    productDataModelDraft.moveSectionUp(section2.id);
+    expect(productDataModelDraft.sections).toEqual([
+      section2,
+      section1,
+      subSection11,
+      subSection12,
+      subSection21,
+    ]);
+
+    productDataModelDraft.moveSectionDown(section2.id);
+    expect(productDataModelDraft.sections).toEqual([
+      section1,
+      section2,
+      subSection11,
+      subSection12,
+      subSection21,
+    ]);
+  });
+
   it('should delete a section', () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
