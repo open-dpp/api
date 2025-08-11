@@ -12,6 +12,11 @@ export type Publication = {
   version: string;
 };
 
+export enum MoveDirection {
+  UP = 'up',
+  DOWN = 'down',
+}
+
 export type TemplateDraftCreateProps = {
   name: string;
   sectors: Sector[];
@@ -152,15 +157,7 @@ export class TemplateDraft {
     return section;
   }
 
-  moveSectionDown(sectionId: string) {
-    this.moveSectionPosition(sectionId, 'down');
-  }
-
-  moveSectionUp(sectionId: string) {
-    this.moveSectionPosition(sectionId, 'up');
-  }
-
-  private moveSectionPosition(sectionId: string, direction: 'up' | 'down') {
+  public moveSection(sectionId: string, direction: MoveDirection) {
     const section = this.findSectionOrFail(sectionId);
     const fromIndex = this.sections.findIndex((s) => s.id === sectionId);
     const siblingSections = this.findSectionsOfParent(section.parentId);
@@ -168,7 +165,7 @@ export class TemplateDraft {
 
     const removedSections = this._sections.splice(fromIndex, 1)[0];
 
-    const shiftIndex = direction === 'up' ? -1 : 1;
+    const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
     let toIndex = siblingIndex + shiftIndex;
     if (toIndex < 0) {
       toIndex = 0;

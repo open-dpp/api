@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 import { TemplateDraftModule } from '../template-draft.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { TemplateDraft } from '../domain/template-draft';
+import { MoveDirection, TemplateDraft } from '../domain/template-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
@@ -45,7 +45,8 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
-import { sectionDraftEnvironment } from '../fixtures/section-draft.factory';
+import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
+import { MoveType } from './dto/move-section-draft.dto';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
@@ -716,24 +717,24 @@ describe('TemplateDraftController', () => {
         userId,
       }),
     );
-
-    const section = SectionDraft.create({
-      name: 'Tecs',
-      type: SectionType.GROUP,
-      granularityLevel: GranularityLevel.MODEL,
-    });
-    laptopDraft.addSection(section);
+    const section1 = SectionDraft.create(sectionDraftDbPropsFactory.build());
+    const subSection11 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build(),
+    );
+    const section2 = SectionDraft.create(sectionDraftDbPropsFactory.build());
+    laptopDraft.addSection(section1);
+    laptopDraft.addSubSection(section1.id, subSection11);
+    laptopDraft.addSection(section2);
 
     await templateDraftService.save(laptopDraft);
 
     const body = {
-      type: 'position',
-      // parentSectionId: laptopDraft.sections[0].id,
-      position: 0,
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
     };
     const response = await request(app.getHttpServer())
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/move`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
       )
       .set(
         'Authorization',
@@ -746,6 +747,63 @@ describe('TemplateDraftController', () => {
       .send(body);
     expect(response.status).toEqual(200);
     const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(found.sections).toEqual([section2, section1, subSection11]);
+  });
+
+  it(`/POST section draft ${userNotMemberTxt}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
+    await templateDraftService.save(laptopDraft);
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/POST section draft ${draftDoesNotBelongToOrga}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
+    await templateDraftService.save(laptopDraft);
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .patch(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
   });
 
   it(`/DELETE section draft`, async () => {

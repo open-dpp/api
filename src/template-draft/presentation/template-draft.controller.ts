@@ -51,6 +51,10 @@ import {
 import { templateDraftToDto } from './dto/template-draft.dto';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
+import {
+  MoveSectionDraftDto,
+  MoveSectionDraftDtoSchema,
+} from './dto/move-section-draft.dto';
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {
@@ -272,6 +276,35 @@ export class TemplateDraftController {
     foundProductDataModelDraft.modifySection(
       sectionId,
       omit(modifySectionDraftDto),
+    );
+
+    return templateDraftToDto(
+      await this.templateDraftService.save(foundProductDataModelDraft),
+    );
+  }
+
+  @Patch(':draftId/sections/:sectionId/move')
+  async moveSection(
+    @Param('orgaId') organizationId: string,
+    @Param('sectionId') sectionId: string,
+    @Param('draftId') draftId: string,
+    @Body(new ZodValidationPipe(MoveSectionDraftDtoSchema))
+    moveSectionDraftDto: MoveSectionDraftDto,
+    @Request() req: AuthRequest,
+  ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+
+    const foundProductDataModelDraft =
+      await this.templateDraftService.findOneOrFail(draftId);
+
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+
+    foundProductDataModelDraft.moveSection(
+      sectionId,
+      moveSectionDraftDto.direction,
     );
 
     return templateDraftToDto(
