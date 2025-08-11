@@ -158,21 +158,40 @@ export class TemplateDraft {
   }
 
   public moveSection(sectionId: string, direction: MoveDirection) {
-    const section = this.findSectionOrFail(sectionId);
     const fromIndex = this.sections.findIndex((s) => s.id === sectionId);
-    const siblingSections = this.findSectionsOfParent(section.parentId);
-    const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
-
-    const removedSections = this._sections.splice(fromIndex, 1)[0];
-
+    const sectionToMove = this.sections[fromIndex];
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
-    let toIndex = siblingIndex + shiftIndex;
+
+    const siblingSections = this.findSectionsOfParent(sectionToMove.parentId);
+
+    // find sibling section to move to
+    const indexInSiblings = siblingSections.findIndex(
+      (s) => s.id === sectionId,
+    );
+    const siblingSearchIndex = indexInSiblings + shiftIndex;
+    if (
+      siblingSearchIndex < 0 ||
+      siblingSearchIndex >= siblingSections.length
+    ) {
+      return;
+    }
+
+    const sibling = siblingSections[siblingSearchIndex];
+
+    this._sections.splice(fromIndex, 1);
+
+    const siblingIndex = this.sections.findIndex((s) => s.id === sibling.id);
+
+    let toIndex =
+      direction === MoveDirection.DOWN
+        ? siblingIndex + shiftIndex
+        : siblingIndex;
     if (toIndex < 0) {
       toIndex = 0;
-    } else if (toIndex >= siblingSections.length) {
+    } else if (toIndex >= this._sections.length) {
       toIndex = siblingSections.length - 1;
     }
-    this._sections.splice(toIndex, 0, removedSections);
+    this._sections.splice(toIndex, 0, sectionToMove);
   }
 
   findSectionWithParent(sectionId: string) {

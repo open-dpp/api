@@ -745,7 +745,7 @@ describe('TemplateDraftController', () => {
         ),
       )
       .send(body);
-    expect(response.status).toEqual(200);
+    expect(response.status).toEqual(201);
     const found = await templateDraftService.findOneOrFail(response.body.id);
     expect(found.sections).toEqual([section2, section1, subSection11]);
   });

@@ -330,47 +330,92 @@ describe('TemplateDraft', () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
-    const section1 = SectionDraft.create(sectionDraftDbPropsFactory.build());
-    const subSection11 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build(),
+    const section1 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'section-1' }),
     );
-    const section2 = SectionDraft.create(sectionDraftDbPropsFactory.build());
+    const subSection11 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'sub-section-1-1' }),
+    );
+    const section2 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'section-2' }),
+    );
     const subSection12 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build(),
+      sectionDraftDbPropsFactory.build({ id: 'sub-section-1-2' }),
     );
     const subSection21 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build(),
+      sectionDraftDbPropsFactory.build({
+        id: 'sub-section-2-1',
+      }),
     );
+    const section3 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'section-3' }),
+    );
+
     productDataModelDraft.addSection(section1);
     productDataModelDraft.addSubSection(section1.id, subSection11);
     productDataModelDraft.addSection(section2);
     productDataModelDraft.addSubSection(section1.id, subSection12);
     productDataModelDraft.addSubSection(section2.id, subSection21);
+    productDataModelDraft.addSection(section3);
     expect(productDataModelDraft.sections).toEqual([
       section1,
       subSection11,
       section2,
+      subSection12,
+      subSection21,
+      section3,
+    ]);
+
+    productDataModelDraft.moveSection(section1.id, MoveDirection.DOWN);
+    expect(productDataModelDraft.sections).toEqual([
+      subSection11,
+      section2,
+      section1,
+      subSection12,
+      subSection21,
+      section3,
+    ]);
+
+    productDataModelDraft.moveSection(section3.id, MoveDirection.UP);
+    expect(productDataModelDraft.sections).toEqual([
+      subSection11,
+      section2,
+      section3,
+      section1,
       subSection12,
       subSection21,
     ]);
 
-    productDataModelDraft.moveSection(section2.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(section1.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(section1.id, MoveDirection.UP);
     expect(productDataModelDraft.sections).toEqual([
-      section2,
-      section1,
       subSection11,
+      section1,
+      section2,
+      section3,
       subSection12,
       subSection21,
     ]);
 
-    productDataModelDraft.moveSection(section2.id, MoveDirection.DOWN);
-    expect(productDataModelDraft.sections).toEqual([
+    productDataModelDraft.moveSection(subSection12.id, MoveDirection.UP);
+    const final = [
+      subSection12,
+      subSection11,
       section1,
       section2,
-      subSection11,
-      subSection12,
+      section3,
       subSection21,
-    ]);
+    ];
+    expect(productDataModelDraft.sections).toEqual(final);
+
+    // the following moves should not change the order of the sections
+    productDataModelDraft.moveSection(subSection11.id, MoveDirection.DOWN);
+    productDataModelDraft.moveSection(subSection12.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(subSection21.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(subSection21.id, MoveDirection.DOWN);
+    productDataModelDraft.moveSection(section1.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(section3.id, MoveDirection.DOWN);
+    expect(productDataModelDraft.sections).toEqual(final);
   });
 
   it('should delete a section', () => {
