@@ -733,7 +733,7 @@ describe('TemplateDraftController', () => {
       direction: MoveDirection.UP,
     };
     const response = await request(app.getHttpServer())
-      .patch(
+      .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
       )
       .set(
@@ -750,7 +750,7 @@ describe('TemplateDraftController', () => {
     expect(found.sections).toEqual([section2, section1, subSection11]);
   });
 
-  it(`/POST section draft ${userNotMemberTxt}`, async () => {
+  it(`/POST move section ${userNotMemberTxt}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
         organizationId,
@@ -763,7 +763,7 @@ describe('TemplateDraftController', () => {
       direction: MoveDirection.UP,
     };
     const response = await request(app.getHttpServer())
-      .patch(
+      .post(
         `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
@@ -778,7 +778,7 @@ describe('TemplateDraftController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it(`/POST section draft ${draftDoesNotBelongToOrga}`, async () => {
+  it(`/POST move section ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
         organizationId: otherOrganizationId,

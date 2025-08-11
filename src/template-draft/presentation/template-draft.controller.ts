@@ -296,7 +296,6 @@ export class TemplateDraftController {
       organizationId,
       req.authContext,
     );
-    console.log('MOVE');
 
     const foundProductDataModelDraft =
       await this.templateDraftService.findOneOrFail(draftId);
