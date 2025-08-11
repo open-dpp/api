@@ -283,7 +283,7 @@ export class TemplateDraftController {
     );
   }
 
-  @Patch(':draftId/sections/:sectionId/move')
+  @Post(':draftId/sections/:sectionId/move')
   async moveSection(
     @Param('orgaId') organizationId: string,
     @Param('sectionId') sectionId: string,
@@ -296,6 +296,7 @@ export class TemplateDraftController {
       organizationId,
       req.authContext,
     );
+    console.log('MOVE');
 
     const foundProductDataModelDraft =
       await this.templateDraftService.findOneOrFail(draftId);

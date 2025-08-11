@@ -791,7 +791,7 @@ describe('TemplateDraftController', () => {
       direction: MoveDirection.UP,
     };
     const response = await request(app.getHttpServer())
-      .patch(
+      .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
