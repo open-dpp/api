@@ -180,10 +180,36 @@ export class NumericField extends DataField {
   }
 }
 
+export class FileField extends DataField {
+  static create(data: DataFieldProps) {
+    return DataField.createInstance(FileField, data, DataFieldType.FILE_FIELD);
+  }
+
+  static loadFromDb(data: DataFieldDbProps) {
+    return DataField.loadFromDbInstance(FileField, {
+      ...data,
+      type: DataFieldType.FILE_FIELD,
+    });
+  }
+
+  validate(version: string, value: unknown): DataFieldValidationResult {
+    const result = z.string().optional().safeParse(value);
+    return DataFieldValidationResult.create({
+      dataFieldId: this.id,
+      dataFieldName: this.name,
+      isValid: result.success,
+      errorMessage: !result.success
+        ? result.error.issues[0].message
+        : undefined,
+    });
+  }
+}
+
 const dataFieldSubtypes = [
   { value: TextField, name: DataFieldType.TEXT_FIELD },
   { value: ProductPassportLink, name: DataFieldType.PRODUCT_PASSPORT_LINK },
   { value: NumericField, name: DataFieldType.NUMERIC_FIELD },
+  { value: FileField, name: DataFieldType.FILE_FIELD },
 ];
 
 export function findDataFieldClassByTypeOrFail(type: DataFieldType) {

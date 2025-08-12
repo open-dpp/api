@@ -21,7 +21,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TraceabilityEventsModule } from './traceability-events/traceability-events.module';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
 import { IntegrationModule } from './integrations/integration.module';
-import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -62,7 +61,6 @@ import { FilesModule } from './files/files.module';
     TraceabilityEventsModule,
     KeycloakSyncOnStartupModule,
     IntegrationModule,
-    FilesModule,
   ],
   providers: [
     {

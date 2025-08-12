@@ -10,7 +10,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
 import { buildOpenApiDocumentation } from './open-api-docs';
 import { ConfigService } from '@nestjs/config';
-import { rawBodyMiddleware } from './raw-body.middleware';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,19 +23,13 @@ export async function bootstrap() {
   app.use((req, res, next) =>
     req.path.startsWith('/organizations/') && req.path.includes('/integration')
       ? next()
-      : json({ limit: '100kb' })(req, res, next),
+      : json({ limit: '10mb' })(req, res, next),
   );
 
   // Dedicated large-payload parser
   app.use(
     '/organizations/:organizationId/integration',
     json({ limit: '50mb' }),
-  );
-  app.use(
-    rawBodyMiddleware({
-      limit: '10mb',
-      rawBodyUrls: [`/files/upload-dpp-file/:upi,`],
-    }),
   );
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
