@@ -2,11 +2,6 @@ import { dataFieldDbPropsFactory } from './data-field.factory';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel, Sector } from '@open-dpp/api-client';
 import { SectionType } from '../../data-modelling/domain/section-base';
-import {
-  layoutColStart2,
-  layoutColStart3,
-  layoutPropsFactory,
-} from '../../data-modelling/fixtures/layout.factory';
 import { sectionDbPropsFactory } from './section.factory';
 import { Factory } from 'fishery';
 import { TemplateDbProps } from '../domain/template';
@@ -58,19 +53,16 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
         dataFieldDbPropsFactory.build({
           id: LaptopFactory.ids.techSpecs.fields.memory,
           name: 'Memory',
-          layout: layoutColStart2.build(),
         }),
         dataFieldDbPropsFactory.build({
           id: LaptopFactory.ids.techSpecs.fields.serialNumber,
           name: 'Serial number',
           granularityLevel: GranularityLevel.ITEM,
-          layout: layoutColStart3.build(),
         }),
         dataFieldDbPropsFactory.build({
           id: LaptopFactory.ids.techSpecs.fields.batteryStatus,
           name: 'Battery Status',
           granularityLevel: GranularityLevel.ITEM,
-          layout: layoutPropsFactory.build({ rowStart: { sm: 2 } }),
         }),
       ],
     });
@@ -90,7 +82,6 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           id: LaptopFactory.ids.material.fields.mass,
           type: DataFieldType.NUMERIC_FIELD,
           name: 'Mass',
-          layout: layoutColStart2.build(),
         }),
       ],
     });
@@ -109,7 +100,6 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           id: LaptopFactory.ids.materialCo2.fields.co2Emissions,
           type: DataFieldType.NUMERIC_FIELD,
           name: 'Co2 emissions',
-          layout: layoutColStart2.build(),
         }),
       ],
     });

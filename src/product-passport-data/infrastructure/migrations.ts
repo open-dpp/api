@@ -1,4 +1,4 @@
-import { PassportDoc } from './product-passport.schema';
+import { PassportDoc } from './product-passport-data.schema';
 
 export function migratePassportDocToTemplateId(passportDoc: PassportDoc) {
   if (passportDoc.productDataModelId) {

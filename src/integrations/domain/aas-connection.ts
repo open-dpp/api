@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import {
   AasProperty,
   AssetAdministrationShell,

@@ -1,6 +1,6 @@
 import { AasConnection, AasFieldAssignment } from './aas-connection';
 import { ignoreIds } from '../../../test/utils';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import {
   AssetAdministrationShell,
   AssetAdministrationShellType,

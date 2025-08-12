@@ -1,8 +1,5 @@
 import { Controller, Get, Param, Request } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
-import { Public } from '../../auth/public/public.decorator';
-import { View } from '../domain/view';
-import { TemplateService } from '../../templates/infrastructure/template.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
 import { UniqueProductIdentifierReferenceDtoSchema } from './dto/unique-product-identifier-dto.schema';
@@ -14,30 +11,9 @@ export class UniqueProductIdentifierController {
   constructor(
     private readonly modelsService: ModelsService,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly templateService: TemplateService,
     private readonly itemService: ItemsService,
     private readonly permissionsService: PermissionsService,
   ) {}
-
-  @Public()
-  @Get('unique-product-identifiers/:id/view')
-  async buildView(@Param('id') id: string) {
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(id);
-    const item = await this.itemService.findOne(
-      uniqueProductIdentifier.referenceId,
-    );
-    const modelId = item?.modelId ?? uniqueProductIdentifier.referenceId;
-    const model = await this.modelsService.findOneOrFail(modelId);
-
-    const template = await this.templateService.findOneOrFail(model.templateId);
-    return View.create({
-      model: model,
-      template: template,
-      item,
-    }).build();
-  }
-
   @Get('organizations/:orgaId/unique-product-identifiers/:id/reference')
   async getReferencedProductPassport(
     @Param('orgaId') organizationId: string,

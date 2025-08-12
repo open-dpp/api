@@ -1,4 +1,3 @@
-import { Layout } from './layout';
 import { GranularityLevel } from './granularity-level';
 
 export enum DataFieldType {
@@ -14,7 +13,6 @@ export abstract class DataFieldBase {
     protected _name: string,
     public readonly type: DataFieldType,
     public readonly options: Record<string, unknown> = {},
-    public readonly layout: Layout,
     public readonly granularityLevel: GranularityLevel,
   ) {}
 

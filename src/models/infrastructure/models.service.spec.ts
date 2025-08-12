@@ -27,7 +27,7 @@ import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from './model.schema';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ignoreIds } from '../../../test/utils';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 import { Model } from '../domain/model';
 

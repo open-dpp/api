@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { TemplateDraft } from '../domain/template-draft';
 import { AuthRequest } from '../../auth/auth-request';
-import { DataSectionDraft } from '../domain/section-draft';
+import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import {
@@ -44,7 +44,6 @@ import { TemplateDraftService } from '../infrastructure/template-draft.service';
 import { omit } from 'lodash';
 import { PermissionsService } from '../../permissions/permissions.service';
 
-import { Layout } from '../../data-modelling/domain/layout';
 import {
   UpdateSectionDraftDto,
   UpdateSectionDraftDtoSchema,
@@ -143,9 +142,8 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    const section = DataSectionDraft.create({
-      ...omit(createSectionDraftDto, ['parentSectionId', 'layout']),
-      layout: Layout.create(createSectionDraftDto.layout),
+    const section = SectionDraft.create({
+      ...omit(createSectionDraftDto, ['parentSectionId']),
     });
 
     if (createSectionDraftDto.parentSectionId) {
@@ -220,10 +218,7 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    const dataField = DataFieldDraft.create({
-      ...omit(createDataFieldDraftDto, ['layout']),
-      layout: Layout.create(createDataFieldDraftDto.layout),
-    });
+    const dataField = DataFieldDraft.create(createDataFieldDraftDto);
 
     foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
 

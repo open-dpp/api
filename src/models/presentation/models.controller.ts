@@ -22,8 +22,8 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import {
   DataValueDto,
   DataValueDtoSchema,
-} from '../../product-passport/presentation/dto/data-value.dto';
-import { DataValue } from '../../product-passport/domain/data-value';
+} from '../../product-passport-data/presentation/dto/data-value.dto';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
   createModelDocumentation,
@@ -33,7 +33,7 @@ import {
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
-} from '../../product-passport/presentation/dto/docs/product-passport.doc';
+} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';

@@ -6,7 +6,7 @@ import {
   DataFieldDoc,
   SectionDoc,
 } from '../../data-modelling/infrastructure/template-base.schema';
-import { DataSectionDbProps } from './section';
+import { SectionDbProps } from './section';
 import { DataFieldDbProps } from './data-field';
 import { Template } from './template';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -19,7 +19,7 @@ export function serializeTemplate(t: Template) {
     description: t.description,
     sectors: t.sectors,
     version: t.version,
-    _schemaVersion: TemplateDocSchemaVersion.v1_0_1,
+    _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
     sections: t.sections.map((s) => ({
       _id: s.id,
       name: s.name,
@@ -30,10 +30,8 @@ export function serializeTemplate(t: Template) {
         name: d.name,
         type: d.type,
         options: d.options,
-        layout: d.layout,
         granularityLevel: d.granularityLevel,
       })),
-      layout: s.layout,
       subSections: s.subSections,
       parentId: s.parentId,
     })),
@@ -58,7 +56,7 @@ export function deserializeTemplate(plain: TemplateDoc) {
   return Template.loadFromDb(tmp);
 }
 
-function createSection(sectionDoc: SectionDoc): DataSectionDbProps {
+function createSection(sectionDoc: SectionDoc): SectionDbProps {
   return {
     id: sectionDoc._id,
     type: sectionDoc.type,
@@ -66,13 +64,6 @@ function createSection(sectionDoc: SectionDoc): DataSectionDbProps {
     parentId: sectionDoc.parentId,
     subSections: sectionDoc.subSections,
     dataFields: sectionDoc.dataFields.map((df) => createDataField(df)),
-    layout: {
-      cols: sectionDoc.layout.cols,
-      colStart: sectionDoc.layout.colStart,
-      colSpan: sectionDoc.layout.colSpan,
-      rowStart: sectionDoc.layout.rowStart,
-      rowSpan: sectionDoc.layout.rowSpan,
-    },
     granularityLevel: sectionDoc.granularityLevel
       ? sectionDoc.granularityLevel
       : sectionDoc.type === SectionType.REPEATABLE
@@ -85,12 +76,6 @@ function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
   return {
     id: dataFieldDoc._id,
     type: dataFieldDoc.type,
-    layout: {
-      colStart: dataFieldDoc.layout.colStart,
-      colSpan: dataFieldDoc.layout.colSpan,
-      rowStart: dataFieldDoc.layout.rowStart,
-      rowSpan: dataFieldDoc.layout.rowSpan,
-    },
     granularityLevel: dataFieldDoc.granularityLevel,
     options: dataFieldDoc.options,
     name: dataFieldDoc.name,

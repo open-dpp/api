@@ -1,10 +1,9 @@
 import { randomUUID } from 'crypto';
 import { DataFieldDraft } from './data-field-draft';
-import { DataSectionDraft, DataSectionDraftDbProps } from './section-draft';
+import { SectionDraft, SectionDraftDbProps } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { Template } from '../../templates/domain/template';
 import * as semver from 'semver';
-import { LayoutProps } from '../../data-modelling/domain/layout';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Sector } from '@open-dpp/api-client';
 
@@ -25,7 +24,7 @@ export type TemplateDraftDbProps = TemplateDraftCreateProps & {
   id: string;
   version: string;
   publications: Publication[];
-  sections: DataSectionDraftDbProps[];
+  sections: SectionDraftDbProps[];
 };
 
 export class TemplateDraft {
@@ -38,7 +37,7 @@ export class TemplateDraft {
     private readonly _publications: Publication[],
     private _ownedByOrganizationId: string | undefined,
     private _createdByUserId: string | undefined,
-    private _sections: DataSectionDraft[],
+    private _sections: SectionDraft[],
   ) {}
 
   static create(data: {
@@ -95,7 +94,7 @@ export class TemplateDraft {
       data.publications,
       data.organizationId,
       data.userId,
-      data.sections.map((s) => DataSectionDraft.loadFromDb(s)),
+      data.sections.map((s) => SectionDraft.loadFromDb(s)),
     );
   }
 
@@ -119,15 +118,11 @@ export class TemplateDraft {
     this._sections = this.sections.filter((s) => s.id !== section.id);
   }
 
-  modifySection(
-    sectionId: string,
-    data: { name?: string; layout: Partial<LayoutProps> },
-  ) {
+  modifySection(sectionId: string, data: { name?: string }) {
     const section = this.findSectionOrFail(sectionId);
     if (data.name) {
       section.rename(data.name);
     }
-    section.layout.modify(data.layout);
   }
 
   modifyDataField(
@@ -136,7 +131,6 @@ export class TemplateDraft {
     data: {
       name?: string;
       options?: Record<string, unknown>;
-      layout: Partial<LayoutProps>;
     },
   ) {
     this.findSectionOrFail(sectionId).modifyDataField(dataFieldId, data);
@@ -153,7 +147,7 @@ export class TemplateDraft {
   findSectionOrFail(sectionId: string) {
     const { section } = this.findSectionWithParent(sectionId);
     if (!section) {
-      throw new NotFoundError(DataSectionDraft.name, sectionId);
+      throw new NotFoundError(SectionDraft.name, sectionId);
     }
     return section;
   }
@@ -166,7 +160,7 @@ export class TemplateDraft {
     return { section, parent };
   }
 
-  addSubSection(parentSectionId: string, section: DataSectionDraft) {
+  addSubSection(parentSectionId: string, section: SectionDraft) {
     const parentSection = this.findSectionOrFail(parentSectionId);
     if (
       section.granularityLevel &&
@@ -185,7 +179,7 @@ export class TemplateDraft {
     this.sections.push(section);
   }
 
-  addSection(section: DataSectionDraft) {
+  addSection(section: SectionDraft) {
     if (section.parentId && section.type === SectionType.REPEATABLE) {
       throw new ValueError(
         `Repeater section can only be added as root section`,

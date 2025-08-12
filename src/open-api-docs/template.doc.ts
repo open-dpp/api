@@ -1,4 +1,4 @@
-import { sectionBaseDocumentation } from '../data-modelling/presentation/dto/docs/section-base.doc';
+import { sectionBaseDocumentation } from './section-base.doc';
 import { Sector } from '@open-dpp/api-client';
 
 export const templateDocumentation = {

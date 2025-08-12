@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   createCommonIndexesForPassportDoc,
   PassportDoc,
-} from '../../product-passport/infrastructure/product-passport.schema';
+} from '../../product-passport-data/infrastructure/product-passport-data.schema';
 
 export enum ModelDocSchemaVersion {
   v1_0_0 = '1.0.0',

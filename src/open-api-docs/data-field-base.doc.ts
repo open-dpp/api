@@ -1,6 +1,5 @@
-import { DataFieldType } from '../../../domain/data-field-base';
-import { GranularityLevel } from '../../../domain/granularity-level';
-import { layoutDocumentation } from './layout.doc';
+import { DataFieldType } from '../data-modelling/domain/data-field-base';
+import { GranularityLevel } from '../data-modelling/domain/granularity-level';
 
 export const dataFieldDocumentation = {
   type: 'object',
@@ -22,6 +21,5 @@ export const dataFieldDocumentation = {
       enum: Object.values(GranularityLevel),
       nullable: true,
     },
-    layout: layoutDocumentation,
   },
 };

@@ -3,7 +3,6 @@ import {
   DataFieldType,
 } from '../../data-modelling/domain/data-field-base';
 import { merge } from 'lodash';
-import { Layout, LayoutProps } from '../../data-modelling/domain/layout';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { DataFieldDbProps } from '../../templates/domain/data-field';
@@ -12,7 +11,6 @@ export type DataFieldDraftCreateProps = {
   name: string;
   type: DataFieldType;
   options?: Record<string, unknown>;
-  layout: LayoutProps;
   granularityLevel: GranularityLevel;
 };
 
@@ -26,10 +24,9 @@ export class DataFieldDraft extends DataFieldBase {
     protected _name: string,
     public readonly type: DataFieldType,
     public readonly options: Record<string, unknown> = {},
-    public readonly layout: Layout,
     public readonly granularityLevel: GranularityLevel,
   ) {
-    super(id, _name, type, options, layout, granularityLevel);
+    super(id, _name, type, options, granularityLevel);
   }
   static create(data: DataFieldDraftCreateProps): DataFieldDraft {
     return new DataFieldDraft(
@@ -37,7 +34,6 @@ export class DataFieldDraft extends DataFieldBase {
       data.name,
       data.type,
       data.options,
-      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -48,7 +44,6 @@ export class DataFieldDraft extends DataFieldBase {
       data.name,
       data.type,
       data.options,
-      Layout.create(data.layout),
       data.granularityLevel,
     );
   }
@@ -65,7 +60,6 @@ export class DataFieldDraft extends DataFieldBase {
     return {
       type: this.type,
       id: this.id,
-      layout: this.layout,
       granularityLevel: this.granularityLevel,
       options: this.options,
       name: this.name,

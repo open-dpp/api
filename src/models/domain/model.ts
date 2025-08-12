@@ -1,8 +1,8 @@
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
-import { ProductPassport } from '../../product-passport/domain/product-passport';
+import { ProductPassportData } from '../../product-passport-data/domain/product-passport-data';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport/domain/data-value';
+import { DataValue } from '../../product-passport-data/domain/data-value';
 import { Template } from '../../templates/domain/template';
 
 type ModelCreateProps = {
@@ -13,7 +13,7 @@ type ModelCreateProps = {
   template: Template;
 };
 
-type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
+export type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
   id: string;
   uniqueProductIdentifiers: UniqueProductIdentifier[];
   templateId: string;
@@ -21,7 +21,7 @@ type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
   description: string | undefined;
 };
 
-export class Model extends ProductPassport {
+export class Model extends ProductPassportData {
   granularityLevel = GranularityLevel.MODEL;
   name: string;
   description: string | undefined;
