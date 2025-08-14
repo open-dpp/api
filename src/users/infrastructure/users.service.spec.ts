@@ -6,6 +6,7 @@ import { UserEntity } from './user.entity';
 import { User } from '../domain/user';
 import { BadRequestException } from '@nestjs/common';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { KeycloakUserInToken } from '../../auth/keycloak-auth/KeycloakUserInToken';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -26,12 +27,13 @@ describe('UsersService', () => {
     ownerOfOrganizations: [],
   };
 
-  const mockKeycloakUser = {
+  const mockKeycloakUser: KeycloakUserInToken = {
     sub: userId,
     email: userEmail,
     name: 'Test User',
     preferred_username: 'testuser',
     email_verified: true,
+    memberships: [],
   };
 
   beforeEach(async () => {
