@@ -91,25 +91,29 @@ export class KeycloakAuthGuard implements CanActivate {
     token: string,
   ): Promise<jwt.JwtPayload & KeycloakUserInToken> {
     const validationOptions: jwt.VerifyOptions = {
-      audience: 'account',
+      audience: this.configService.get('KEYCLOAK_JWT_AUDIENCE', 'account'),
       issuer: `${this.configService.get('KEYCLOAK_PUBLIC_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}`,
       algorithms: ['RS256'],
     };
+    const decoded = jwt.decode(token, { complete: true });
+    if (!decoded || typeof decoded === 'string') {
+      throw new UnauthorizedException('Invalid token');
+    }
     try {
-      const decoded = jwt.decode(token, { complete: true });
       const key = await this.getKey(decoded.header);
-      return jwt.verify(
+      const verified = jwt.verify(
         token,
         key.getPublicKey(),
         validationOptions,
       ) as jwt.JwtPayload & KeycloakUserInToken;
+      return { ...verified, memberships: (verified as any).memberships ?? [] };
     } catch {
       throw new UnauthorizedException('Invalid token');
     }
   }
 
   private getAuthUrl() {
-    const baseUrl = this.configService.get('KEYCLOAK_NETWORK_URL');
+    const baseUrl = this.configService.get<string>('KEYCLOAK_NETWORK_URL');
     if (!baseUrl) {
       throw new Error('KEYCLOAK_NETWORK_URL configuration is missing');
     }
@@ -129,18 +133,21 @@ export class KeycloakAuthGuard implements CanActivate {
     headerApiKey: string,
   ): Promise<string> {
     const authUrl = this.getAuthUrl();
-    const response = await firstValueFrom<AxiosResponse<{ jwt: string }>>(
-      this.httpService.get(`${authUrl}?apiKey=${headerApiKey}`),
-    );
-    if (response.status === 200) {
-      return response.data.jwt;
-    } else {
+    try {
+      const response = await firstValueFrom<AxiosResponse<{ jwt: string }>>(
+        this.httpService.get(`${authUrl}?apiKey=${headerApiKey}`),
+      );
+      if (response.status === 200) {
+        return response.data.jwt;
+      }
+    } catch {
       throw new UnauthorizedException('API Key invalid');
     }
+    throw new UnauthorizedException('API Key invalid');
   }
 
-  private async readTokenFromJwt(jwt: string): Promise<string> {
-    const parts = jwt.split(' ');
+  private async readTokenFromJwt(authorization: string): Promise<string> {
+    const parts = authorization.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
       throw new UnauthorizedException(
         'Authorization: Bearer <token> header invalid',
@@ -149,10 +156,11 @@ export class KeycloakAuthGuard implements CanActivate {
     return parts[1];
   }
 
-  private async getKey(header: jwt.JwtHeader) {
+  private async getKey(header: jwt.JwtHeader): Promise<jwksRsa.SigningKey> {
     if (!header.kid) {
-      new Error('Token is missing the "kid" (Key ID) header.');
-      return;
+      throw new UnauthorizedException(
+        'Token is missing the "kid" (Key ID) header.',
+      );
     }
     return this.jwksClient.getSigningKey(header.kid);
   }

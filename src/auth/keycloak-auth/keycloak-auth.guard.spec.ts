@@ -1,14 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { KeycloakAuthGuard } from './keycloak-auth.guard';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/infrastructure/users.service';
-import {
-  ExecutionContext,
-  HttpException,
-  HttpStatus,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ExecutionContext, HttpException, HttpStatus, UnauthorizedException, } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
@@ -52,12 +46,6 @@ describe('KeycloakAuthGuard', () => {
             create: jest
               .fn()
               .mockResolvedValue(new User('test-user-id', 'user@example.com')),
-          },
-        },
-        {
-          provide: JwtService,
-          useValue: {
-            verifyAsync: jest.fn(),
           },
         },
       ],
