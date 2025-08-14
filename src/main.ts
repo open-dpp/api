@@ -7,7 +7,7 @@ import {
   ValueErrorFilter,
 } from './exceptions/exception.handler';
 import { ValidationPipe } from '@nestjs/common';
-import { json, NextFunction, Response } from 'express';
+import { json, NextFunction, Request, Response } from 'express';
 import { buildOpenApiDocumentation } from './open-api-docs';
 import { ConfigService } from '@nestjs/config';
 
@@ -21,15 +21,15 @@ export async function bootstrap() {
     new ValueErrorFilter(),
   );
 
-  // Single JSON body parser selector based on precise integration route match
-  const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/?|$)/;
+  // Single JSON body parser selector based on a precise integration route match
+  const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
   const defaultJsonLimit =
     configService.get<string>('JSON_LIMIT_DEFAULT') || '10mb';
   const integrationJsonLimit =
     configService.get<string>('JSON_LIMIT_INTEGRATION') || '50mb';
   const defaultJsonParser = json({ limit: defaultJsonLimit });
   const integrationJsonParser = json({ limit: integrationJsonLimit });
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     const parser = integrationRouteRegex.test(req.path)
       ? integrationJsonParser
       : defaultJsonParser;
@@ -41,13 +41,20 @@ export async function bootstrap() {
         statusCode: 413,
         message: 'Payload Too Large',
         error: 'PayloadTooLargeError',
+        path: req.path,
+        timestamp: new Date().toISOString(),
       });
     }
-    if (err instanceof SyntaxError && 'body' in err) {
+    if (
+      err?.type === 'entity.parse.failed' ||
+      (err instanceof SyntaxError && 'body' in err)
+    ) {
       return res.status(400).json({
         statusCode: 400,
         message: 'Invalid JSON payload',
         error: 'BadRequest',
+        path: req.path,
+        timestamp: new Date().toISOString(),
       });
     }
     return next(err);
