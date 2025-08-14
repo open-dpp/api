@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { DataFieldBase, DataFieldType, } from '../../data-modelling/domain/data-field-base';
+import {
+  DataFieldBase,
+  DataFieldType,
+} from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
