@@ -20,17 +20,21 @@ export async function bootstrap() {
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
   );
-  app.use((req, res, next) =>
-    req.path.startsWith('/organizations/') && req.path.includes('/integration')
-      ? next()
-      : json({ limit: '10mb' })(req, res, next),
-  );
 
-  // Dedicated large-payload parser
-  app.use(
-    '/organizations/:organizationId/integration',
-    json({ limit: '50mb' }),
-  );
+  // Single JSON body parser selector based on precise integration route match
+  const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/?|$)/;
+  const defaultJsonLimit =
+    configService.get<string>('JSON_LIMIT_DEFAULT') || '10mb';
+  const integrationJsonLimit =
+    configService.get<string>('JSON_LIMIT_INTEGRATION') || '50mb';
+
+  app.use((req, res, next) => {
+    const limit = integrationRouteRegex.test(req.path)
+      ? integrationJsonLimit
+      : defaultJsonLimit;
+    return json({ limit })(req, res, next);
+  });
+
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: '*',
