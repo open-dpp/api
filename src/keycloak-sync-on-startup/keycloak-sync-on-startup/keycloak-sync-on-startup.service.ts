@@ -37,6 +37,7 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
             email: keycloakUser.email,
             email_verified: keycloakUser.emailVerified,
             preferred_username: keycloakUser.username,
+            memberships: [],
           },
           true,
         );

@@ -15,16 +15,26 @@ import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
+import * as jwksRsa from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
+  private jwksClient: jwksRsa.JwksClient;
+
   constructor(
     private reflector: Reflector,
     private configService: ConfigService,
     private readonly usersService: UsersService,
     private jwtService: JwtService,
     private readonly httpService: HttpService,
-  ) {}
+  ) {
+    this.jwksClient = jwksRsa({
+      jwksUri: `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}/protocol/openid-connect/certs`,
+      cache: true,
+      rateLimit: true,
+    });
+  }
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
@@ -55,12 +65,7 @@ export class KeycloakAuthGuard implements CanActivate {
     let payload: KeycloakUserInToken & { memberships: string[] | undefined };
 
     try {
-      payload = await this.jwtService.verifyAsync(accessToken, {
-        algorithms: ['RS256'],
-        publicKey: this.formatPublicKey(
-          this.configService.get('KEYCLOAK_JWT_PUBLIC_KEY'),
-        ),
-      });
+      payload = await this.validateToken(accessToken);
     } catch {
       throw new UnauthorizedException(
         'Invalid token. Check if it is maybe expired.',
@@ -91,7 +96,10 @@ export class KeycloakAuthGuard implements CanActivate {
     }
 
     try {
-      const url = new URL('/realms/open-dpp/api-key/auth', baseUrl);
+      const url = new URL(
+        `/realms/${this.configService.get<string>('KEYCLOAK_REALM')}/api-key/auth`,
+        baseUrl,
+      );
       return url.toString();
     } catch {
       throw new Error('Invalid KEYCLOAK_NETWORK_URL configuration');
@@ -122,8 +130,32 @@ export class KeycloakAuthGuard implements CanActivate {
     return parts[1];
   }
 
-  private formatPublicKey(publicKey: string): string {
-    // Format the public key with the proper PEM headers if needed
-    return `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----`;
+  private async getKey(header: jwt.JwtHeader) {
+    if (!header.kid) {
+      new Error('Token is missing the "kid" (Key ID) header.');
+      return;
+    }
+    return this.jwksClient.getSigningKey(header.kid);
+  }
+
+  private async validateToken(
+    token: string,
+  ): Promise<jwt.JwtPayload & KeycloakUserInToken> {
+    const validationOptions: jwt.VerifyOptions = {
+      audience: 'account',
+      issuer: `${this.configService.get('KEYCLOAK_PUBLIC_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}`,
+      algorithms: ['RS256'],
+    };
+    try {
+      const decoded = jwt.decode(token, { complete: true });
+      const key = await this.getKey(decoded.header);
+      return jwt.verify(
+        token,
+        key.getPublicKey(),
+        validationOptions,
+      ) as jwt.JwtPayload & KeycloakUserInToken;
+    } catch {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }
