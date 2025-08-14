@@ -27,12 +27,14 @@ export async function bootstrap() {
     configService.get<string>('JSON_LIMIT_DEFAULT') || '10mb';
   const integrationJsonLimit =
     configService.get<string>('JSON_LIMIT_INTEGRATION') || '50mb';
+  const defaultJsonParser = json({ limit: defaultJsonLimit });
+  const integrationJsonParser = json({ limit: integrationJsonLimit });
 
   app.use((req, res, next) => {
-    const limit = integrationRouteRegex.test(req.path)
-      ? integrationJsonLimit
-      : defaultJsonLimit;
-    return json({ limit })(req, res, next);
+    const parser = integrationRouteRegex.test(req.path)
+      ? integrationJsonParser
+      : defaultJsonParser;
+    return parser(req, res, next);
   });
 
   app.useGlobalPipes(new ValidationPipe());
