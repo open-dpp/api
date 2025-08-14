@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AuthContext } from '../auth-request';
@@ -141,7 +146,7 @@ export class KeycloakAuthGuard implements CanActivate {
     throw new UnauthorizedException('API Key invalid');
   }
 
-  private async readTokenFromJwt(authorization: string): Promise<string> {
+  private readTokenFromJwt(authorization: string): string {
     const parts = authorization.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
       throw new UnauthorizedException(
