@@ -19,7 +19,6 @@ describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;
   let reflector: Reflector;
   let usersService: UsersService;
-  let jwtService: JwtService;
 
   const mockUser: KeycloakUserInToken = {
     sub: 'test-user-id',
@@ -27,6 +26,7 @@ describe('KeycloakAuthGuard', () => {
     name: 'Test User',
     preferred_username: 'testuser',
     email_verified: true,
+    memberships: [],
   };
 
   beforeEach(async () => {
@@ -66,7 +66,6 @@ describe('KeycloakAuthGuard', () => {
     guard = module.get<KeycloakAuthGuard>(KeycloakAuthGuard);
     reflector = module.get<Reflector>(Reflector);
     usersService = module.get<UsersService>(UsersService);
-    jwtService = module.get<JwtService>(JwtService);
   });
 
   it('should be defined', () => {
@@ -126,16 +125,11 @@ describe('KeycloakAuthGuard', () => {
         memberships: ['organization-org1', 'organization-org2'],
       };
 
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue(mockPayload);
+      jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload);
 
       const result = await guard.canActivate(context);
 
       expect(result).toBe(true);
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid-token', {
-        algorithms: ['RS256'],
-        publicKey:
-          '-----BEGIN PUBLIC KEY-----\nmock-public-key\n-----END PUBLIC KEY-----',
-      });
       expect(usersService.create).toHaveBeenCalledWith(mockPayload, true);
       expect(mockRequest.authContext).toBeDefined();
       expect(mockRequest.authContext.user).toEqual(
@@ -165,7 +159,7 @@ describe('KeycloakAuthGuard', () => {
         // No memberships property
       };
 
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue(mockPayload);
+      jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload);
 
       const result = await guard.canActivate(context);
 

@@ -6,12 +6,7 @@ import { AuthContext } from '../../auth/auth-request';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException, } from '@nestjs/common';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -50,6 +45,7 @@ describe('KeycloakResourcesService', () => {
     name: 'Test User',
     preferred_username: 'testuser',
     email_verified: true,
+    memberships: [],
   };
 
   beforeEach(async () => {

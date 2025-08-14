@@ -11,7 +11,6 @@ import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
-import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
@@ -26,7 +25,6 @@ export class KeycloakAuthGuard implements CanActivate {
     private reflector: Reflector,
     private configService: ConfigService,
     private readonly usersService: UsersService,
-    private jwtService: JwtService,
     private readonly httpService: HttpService,
   ) {
     this.jwksClient = jwksRsa({
@@ -89,6 +87,27 @@ export class KeycloakAuthGuard implements CanActivate {
     return true;
   }
 
+  async validateToken(
+    token: string,
+  ): Promise<jwt.JwtPayload & KeycloakUserInToken> {
+    const validationOptions: jwt.VerifyOptions = {
+      audience: 'account',
+      issuer: `${this.configService.get('KEYCLOAK_PUBLIC_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}`,
+      algorithms: ['RS256'],
+    };
+    try {
+      const decoded = jwt.decode(token, { complete: true });
+      const key = await this.getKey(decoded.header);
+      return jwt.verify(
+        token,
+        key.getPublicKey(),
+        validationOptions,
+      ) as jwt.JwtPayload & KeycloakUserInToken;
+    } catch {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+
   private getAuthUrl() {
     const baseUrl = this.configService.get('KEYCLOAK_NETWORK_URL');
     if (!baseUrl) {
@@ -136,26 +155,5 @@ export class KeycloakAuthGuard implements CanActivate {
       return;
     }
     return this.jwksClient.getSigningKey(header.kid);
-  }
-
-  private async validateToken(
-    token: string,
-  ): Promise<jwt.JwtPayload & KeycloakUserInToken> {
-    const validationOptions: jwt.VerifyOptions = {
-      audience: 'account',
-      issuer: `${this.configService.get('KEYCLOAK_PUBLIC_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}`,
-      algorithms: ['RS256'],
-    };
-    try {
-      const decoded = jwt.decode(token, { complete: true });
-      const key = await this.getKey(decoded.header);
-      return jwt.verify(
-        token,
-        key.getPublicKey(),
-        validationOptions,
-      ) as jwt.JwtPayload & KeycloakUserInToken;
-    } catch {
-      throw new UnauthorizedException('Invalid token');
-    }
   }
 }
