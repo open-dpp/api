@@ -77,7 +77,7 @@ export abstract class DataField extends DataFieldBase {
       data.id,
       data.name,
       data.type,
-      data.options,
+      data.options ?? {},
       data.granularityLevel,
     );
   }
@@ -176,11 +176,11 @@ export class NumericField extends DataField {
 }
 
 export class FileField extends DataField {
-  static create(data: DataFieldProps) {
+  static create(data: DataFieldProps): FileField {
     return DataField.createInstance(FileField, data, DataFieldType.FILE_FIELD);
   }
 
-  static loadFromDb(data: DataFieldDbProps) {
+  static loadFromDb(data: DataFieldDbProps): FileField {
     return DataField.loadFromDbInstance(FileField, {
       ...data,
       type: DataFieldType.FILE_FIELD,
@@ -188,15 +188,7 @@ export class FileField extends DataField {
   }
 
   validate(version: string, value: unknown): DataFieldValidationResult {
-    const result = z.string().optional().safeParse(value);
-    return DataFieldValidationResult.create({
-      dataFieldId: this.id,
-      dataFieldName: this.name,
-      isValid: result.success,
-      errorMessage: !result.success
-        ? result.error.issues[0].message
-        : undefined,
-    });
+    return validateString(this.id, this.name, value);
   }
 }
 
