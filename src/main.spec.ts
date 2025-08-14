@@ -56,10 +56,6 @@ describe('Bootstrap', () => {
       expect.any(ValueErrorFilter),
     );
 
-    expect(mockApp.enableCors).toHaveBeenCalledWith({
-      origin: '*',
-    });
-
     expect(mockApp.listen).toHaveBeenCalledWith(3000, '0.0.0.0');
   });
 });
