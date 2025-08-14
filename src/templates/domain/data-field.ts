@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import {
-  DataFieldBase,
-  DataFieldType,
-} from '../../data-modelling/domain/data-field-base';
+import { DataFieldBase, DataFieldType, } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { NotSupportedError } from '../../exceptions/domain.errors';
@@ -109,11 +106,11 @@ function validateString(
 }
 
 export class TextField extends DataField {
-  static create(data: DataFieldProps) {
+  static create(data: DataFieldProps): TextField {
     return DataField.createInstance(TextField, data, DataFieldType.TEXT_FIELD);
   }
 
-  static loadFromDb(data: DataFieldDbProps) {
+  static loadFromDb(data: DataFieldDbProps): TextField {
     return DataField.loadFromDbInstance(TextField, {
       ...data,
       type: DataFieldType.TEXT_FIELD,
@@ -126,7 +123,7 @@ export class TextField extends DataField {
 }
 
 export class ProductPassportLink extends DataField {
-  static create(data: DataFieldProps) {
+  static create(data: DataFieldProps): ProductPassportLink {
     return DataField.createInstance(
       ProductPassportLink,
       data,
@@ -134,7 +131,7 @@ export class ProductPassportLink extends DataField {
     );
   }
 
-  static loadFromDb(data: DataFieldDbProps) {
+  static loadFromDb(data: DataFieldDbProps): ProductPassportLink {
     return DataField.loadFromDbInstance(ProductPassportLink, {
       ...data,
       type: DataFieldType.PRODUCT_PASSPORT_LINK,
@@ -147,7 +144,7 @@ export class ProductPassportLink extends DataField {
 }
 
 export class NumericField extends DataField {
-  static create(data: DataFieldProps) {
+  static create(data: DataFieldProps): NumericField {
     return DataField.createInstance(
       NumericField,
       data,
@@ -155,7 +152,7 @@ export class NumericField extends DataField {
     );
   }
 
-  static loadFromDb(data: DataFieldDbProps) {
+  static loadFromDb(data: DataFieldDbProps): NumericField {
     return DataField.loadFromDbInstance(NumericField, {
       ...data,
       type: DataFieldType.NUMERIC_FIELD,
