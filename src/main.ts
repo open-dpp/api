@@ -15,6 +15,7 @@ export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  app.enableCors();
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
@@ -32,9 +33,6 @@ export async function bootstrap() {
     json({ limit: '50mb' }),
   );
   app.useGlobalPipes(new ValidationPipe());
-  app.enableCors({
-    origin: '*',
-  });
   if (configService.get<string>('BUILD_OPEN_API_DOCUMENTATION') === 'true') {
     buildOpenApiDocumentation(app);
   }
