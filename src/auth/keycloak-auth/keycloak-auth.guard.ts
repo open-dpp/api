@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AuthContext } from '../auth-request';
@@ -135,7 +130,7 @@ export class KeycloakAuthGuard implements CanActivate {
     const authUrl = this.getAuthUrl();
     try {
       const response = await firstValueFrom<AxiosResponse<{ jwt: string }>>(
-        this.httpService.get(`${authUrl}?apiKey=${headerApiKey}`),
+        this.httpService.get(authUrl, { params: { apiKey: headerApiKey } }),
       );
       if (response.status === 200) {
         return response.data.jwt;
