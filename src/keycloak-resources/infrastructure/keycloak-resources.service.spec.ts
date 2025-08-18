@@ -50,6 +50,7 @@ describe('KeycloakResourcesService', () => {
     name: 'Test User',
     preferred_username: 'testuser',
     email_verified: true,
+    memberships: [],
   };
 
   beforeEach(async () => {
