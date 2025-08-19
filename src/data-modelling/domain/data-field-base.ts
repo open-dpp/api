@@ -4,6 +4,7 @@ export enum DataFieldType {
   TEXT_FIELD = 'TextField',
   PRODUCT_PASSPORT_LINK = 'ProductPassportLink',
   NUMERIC_FIELD = 'NumericField',
+  FILE_FIELD = 'FileField',
 }
 
 export abstract class DataFieldBase {
