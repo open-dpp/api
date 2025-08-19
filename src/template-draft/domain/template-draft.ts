@@ -12,6 +12,11 @@ export type Publication = {
   version: string;
 };
 
+export enum MoveDirection {
+  UP = 'up',
+  DOWN = 'down',
+}
+
 export type TemplateDraftCreateProps = {
   name: string;
   sectors: Sector[];
@@ -152,12 +157,53 @@ export class TemplateDraft {
     return section;
   }
 
+  public moveSection(sectionId: string, direction: MoveDirection) {
+    const fromIndex = this.sections.findIndex((s) => s.id === sectionId);
+    const sectionToMove = this.sections[fromIndex];
+    const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
+
+    const siblingSections = this.findSectionsOfParent(sectionToMove.parentId);
+
+    // find sibling section to move to
+    const indexInSiblings = siblingSections.findIndex(
+      (s) => s.id === sectionId,
+    );
+    const siblingSearchIndex = indexInSiblings + shiftIndex;
+    if (
+      siblingSearchIndex < 0 ||
+      siblingSearchIndex >= siblingSections.length
+    ) {
+      return;
+    }
+
+    const sibling = siblingSections[siblingSearchIndex];
+
+    this._sections.splice(fromIndex, 1);
+
+    const siblingIndex = this.sections.findIndex((s) => s.id === sibling.id);
+
+    let toIndex =
+      direction === MoveDirection.DOWN
+        ? siblingIndex + shiftIndex
+        : siblingIndex;
+    if (toIndex < 0) {
+      toIndex = 0;
+    } else if (toIndex >= this._sections.length) {
+      toIndex = siblingSections.length - 1;
+    }
+    this._sections.splice(toIndex, 0, sectionToMove);
+  }
+
   findSectionWithParent(sectionId: string) {
     const section = this.sections.find((s) => s.id === sectionId);
     const parent = section?.parentId
       ? this.sections.find((s) => s.id === section.parentId)
       : undefined;
     return { section, parent };
+  }
+
+  findSectionsOfParent(parentSectionId?: string) {
+    return this.sections.filter((s) => s.parentId === parentSectionId);
   }
 
   addSubSection(parentSectionId: string, section: SectionDraft) {
