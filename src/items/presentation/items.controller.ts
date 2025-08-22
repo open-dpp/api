@@ -33,6 +33,7 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
 import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
+import { AgentServerProxyService } from '../../event-messages/infrastructure/agent-server-proxy.service';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -42,6 +43,7 @@ export class ItemsController {
     private readonly itemsApplicationService: ItemsApplicationService,
     private readonly modelsService: ModelsService,
     private readonly templateService: TemplateService,
+    private readonly agentServerProxyService: AgentServerProxyService,
   ) {}
 
   @ApiOperation({
@@ -174,6 +176,10 @@ export class ItemsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+    this.agentServerProxyService.publishPassportUpdatedEvent(
+      organizationId,
+      item.uniqueProductIdentifiers[0],
+    );
     return itemToDto(await this.itemsService.save(item));
   }
 
@@ -223,6 +229,10 @@ export class ItemsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+    this.agentServerProxyService.publishPassportUpdatedEvent(
+      organizationId,
+      item.uniqueProductIdentifiers[0],
+    );
     return itemToDto(await this.itemsService.save(item));
   }
 }

@@ -15,6 +15,7 @@ import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
 import { TemplateModule } from '../templates/template.module';
 import { ItemsApplicationService } from './presentation/items-application.service';
+import { EventMessagesModule } from '../event-messages/event-messages.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ItemsApplicationService } from './presentation/items-application.servic
     KeycloakResourcesModule,
     PermissionsModule,
     TraceabilityEventsModule,
+    EventMessagesModule,
   ],
   controllers: [ItemsController],
   providers: [ItemsService, ItemsApplicationService, OrganizationsService],
