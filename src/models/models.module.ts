@@ -14,6 +14,7 @@ import {
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
+import { EventMessagesModule } from '../event-messages/event-messages.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MarketplaceModule } from '../marketplace/marketplace.module';
     PermissionsModule,
     TraceabilityEventsModule,
     MarketplaceModule,
+    EventMessagesModule,
   ],
   controllers: [ModelsController],
   providers: [ModelsService],
