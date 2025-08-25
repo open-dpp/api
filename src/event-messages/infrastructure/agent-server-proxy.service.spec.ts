@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventMessagesModule } from '../event-messages.module';
 import { AgentServerProxyService } from './agent-server-proxy.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
@@ -13,8 +12,15 @@ describe('AgentServerProxyService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [EventMessagesModule],
-      providers: [],
+      providers: [
+        AgentServerProxyService,
+        {
+          provide: 'AGENT_SERVER',
+          useValue: {
+            emit: jest.fn().mockReturnValue({ subscribe: jest.fn() }),
+          },
+        },
+      ],
     }).compile();
     client = module.get<ClientProxy>('AGENT_SERVER'); // token from provider
     agentServerProxyService = module.get<AgentServerProxyService>(
