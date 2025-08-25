@@ -12,7 +12,8 @@ export function applyBodySizeHandler(app: INestApplication) {
 
   // Single JSON body parser selector based on a precise integration route match
   const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
-  const defaultJsonLimit = configService.get<string>('JSON_LIMIT_DEFAULT') || '10mb';
+  const defaultJsonLimit =
+    configService.get<string>('JSON_LIMIT_DEFAULT') || '10mb';
   const integrationJsonLimit =
     configService.get<string>('JSON_LIMIT_INTEGRATION') || '50mb';
   const defaultJsonParser = json({ limit: defaultJsonLimit });

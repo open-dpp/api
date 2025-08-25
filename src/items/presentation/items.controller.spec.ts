@@ -291,6 +291,7 @@ describe('ItemsController', () => {
       template,
     });
     const item = Item.create({ organizationId, userId, model, template });
+    item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
     const addedValues = [
@@ -409,6 +410,8 @@ describe('ItemsController', () => {
       template,
       model,
     });
+
+    item.createUniqueProductIdentifier();
 
     const dataValue1 = item.dataValues[0];
     const dataValue2 = item.dataValues[1];

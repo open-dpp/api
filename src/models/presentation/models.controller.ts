@@ -37,6 +37,7 @@ import {
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
+import { AgentServerProxyService } from '../../event-messages/infrastructure/agent-server-proxy.service';
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -45,6 +46,7 @@ export class ModelsController {
     private readonly templateService: TemplateService,
     private readonly permissionsService: PermissionsService,
     private readonly marketplaceService: MarketplaceService,
+    private readonly agentServerProxyService: AgentServerProxyService,
   ) {}
 
   @ApiOperation({
@@ -106,7 +108,11 @@ export class ModelsController {
       organizationId: organizationId,
       template,
     });
-    model.createUniqueProductIdentifier();
+    const uniqueProductIdentifier = model.createUniqueProductIdentifier();
+    this.agentServerProxyService.publishPassportCreatedEvent(
+      organizationId,
+      uniqueProductIdentifier,
+    );
     return modelToDto(await this.modelsService.save(model));
   }
 
@@ -193,7 +199,10 @@ export class ModelsController {
     if (updateModelDto.description) {
       model.modifyDescription(updateModelDto.description);
     }
-
+    this.agentServerProxyService.publishPassportCreatedEvent(
+      organizationId,
+      model.uniqueProductIdentifiers[0],
+    );
     return modelToDto(await this.modelsService.save(model));
   }
 
@@ -235,6 +244,10 @@ export class ModelsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+    this.agentServerProxyService.publishPassportUpdatedEvent(
+      organizationId,
+      model.uniqueProductIdentifiers[0],
+    );
     return modelToDto(await this.modelsService.save(model));
   }
 
@@ -276,6 +289,10 @@ export class ModelsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+    this.agentServerProxyService.publishPassportUpdatedEvent(
+      organizationId,
+      model.uniqueProductIdentifiers[0],
+    );
     return modelToDto(await this.modelsService.save(model));
   }
 }

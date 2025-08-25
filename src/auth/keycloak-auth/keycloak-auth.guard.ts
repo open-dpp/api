@@ -49,7 +49,7 @@ export class KeycloakAuthGuard implements CanActivate {
     let accessToken: string;
 
     if (headerAuthorization) {
-      accessToken = await this.readTokenFromJwt(headerAuthorization);
+      accessToken = this.readTokenFromJwt(headerAuthorization);
     } else if (headerApiKey) {
       accessToken = await this.readTokenFromApiKeyOrFail(headerApiKey);
     } else {

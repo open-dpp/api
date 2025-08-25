@@ -402,6 +402,7 @@ describe('ModelsController', () => {
       template,
     });
 
+    model.createUniqueProductIdentifier();
     await modelsService.save(model);
     const dataValue1 = model.dataValues[0];
     const dataValue2 = model.dataValues[1];
@@ -584,6 +585,7 @@ describe('ModelsController', () => {
       userId: authContext.user.id,
       template,
     });
+    model.createUniqueProductIdentifier();
 
     await modelsService.save(model);
     const existingDataValues = model.dataValues;
