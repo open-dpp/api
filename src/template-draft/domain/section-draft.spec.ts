@@ -4,6 +4,9 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { MoveDirection } from './template-draft';
+import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
+import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
 
 describe('DataSectionDraft', () => {
   it('is created', () => {
@@ -141,6 +144,58 @@ describe('DataSectionDraft', () => {
         options: { min: 3 },
       }),
     ).toThrow(new NotFoundError(DataFieldDraft.name, 'unknown-id'));
+  });
+
+  it('should move data field', () => {
+    const dataField1 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build({ id: 'f1' }),
+    );
+    const dataField2 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build({ id: 'f2' }),
+    );
+    const dataField3 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build({ id: 'f3' }),
+    );
+    const dataField4 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build({ id: 'f4' }),
+    );
+    const section = SectionDraft.loadFromDb(
+      sectionDraftDbPropsFactory
+        .addDataField(dataField1)
+        .addDataField(dataField2)
+        .addDataField(dataField3)
+        .addDataField(dataField4)
+        .build(),
+    );
+    section.moveDataField(dataField2.id, MoveDirection.DOWN);
+    expect(section.dataFields).toEqual([
+      dataField1,
+      dataField3,
+      dataField2,
+      dataField4,
+    ]);
+    section.moveDataField(dataField4.id, MoveDirection.UP);
+    expect(section.dataFields).toEqual([
+      dataField1,
+      dataField3,
+      dataField4,
+      dataField2,
+    ]);
+    section.moveDataField(dataField4.id, MoveDirection.UP);
+    expect(section.dataFields).toEqual([
+      dataField1,
+      dataField4,
+      dataField3,
+      dataField2,
+    ]);
+    section.moveDataField(dataField1.id, MoveDirection.UP);
+    section.moveDataField(dataField2.id, MoveDirection.DOWN);
+    expect(section.dataFields).toEqual([
+      dataField1,
+      dataField4,
+      dataField3,
+      dataField2,
+    ]);
   });
 
   it('should delete data field', () => {

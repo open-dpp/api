@@ -7,6 +7,7 @@ import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
 import { SectionDbProps } from '../../templates/domain/section';
+import { MoveDirection } from './template-draft';
 
 export type SectionDraftCreateProps = {
   name: string;
@@ -118,6 +119,22 @@ export class SectionDraft extends SectionBase {
     if (data.options) {
       found.mergeOptions(data.options);
     }
+  }
+
+  moveDataField(dataFieldId: string, direction: MoveDirection) {
+    const fromIndex = this.dataFields.findIndex((d) => d.id === dataFieldId);
+    if (fromIndex < 0) {
+      throw new NotFoundError(DataFieldDraft.name, dataFieldId);
+    }
+    const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
+
+    let toIndex = fromIndex + shiftIndex;
+    if (toIndex < 0 || toIndex >= this.dataFields.length) {
+      return;
+    }
+
+    const deletedField = this.dataFields.splice(fromIndex, 1);
+    this.dataFields.splice(toIndex, 0, deletedField[0]);
   }
 
   deleteDataField(dataFieldId: string) {

@@ -46,7 +46,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
-import { MoveType } from './dto/move-section-draft.dto';
+import { MoveType } from './dto/move.dto';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;

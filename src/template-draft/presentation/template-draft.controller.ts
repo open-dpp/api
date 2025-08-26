@@ -51,10 +51,7 @@ import {
 import { templateDraftToDto } from './dto/template-draft.dto';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import { ZodValidationPipe } from '../../exceptions/zod-validation.pipeline';
-import {
-  MoveSectionDraftDto,
-  MoveSectionDraftDtoSchema,
-} from './dto/move-section-draft.dto';
+import { MoveDto, MoveDtoSchema } from './dto/move.dto';
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {
@@ -288,8 +285,8 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Param('sectionId') sectionId: string,
     @Param('draftId') draftId: string,
-    @Body(new ZodValidationPipe(MoveSectionDraftDtoSchema))
-    moveSectionDraftDto: MoveSectionDraftDto,
+    @Body(new ZodValidationPipe(MoveDtoSchema))
+    moveDto: MoveDto,
     @Request() req: AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
@@ -302,10 +299,7 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    foundProductDataModelDraft.moveSection(
-      sectionId,
-      moveSectionDraftDto.direction,
-    );
+    foundProductDataModelDraft.moveSection(sectionId, moveDto.direction);
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
@@ -337,6 +331,35 @@ export class TemplateDraftController {
       fieldId,
       omit(modifyDataFieldDraftDto, 'view'),
     );
+
+    return templateDraftToDto(
+      await this.templateDraftService.save(foundProductDataModelDraft),
+    );
+  }
+
+  @Post(':draftId/sections/:sectionId/data-fields/:fieldId/move')
+  async moveDataField(
+    @Param('orgaId') organizationId: string,
+    @Param('sectionId') sectionId: string,
+    @Param('draftId') draftId: string,
+    @Body(new ZodValidationPipe(MoveDtoSchema))
+    moveDto: MoveDto,
+    @Request() req: AuthRequest,
+  ) {
+    await this.permissionsService.canAccessOrganizationOrFail(
+      organizationId,
+      req.authContext,
+    );
+
+    const foundProductDataModelDraft =
+      await this.templateDraftService.findOneOrFail(draftId);
+
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+
+    // foundProductDataModelDraft.moveSection(
+    //   sectionId,
+    //   moveSectionDraftDto.direction,
+    // );
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
