@@ -1,18 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AgentServerProxyService } from './infrastructure/agent-server-proxy.service';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     ClientsModule.registerAsync([
       {
         name: 'AGENT_SERVER',
+        imports: [ConfigModule],
         useFactory: async (configService: ConfigService) => ({
           transport: Transport.TCP,
           options: {
             host: 'localhost',
-            port: configService.get('AGENT_SERVER_MSG_PORT'),
+            port: parseInt(configService.get<string>('AGENT_SERVER_MSG_PORT')),
           },
         }),
         inject: [ConfigService],

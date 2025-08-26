@@ -178,7 +178,7 @@ export class ItemsController {
     }
     this.agentServerProxyService.publishPassportUpdatedEvent(
       organizationId,
-      item.uniqueProductIdentifiers[0],
+      item.uniqueProductIdentifiers,
     );
     return itemToDto(await this.itemsService.save(item));
   }
@@ -229,10 +229,12 @@ export class ItemsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+
     this.agentServerProxyService.publishPassportUpdatedEvent(
       organizationId,
-      item.uniqueProductIdentifiers[0],
+      item.uniqueProductIdentifiers,
     );
+
     return itemToDto(await this.itemsService.save(item));
   }
 }

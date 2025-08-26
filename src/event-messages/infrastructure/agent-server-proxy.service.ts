@@ -1,28 +1,56 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 
 @Injectable()
 export class AgentServerProxyService {
+  private readonly logger = new Logger(AgentServerProxyService.name);
+
   constructor(@Inject('AGENT_SERVER') private client: ClientProxy) {}
 
   publishPassportCreatedEvent(
     organizationId: string,
-    uniqueProductIdentifier: UniqueProductIdentifier,
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    this.client.emit('passport_created', {
-      organizationId: organizationId,
-      uuid: uniqueProductIdentifier.uuid,
-    });
+    this.publishPassportEvent(
+      organizationId,
+      uniqueProductIdentifiers,
+      'passport_created',
+    );
   }
 
   publishPassportUpdatedEvent(
     organizationId: string,
-    uniqueProductIdentifier: UniqueProductIdentifier,
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    this.client.emit('passport_updated', {
-      organizationId: organizationId,
-      uuid: uniqueProductIdentifier.uuid,
-    });
+    this.publishPassportEvent(
+      organizationId,
+      uniqueProductIdentifiers,
+      'passport_updated',
+    );
+  }
+
+  private publishPassportEvent(
+    organizationId: string,
+    uniqueProductIdentifiers: UniqueProductIdentifier[],
+    eventName: string,
+  ) {
+    for (const uniqueProductIdentifier of uniqueProductIdentifiers) {
+      if (!uniqueProductIdentifier?.uuid) {
+        this.logger.warn(
+          `Skipping ${eventName}: missing UUID (organizationId=${organizationId})`,
+        );
+        return;
+      }
+      this.client
+        .emit(eventName, {
+          organizationId,
+          uuid: uniqueProductIdentifier.uuid,
+        })
+        .subscribe({
+          error: (err) =>
+            this.logger.error(`Failed to emit ${eventName}`, err as any),
+        });
+    }
   }
 }

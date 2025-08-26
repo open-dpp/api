@@ -108,10 +108,10 @@ export class ModelsController {
       organizationId: organizationId,
       template,
     });
-    const uniqueProductIdentifier = model.createUniqueProductIdentifier();
+    model.createUniqueProductIdentifier();
     this.agentServerProxyService.publishPassportCreatedEvent(
       organizationId,
-      uniqueProductIdentifier,
+      model.uniqueProductIdentifiers,
     );
     return modelToDto(await this.modelsService.save(model));
   }
@@ -201,7 +201,7 @@ export class ModelsController {
     }
     this.agentServerProxyService.publishPassportCreatedEvent(
       organizationId,
-      model.uniqueProductIdentifiers[0],
+      model.uniqueProductIdentifiers,
     );
     return modelToDto(await this.modelsService.save(model));
   }
@@ -246,7 +246,7 @@ export class ModelsController {
     }
     this.agentServerProxyService.publishPassportUpdatedEvent(
       organizationId,
-      model.uniqueProductIdentifiers[0],
+      model.uniqueProductIdentifiers,
     );
     return modelToDto(await this.modelsService.save(model));
   }
@@ -291,7 +291,7 @@ export class ModelsController {
     }
     this.agentServerProxyService.publishPassportUpdatedEvent(
       organizationId,
-      model.uniqueProductIdentifiers[0],
+      model.uniqueProductIdentifiers,
     );
     return modelToDto(await this.modelsService.save(model));
   }

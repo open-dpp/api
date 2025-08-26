@@ -35,10 +35,9 @@ describe('AgentServerProxyService', () => {
     const uniqueProductIdentifier = UniqueProductIdentifier.create({
       referenceId: randomUUID(),
     });
-    agentServerProxyService.publishPassportCreatedEvent(
-      'orgaId',
+    agentServerProxyService.publishPassportCreatedEvent('orgaId', [
       uniqueProductIdentifier,
-    );
+    ]);
     expect(spy).toHaveBeenCalledWith('passport_created', {
       organizationId: 'orgaId',
       uuid: uniqueProductIdentifier.uuid,
@@ -52,10 +51,9 @@ describe('AgentServerProxyService', () => {
     const uniqueProductIdentifier = UniqueProductIdentifier.create({
       referenceId: randomUUID(),
     });
-    agentServerProxyService.publishPassportUpdatedEvent(
-      'orgaId',
+    agentServerProxyService.publishPassportUpdatedEvent('orgaId', [
       uniqueProductIdentifier,
-    );
+    ]);
     expect(spy).toHaveBeenCalledWith('passport_updated', {
       organizationId: 'orgaId',
       uuid: uniqueProductIdentifier.uuid,

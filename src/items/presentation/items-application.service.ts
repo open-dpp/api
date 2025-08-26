@@ -37,8 +37,7 @@ export class ItemsApplicationService {
       model,
     });
 
-    const uniqueProductIdentifier =
-      item.createUniqueProductIdentifier(externalUUID);
+    item.createUniqueProductIdentifier(externalUUID);
 
     await this.traceabilityEventsService.create(
       ItemCreatedEventData.createWithWrapper({
@@ -59,7 +58,7 @@ export class ItemsApplicationService {
     }
     this.agentServerProxyService.publishPassportCreatedEvent(
       organizationId,
-      uniqueProductIdentifier,
+      item.uniqueProductIdentifiers,
     );
 
     return item;
