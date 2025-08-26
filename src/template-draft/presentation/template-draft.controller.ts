@@ -341,6 +341,7 @@ export class TemplateDraftController {
   async moveDataField(
     @Param('orgaId') organizationId: string,
     @Param('sectionId') sectionId: string,
+    @Param('fieldId') fieldId: string,
     @Param('draftId') draftId: string,
     @Body(new ZodValidationPipe(MoveDtoSchema))
     moveDto: MoveDto,
@@ -356,10 +357,11 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    // foundProductDataModelDraft.moveSection(
-    //   sectionId,
-    //   moveSectionDraftDto.direction,
-    // );
+    foundProductDataModelDraft.moveDataField(
+      sectionId,
+      fieldId,
+      moveDto.direction,
+    );
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),

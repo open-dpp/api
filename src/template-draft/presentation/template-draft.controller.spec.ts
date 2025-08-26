@@ -47,6 +47,7 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { MoveType } from './dto/move.dto';
+import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
@@ -804,6 +805,59 @@ describe('TemplateDraftController', () => {
       )
       .send(body);
     expect(response.status).toEqual(403);
+  });
+
+  it(`/POST move data field`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
+    const dataField1 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build(),
+    );
+    const dataField2 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build(),
+    );
+    const dataField3 = DataFieldDraft.loadFromDb(
+      dataFieldDraftDbPropsFactory.build(),
+    );
+    const section1 = SectionDraft.loadFromDb(
+      sectionDraftDbPropsFactory
+        .addDataField(dataField1)
+        .addDataField(dataField2)
+        .addDataField(dataField3)
+        .build(),
+    );
+
+    laptopDraft.addSection(section1);
+    await templateDraftService.save(laptopDraft);
+
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(201);
+    const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(found.findSectionOrFail(section1.id).dataFields).toEqual([
+      dataField1,
+      dataField3,
+      dataField2,
+    ]);
   });
 
   it(`/DELETE section draft`, async () => {

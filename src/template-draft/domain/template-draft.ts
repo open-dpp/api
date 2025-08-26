@@ -157,6 +157,14 @@ export class TemplateDraft {
     return section;
   }
 
+  public moveDataField(
+    sectionId: string,
+    dataFieldId: string,
+    direction: MoveDirection,
+  ) {
+    this.findSectionOrFail(sectionId).moveDataField(dataFieldId, direction);
+  }
+
   public moveSection(sectionId: string, direction: MoveDirection) {
     const section = this.findSectionOrFail(sectionId);
     const siblingSections = this.findSectionsOfParent(section.parentId);
