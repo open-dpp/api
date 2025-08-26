@@ -40,7 +40,7 @@ export class AgentServerProxyService {
         this.logger.warn(
           `Skipping ${eventName}: missing UUID (organizationId=${organizationId})`,
         );
-        return;
+        continue;
       }
       this.client
         .emit(eventName, {
