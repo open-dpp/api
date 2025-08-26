@@ -1,4 +1,8 @@
-import { TemplateDraft, TemplateDraftDbProps } from './template-draft';
+import {
+  MoveDirection,
+  TemplateDraft,
+  TemplateDraftDbProps,
+} from './template-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { SectionDraft } from './section-draft';
 import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
@@ -8,15 +12,12 @@ import { randomUUID } from 'crypto';
 import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
+  sectionDraftEnvironment,
   templateDraftCreatePropsFactory,
   templateDraftDbFactory,
 } from '../fixtures/template-draft.factory';
 import { textFieldProps } from '../fixtures/data-field-draft.factory';
-import {
-  sectionDraftDbPropsFactory,
-  sectionDraftEnvironment,
-  sectionDraftFactoryIds,
-} from '../fixtures/section-draft.factory';
+import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { Sector } from '@open-dpp/api-client';
 
 describe('TemplateDraft', () => {
@@ -325,6 +326,98 @@ describe('TemplateDraft', () => {
     ]);
   });
 
+  it('should move section', () => {
+    const productDataModelDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({ organizationId, userId }),
+    );
+    const section1 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'section-1' }),
+    );
+    const subSection11 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'sub-section-1-1' }),
+    );
+    const section2 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'section-2' }),
+    );
+    const subSection12 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'sub-section-1-2' }),
+    );
+    const subSection21 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({
+        id: 'sub-section-2-1',
+      }),
+    );
+    const section3 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build({ id: 'section-3' }),
+    );
+
+    productDataModelDraft.addSection(section1);
+    productDataModelDraft.addSubSection(section1.id, subSection11);
+    productDataModelDraft.addSection(section2);
+    productDataModelDraft.addSubSection(section1.id, subSection12);
+    productDataModelDraft.addSubSection(section2.id, subSection21);
+    productDataModelDraft.addSection(section3);
+    expect(productDataModelDraft.sections).toEqual([
+      section1,
+      subSection11,
+      section2,
+      subSection12,
+      subSection21,
+      section3,
+    ]);
+
+    productDataModelDraft.moveSection(section1.id, MoveDirection.DOWN);
+    expect(productDataModelDraft.sections).toEqual([
+      subSection11,
+      section2,
+      section1,
+      subSection12,
+      subSection21,
+      section3,
+    ]);
+
+    productDataModelDraft.moveSection(section3.id, MoveDirection.UP);
+    expect(productDataModelDraft.sections).toEqual([
+      subSection11,
+      section2,
+      section3,
+      section1,
+      subSection12,
+      subSection21,
+    ]);
+
+    productDataModelDraft.moveSection(section1.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(section1.id, MoveDirection.UP);
+    expect(productDataModelDraft.sections).toEqual([
+      subSection11,
+      section1,
+      section2,
+      section3,
+      subSection12,
+      subSection21,
+    ]);
+
+    productDataModelDraft.moveSection(subSection12.id, MoveDirection.UP);
+    const final = [
+      subSection12,
+      subSection11,
+      section1,
+      section2,
+      section3,
+      subSection21,
+    ];
+    expect(productDataModelDraft.sections).toEqual(final);
+
+    // the following moves should not change the order of the sections
+    productDataModelDraft.moveSection(subSection11.id, MoveDirection.DOWN);
+    productDataModelDraft.moveSection(subSection12.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(subSection21.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(subSection21.id, MoveDirection.DOWN);
+    productDataModelDraft.moveSection(section1.id, MoveDirection.UP);
+    productDataModelDraft.moveSection(section3.id, MoveDirection.DOWN);
+    expect(productDataModelDraft.sections).toEqual(final);
+  });
+
   it('should delete a section', () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
@@ -406,21 +499,20 @@ describe('TemplateDraft', () => {
     });
 
     productDataModelDraft.addDataFieldToSection(
-      sectionDraftFactoryIds.environment,
+      sectionDraftEnvironment.id,
       dataField1,
     );
     productDataModelDraft.addDataFieldToSection(
-      sectionDraftFactoryIds.environment,
+      sectionDraftEnvironment.id,
       dataField2,
     );
 
-    const existingFields = sectionDraftEnvironment
-      .build()
-      .dataFields.map((d) => DataFieldDraft.loadFromDb(d));
+    const existingFields = sectionDraftEnvironment.dataFields.map((d) =>
+      DataFieldDraft.loadFromDb(d),
+    );
     expect(
-      productDataModelDraft.findSectionOrFail(
-        sectionDraftFactoryIds.environment,
-      ).dataFields,
+      productDataModelDraft.findSectionOrFail(sectionDraftEnvironment.id)
+        .dataFields,
     ).toEqual([...existingFields, dataField1, dataField2]);
 
     expect(() =>
@@ -437,12 +529,14 @@ describe('TemplateDraft', () => {
     const productDataModelDraft = TemplateDraft.loadFromDb(
       templateDraftDbFactory.build({
         sections: [
-          sectionDraftDbPropsFactory.build({
-            id: 'section-1',
-            name: 'section-1',
-            dataFields: [dataFieldProps1, dataFieldProps2],
-          }),
-          sectionDraftEnvironment.build(),
+          sectionDraftDbPropsFactory
+            .addDataField(dataFieldProps1)
+            .addDataField(dataFieldProps2)
+            .build({
+              id: 'section-1',
+              name: 'section-1',
+            }),
+          sectionDraftEnvironment,
         ],
       }),
     );
