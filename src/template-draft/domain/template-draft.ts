@@ -158,40 +158,27 @@ export class TemplateDraft {
   }
 
   public moveSection(sectionId: string, direction: MoveDirection) {
-    const fromIndex = this.sections.findIndex((s) => s.id === sectionId);
-    const sectionToMove = this.sections[fromIndex];
+    const section = this.findSectionOrFail(sectionId);
+    const siblingSections = this.findSectionsOfParent(section.parentId);
+    const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
+    let newSiblingIndex = siblingIndex + shiftIndex;
 
-    const siblingSections = this.findSectionsOfParent(sectionToMove.parentId);
-
-    // find sibling section to move to
-    const indexInSiblings = siblingSections.findIndex(
-      (s) => s.id === sectionId,
-    );
-    const siblingSearchIndex = indexInSiblings + shiftIndex;
-    if (
-      siblingSearchIndex < 0 ||
-      siblingSearchIndex >= siblingSections.length
-    ) {
-      return;
+    // Bounds checking for sibling position
+    if (newSiblingIndex < 0 || newSiblingIndex >= siblingSections.length) {
+      return; // Can't move beyond bounds
     }
 
-    const sibling = siblingSections[siblingSearchIndex];
+    // Get the target sibling
+    const targetSibling = siblingSections[newSiblingIndex];
 
-    this._sections.splice(fromIndex, 1);
+    // Find global indices
+    const fromIndex = this._sections.findIndex((s) => s.id === sectionId);
+    const toIndex = this._sections.findIndex((s) => s.id === targetSibling.id);
 
-    const siblingIndex = this.sections.findIndex((s) => s.id === sibling.id);
-
-    let toIndex =
-      direction === MoveDirection.DOWN
-        ? siblingIndex + shiftIndex
-        : siblingIndex;
-    if (toIndex < 0) {
-      toIndex = 0;
-    } else if (toIndex >= this._sections.length) {
-      toIndex = siblingSections.length - 1;
-    }
-    this._sections.splice(toIndex, 0, sectionToMove);
+    // Remove and reinsert
+    const [removed] = this._sections.splice(fromIndex, 1);
+    this._sections.splice(toIndex, 0, removed);
   }
 
   findSectionWithParent(sectionId: string) {
