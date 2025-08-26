@@ -764,13 +764,13 @@ describe('TemplateDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
         'Authorization',
         getKeycloakAuthToken(
           userId,
-          [organizationId],
+          [otherOrganizationId],
           keycloakAuthTestingGuard,
         ),
       )
