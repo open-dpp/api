@@ -860,6 +860,62 @@ describe('TemplateDraftController', () => {
     ]);
   });
 
+  it(`/POST move data field ${userNotMemberTxt}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
+    await templateDraftService.save(laptopDraft);
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/POST move data field ${draftDoesNotBelongToOrga}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
+    await templateDraftService.save(laptopDraft);
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
   it(`/DELETE section draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
