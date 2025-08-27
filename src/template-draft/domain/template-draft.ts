@@ -12,6 +12,11 @@ export type Publication = {
   version: string;
 };
 
+export enum MoveDirection {
+  UP = 'up',
+  DOWN = 'down',
+}
+
 export type TemplateDraftCreateProps = {
   name: string;
   sectors: Sector[];
@@ -152,12 +157,40 @@ export class TemplateDraft {
     return section;
   }
 
+  public moveSection(sectionId: string, direction: MoveDirection) {
+    const section = this.findSectionOrFail(sectionId);
+    const siblingSections = this.findSectionsOfParent(section.parentId);
+    const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
+    const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
+    let newSiblingIndex = siblingIndex + shiftIndex;
+
+    // Bounds checking for sibling position
+    if (newSiblingIndex < 0 || newSiblingIndex >= siblingSections.length) {
+      return; // Can't move beyond bounds
+    }
+
+    // Get the target sibling
+    const targetSibling = siblingSections[newSiblingIndex];
+
+    // Find global indices
+    const fromIndex = this._sections.findIndex((s) => s.id === sectionId);
+    const toIndex = this._sections.findIndex((s) => s.id === targetSibling.id);
+
+    // Remove and reinsert
+    const [removed] = this._sections.splice(fromIndex, 1);
+    this._sections.splice(toIndex, 0, removed);
+  }
+
   findSectionWithParent(sectionId: string) {
     const section = this.sections.find((s) => s.id === sectionId);
     const parent = section?.parentId
       ? this.sections.find((s) => s.id === section.parentId)
       : undefined;
     return { section, parent };
+  }
+
+  findSectionsOfParent(parentSectionId?: string) {
+    return this.sections.filter((s) => s.parentId === parentSectionId);
   }
 
   addSubSection(parentSectionId: string, section: SectionDraft) {

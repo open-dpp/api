@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 import { TemplateDraftModule } from '../template-draft.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { TemplateDraft } from '../domain/template-draft';
+import { MoveDirection, TemplateDraft } from '../domain/template-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
@@ -45,6 +45,8 @@ import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
+import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
+import { MoveType } from './dto/move-section-draft.dto';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
@@ -695,6 +697,102 @@ describe('TemplateDraftController', () => {
     const response = await request(app.getHttpServer())
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId, otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/POST move section`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
+    const section1 = SectionDraft.create(sectionDraftDbPropsFactory.build());
+    const subSection11 = SectionDraft.create(
+      sectionDraftDbPropsFactory.build(),
+    );
+    const section2 = SectionDraft.create(sectionDraftDbPropsFactory.build());
+    laptopDraft.addSection(section1);
+    laptopDraft.addSubSection(section1.id, subSection11);
+    laptopDraft.addSection(section2);
+
+    await templateDraftService.save(laptopDraft);
+
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(201);
+    const found = await templateDraftService.findOneOrFail(response.body.id);
+    expect(found.sections).toEqual([section2, section1, subSection11]);
+  });
+
+  it(`/POST move section ${userNotMemberTxt}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId,
+        userId,
+      }),
+    );
+    await templateDraftService.save(laptopDraft);
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(body);
+    expect(response.status).toEqual(403);
+  });
+
+  it(`/POST move section ${draftDoesNotBelongToOrga}`, async () => {
+    const laptopDraft = TemplateDraft.create(
+      templateDraftCreatePropsFactory.build({
+        organizationId: otherOrganizationId,
+        userId,
+      }),
+    );
+    await templateDraftService.save(laptopDraft);
+    const body = {
+      type: MoveType.POSITION,
+      direction: MoveDirection.UP,
+    };
+    const response = await request(app.getHttpServer())
+      .post(
+        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
         'Authorization',
