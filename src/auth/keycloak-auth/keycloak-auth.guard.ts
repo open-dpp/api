@@ -10,15 +10,13 @@ import { AuthContext } from '../auth-request';
 import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
-import {
-  ALLOW_SERVICE_ACCESS,
-  IS_PUBLIC,
-} from '../decorators/public.decorator';
+import { IS_PUBLIC } from '../decorators/public.decorator';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import * as jwksRsa from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
+import { ALLOW_SERVICE_ACCESS } from '../decorators/allow-service-access.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {

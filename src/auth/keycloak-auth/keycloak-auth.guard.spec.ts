@@ -9,13 +9,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import {
-  ALLOW_SERVICE_ACCESS,
-  IS_PUBLIC,
-} from '../decorators/public.decorator';
+import { IS_PUBLIC } from '../decorators/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { User } from '../../users/domain/user';
 import { HttpModule } from '@nestjs/axios';
+import { ALLOW_SERVICE_ACCESS } from '../decorators/allow-service-access.decorator';
 
 describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;
