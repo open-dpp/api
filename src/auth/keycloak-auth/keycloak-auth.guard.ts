@@ -10,7 +10,10 @@ import { AuthContext } from '../auth-request';
 import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
-import { IS_PUBLIC } from '../public/public.decorator';
+import {
+  ALLOW_SERVICE_ACCESS,
+  IS_PUBLIC,
+} from '../decorators/public.decorator';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
@@ -40,8 +43,22 @@ export class KeycloakAuthGuard implements CanActivate {
       IS_PUBLIC,
       context.getHandler(),
     );
+    const allowServiceAccess = this.reflector.get<boolean>(
+      ALLOW_SERVICE_ACCESS,
+      context.getHandler(),
+    );
     if (isPublic) {
       return isPublic;
+    }
+    if (allowServiceAccess) {
+      if (
+        request.headers.service_token !==
+        this.configService.get('SERVICE_TOKEN')
+      ) {
+        throw new UnauthorizedException('Invalid service token.');
+      } else {
+        return allowServiceAccess;
+      }
     }
 
     const headerAuthorization = request.headers.authorization;

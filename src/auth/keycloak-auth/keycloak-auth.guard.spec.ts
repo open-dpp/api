@@ -9,7 +9,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC } from '../public/public.decorator';
+import {
+  ALLOW_SERVICE_ACCESS,
+  IS_PUBLIC,
+} from '../decorators/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { User } from '../../users/domain/user';
 import { HttpModule } from '@nestjs/axios';
@@ -42,7 +45,11 @@ describe('KeycloakAuthGuard', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn().mockReturnValue('mock-public-key'),
+            get: jest
+              .fn()
+              .mockImplementation((key) =>
+                key === 'SERVICE_TOKEN' ? 'serviceToken' : 'mock-public-key',
+              ),
           },
         },
         {
@@ -106,6 +113,42 @@ describe('KeycloakAuthGuard', () => {
         new UnauthorizedException(
           'Authorization: Bearer <token> header invalid',
         ),
+      );
+    });
+
+    it('should authenticate with service token', async () => {
+      jest.spyOn(reflector, 'get').mockImplementation((key) => {
+        if (key === IS_PUBLIC) {
+          return false;
+        }
+        if (key === ALLOW_SERVICE_ACCESS) {
+          return true;
+        }
+        return false;
+      });
+
+      mockRequest.headers.service_token = 'serviceToken';
+
+      const result = await guard.canActivate(context);
+      expect(result).toBe(true);
+      expect(mockRequest.authContext).toBeUndefined();
+    });
+
+    it('should fail to authenticate with invalid service token', async () => {
+      jest.spyOn(reflector, 'get').mockImplementation((key) => {
+        if (key === IS_PUBLIC) {
+          return false;
+        }
+        if (key === ALLOW_SERVICE_ACCESS) {
+          return true;
+        }
+        return false;
+      });
+
+      mockRequest.headers.service_token = 'INVALID_TOKEN';
+
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        new UnauthorizedException('Invalid service token.'),
       );
     });
 

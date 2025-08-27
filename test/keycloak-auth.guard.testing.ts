@@ -6,7 +6,7 @@ import {
 import { AuthContext } from '../src/auth/auth-request';
 import { User } from '../src/users/domain/user';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC } from '../src/auth/public/public.decorator';
+import { IS_PUBLIC } from '../src/auth/decorators/public.decorator';
 
 export class KeycloakAuthTestingGuard implements CanActivate {
   constructor(
