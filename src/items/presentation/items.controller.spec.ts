@@ -32,8 +32,6 @@ import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
-import { AgentServerProxyService } from '../../event-messages/infrastructure/agent-server-proxy.service';
-import { AgentServerProxyServiceTesting } from '../../../test/agent.server.proxy.service.testing';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -165,8 +163,6 @@ describe('ItemsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
-      .overrideProvider(AgentServerProxyService)
-      .useClass(AgentServerProxyServiceTesting)
       .compile();
 
     modelsService = moduleRef.get(ModelsService);

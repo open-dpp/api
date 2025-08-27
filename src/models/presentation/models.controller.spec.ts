@@ -31,8 +31,6 @@ import {
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
 import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
-import { AgentServerProxyService } from '../../event-messages/infrastructure/agent-server-proxy.service';
-import { AgentServerProxyServiceTesting } from '../../../test/agent.server.proxy.service.testing';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -73,8 +71,6 @@ describe('ModelsController', () => {
       )
       .overrideProvider(MarketplaceService)
       .useClass(MarketplaceServiceTesting)
-      .overrideProvider(AgentServerProxyService)
-      .useClass(AgentServerProxyServiceTesting)
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(

@@ -35,8 +35,6 @@ import { Organization } from '../../organizations/domain/organization';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
 import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
-import { AgentServerProxyService } from '../../event-messages/infrastructure/agent-server-proxy.service';
-import { AgentServerProxyServiceTesting } from '../../../test/agent.server.proxy.service.testing';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -90,8 +88,6 @@ describe('AasConnectionController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
-      .overrideProvider(AgentServerProxyService)
-      .useClass(AgentServerProxyServiceTesting)
       .compile();
 
     app = moduleRef.createNestApplication();

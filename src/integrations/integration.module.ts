@@ -16,7 +16,6 @@ import { ItemsService } from '../items/infrastructure/items.service';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ItemsApplicationService } from '../items/presentation/items-application.service';
 import { OrganizationsModule } from '../organizations/organizations.module';
-import { EventMessagesModule } from '../event-messages/event-messages.module';
 
 @Module({
   imports: [
@@ -39,7 +38,6 @@ import { EventMessagesModule } from '../event-messages/event-messages.module';
     UniqueProductIdentifierModule,
     PermissionsModule,
     TraceabilityEventsModule,
-    EventMessagesModule,
   ],
   controllers: [AasConnectionController],
   providers: [

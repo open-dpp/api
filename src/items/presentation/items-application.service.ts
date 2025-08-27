@@ -5,7 +5,6 @@ import { UniqueProductIdentifierCreatedEventData } from '../../traceability-even
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
-import { AgentServerProxyService } from '../../event-messages/infrastructure/agent-server-proxy.service';
 
 @Injectable()
 export class ItemsApplicationService {
@@ -13,7 +12,6 @@ export class ItemsApplicationService {
     private readonly modelsService: ModelsService,
     private readonly templateService: TemplateService,
     private readonly traceabilityEventsService: TraceabilityEventsService,
-    private readonly agentServerProxyService: AgentServerProxyService,
   ) {}
 
   async createItem(
@@ -56,11 +54,6 @@ export class ItemsApplicationService {
         }),
       );
     }
-    this.agentServerProxyService.publishPassportCreatedEvent(
-      organizationId,
-      item.uniqueProductIdentifiers,
-    );
-
     return item;
   }
 }
