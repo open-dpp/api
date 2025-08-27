@@ -117,15 +117,9 @@ describe('KeycloakAuthGuard', () => {
     });
 
     it('should authenticate with service token', async () => {
-      jest.spyOn(reflector, 'get').mockImplementation((key) => {
-        if (key === IS_PUBLIC) {
-          return false;
-        }
-        if (key === ALLOW_SERVICE_ACCESS) {
-          return true;
-        }
-        return false;
-      });
+      jest
+        .spyOn(reflector, 'get')
+        .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
 
       mockRequest.headers.service_token = 'serviceToken';
 
@@ -135,15 +129,9 @@ describe('KeycloakAuthGuard', () => {
     });
 
     it('should fail to authenticate with invalid service token', async () => {
-      jest.spyOn(reflector, 'get').mockImplementation((key) => {
-        if (key === IS_PUBLIC) {
-          return false;
-        }
-        if (key === ALLOW_SERVICE_ACCESS) {
-          return true;
-        }
-        return false;
-      });
+      jest
+        .spyOn(reflector, 'get')
+        .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
 
       mockRequest.headers.service_token = 'INVALID_TOKEN';
 
