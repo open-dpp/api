@@ -3,7 +3,7 @@ import { ModelsService } from '../../models/infrastructure/models.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
-import { Public } from '../../auth/public/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 import { ProductPassport } from '../domain/product-passport';
 import { productPassportToDto } from './dto/product-passport.dto';
 

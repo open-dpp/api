@@ -14,6 +14,10 @@ export const UniqueProductIdentifierReferenceDtoSchema = z.object({
   granularityLevel: z.enum(GranularityLevel),
 });
 
+export const UniqueProductIdentifierMetadataDtoSchema = z.object({
+  organizationId: z.string(),
+});
+
 export function uniqueProductIdentifierToDto(
   uniqueProductIdentifier: UniqueProductIdentifier,
 ) {

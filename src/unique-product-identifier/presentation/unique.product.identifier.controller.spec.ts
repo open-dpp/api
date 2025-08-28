@@ -23,17 +23,20 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { ItemsService } from '../../items/infrastructure/items.service';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { phoneFactory } from '../../product-passport/fixtures/product-passport.factory';
+import { ALLOW_SERVICE_ACCESS } from '../../auth/decorators/allow-service-access.decorator';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let itemsService: ItemsService;
+  const serviceToken = 'serviceToken';
 
   let templateService: TemplateService;
   const reflector: Reflector = new Reflector();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
     new Map(),
     reflector,
+    new Map([['SERVICE_TOKEN', serviceToken]]),
   );
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), `${randomUUID()}@example.com`);
@@ -111,6 +114,49 @@ describe('UniqueProductIdentifierController', () => {
       modelId: model.id,
       granularityLevel: GranularityLevel.ITEM,
     });
+  });
+
+  it(`/GET organizationId of unique product identifier`, async () => {
+    jest
+      .spyOn(reflector, 'get')
+      .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
+
+    const template = Template.loadFromDb({ ...phoneTemplate });
+    await templateService.save(template);
+    const model = Model.create({
+      name: 'model',
+      userId: randomUUID(),
+      organizationId: randomUUID(),
+      template,
+    });
+    const item = Item.create({
+      organizationId,
+      userId: authContext.user.id,
+      template,
+      model,
+    });
+    const { uuid } = item.createUniqueProductIdentifier('externalId');
+    await itemsService.save(item);
+
+    const response = await request(app.getHttpServer())
+      .get(`/unique-product-identifiers/${uuid}/metadata`)
+      .set('service_token', serviceToken);
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      organizationId,
+    });
+  });
+
+  it(`/GET fails to return organizationId of unique product identifier if service token invalid`, async () => {
+    jest
+      .spyOn(reflector, 'get')
+      .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
+
+    const response = await request(app.getHttpServer())
+      .get(`/unique-product-identifiers/${randomUUID()}/metadata`)
+      .set('service_token', 'invalid_token');
+    expect(response.status).toEqual(401);
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
