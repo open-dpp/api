@@ -6,12 +6,14 @@ import {
 import { AuthContext } from '../src/auth/auth-request';
 import { User } from '../src/users/domain/user';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC } from '../src/auth/public/public.decorator';
+import { IS_PUBLIC } from '../src/auth/decorators/public.decorator';
+import { ALLOW_SERVICE_ACCESS } from '../src/auth/decorators/allow-service-access.decorator';
 
 export class KeycloakAuthTestingGuard implements CanActivate {
   constructor(
     public tokenToUserMap: Map<string, User>,
     private reflector?: Reflector,
+    private configService?: Map<string, string>,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -22,8 +24,22 @@ export class KeycloakAuthTestingGuard implements CanActivate {
         IS_PUBLIC,
         context.getHandler(),
       );
+      const allowServiceAccess = this.reflector.get<boolean>(
+        ALLOW_SERVICE_ACCESS,
+        context.getHandler(),
+      );
       if (isPublic) {
         return isPublic;
+      }
+      if (allowServiceAccess) {
+        if (
+          request.headers.service_token !==
+          this.configService!.get('SERVICE_TOKEN')
+        ) {
+          throw new UnauthorizedException('Invalid service token.');
+        } else {
+          return allowServiceAccess;
+        }
       }
     }
 

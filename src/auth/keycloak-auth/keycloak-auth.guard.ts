@@ -10,12 +10,13 @@ import { AuthContext } from '../auth-request';
 import { User } from '../../users/domain/user';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
-import { IS_PUBLIC } from '../public/public.decorator';
+import { IS_PUBLIC } from '../decorators/public.decorator';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import * as jwksRsa from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
+import { ALLOW_SERVICE_ACCESS } from '../decorators/allow-service-access.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -40,8 +41,22 @@ export class KeycloakAuthGuard implements CanActivate {
       IS_PUBLIC,
       context.getHandler(),
     );
+    const allowServiceAccess = this.reflector.get<boolean>(
+      ALLOW_SERVICE_ACCESS,
+      context.getHandler(),
+    );
     if (isPublic) {
       return isPublic;
+    }
+    if (allowServiceAccess) {
+      if (
+        request.headers.service_token !==
+        this.configService.get('SERVICE_TOKEN')
+      ) {
+        throw new UnauthorizedException('Invalid service token.');
+      } else {
+        return allowServiceAccess;
+      }
     }
 
     const headerAuthorization = request.headers.authorization;
@@ -49,7 +64,7 @@ export class KeycloakAuthGuard implements CanActivate {
     let accessToken: string;
 
     if (headerAuthorization) {
-      accessToken = await this.readTokenFromJwt(headerAuthorization);
+      accessToken = this.readTokenFromJwt(headerAuthorization);
     } else if (headerApiKey) {
       accessToken = await this.readTokenFromApiKeyOrFail(headerApiKey);
     } else {

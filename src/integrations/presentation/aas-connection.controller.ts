@@ -13,7 +13,7 @@ import { AuthRequest } from '../../auth/auth-request';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
-import { Public } from '../../auth/public/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 import { ConfigService } from '@nestjs/config';
 import { itemToDto } from '../../items/presentation/dto/item.dto';
 import { ItemsService } from '../../items/infrastructure/items.service';

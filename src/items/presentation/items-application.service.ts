@@ -2,7 +2,6 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Item } from '../domain/item';
 import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data';
 import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
-import { ItemsService } from '../infrastructure/items.service';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
@@ -10,7 +9,6 @@ import { TraceabilityEventsService } from '../../traceability-events/infrastruct
 @Injectable()
 export class ItemsApplicationService {
   constructor(
-    private readonly itemsService: ItemsService,
     private readonly modelsService: ModelsService,
     private readonly templateService: TemplateService,
     private readonly traceabilityEventsService: TraceabilityEventsService,

@@ -19,6 +19,7 @@ import {
 import { ProductPassport } from '../domain/product-passport';
 import { ProductPassportModule } from '../product-passport.module';
 import { productPassportToDto } from './dto/product-passport.dto';
+import { IS_PUBLIC } from '../../auth/decorators/public.decorator';
 
 describe('ProductPassportController', () => {
   let app: INestApplication;
@@ -82,7 +83,8 @@ describe('ProductPassportController', () => {
     const uuid = item.uniqueProductIdentifiers[0].uuid;
     await itemsService.save(item);
     await modelsService.save(model);
-    jest.spyOn(reflector, 'get').mockReturnValue(true);
+    jest.spyOn(reflector, 'get').mockImplementation((key) => key === IS_PUBLIC);
+
     const response = await request(app.getHttpServer()).get(
       `/product-passports/${uuid}`,
     );

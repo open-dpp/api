@@ -2,9 +2,14 @@ import { Controller, Get, Param, Request } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
-import { UniqueProductIdentifierReferenceDtoSchema } from './dto/unique-product-identifier-dto.schema';
+import {
+  UniqueProductIdentifierMetadataDtoSchema,
+  UniqueProductIdentifierReferenceDtoSchema,
+} from './dto/unique-product-identifier-dto.schema';
 import { AuthRequest } from '../../auth/auth-request';
 import { PermissionsService } from '../../permissions/permissions.service';
+
+import { AllowServiceAccess } from '../../auth/decorators/allow-service-access.decorator';
 
 @Controller()
 export class UniqueProductIdentifierController {
@@ -47,5 +52,28 @@ export class UniqueProductIdentifierController {
         granularityLevel: model.granularityLevel,
       });
     }
+  }
+
+  @AllowServiceAccess()
+  @Get('unique-product-identifiers/:id/metadata')
+  async get(@Param('id') id: string) {
+    const uniqueProductIdentifier =
+      await this.uniqueProductIdentifierService.findOneOrFail(id);
+
+    const item = await this.itemService.findOne(
+      uniqueProductIdentifier.referenceId,
+    );
+    let organizationId;
+    if (item) {
+      organizationId = item.ownedByOrganizationId;
+    } else {
+      const model = await this.modelsService.findOneOrFail(
+        uniqueProductIdentifier.referenceId,
+      );
+      organizationId = model.ownedByOrganizationId;
+    }
+    return UniqueProductIdentifierMetadataDtoSchema.parse({
+      organizationId,
+    });
   }
 }

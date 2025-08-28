@@ -174,6 +174,7 @@ export class ItemsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+
     return itemToDto(await this.itemsService.save(item));
   }
 
@@ -223,6 +224,7 @@ export class ItemsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+
     return itemToDto(await this.itemsService.save(item));
   }
 }

@@ -193,7 +193,6 @@ export class ModelsController {
     if (updateModelDto.description) {
       model.modifyDescription(updateModelDto.description);
     }
-
     return modelToDto(await this.modelsService.save(model));
   }
 
