@@ -5,9 +5,9 @@ export enum MoveType {
   POSITION = 'Position',
 }
 
-export const MoveSectionDraftDtoSchema = z.object({
+export const MoveDtoSchema = z.object({
   type: z.enum(MoveType),
   direction: z.enum(MoveDirection),
 });
 
-export type MoveSectionDraftDto = z.infer<typeof MoveSectionDraftDtoSchema>;
+export type MoveDto = z.infer<typeof MoveDtoSchema>;
