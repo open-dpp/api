@@ -22,6 +22,7 @@ import { TraceabilityEventsModule } from './traceability-events/traceability-eve
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
 import { IntegrationModule } from './integrations/integration.module';
 import { ProductPassportModule } from './product-passport/product-passport.module';
+import { EventMessagesModule } from './event-messages/event-messages.module';
 
 @Module({
   imports: [
@@ -63,13 +64,13 @@ import { ProductPassportModule } from './product-passport/product-passport.modul
     KeycloakSyncOnStartupModule,
     IntegrationModule,
     ProductPassportModule,
+    EventMessagesModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,
     },
-    // KeycloakPermissionsGuard is now provided by PermissionsModule
   ],
 })
 export class AppModule {}

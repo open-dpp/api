@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
@@ -6,6 +6,7 @@ import { ItemsService } from '../../items/infrastructure/items.service';
 import { Public } from '../../auth/decorators/public.decorator';
 import { ProductPassport } from '../domain/product-passport';
 import { productPassportToDto } from './dto/product-passport.dto';
+import { MessageProducerService } from '../../event-messages/message.producer.service';
 
 @Controller()
 export class ProductPassportController {
@@ -14,11 +15,15 @@ export class ProductPassportController {
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly templateService: TemplateService,
     private readonly itemService: ItemsService,
+    private readonly messageProducerService: MessageProducerService,
   ) {}
 
   @Public()
   @Get('product-passports/:id')
-  async getProductPassport(@Param('id') id: string) {
+  async getProductPassport(
+    @Param('id') id: string,
+    @Query('page') page?: string,
+  ) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOneOrFail(id);
     const item = await this.itemService.findOne(
@@ -35,6 +40,16 @@ export class ProductPassportController {
       model,
       item,
     });
+
+    if (page) {
+      await this.messageProducerService.sendPageViewEvent(
+        item?.id ?? model.id,
+        model.id,
+        template.id,
+        template.ownedByOrganizationId,
+        page,
+      );
+    }
 
     return productPassportToDto(productPassport);
   }

@@ -15,6 +15,8 @@ import { ModelsService } from '../models/infrastructure/models.service';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { ProductPassportController } from './presentation/product-passport.controller';
+import { EventMessagesModule } from '../event-messages/event-messages.module';
+import { MessageProducerService } from '../event-messages/message.producer.service';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { ProductPassportController } from './presentation/product-passport.contr
         schema: TemplateSchema,
       },
     ]),
+    EventMessagesModule,
   ],
   controllers: [ProductPassportController],
   providers: [
@@ -43,6 +46,7 @@ import { ProductPassportController } from './presentation/product-passport.contr
     ModelsService,
     TemplateService,
     ItemsService,
+    MessageProducerService,
   ],
   exports: [],
 })
