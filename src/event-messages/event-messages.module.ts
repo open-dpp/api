@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MessageProducerService } from './message.producer.service';
+import { MessageBrokerService } from './message-broker.service';
 
 @Module({
   controllers: [],
-  providers: [MessageProducerService],
+  providers: [MessageBrokerService],
 
-  exports: [MessageProducerService],
+  exports: [MessageBrokerService],
 })
 export class EventMessagesModule {}

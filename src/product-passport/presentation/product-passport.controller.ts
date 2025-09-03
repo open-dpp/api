@@ -6,7 +6,7 @@ import { ItemsService } from '../../items/infrastructure/items.service';
 import { Public } from '../../auth/decorators/public.decorator';
 import { ProductPassport } from '../domain/product-passport';
 import { productPassportToDto } from './dto/product-passport.dto';
-import { MessageProducerService } from '../../event-messages/message.producer.service';
+import { MessageBrokerService } from '../../event-messages/message-broker.service';
 
 @Controller()
 export class ProductPassportController {
@@ -15,7 +15,7 @@ export class ProductPassportController {
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly templateService: TemplateService,
     private readonly itemService: ItemsService,
-    private readonly messageProducerService: MessageProducerService,
+    private readonly messageProducerService: MessageBrokerService,
   ) {}
 
   @Public()

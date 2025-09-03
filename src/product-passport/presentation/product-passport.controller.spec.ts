@@ -20,6 +20,8 @@ import { ProductPassport } from '../domain/product-passport';
 import { ProductPassportModule } from '../product-passport.module';
 import { productPassportToDto } from './dto/product-passport.dto';
 import { IS_PUBLIC } from '../../auth/decorators/public.decorator';
+import { MessageBrokerService } from '../../event-messages/message-broker.service';
+import { MessageBrokerServiceTesting } from '../../../test/message.broker.service.testing';
 
 describe('ProductPassportController', () => {
   let app: INestApplication;
@@ -35,9 +37,15 @@ describe('ProductPassportController', () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
   let module: TestingModule;
-
+  const messageBrokerService = new MessageBrokerServiceTesting();
+  const mockNow = new Date('2025-01-01T12:00:00Z').getTime();
   beforeEach(() => {
     jest.spyOn(reflector, 'get').mockReturnValue(false);
+    jest.spyOn(Date, 'now').mockImplementation(() => mockNow);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   beforeAll(async () => {
@@ -49,7 +57,10 @@ describe('ProductPassportController', () => {
           useValue: keycloakAuthTestingGuard,
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(MessageBrokerService)
+      .useValue(messageBrokerService)
+      .compile();
 
     modelsService = module.get(ModelsService);
     itemsService = module.get(ItemsService);
@@ -86,9 +97,18 @@ describe('ProductPassportController', () => {
     jest.spyOn(reflector, 'get').mockImplementation((key) => key === IS_PUBLIC);
 
     const response = await request(app.getHttpServer()).get(
-      `/product-passports/${uuid}`,
+      `/product-passports/${uuid}?page=https://example.com/page`,
     );
     expect(response.status).toEqual(200);
+
+    expect(messageBrokerService.getLastEvent('page_viewed')).toEqual({
+      page: 'https://example.com/page',
+      modelId: model.id,
+      id: item.id,
+      templateId: template.id,
+      ownedByOrganizationId: organizationId,
+      date: '2025-01-01T12:00:00.000Z',
+    });
 
     const productPassport = ProductPassport.create({
       uniqueProductIdentifier: item.uniqueProductIdentifiers[0],
@@ -96,6 +116,7 @@ describe('ProductPassportController', () => {
       model: model,
       item: item,
     });
+
     expect(response.body).toEqual(productPassportToDto(productPassport));
   });
 

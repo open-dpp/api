@@ -1,10 +1,12 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Kafka, Producer } from 'kafkajs';
+import { Kafka, Partitioners, Producer } from 'kafkajs';
 
 @Injectable()
-export class MessageProducerService implements OnModuleInit, OnModuleDestroy {
+export class MessageBrokerService implements OnModuleInit, OnModuleDestroy {
   private kafka = new Kafka({ brokers: ['localhost:9094'] });
-  private producer: Producer = this.kafka.producer();
+  private producer: Producer = this.kafka.producer({
+    createPartitioner: Partitioners.DefaultPartitioner,
+  });
 
   async onModuleInit() {
     await this.producer.connect();
@@ -27,11 +29,11 @@ export class MessageProducerService implements OnModuleInit, OnModuleDestroy {
       templateId: templateId,
       ownedByOrganizationId: organizationId,
       page: page,
-      date: new Date().toISOString(),
+      date: new Date(Date.now()).toISOString(),
     });
 
     await this.producer.send({
-      topic: 'test-topic',
+      topic: 'page_viewed',
       messages: [{ value: message }],
     });
   }

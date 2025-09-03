@@ -16,7 +16,7 @@ import { TemplateService } from '../templates/infrastructure/template.service';
 import { ItemsService } from '../items/infrastructure/items.service';
 import { ProductPassportController } from './presentation/product-passport.controller';
 import { EventMessagesModule } from '../event-messages/event-messages.module';
-import { MessageProducerService } from '../event-messages/message.producer.service';
+import { MessageBrokerService } from '../event-messages/message-broker.service';
 
 @Module({
   imports: [
@@ -46,7 +46,7 @@ import { MessageProducerService } from '../event-messages/message.producer.servi
     ModelsService,
     TemplateService,
     ItemsService,
-    MessageProducerService,
+    MessageBrokerService,
   ],
   exports: [],
 })
