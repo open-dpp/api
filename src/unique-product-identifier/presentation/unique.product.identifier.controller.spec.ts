@@ -116,7 +116,7 @@ describe('UniqueProductIdentifierController', () => {
     });
   });
 
-  it(`/GET organizationId of unique product identifier`, async () => {
+  it(`/GET metadate of unique product identifier`, async () => {
     jest
       .spyOn(reflector, 'get')
       .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
@@ -126,9 +126,10 @@ describe('UniqueProductIdentifierController', () => {
     const model = Model.create({
       name: 'model',
       userId: randomUUID(),
-      organizationId: randomUUID(),
+      organizationId,
       template,
     });
+    await modelsService.save(model);
     const item = Item.create({
       organizationId,
       userId: authContext.user.id,
@@ -144,6 +145,9 @@ describe('UniqueProductIdentifierController', () => {
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
+      passportId: item.id,
+      modelId: model.id,
+      templateId: template.id,
       organizationId,
     });
   });
