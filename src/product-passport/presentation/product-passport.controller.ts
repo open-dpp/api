@@ -6,7 +6,6 @@ import { ItemsService } from '../../items/infrastructure/items.service';
 import { Public } from '../../auth/decorators/public.decorator';
 import { ProductPassport } from '../domain/product-passport';
 import { productPassportToDto } from './dto/product-passport.dto';
-import { MessageBrokerService } from '../../event-messages/message-broker.service';
 
 @Controller()
 export class ProductPassportController {
@@ -15,7 +14,6 @@ export class ProductPassportController {
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly templateService: TemplateService,
     private readonly itemService: ItemsService,
-    private readonly messageProducerService: MessageBrokerService,
   ) {}
 
   @Public()
@@ -40,16 +38,6 @@ export class ProductPassportController {
       model,
       item,
     });
-
-    if (page) {
-      await this.messageProducerService.sendPageViewEvent(
-        item?.id ?? model.id,
-        model.id,
-        template.id,
-        template.ownedByOrganizationId,
-        page,
-      );
-    }
 
     return productPassportToDto(productPassport);
   }
