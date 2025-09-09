@@ -170,7 +170,7 @@ export class TemplateDraft {
     const siblingSections = this.findSectionsOfParent(section.parentId);
     const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
-    let newSiblingIndex = siblingIndex + shiftIndex;
+    const newSiblingIndex = siblingIndex + shiftIndex;
 
     // Bounds checking for sibling position
     if (newSiblingIndex < 0 || newSiblingIndex >= siblingSections.length) {

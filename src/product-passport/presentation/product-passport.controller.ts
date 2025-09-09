@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
@@ -18,10 +18,7 @@ export class ProductPassportController {
 
   @Public()
   @Get('product-passports/:id')
-  async getProductPassport(
-    @Param('id') id: string,
-    @Query('page') page?: string,
-  ) {
+  async getProductPassport(@Param('id') id: string) {
     const uniqueProductIdentifier =
       await this.uniqueProductIdentifierService.findOneOrFail(id);
     const item = await this.itemService.findOne(

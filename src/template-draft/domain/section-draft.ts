@@ -128,7 +128,7 @@ export class SectionDraft extends SectionBase {
     }
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
 
-    let toIndex = fromIndex + shiftIndex;
+    const toIndex = fromIndex + shiftIndex;
     if (toIndex < 0 || toIndex >= this.dataFields.length) {
       return;
     }

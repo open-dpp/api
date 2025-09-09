@@ -1,5 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Kafka, Partitioners, Producer } from 'kafkajs';
+import { Item } from '../items/domain/item';
 
 @Injectable()
 export class MessageBrokerService implements OnModuleInit, OnModuleDestroy {
@@ -16,24 +17,22 @@ export class MessageBrokerService implements OnModuleInit, OnModuleDestroy {
     await this.producer.disconnect();
   }
 
-  async sendPageViewEvent(
-    passportId: string,
-    modelId: string,
-    templateId: string,
-    organizationId: string,
-    page: string,
-  ) {
+  async emitItemUpdated(item: Item) {
     const message = JSON.stringify({
-      id: passportId,
-      modelId: modelId,
-      templateId: templateId,
-      ownedByOrganizationId: organizationId,
-      page: page,
+      modelId: item.modelId,
+      templateId: item.templateId,
+      organizationId: item.ownedByOrganizationId,
+      fieldValues: item.dataValues.map((value) => ({
+        dataSectionId: value.dataSectionId,
+        dataFieldId: value.dataFieldId,
+        value: value.value,
+        row: value.row,
+      })),
       date: new Date(Date.now()).toISOString(),
     });
 
     await this.producer.send({
-      topic: 'page_viewed',
+      topic: 'item_updated',
       messages: [{ value: message }],
     });
   }

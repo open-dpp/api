@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MessageBrokerService } from './message-broker.service';
 import { Kafka } from 'kafkajs';
+import { Item } from '../items/domain/item';
+import { phoneItemFactory } from '../product-passport/fixtures/product-passport.factory';
 
 jest.mock('kafkajs');
 
@@ -32,39 +34,31 @@ describe('MessageBrokerService', () => {
     jest.clearAllMocks();
   });
 
-  describe('sendPageViewEvent', () => {
-    it('should send a properly formatted message to Kafka', async () => {
+  describe('emitItemUpdated', () => {
+    it('should emit a properly formatted message to message broker', async () => {
       // Mock the date for consistent testing
       const mockDate = new Date('2025-01-01T12:00:00Z');
       jest.spyOn(Date, 'now').mockImplementation(() => mockDate.getTime());
 
-      const testData = {
-        passportId: 'test-passport-id',
-        modelId: 'test-model-id',
-        templateId: 'test-template-id',
-        organizationId: 'test-org-id',
-        page: 'https://example.com/test-page',
-      };
+      const item = Item.loadFromDb(phoneItemFactory.addDataValues().build());
 
-      await service.sendPageViewEvent(
-        testData.passportId,
-        testData.modelId,
-        testData.templateId,
-        testData.organizationId,
-        testData.page,
-      );
+      await service.emitItemUpdated(item);
 
       const expectedMessage = JSON.stringify({
-        id: testData.passportId,
-        modelId: testData.modelId,
-        templateId: testData.templateId,
-        ownedByOrganizationId: testData.organizationId,
-        page: testData.page,
+        modelId: item.modelId,
+        templateId: item.templateId,
+        organizationId: item.ownedByOrganizationId,
+        fieldValues: item.dataValues.map((value) => ({
+          dataSectionId: value.dataSectionId,
+          dataFieldId: value.dataFieldId,
+          value: value.value,
+          row: value.row,
+        })),
         date: mockDate.toISOString(),
       });
 
       expect(mockProducer.send).toHaveBeenCalledWith({
-        topic: 'page_viewed',
+        topic: 'item_updated',
         messages: [{ value: expectedMessage }],
       });
 
@@ -75,15 +69,11 @@ describe('MessageBrokerService', () => {
     it('should throw an error if producer.send fails', async () => {
       mockProducer.send.mockRejectedValueOnce(new Error('Kafka error'));
 
-      await expect(
-        service.sendPageViewEvent(
-          'test-id',
-          'test-model',
-          'test-template',
-          'test-org',
-          'test-page',
-        ),
-      ).rejects.toThrow('Kafka error');
+      const item = Item.loadFromDb(phoneItemFactory.addDataValues().build());
+
+      await expect(service.emitItemUpdated(item)).rejects.toThrow(
+        'Kafka error',
+      );
     });
   });
 
