@@ -13,6 +13,8 @@ export abstract class ProductPassportData {
     public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
     private _templateId: string,
     private _dataValues: DataValue[] = [],
+    public readonly createdAt: Date,
+    public updatedAt: Date,
   ) {}
 
   public get createdByUserId() {

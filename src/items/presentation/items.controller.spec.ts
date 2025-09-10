@@ -32,6 +32,8 @@ import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
+import { MessageBrokerServiceTesting } from '../../../test/message.broker.service.testing';
+import { MessageBrokerService } from '../../event-messages/message-broker.service';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -41,6 +43,7 @@ describe('ItemsController', () => {
   let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
+  const messageBrokerServiceTesting = new MessageBrokerServiceTesting();
 
   const authContext = new AuthContext();
   authContext.user = new User(randomUUID(), 'test@test.test');
@@ -133,6 +136,10 @@ describe('ItemsController', () => {
   };
   const template = Template.loadFromDb(laptopModel);
 
+  afterEach(async () => {
+    jest.clearAllMocks();
+  });
+
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
@@ -163,6 +170,8 @@ describe('ItemsController', () => {
           users: [{ id: authContext.user.id, email: authContext.user.email }],
         }),
       )
+      .overrideProvider(MessageBrokerService)
+      .useValue(messageBrokerServiceTesting)
       .compile();
 
     modelsService = moduleRef.get(ModelsService);
@@ -282,6 +291,8 @@ describe('ItemsController', () => {
   });
 
   it('add data values to item', async () => {
+    const mockDate = new Date('2025-01-01T12:00:00Z');
+    jest.spyOn(Date, 'now').mockImplementation(() => mockDate.getTime());
     const organizationId = randomUUID();
     const userId = randomUUID();
     const model = Model.create({
@@ -331,6 +342,20 @@ describe('ItemsController', () => {
     const foundItem = await itemsService.findOneOrFail(response.body.id);
 
     expect(foundItem.dataValues).toEqual(response.body.dataValues);
+    expect(
+      messageBrokerServiceTesting.getEventWithDate('item_updated', mockDate),
+    ).toEqual({
+      modelId: foundItem.modelId,
+      templateId: foundItem.templateId,
+      organizationId: foundItem.ownedByOrganizationId,
+      fieldValues: foundItem.dataValues.map((value) => ({
+        dataSectionId: value.dataSectionId,
+        dataFieldId: value.dataFieldId,
+        value: value.value,
+        row: value.row,
+      })),
+      date: item.createdAt.toISOString(),
+    });
   });
 
   it('add data values to item fails if user is not member of organization', async () => {
@@ -398,6 +423,8 @@ describe('ItemsController', () => {
   });
 
   it('update data values of item', async () => {
+    const mockDate = new Date('2025-01-01T13:00:00Z');
+    jest.spyOn(Date, 'now').mockImplementation(() => mockDate.getTime());
     const model = Model.create({
       name: 'name',
       userId: authContext.user.id,
@@ -461,6 +488,20 @@ describe('ItemsController', () => {
     expect(response.body.dataValues).toEqual(expectedDataValues);
     const foundItem = await itemsService.findOneOrFail(response.body.id);
     expect(foundItem.dataValues).toEqual(expectedDataValues);
+    expect(
+      messageBrokerServiceTesting.getEventWithDate('item_updated', mockDate),
+    ).toEqual({
+      modelId: foundItem.modelId,
+      templateId: foundItem.templateId,
+      organizationId: foundItem.ownedByOrganizationId,
+      fieldValues: foundItem.dataValues.map((value) => ({
+        dataSectionId: value.dataSectionId,
+        dataFieldId: value.dataFieldId,
+        value: value.value,
+        row: value.row,
+      })),
+      date: item.createdAt.toISOString(),
+    });
   });
 
   it('update data values fails if user is not member of organization', async () => {

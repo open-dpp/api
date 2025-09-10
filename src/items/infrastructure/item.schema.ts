@@ -10,7 +10,7 @@ export enum ItemDocSchemaVersion {
   v1_0_2 = '1.0.2',
 }
 
-@Schema({ collection: 'items', timestamps: true })
+@Schema({ collection: 'items' })
 export class ItemDoc extends PassportDoc {
   @Prop({
     default: ItemDocSchemaVersion.v1_0_2,

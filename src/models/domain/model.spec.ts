@@ -79,6 +79,7 @@ describe('Model', () => {
 
     const createdByUserId = randomUUID();
     const ownedByOrganizationId = randomUUID();
+    const nowDate = new Date();
 
     const model = Model.loadFromDb({
       id,
@@ -89,6 +90,8 @@ describe('Model', () => {
       templateId: templateId,
       dataValues,
       description,
+      createdAt: nowDate,
+      updatedAt: nowDate,
     });
     expect(model.id).toEqual(id);
     expect(model.name).toEqual(name);

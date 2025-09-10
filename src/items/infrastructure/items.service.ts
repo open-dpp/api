@@ -36,6 +36,8 @@ export class ItemsService {
           }))
         : [],
       templateId: itemDoc.templateId,
+      createdAt: itemDoc.createdAt,
+      updatedAt: itemDoc.updatedAt,
     });
   }
 
@@ -55,6 +57,8 @@ export class ItemsService {
             dataFieldId: d.dataFieldId,
             row: d.row,
           })),
+          createdAt: item.createdAt,
+          updatedAt: new Date(Date.now()),
         },
         $unset: {
           productDataModelId: 1,

@@ -1,27 +1,29 @@
+import { Item } from '../src/items/domain/item';
+
 export class MessageBrokerServiceTesting {
-  public readonly messages = { page_viewed: [] };
+  public readonly messages = { item_updated: [] };
   constructor() {}
 
-  getLastEvent(topic: string) {
-    return this.messages[topic][this.messages[topic].length - 1];
+  getEventWithDate(topic: string, date: Date) {
+    return this.messages[topic].find((message) => {
+      return message.date === date.toISOString();
+    });
   }
 
-  async sendPageViewEvent(
-    passportId: string,
-    modelId: string,
-    templateId: string,
-    organizationId: string,
-    page: string,
-  ) {
+  async emitItemUpdated(item: Item) {
     const message = {
-      id: passportId,
-      modelId: modelId,
-      templateId: templateId,
-      ownedByOrganizationId: organizationId,
-      page: page,
+      modelId: item.modelId,
+      templateId: item.templateId,
+      organizationId: item.ownedByOrganizationId,
+      fieldValues: item.dataValues.map((value) => ({
+        dataSectionId: value.dataSectionId,
+        dataFieldId: value.dataFieldId,
+        value: value.value,
+        row: value.row,
+      })),
       date: new Date(Date.now()).toISOString(),
     };
 
-    this.messages['page_viewed'].push(message);
+    this.messages['item_updated'].push(message);
   }
 }

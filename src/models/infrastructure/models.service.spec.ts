@@ -38,6 +38,16 @@ describe('ModelsService', () => {
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
 
+  const mockNow = new Date('2025-01-01T12:00:00Z').getTime();
+
+  beforeEach(() => {
+    jest.spyOn(Date, 'now').mockImplementation(() => mockNow);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -155,24 +165,30 @@ describe('ModelsService', () => {
         .build({ organizationId: organization.id, userId: user.id }),
     );
 
-    const model1 = Model.create({
-      name: 'Product A',
-      userId: user.id,
-      organizationId: otherOrganizationId,
-      template,
-    });
-    const model2 = Model.create({
-      name: 'Product B',
-      userId: user.id,
-      organizationId: otherOrganizationId,
-      template,
-    });
-    const model3 = Model.create({
-      name: 'Product C',
-      userId: user.id,
-      organizationId: otherOrganizationId,
-      template,
-    });
+    const model1 = await modelsService.save(
+      Model.create({
+        name: 'Product A',
+        userId: user.id,
+        organizationId: otherOrganizationId,
+        template,
+      }),
+    );
+    const model2 = await modelsService.save(
+      Model.create({
+        name: 'Product B',
+        userId: user.id,
+        organizationId: otherOrganizationId,
+        template,
+      }),
+    );
+    const model3 = await modelsService.save(
+      Model.create({
+        name: 'Product C',
+        userId: user.id,
+        organizationId: otherOrganizationId,
+        template,
+      }),
+    );
     await modelsService.save(model1);
     await modelsService.save(model2);
     await modelsService.save(model3);

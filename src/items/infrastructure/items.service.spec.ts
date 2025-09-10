@@ -45,6 +45,16 @@ describe('ItemsService', () => {
   const template = Template.create(templateCreatePropsFactory.build());
   let module: TestingModule;
 
+  const mockNow = new Date('2025-01-01T12:00:00Z').getTime();
+
+  beforeEach(() => {
+    jest.spyOn(Date, 'now').mockImplementation(() => mockNow);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [

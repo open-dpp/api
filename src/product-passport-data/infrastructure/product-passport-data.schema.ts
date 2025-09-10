@@ -22,11 +22,11 @@ export abstract class PassportDoc extends Document {
   @Prop({ required: true })
   templateId: string;
 
-  @Prop()
-  createdAt?: Date;
+  @Prop({ type: Date, required: true, default: () => new Date() })
+  createdAt: Date;
 
-  @Prop()
-  updatedAt?: Date;
+  @Prop({ type: Date, required: true, default: () => new Date() })
+  updatedAt: Date;
 }
 
 export function createCommonIndexesForPassportDoc(schema: Schema) {

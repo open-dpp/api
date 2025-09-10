@@ -15,6 +15,7 @@ import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
 import { TemplateModule } from '../templates/template.module';
 import { ItemsApplicationService } from './presentation/items-application.service';
+import { MessageBrokerService } from '../event-messages/message-broker.service';
 
 @Module({
   imports: [
@@ -38,7 +39,12 @@ import { ItemsApplicationService } from './presentation/items-application.servic
     TraceabilityEventsModule,
   ],
   controllers: [ItemsController],
-  providers: [ItemsService, ItemsApplicationService, OrganizationsService],
+  providers: [
+    ItemsService,
+    ItemsApplicationService,
+    OrganizationsService,
+    MessageBrokerService,
+  ],
   exports: [ItemsService],
 })
 export class ItemsModule {}

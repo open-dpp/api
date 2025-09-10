@@ -9,7 +9,7 @@ export enum ModelDocSchemaVersion {
   v1_0_1 = '1.0.1',
 }
 
-@Schema({ collection: 'models', timestamps: true })
+@Schema({ collection: 'models' })
 export class ModelDoc extends PassportDoc {
   @Prop({ required: true })
   name: string;

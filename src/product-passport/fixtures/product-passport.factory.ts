@@ -291,6 +291,8 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
   }
 }
 
+const nowDate = new Date('2021-01-01T00:00:00.000Z');
+
 export const phoneModelFactory = PhoneModelFactory.define(() => ({
   id: randomUUID(),
   name: 'Model Y',
@@ -300,6 +302,8 @@ export const phoneModelFactory = PhoneModelFactory.define(() => ({
   userId: randomUUID(),
   uniqueProductIdentifiers: [],
   dataValues: [],
+  createdAt: nowDate,
+  updatedAt: nowDate,
 }));
 
 export class PhoneItemFactory extends Factory<ItemDbProps> {
@@ -405,5 +409,7 @@ export const phoneItemFactory = PhoneItemFactory.define(({ params }) => {
       },
     ],
     dataValues: [],
+    createdAt: nowDate,
+    updatedAt: nowDate,
   };
 });

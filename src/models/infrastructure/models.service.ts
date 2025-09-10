@@ -37,6 +37,8 @@ export class ModelsService {
           }))
         : [],
       description: modelDoc.description ?? undefined,
+      createdAt: modelDoc.createdAt,
+      updatedAt: modelDoc.updatedAt,
     });
   }
 
@@ -57,6 +59,8 @@ export class ModelsService {
           })),
           createdByUserId: model.createdByUserId,
           ownedByOrganizationId: model.ownedByOrganizationId,
+          createdAt: model.createdAt,
+          updatedAt: new Date(Date.now()),
         },
         $unset: {
           productDataModelId: 1,

@@ -20,6 +20,8 @@ export type ItemDbProps = Omit<ItemCreateProps, 'template' | 'model'> & {
   templateId: string;
   dataValues: DataValue[];
   modelId: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export class Item extends ProductPassportData {
@@ -32,6 +34,8 @@ export class Item extends ProductPassportData {
     private _modelId: string,
     templateId: string,
     dataValues: DataValue[],
+    createdAt: Date,
+    updatedAt: Date,
   ) {
     super(
       id,
@@ -40,6 +44,8 @@ export class Item extends ProductPassportData {
       uniqueProductIdentifiers,
       templateId,
       dataValues,
+      createdAt,
+      updatedAt,
     );
   }
 
@@ -47,6 +53,8 @@ export class Item extends ProductPassportData {
     if (data.model.templateId !== data.template.id) {
       throw new ValueError('Model and template do not match');
     }
+    const now = new Date(Date.now());
+
     const item = new Item(
       randomUUID(),
       data.organizationId,
@@ -55,6 +63,8 @@ export class Item extends ProductPassportData {
       data.model.id,
       data.template.id,
       [],
+      now, // is set by the database by timestamps
+      now, // is set by the database by timestamps
     );
     item.initializeDataValueFromTemplate(data.template);
     return item;
@@ -69,6 +79,8 @@ export class Item extends ProductPassportData {
       data.modelId,
       data.templateId,
       data.dataValues,
+      data.createdAt,
+      data.updatedAt,
     );
   }
 

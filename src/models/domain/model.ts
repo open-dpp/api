@@ -19,6 +19,8 @@ export type ModelDbProps = Omit<ModelCreateProps, 'template'> & {
   templateId: string;
   dataValues: DataValue[];
   description: string | undefined;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export class Model extends ProductPassportData {
@@ -35,6 +37,8 @@ export class Model extends ProductPassportData {
     templateId: string,
     dataValues: DataValue[],
     description: string | undefined,
+    createdAt: Date,
+    updatedAt: Date,
   ) {
     super(
       id,
@@ -43,12 +47,15 @@ export class Model extends ProductPassportData {
       uniqueProductIdentifiers,
       templateId,
       dataValues,
+      createdAt,
+      updatedAt,
     );
     this.name = name;
     this.description = description;
   }
 
   static create(data: ModelCreateProps) {
+    const now = new Date(Date.now());
     const model = new Model(
       randomUUID(),
       data.name,
@@ -58,6 +65,8 @@ export class Model extends ProductPassportData {
       data.template.id,
       [],
       data.description,
+      now,
+      now,
     );
     model.initializeDataValueFromTemplate(data.template);
     return model;
@@ -73,6 +82,8 @@ export class Model extends ProductPassportData {
       data.templateId,
       data.dataValues,
       data.description,
+      data.createdAt,
+      data.updatedAt,
     );
   }
 
