@@ -54,7 +54,7 @@ describe('MessageBrokerService', () => {
           value: value.value,
           row: value.row,
         })),
-        date: mockDate.toISOString(),
+        date: item.createdAt.toISOString(),
       });
 
       expect(mockProducer.send).toHaveBeenCalledWith({

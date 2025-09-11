@@ -28,7 +28,7 @@ export class MessageBrokerService implements OnModuleInit, OnModuleDestroy {
         value: value.value,
         row: value.row,
       })),
-      date: new Date(Date.now()).toISOString(),
+      date: item.createdAt.toISOString(),
     });
 
     await this.producer.send({
